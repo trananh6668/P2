@@ -1151,8 +1151,8 @@ mjx-stretchy-v mjx-c, mjx-stretchy-h mjx-c {
 <div class="data-controls" style="margin-top: 10px; border-top: 2px dashed #bdc3c7; padding-top: 10px;">
 <p style="font-weight:bold; margin-bottom:5px; color: var(--secondary-color);">☁ Cloud / Google Sheet Database</p>
 <div style="margin-bottom: 8px;">
-<button class="btn btn-secondary btn-sm" onclick="DataManager.exportJSON()">⬇ Xuất file JSON (Backup)</button>
-<button class="btn btn-orange btn-sm" onclick="document.getElementById('json-upload').click()">⬆ Nạp file JSON</button>
+<button class="btn btn-secondary btn-sm" onclick="DataManager.exportJSON()">⬇ Xuất file JSON</button>
+<button class="btn btn-orange btn-sm" onclick="document.getElementById('json-upload').click()">⬆ Nhập file JSON</button>
 <input accept=".json" id="json-upload" onchange="DataManager.importJSONFile(this)" style="display: none;" type="file">
 </div>
 <div style="display:flex; gap:5px;">
@@ -2649,7 +2649,7 @@ DataManager.loadFromCloud = function() {
         });
 };
 
-// 4. Hàm xử lý trộn dữ liệu (Đồng bộ: Câu hỏi - Môn thi - Lịch sử)
+// 4. Hàm xử lý trộn dữ liệu (Đã sửa lỗi mất mật khẩu Admin)
 DataManager.mergeData = function(data, isSilent = false) {
     // 1. Kiểm tra định dạng sơ bộ
     if (!data.questions && !data.subjects && !data.leaderboard && !data.config) {
@@ -2659,6 +2659,11 @@ DataManager.mergeData = function(data, isSilent = false) {
 
     // Đảm bảo GLOBAL_DATA.config luôn tồn tại
     if (!GLOBAL_DATA.config) GLOBAL_DATA.config = { subjects: ["Chung"] };
+
+    // === [FIX QUAN TRỌNG] BƯỚC 1: LƯU LẠI MẬT KHẨU HIỆN TẠI ===
+    // Trước khi nạp dữ liệu mới, ta cất giữ mật khẩu đang dùng vào biến tạm
+    const currentAdminHash = GLOBAL_DATA.config.adminHash;
+    // ==========================================================
 
     let isOverwrite = false;
 
@@ -2677,16 +2682,19 @@ DataManager.mergeData = function(data, isSilent = false) {
     if (isOverwrite) {
         // === CHẾ ĐỘ GHI ĐÈ (RESET) ===
         if (data.questions) GLOBAL_DATA.questions = data.questions;
+        
         if (data.leaderboard && Array.isArray(data.leaderboard)) {
             GLOBAL_DATA.leaderboard = data.leaderboard;
         } else {
-            GLOBAL_DATA.leaderboard = [];
+            GLOBAL_DATA.leaderboard = []; // Reset leaderboard nếu file mới không có
         }
         
-        // Nếu file có config thì lấy
+        // === [FIX QUAN TRỌNG] BƯỚC 2: CHỈ CẬP NHẬT DANH SÁCH MÔN ===
+        // Thay vì gán: GLOBAL_DATA.config = data.config (sẽ mất pass)
+        // Ta chỉ lấy danh sách môn thi từ file mới
         if (data.config && data.config.subjects) {
-            GLOBAL_DATA.config = data.config;
-        } else {
+            GLOBAL_DATA.config.subjects = data.config.subjects;
+        } else if (!isSilent) {
             GLOBAL_DATA.config.subjects = ["Chung"];
         }
 
@@ -2700,7 +2708,14 @@ DataManager.mergeData = function(data, isSilent = false) {
         }
     }
 
-    // 3. Tự động quét và cập nhật danh sách môn thi
+    // === [FIX QUAN TRỌNG] BƯỚC 3: KHÔI PHỤC MẬT KHẨU ===
+    // Gán lại mật khẩu cũ vào config sau khi đã nạp dữ liệu xong
+    if (currentAdminHash) {
+        GLOBAL_DATA.config.adminHash = currentAdminHash;
+    }
+    // ==================================================
+
+    // 3. Tự động quét và cập nhật danh sách môn thi từ tất cả câu hỏi (để đảm bảo không sót môn)
     let subjectSet = new Set(GLOBAL_DATA.config.subjects || ["Chung"]);
     
     if (GLOBAL_DATA.questions && GLOBAL_DATA.questions.length > 0) {
@@ -2727,12 +2742,12 @@ DataManager.mergeData = function(data, isSilent = false) {
         DataManager.renderLeaderboard();
     }
     
-    // Chỉ hiện thông báo nếu KHÔNG PHẢI là chế độ im lặng
+    // Chỉ hiện thông báo nếu KHÔNG PHẢI là chế độ im lặng (Auto)
     if (!isSilent) {
-        alert("Đồng bộ dữ liệu thành công!");
-        location.reload();
+        alert("Đồng bộ dữ liệu thành công!)");
+        // Không reload trang để tránh việc saveToLocal chưa kịp ghi xuống disk trong một số trình duyệt chậm
+        // location.reload(); 
     } else {
-        // Nếu im lặng, cập nhật text trạng thái nhỏ (nếu có element hiển thị)
         const statusEl = document.getElementById('subject-info-display');
         if(statusEl) statusEl.innerHTML = '<span style="color:green">✅ Dữ liệu đã tự động cập nhật!</span>';
     }
