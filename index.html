@@ -2716,7 +2716,7 @@ DataManager.mergeData = function(data, isSilent = false) {
     // ==================================================
 
     // 3. Tự động quét và cập nhật danh sách môn thi từ tất cả câu hỏi (để đảm bảo không sót môn)
-    let subjectSet = new Set(GLOBAL_DATA.config.subjects || ["Chung"]);
+    let subjectSet = new Set();
     
     if (GLOBAL_DATA.questions && GLOBAL_DATA.questions.length > 0) {
         GLOBAL_DATA.questions.forEach(q => {
@@ -2725,6 +2725,10 @@ DataManager.mergeData = function(data, isSilent = false) {
             }
         });
     }
+	if (subjectSet.size === 0) {
+        subjectSet.add("Chung");
+    }
+
     GLOBAL_DATA.config.subjects = Array.from(subjectSet);
 
     // 4. Cập nhật tham chiếu biến toàn cục
