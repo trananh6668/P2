@@ -1,0 +1,1033 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TypeMaster | Tiếng Việt</title>
+    <!-- Tải Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0f172a; /* slate-900 */
+            color: #f8fafc;
+            overflow-x: hidden;
+        }
+        .mono { font-family: 'Fira Code', monospace; }
+
+        /* Ẩn thanh cuộn mặc định cho khu vực văn bản */
+        #text-display::-webkit-scrollbar { display: none; }
+        #text-display {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+            scroll-behavior: smooth;
+        }
+        
+        /* Bàn phím phẳng 2D: KHÔNG shadow, KHÔNG translateY */
+        .key-base {
+            transition: background-color 0.05s ease;
+        }
+        .key-active {
+            background-color: #3b82f6 !important; /* blue-500 */
+            color: white !important;
+        }
+        
+        /* Con trỏ absolute không chiếm diện tích (width) của chuỗi */
+        .cursor-active {
+            position: relative;
+        }
+        .cursor-active::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 15%;
+            height: 70%;
+            width: 2.5px;
+            background-color: #3b82f6;
+            animation: blink 1s infinite;
+            border-radius: 1px;
+            z-index: 10;
+        }
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center p-4 md:p-6">
+
+    <div class="w-full max-w-5xl flex flex-col gap-6">
+        
+        <!-- Header -->
+        <header class="text-center">
+            <h1 class="text-4xl md:text-5xl font-bold text-blue-500 tracking-tight">
+                TypeMaster <span class="text-slate-400 text-2xl md:text-3xl font-light">| Tiếng Việt</span>
+            </h1>
+        </header>
+
+        <!-- Main Fixed Box: Chiều cao cố định 450px -->
+        <main class="w-full h-[450px] bg-[#1e293b] rounded-2xl shadow-2xl border border-slate-700 relative overflow-hidden flex flex-col">
+            
+            <!-- 1. Màn hình Setup -->
+            <div id="screen-setup" class="absolute inset-0 flex flex-col p-6 lg:p-8 z-20 bg-[#1e293b] transition-opacity duration-300">
+                <h2 class="text-xl font-bold text-center text-slate-200 mb-6">Tùy Chọn Luyện Tập</h2>
+                
+                <div class="grid grid-cols-2 gap-4 mb-6">
+                    <button id="btn-mode-random" class="p-4 rounded-xl border-2 border-blue-500 bg-blue-500/10 text-center transition-colors">
+                        <div class="font-bold text-blue-400 mb-1">Vô Tận (Random)</div>
+                        <div class="text-xs text-slate-400">Tự tạo văn bản Tiếng Việt ngẫu nhiên.</div>
+                    </button>
+                    <button id="btn-mode-custom" class="p-4 rounded-xl border-2 border-slate-700 bg-slate-800 text-center transition-colors hover:border-slate-500">
+                        <div class="font-bold text-slate-300 mb-1">Tự Chọn</div>
+                        <div class="text-xs text-slate-400">Dán đoạn văn bản bạn muốn gõ.</div>
+                    </button>
+                </div>
+
+                <div class="flex-1 flex flex-col">
+                    <label class="text-sm font-semibold text-slate-400 mb-2">Nhập văn bản của bạn:</label>
+                    <textarea id="setup-textarea" class="w-full flex-1 bg-slate-900 border border-slate-700 rounded-xl p-4 text-slate-300 focus:outline-none focus:border-blue-500 resize-none mono text-sm opacity-50 cursor-not-allowed transition-all" disabled placeholder="Chế độ Random đang bật. Tự động sinh văn bản..."></textarea>
+                </div>
+
+                <div class="mt-6 text-center">
+                    <button id="btn-start" class="bg-blue-600 hover:bg-blue-500 text-white px-12 py-3 rounded-xl font-bold text-lg transition-colors">Bắt Đầu</button>
+                </div>
+            </div>
+
+            <!-- 2. Màn hình Typing -->
+            <div id="screen-typing" class="absolute inset-0 flex flex-col z-10 bg-[#1e293b] opacity-0 pointer-events-none transition-opacity duration-300">
+                
+                <!-- Thanh Stats nhỏ -->
+                <div class="flex justify-between items-center p-4 border-b border-slate-700 bg-slate-800/50">
+                    <div class="flex gap-6">
+                        <div class="text-slate-400 font-semibold text-sm">Thời gian: <span id="live-time" class="text-blue-400 mono text-lg">00:00</span></div>
+                        <div class="text-slate-400 font-semibold text-sm">Ký tự: <span id="live-chars" class="text-slate-200 mono text-lg">0</span></div>
+                    </div>
+                    <button id="btn-end-early" class="bg-red-500/20 text-red-400 hover:bg-red-500 hover:text-white px-4 py-1.5 rounded-lg text-sm font-bold transition-colors">Kết thúc sớm</button>
+                </div>
+
+                <!-- Khu vực gõ chữ -->
+                <div class="relative flex-1 overflow-hidden" id="typing-container">
+                    <!-- Textarea ẨN bắt sự kiện gõ thực tế -->
+                    <textarea id="hidden-input" class="absolute inset-0 w-full h-full opacity-0 z-10 resize-none text-transparent bg-transparent cursor-default focus:outline-none" spellcheck="false" autocomplete="off" autocorrect="off"></textarea>
+                    
+                    <!-- Lớp hiển thị chữ Text Display -->
+                    <!-- Dùng whitespace-pre-wrap để giữ nguyên khoảng trắng -->
+                    <div id="text-display" class="absolute inset-0 w-full h-full p-6 text-2xl lg:text-[28px] font-mono leading-[2.2] tracking-wide select-none whitespace-pre-wrap break-words overflow-y-auto text-slate-500">
+                        <!-- Chữ sinh ra bằng JS -->
+                    </div>
+                    
+                    <!-- Lớp phủ yêu cầu Click khi mất focus -->
+                    <div id="focus-overlay" class="absolute inset-0 z-20 bg-slate-900/80 backdrop-blur-sm hidden flex-col items-center justify-center cursor-pointer">
+                        <div class="text-xl font-bold text-white mb-2">Nhấn vào đây để tiếp tục gõ</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. Màn hình Stats (Kết quả) -->
+            <div id="screen-stats" class="absolute inset-0 flex flex-col items-center justify-center p-6 z-0 bg-[#151e2e] opacity-0 pointer-events-none transition-opacity duration-300">
+                <h2 class="text-3xl font-bold text-slate-200 mb-2">Thống Kê</h2>
+                <p class="text-slate-400 mb-8">Kết quả lượt gõ của bạn</p>
+                
+                <div class="w-full max-w-3xl flex flex-col gap-4 mb-8">
+                    <!-- Hàng 1: 3 Cột -->
+                    <div class="grid grid-cols-3 gap-4">
+                        <div class="bg-[#1e293b] p-6 rounded-xl border border-slate-700 text-center flex flex-col justify-center">
+                            <div class="text-slate-400 text-xs font-bold uppercase tracking-wider mb-2">Tốc độ (WPM)</div>
+                            <div id="res-wpm" class="text-5xl font-bold text-green-400 mono">0</div>
+                        </div>
+                        <div class="bg-[#1e293b] p-6 rounded-xl border border-slate-700 text-center flex flex-col justify-center">
+                            <div class="text-slate-400 text-xs font-bold uppercase tracking-wider mb-2">Tổng Ký Tự</div>
+                            <div id="res-chars" class="text-5xl font-bold text-blue-400 mono">0</div>
+                        </div>
+                        <div class="bg-[#1e293b] p-6 rounded-xl border border-slate-700 text-center flex flex-col justify-center">
+                            <div class="text-slate-400 text-xs font-bold uppercase tracking-wider mb-2">Lỗi Sai</div>
+                            <div id="res-errors" class="text-5xl font-bold text-red-400 mono">0</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Hàng 2: 2 Cột Căn Giữa Hoàn Hảo -->
+                    <div class="flex justify-center gap-4">
+                        <!-- Box width tương đương 1/3 grid phía trên (khoảng 33%) để thẳng cột đẹp mắt -->
+                        <div class="w-1/3 bg-[#1e293b] p-6 rounded-xl border border-slate-700 text-center flex flex-col justify-center">
+                            <div class="text-slate-400 text-xs font-bold uppercase tracking-wider mb-2">Tỷ Lệ Sai</div>
+                            <div id="res-err-rate" class="text-4xl font-bold text-orange-400 mono">0%</div>
+                        </div>
+                        <div class="w-1/3 bg-[#1e293b] p-6 rounded-xl border border-slate-700 text-center flex flex-col justify-center">
+                            <div class="text-slate-400 text-xs font-bold uppercase tracking-wider mb-2">Backspace</div>
+                            <div id="res-backspace" class="text-4xl font-bold text-slate-200 mono">0</div>
+                        </div>
+                    </div>
+                </div>
+
+                <button id="btn-restart" class="bg-blue-600 hover:bg-blue-500 text-white px-8 py-3 rounded-xl font-bold text-lg flex items-center gap-2 transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                    Bắt đầu lại
+                </button>
+            </div>
+        </main>
+
+        <!-- Khu vực Bàn phím Mô phỏng (Luôn cố định phía dưới) -->
+        <div class="w-full bg-[#1e293b] p-3 md:p-5 rounded-2xl border border-slate-700 overflow-x-auto select-none">
+            <div id="keyboard-container" class="min-w-[850px] flex flex-col gap-2 max-w-5xl mx-auto">
+                <!-- Bàn phím render bằng JS -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- DATA BÀN PHÍM ---
+        const keyboardLayout = [
+            [
+                { code: 'Backquote', label: '`' }, { code: 'Digit1', label: '1' }, { code: 'Digit2', label: '2' }, { code: 'Digit3', label: '3' }, 
+                { code: 'Digit4', label: '4' }, { code: 'Digit5', label: '5' }, { code: 'Digit6', label: '6' }, { code: 'Digit7', label: '7' }, 
+                { code: 'Digit8', label: '8' }, { code: 'Digit9', label: '9' }, { code: 'Digit0', label: '0' }, { code: 'Minus', label: '-' }, 
+                { code: 'Equal', label: '=' }, { code: 'Backspace', label: 'BACKSPACE', flex: 2 }
+            ],
+            [
+                { code: 'Tab', label: 'TAB', flex: 1.5 }, { code: 'KeyQ', label: 'Q' }, { code: 'KeyW', label: 'W' }, { code: 'KeyE', label: 'E' }, 
+                { code: 'KeyR', label: 'R' }, { code: 'KeyT', label: 'T' }, { code: 'KeyY', label: 'Y' }, { code: 'KeyU', label: 'U' }, 
+                { code: 'KeyI', label: 'I' }, { code: 'KeyO', label: 'O' }, { code: 'KeyP', label: 'P' }, { code: 'BracketLeft', label: '[' }, 
+                { code: 'BracketRight', label: ']' }, { code: 'Backslash', label: '\\', flex: 1.5 }
+            ],
+            [
+                { code: 'CapsLock', label: 'CAPS', flex: 1.8 }, { code: 'KeyA', label: 'A' }, { code: 'KeyS', label: 'S' }, { code: 'KeyD', label: 'D' }, 
+                { code: 'KeyF', label: 'F' }, { code: 'KeyG', label: 'G' }, { code: 'KeyH', label: 'H' }, { code: 'KeyJ', label: 'J' }, 
+                { code: 'KeyK', label: 'K' }, { code: 'KeyL', label: 'L' }, { code: 'Semicolon', label: ';' }, { code: 'Quote', label: '\'' }, 
+                { code: 'Enter', label: 'ENTER', flex: 2.2 }
+            ],
+            [
+                { code: 'ShiftLeft', label: 'SHIFT', flex: 2.5 }, { code: 'KeyZ', label: 'Z' }, { code: 'KeyX', label: 'X' }, { code: 'KeyC', label: 'C' }, 
+                { code: 'KeyV', label: 'V' }, { code: 'KeyB', label: 'B' }, { code: 'KeyN', label: 'N' }, { code: 'KeyM', label: 'M' }, 
+                { code: 'Comma', label: ',' }, { code: 'Period', label: '.' }, { code: 'Slash', label: '/' }, { code: 'ShiftRight', label: 'SHIFT', flex: 2.5 }
+            ],
+            [
+                { code: 'ControlLeft', label: 'CTRL', flex: 1.25 }, { code: 'MetaLeft', label: 'WIN', flex: 1.25 }, { code: 'AltLeft', label: 'ALT', flex: 1.25 }, 
+                { code: 'Space', label: '', flex: 6.25 }, 
+                { code: 'AltRight', label: 'ALT', flex: 1.25 }, { code: 'MetaRight', label: 'WIN', flex: 1.25 }, { code: 'ContextMenu', label: 'MENU', flex: 1.25 }, 
+                { code: 'ControlRight', label: 'CTRL', flex: 1.25 }
+            ]
+        ];
+
+        // --- TỪ ĐIỂN VĂN BẢN (Cho chế độ Random) ---
+        const vietnameseSentences = [
+            "Hà Nội mùa thu thật đẹp với những con đường rợp bóng cây xanh.",
+            "Công nghệ thông tin đang thay đổi cách chúng ta làm việc mỗi ngày.",
+            "Một nụ cười bằng mười thang thuốc bổ, hãy luôn giữ tinh thần lạc quan.",
+            "Luyện gõ phím mười ngón giúp bạn tiết kiệm được rất nhiều thời gian.",
+            "Bầu trời đêm nay đầy sao, ánh trăng sáng chiếu rọi xuống mặt hồ tĩnh lặng.",
+            "Đọc sách là cách tốt nhất để mở rộng kiến thức và nuôi dưỡng tâm hồn.",
+            "Sự kiên trì và nỗ lực không ngừng nghỉ sẽ dẫn đến con đường thành công.",
+            "Thất bại là mẹ thành công, mỗi vấp ngã đều là một bài học vô cùng quý giá.",
+            "Đừng bao giờ từ bỏ ước mơ của mình, hãy dũng cảm theo đuổi nó đến cùng.",
+            "Gia đình là điểm tựa vững chắc nhất trong cuộc đời của mỗi con người.",
+            "Cuộc sống luôn chứa đựng những điều bất ngờ thú vị đang chờ ta khám phá.",
+            "Thiên nhiên ban tặng cho chúng ta vô vàn cảnh đẹp hùng vĩ và tráng lệ.",
+            "Uống đủ nước và tập thể dục đều đặn là bí quyết để có một cơ thể khỏe mạnh.",
+            "Hãy sống trọn vẹn từng khoảnh khắc vì thời gian trôi qua không thể quay lại.",
+			// --- KHO 500 CÂU TIẾNG VIỆT MẪU (CHẠY OFFLINE) ---
+  // 1 - 50: Cuộc sống, thói quen & suy ngẫm
+  "Hà Nội mùa thu thật đẹp với những con đường rợp bóng cây xanh.",
+  "Công nghệ thông tin đang thay đổi cách chúng ta làm việc mỗi ngày.",
+  "Một nụ cười bằng mười thang thuốc bổ, hãy luôn giữ tinh thần lạc quan.",
+  "Luyện gõ phím mười ngón giúp bạn tiết kiệm được rất nhiều thời gian.",
+  "Bầu trời đêm nay đầy sao, ánh trăng sáng chiếu rọi xuống mặt hồ tĩnh lặng.",
+  "Đọc sách là cách tốt nhất để mở rộng kiến thức và nuôi dưỡng tâm hồn.",
+  "Sự kiên trì và nỗ lực không ngừng nghỉ sẽ dẫn đến con đường thành công.",
+  "Thất bại là mẹ thành công, mỗi vấp ngã đều là một bài học vô cùng quý giá.",
+  "Đừng bao giờ từ bỏ ước mơ của mình, hãy dũng cảm theo đuổi nó đến cùng.",
+  "Gia đình là điểm tựa vững chắc nhất trong cuộc đời của mỗi con người.",
+  "Cuộc sống luôn chứa đựng những điều bất ngờ thú vị đang chờ ta khám phá.",
+  "Thiên nhiên ban tặng cho chúng ta vô vàn cảnh đẹp hùng vĩ và tráng lệ.",
+  "Uống đủ nước và tập thể dục đều đặn là bí quyết để có một cơ thể khỏe mạnh.",
+  "Hãy sống trọn vẹn từng khoảnh khắc vì thời gian trôi qua không thể quay lại.",
+  "Học hỏi không bao giờ là quá muộn đối với bất kỳ ai có lòng quyết tâm.",
+  "Một thói quen tốt cần được rèn luyện kiên trì qua từng ngày tháng.",
+  "Mỗi buổi sáng thức dậy là một cơ hội mới để bạn hoàn thiện chính mình.",
+  "Tập trung vào hiện tại là cách tốt nhất để xây dựng một tương lai tươi sáng.",
+  "Sự trung thực luôn là nền tảng vững chắc cho mọi mối quan hệ lâu dài.",
+  "Biết ơn những điều giản dị quanh ta sẽ khiến cuộc sống thêm phần an vui.",
+  "Trách nhiệm với bản thân là bước đầu tiên để trở thành người trưởng thành.",
+  "Lắng nghe người khác bằng sự thấu cảm giúp xóa bỏ nhiều rào cản vô hình.",
+  "Hãy đối xử với mọi người theo cách mà bạn mong muốn được đối xử.",
+  "Lời nói nhã nhặn có thể xoa dịu những cơn nóng giận bất chợt.",
+  "Thành công không đến sau một đêm mà là kết tinh của chuỗi ngày chăm chỉ.",
+  "Đừng so sánh bản thân với ai khác, hãy tốt hơn chính mình của ngày hôm qua.",
+  "Sự khiêm tốn giúp chúng ta luôn nhìn thấy những điều bản thân cần học tập.",
+  "Khám phá thế giới giúp con người trở nên bao dung và cởi mở hơn.",
+  "Tự do tài chính đòi hỏi kỷ luật chi tiêu và kế hoạch đầu tư bài bản.",
+  "Giấc ngủ chất lượng đóng vai trò vô cùng quan trọng đối với sức khỏe tinh thần.",
+  "Áp lực tạo nên kim cương, thử thách trui rèn ý chí kiên định.",
+  "Một không gian làm việc gọn gàng sẽ kích thích khả năng sáng tạo bất tận.",
+  "Hãy trân trọng những người bạn luôn đồng hành cùng ta qua lúc khó khăn.",
+  "Âm nhạc có sức mạnh kỳ diệu giúp hàn gắn những vết thương trong tâm hồn.",
+  "Sự tha thứ mang lại sự bình yên sâu lắng cho chính bản thân bạn.",
+  "Mỗi người bạn gặp đều có thể dạy cho bạn một bài học ý nghĩa nào đó.",
+  "Lòng tốt trao đi một cách chân thành luôn để lại dư vị ngọt ngào.",
+  "Mục tiêu rõ ràng là chiếc la bàn dẫn lối bạn vượt qua mọi sương mù.",
+  "Kỷ luật cá nhân chính là cầu nối giữa ước mơ và hiện thực.",
+  "Hãy học cách từ chối những điều không phù hợp với mục tiêu của bạn.",
+  "Tập thể dục buổi sáng mang lại nguồn năng lượng sảng khoái cho cả ngày.",
+  "Bữa cơm gia đình ấm cúng luôn chứa đựng tình yêu thương đong đầy.",
+  "Sự tò mò lành mạnh là động lực thúc đẩy tư duy đổi mới và sáng tạo.",
+  "Đôi khi sự im lặng có sức nặng và ý nghĩa hơn ngàn vạn lời nói.",
+  "Giữ vững chữ tín là chìa khóa mở ra cánh cửa tin cậy trong cuộc sống.",
+  "Niềm tin vào bản thân là bước khởi đầu vững chắc cho mọi hành trình lớn.",
+  "Thời gian trôi qua rất nhanh, hãy dành nó cho những điều thực sự quan trọng.",
+  "Biết hài lòng với những gì đang có là cội nguồn của sự an lạc bền lâu.",
+  "Mỗi lỗi lầm hôm nay là kinh nghiệm quý báu cho những lựa chọn ngày mai.",
+  "Sự tử tế không bao giờ là lãng phí, dù nó nhỏ bé đến đâu đi chăng nữa.",
+
+  // 51 - 100: Kỹ năng, công việc & học tập
+  "Việc tự học đòi hỏi tính kỷ luật và sự nghiêm túc tuyệt đối từ bản thân.",
+  "Kỹ năng giải quyết vấn đề là chìa khóa giúp nâng cao hiệu suất công việc.",
+  "Giao tiếp hiệu quả bắt đầu từ việc lắng nghe chủ động và phản hồi chân thành.",
+  "Lập trình viên cần không ngừng cập nhật các công nghệ mới nổi bật.",
+  "Một thuật toán tối ưu có thể giảm thiểu đáng kể tài nguyên của hệ thống.",
+  "Kiểm thử phần mềm kỹ lưỡng giúp hạn chế tối đa các lỗi tiềm ẩn khi vận hành.",
+  "Tư duy logic giúp chúng ta phân tích các tình huống phức tạp mạch lạc hơn.",
+  "Quản lý thời gian tốt giúp bạn cân bằng giữa công việc và cuộc sống cá nhân.",
+  "Làm việc nhóm đòi hỏi sự phối hợp ăn ý và tôn trọng quan điểm của nhau.",
+  "Kỹ năng đàm phán mang lại những giải pháp có lợi cho cả đôi bên.",
+  "Viết lách rõ ràng giúp truyền đạt ý tưởng một cách rành mạch và thuyết phục.",
+  "Một bản kế hoạch chi tiết sẽ giảm thiểu những rủi ro ngoài ý muốn.",
+  "Phản hồi mang tính xây dựng là cơ hội tuyệt vời để đội ngũ cùng tiến bộ.",
+  "Sáng tạo không phải là năng khiếu bẩm sinh mà là kỹ năng có thể rèn luyện.",
+  "Khả năng thích ứng linh hoạt là lợi thế lớn trong môi trường biến động.",
+  "Tập trung sâu vào một công việc luôn mang lại hiệu quả vượt trội hơn làm việc đa nhiệm.",
+  "Ghi chép cẩn thận giúp bạn lưu giữ lại những ý tưởng vừa chợt lóe lên.",
+  "Tự đánh giá lại bản thân định kỳ giúp nhận diện rõ điểm mạnh và điểm yếu.",
+  "Kỹ năng thuyết trình tốt giúp thông điệp của bạn chạm tới trái tim người nghe.",
+  "Học thêm một ngôn ngữ mới là mở thêm một cánh cửa sổ nhìn ra thế giới.",
+  "Tư duy phản biện bảo vệ chúng ta khỏi những thông tin sai lệch và phiến diện.",
+  "Đơn giản hóa vấn đề là đỉnh cao của sự thấu hiểu và làm chủ kiến thức.",
+  "Chất lượng công việc luôn quan trọng hơn số lượng công việc bạn làm dở dang.",
+  "Hiểu rõ nhu cầu của người dùng là gốc rễ của việc tạo ra sản phẩm thành công.",
+  "Sự chuyên nghiệp thể hiện ở thái độ nghiêm túc và đúng hẹn trong mọi việc.",
+  "Tinh thần cầu tiến sẽ giúp bạn nhanh chóng vượt qua giai đoạn bỡ ngỡ ban đầu.",
+  "Đừng ngại đặt câu hỏi khi bạn chưa thực sự hiểu rõ bản chất của vấn đề.",
+  "Mỗi dự án hoàn thành là một cột mốc đánh dấu sự trưởng thành nghề nghiệp.",
+  "Bảo mật thông tin cá nhân là kỹ năng sinh tồn thiết yếu trong kỷ nguyên số.",
+  "Biết chia sẻ kiến thức với đồng nghiệp giúp tập thể ngày càng vững mạnh hơn.",
+  "Hãy đặt ra các mục tiêu cụ thể, đo lường được và có thời hạn rõ ràng.",
+  "Học cách kiểm soát cảm xúc sẽ giúp bạn đưa ra những quyết định sáng suốt.",
+  "Sự tỉ mỉ trong từng chi tiết nhỏ làm nên đẳng cấp của một người thợ lành nghề.",
+  "Dữ liệu là nguồn tài nguyên vô giá nếu được phân tích đúng phương pháp.",
+  "Công cụ tốt giúp nâng cao năng suất, nhưng tư duy con người mới là yếu tố quyết định.",
+  "Hãy chủ động tìm kiếm giải pháp thay vì phàn nàn về những khó khăn trước mắt.",
+  "Sắp xếp thứ tự ưu tiên giúp bạn không bị choáng ngợp trước núi công việc.",
+  "Thực hành thường xuyên là cách ngắn nhất để biến kiến thức thành kỹ năng.",
+  "Trực quan hóa dữ liệu giúp những con số khô khan trở nên sinh động và dễ hiểu.",
+  "Việc bảo trì hệ thống định kỳ giúp ngăn chặn những sự cố đột ngột phát sinh.",
+  "Tự động hóa các tác vụ lặp đi lặp lại giúp giải phóng sức sáng tạo cho não bộ.",
+  "Sự rõ ràng trong tài liệu kỹ thuật giúp tiết kiệm hàng trăm giờ bảo trì về sau.",
+  "Hãy đối diện với thử thách mới với tâm thế sẵn sàng tiếp thu cái mới.",
+  "Đạo đức nghề nghiệp là thước đo giá trị bền vững của một chuyên gia.",
+  "Một giao diện trực quan và thân thiện sẽ giữ chân người dùng ở lại lâu hơn.",
+  "Kỹ năng tự sửa lỗi giúp lập trình viên rèn luyện tính kiên nhẫn vượt bậc.",
+  "Học tập từ các chuyên gia đi trước giúp rút ngắn con đường dẫn đến mục tiêu.",
+  "Tinh thần trách nhiệm cao là phẩm chất được mọi nhà tuyển dụng đánh giá cao.",
+  "Hãy luôn giữ bàn làm việc của bạn gọn gàng để duy trì mạch suy nghĩ trơn tru.",
+  "Đầu tư vào việc học hành là khoản đầu tư luôn mang lại mức sinh lời cao nhất.",
+
+  // 101 - 150: Thiên nhiên, cảnh quan & du lịch
+  "Những rặng thông xanh ngắt trải dài trên đồi cao đón gió lộng bốn phương.",
+  "Tiếng sóng vỗ rì rào bên bờ cát trắng xóa mang lại cảm giác bình yên đến lạ.",
+  "Mặt trời từ từ nhô lên từ phía chân trời, nhuộm đỏ cả một vùng biển rộng lớn.",
+  "Rừng nguyên sinh là lá phổi xanh bảo vệ sự cân bằng sinh thái của Trái Đất.",
+  "Dòng sông uốn lượn hiền hòa chảy qua những cánh đồng lúa chín vàng óng ả.",
+  "Không khí trong lành buổi sớm mai trên cao nguyên làm say lòng du khách thập phương.",
+  "Những thửa ruộng bậc thang trải dài tầng tầng lớp lớp tạo nên bức tranh kỳ vĩ.",
+  "Cơn mưa rào mùa hạ bất chợt xua tan đi cái nóng nực oi bức của phố thị.",
+  "Ngọn thác đổ nước từ trên vách núi cao xuống tạo thành làn sương mờ ảo diệu.",
+  "Đàn chim én chao lượn trên nền trời xanh thẳm báo hiệu mùa xuân đã về.",
+  "Ánh hoàng hôn buông xuống thung lũng tạo nên khung cảnh trầm mặc và nên thơ.",
+  "Hương hoa sữa thoang thoảng nồng nàn góc phố quen mỗi dịp thu sang.",
+  "Những đám mây trắng bồng bềnh trôi nhẹ nhàng trên đỉnh núi cao vời vợi.",
+  "Vườn hoa khoe sắc rực rỡ dưới ánh nắng dịu dàng của buổi sớm mùa xuân.",
+  "Tiếng ve râm ran ngân vang suốt buổi trưa hè oi ả dưới vòm cây xanh râm mát.",
+  "Con đường đất nhỏ quanh co dẫn lối vào ngôi làng cổ kính thanh bình.",
+  "Gió heo may se lạnh thổi qua từng con ngõ nhỏ làm lòng người bâng khuâng.",
+  "Những giọt sương mai đọng trên phiến lá lấp lánh như những hạt ngọc trời ban.",
+  "Biển đêm tĩnh lặng, xa xa le lói vài ánh đèn của những con thuyền câu mực.",
+  "Dãy núi đá vôi sừng sững uy nghi đứng vững chãi qua hàng triệu năm thăng trầm.",
+  "Cánh rừng ngập mặn là nơi trú ngụ an toàn của rất nhiều loài sinh vật quý hiếm.",
+  "Đỉnh Phan Xi Păng bồng bềnh trong biển mây trắng xoá thu hút bao bước chân chinh phục.",
+  "Mặt hồ gợn sóng lăn tăn khi có một cơn gió thu vô tình lướt qua mặt nước.",
+  "Cảnh sắc mùa đông miền bắc mang một vẻ đẹp trầm tĩnh và rất đỗi riêng biệt.",
+  "Tiếng suối róc rách chảy qua khe đá nghe như bản hòa ca êm dịu của thiên nhiên.",
+  "Mùi rơm rạ thơm nồng nàn khắp các nẻo đường làng sau mỗi vụ mùa gặt hái.",
+  "Đêm trăng rằm sáng vằng vặc chiếu tỏ từng mái nhà tranh đơn sơ mộc mạc.",
+  "Những cánh đồng hoa tam giác mạch phủ sắc hồng tím quyến rũ trên cao nguyên đá.",
+  "Đoàn tàu hỏa chầm chậm lăn bánh xuyên qua những hầm núi dài hun hút.",
+  "Bình minh trên vịnh biển mang đến nguồn năng lượng tràn đầy cho một ngày mới.",
+  "Những rạn san hô đa sắc màu dưới đáy đại dương là kỳ quan tuyệt đẹp của tạo hóa.",
+  "Bụi tre làng đung đưa cành lá theo từng đợt gió chiều mát rượi chốn thôn quê.",
+  "Những con dốc ngoằn ngoèo thử thách tay lái của những phượt thủ đam mê khám phá.",
+  "Hơi thở nồng ấm của đất trời sau cơn mưa phùn mùa xuân như đánh thức cỏ cây.",
+  "Dưới bóng cây đa cổ thụ, người già ngồi chuyện trò rôm rả lúc ban chiều.",
+  "Vạt nắng chiều tà xiên qua ô cửa sổ nhỏ tạo nên những mảng sáng tối êm đềm.",
+  "Những cánh buồm no gió lướt nhanh trên mặt biển khơi bao la rộng lớn.",
+  "Khung cảnh hoang sơ của hòn đảo vắng đem lại sự tĩnh lặng tuyệt đối cho tâm hồn.",
+  "Băng qua cây cầu treo lắt lẻo bắc ngang dòng sông xiết mang lại cảm giác hồi hộp.",
+  "Rừng dừa xanh bạt ngàn soi bóng xuống dòng kênh rạch chằng chịt miền tây sông nước.",
+  "Ngồi trên đỉnh đồi ngắm nhìn toàn cảnh thành phố lung linh ánh đèn khi đêm về.",
+  "Không gian bao la của thảo nguyên mênh mông khiến lòng người thêm phóng khoáng.",
+  "Thảm cỏ xanh mướt trải dài là nơi lý tưởng cho những buổi dã ngoại cuối tuần.",
+  "Tiếng lá vàng rơi xào xạc theo từng bước chân người tản bộ trên vỉa hè vắng.",
+  "Bầu không khí mát lạnh của Đà Lạt luôn để lại ấn tượng khó phai trong lòng du khách.",
+  "Những hang động huyền bí với thạch nhũ hàng triệu năm tuổi ẩn chứa bao điều kỳ thú.",
+  "Con thuyền nhỏ lững lờ trôi trên dòng sông Hương thơ mộng của xứ Huế mộng mơ.",
+  "Cánh đồng muối trắng tinh lấp lánh dưới cái nắng gắt của trưa hè miền duyên hải.",
+  "Những cánh chim hải âu chao lượn rợp trời tìm kiếm đàn cá bơi lội dưới làn nước biếc.",
+  "Thiên nhiên hoang dã luôn ẩn chứa vẻ đẹp kiêu hùng và những quy luật sinh tồn khắc nghiệt.",
+
+  // 151 - 200: Khoa học, công nghệ & tư duy
+  "Trí tuệ nhân tạo đang mở ra một kỷ nguyên mới cho toàn nhân loại.",
+  "Khoa học dữ liệu giúp các doanh nghiệp đưa ra quyết định dựa trên bằng chứng xác thực.",
+  "Thuật toán tìm kiếm thông minh giúp người dùng tiếp cận thông tin chỉ trong vài giây.",
+  "Máy tính lượng tử hứa hẹn sẽ giải quyết được những bài toán phức tạp nhất lịch sử.",
+  "Năng lượng tái tạo là giải pháp tất yếu để bảo vệ môi trường và chống biến đổi khí hậu.",
+  "Sự phát triển của mạng di động thế hệ mới giúp kết nối vạn vật trở nên tức thì.",
+  "Lập trình hướng đối tượng giúp mã nguồn trở nên dễ quản lý và mở rộng hơn.",
+  "Công nghệ chuỗi khối cung cấp giải pháp lưu trữ dữ liệu an toàn và phi tập trung.",
+  "Học máy là một phân nhánh quan trọng giúp máy tính có thể tự học từ dữ liệu mẫu.",
+  "Tư duy thuật toán giúp phân rã một vấn đề khổng lồ thành nhiều bước nhỏ đơn giản.",
+  "Việc tối ưu hóa cấu trúc dữ liệu giúp tiết kiệm bộ nhớ đáng kể cho máy chủ.",
+  "Điện toán đám mây cho phép người dùng truy cập tài nguyên máy tính ở bất kỳ nơi đâu.",
+  "Khám phá vũ trụ luôn là niềm khát khao mãnh liệt của các nhà khoa học trên thế giới.",
+  "Kính viễn vọng không gian mang lại cho chúng ta những bức ảnh tuyệt đẹp về các thiên hà xa xôi.",
+  "Bảo mật đa lớp giúp ngăn chặn các truy cập trái phép vào hệ thống thông tin.",
+  "Mã nguồn mở thúc đẩy sự đổi mới sáng tạo nhờ sự đóng góp nhiệt huyết từ cộng đồng.",
+  "Hiểu sâu về kiến trúc hệ thống giúp kỹ sư xây dựng các ứng dụng có tính ổn định cao.",
+  "Thực tế ảo tăng cường mang đến những trải nghiệm tương tác chân thực và đầy bất ngờ.",
+  "Mạng nơ-ron nhân tạo mô phỏng một phần cách thức hoạt động của bộ não con người.",
+  "Độ trễ thấp là tiêu chuẩn cực kỳ khắt khe đối với các ứng dụng giao tiếp thời gian thực.",
+  "Tự động hóa dây chuyền sản xuất giúp nâng cao năng suất và giải phóng sức lao động chân tay.",
+  "Sự kết hợp giữa công nghệ và y học đang tạo ra những bước đột phá trong cứu chữa người bệnh.",
+  "Phân tích dữ liệu lớn giúp dự báo xu hướng thị trường với độ chính xác ngày càng cao.",
+  "Internet kết nối mọi người trên toàn cầu lại gần nhau hơn bao giờ hết.",
+  "Kỹ thuật xử lý ngôn ngữ tự nhiên giúp máy móc hiểu được giọng nói và chữ viết con người.",
+  "Một hệ điều hành hiện đại cần quản lý tài nguyên phần cứng một cách khéo léo và an toàn.",
+  "Giao thức mạng đảm bảo các gói tin được truyền tải chính xác đến đích nhận.",
+  "Chuyển đổi số là xu thế không thể đảo ngược của các tổ chức trong thế kỷ hai mươi mốt.",
+  "Nghiên cứu khoa học đòi hỏi sự kiên nhẫn và tính trung thực tuyệt đối trong dữ liệu.",
+  "Vi mạch bán dẫn là trái tim của hầu hết mọi thiết bị điện tử hiện đại ngày nay.",
+  "Các mô hình toán học giúp mô phỏng chuyển động của thời tiết để đưa ra cảnh báo bão sớm.",
+  "Phần mềm mã hóa bảo vệ quyền riêng tư của người dùng trước những kẻ tò mò trên mạng.",
+  "Công nghệ in ba chiều mở ra khả năng chế tạo các chi tiết cơ khí phức tạp với chi phí thấp.",
+  "Sự tiến bộ của công nghệ sinh học giúp nâng cao năng suất và chất lượng cây trồng nông nghiệp.",
+  "Trực quan hóa thuật toán giúp người học nắm bắt bản chất của vấn đề một cách nhanh chóng.",
+  "Hệ thống cơ sở dữ liệu phân tán đảm bảo dữ liệu luôn sẵn sàng ngay cả khi một nút bị lỗi.",
+  "Tư duy trừu tượng hóa giúp lập trình viên không bị sa lầy vào những chi tiết vụn vặt.",
+  "Kiểm soát phiên bản bằng mã nguồn giúp đội ngũ phát triển làm việc cùng nhau mượt mà.",
+  "Trải nghiệm người dùng tốt là yếu tố sống còn quyết định sự thành bại của một ứng dụng.",
+  "Đổi mới sáng tạo là động lực chính giúp các công ty công nghệ duy trì vị thế dẫn đầu.",
+  "Thiết bị đeo thông minh giúp chúng ta theo dõi nhịp tim và bước chân hàng ngày một cách tiện lợi.",
+  "Sự an toàn của xe tự hành phụ thuộc rất lớn vào các cảm biến và thuật toán nhận diện vật cản.",
+  "Robot công nghiệp có thể làm việc liên tục trong môi trường độc hại mà không biết mệt mỏi.",
+  "Khám phá các hạt cơ bản giúp con người hiểu rõ hơn về nguồn gốc sơ khai của vũ trụ.",
+  "Khoa học thường thức giúp mỗi người có cái nhìn tỉnh táo và khách quan trước những tin đồn vô căn cứ.",
+  "Một dòng code sạch sẽ và rõ ràng có giá trị hơn hàng ngàn dòng code rối rắm khó hiểu.",
+  "Tái cấu trúc mã nguồn định kỳ giúp hệ thống phần mềm luôn duy trì được sức sống lâu dài.",
+  "Sức mạnh của máy tính nằm ở tốc độ tính toán, nhưng sức mạnh của con người nằm ở tư duy chiến lược.",
+  "Học tập về công nghệ giúp chúng ta không bị tụt lại phía sau trong một thế giới thay đổi từng ngày.",
+  "Tương lai thuộc về những ai biết kết hợp hài hòa giữa công nghệ hiện đại và lòng nhân ái bao la.",
+
+  // 201 - 250: Văn hóa, nghệ thuật & truyền thống
+  "Áo dài truyền thống tôn vinh vẻ đẹp dịu dàng và duyên dáng của người phụ nữ Việt Nam.",
+  "Tiếng đàn bầu cất lên tha thiết làm xao xuyến tâm hồn của biết bao người con xa xứ.",
+  "Những làn điệu dân ca quan họ mượt mà thắm đượm tình người vùng đất Kinh Bắc.",
+  "Bát phở bò nóng hổi thơm phức mùi quế hồi là nét ẩm thực tinh tế nổi tiếng thế giới.",
+  "Tranh Đông Hồ mang đậm sắc màu dân gian với những ước vọng ấm no và thanh bình.",
+  "Lễ hội đầu xuân rộn rã tiếng trống hội cùng những trò chơi dân gian đầy hào hứng.",
+  "Nghệ thuật múa rối nước là di sản văn hóa độc đáo có một không hai của dân tộc ta.",
+  "Mâm ngũ quả ngày Tết thể hiện lòng thành kính của con cháu dâng lên tổ tiên.",
+  "Tục gói bánh chưng bánh tét là nét đẹp truyền thống sum vầy thiêng liêng mỗi dịp Tết đến xuân về.",
+  "Gốm Bát Tràng nổi tiếng bởi sự tinh xảo trong hoa văn và độ bền chắc qua thời gian.",
+  "Những câu ca dao tục ngữ đúc kết kinh nghiệm sống quý báu của cha ông ta từ ngàn xưa.",
+  "Nhã nhạc cung đình Huế là đỉnh cao của nền âm nhạc cổ truyền mang tính bác học.",
+  "Làng nghề dệt lụa Vạn Phúc vẫn gìn giữ được những thoi dệt lụa óng ả suốt hàng trăm năm.",
+  "Hương vị đậm đà của chén nước mắm truyền thống làm nên linh hồn cho bữa cơm gia đình.",
+  "Văn hóa cà phê vỉa hè là một góc sống chậm rãi rất đặc trưng của người dân phố thị.",
+  "Những ngôi nhà rông sừng sững giữa buôn làng là biểu tượng của tinh thần đoàn kết Tây Nguyên.",
+  "Tiếng cồng chiêng ngân vang giữa đại ngàn như lời tâm tình của con người với đất trời.",
+  "Chợ nổi miền Tây tấp nập thuyền bè chở đầy hoa trái tươi ngon từ các miệt vườn.",
+  "Đờn ca tài tử Nam Bộ ngân nga trên sông nước làm say đắm lòng người nghe.",
+  "Chiếc nón lá mộc mạc che mưa che nắng đã gắn liền với hình ảnh người mẹ tảo tần.",
+  "Nghệ thuật tuồng và chèo phản ánh chân thực những hỷ nộ ái ố trong đời sống nhân dân.",
+  "Đồ đồng Ngũ Xã thể hiện bàn tay tài hoa và khối óc sáng tạo của các nghệ nhân Thăng Long.",
+  "Thư pháp chữ Việt vào mỗi dịp đầu năm mang theo những ước nguyện may mắn và hanh thông.",
+  "Di tích Hoàng thành Thăng Long trầm mặc ghi dấu bao thăng trầm lịch sử dựng nước.",
+  "Những câu chuyện cổ tích nuôi dưỡng tâm hồn trẻ thơ bằng những bài học về lòng nhân hậu.",
+  "Mùi khói lam chiều bốc lên từ chái bếp gợi nhớ bao ký ức tuổi thơ êm đềm bên bà.",
+  "Ẩm thực chay thanh đạm đang ngày càng được nhiều người ưa chuộng vì sức khỏe và sự an yên.",
+  "Chiếc chiếu hoa Cà Mau dệt nên từ những sợi cói dẻo dai đượm tình đất phương Nam.",
+  "Hát xoan Phú Thọ là di sản văn hóa phi vật thể quý báu được cộng đồng trân trọng gìn giữ.",
+  "Những bức chạm khắc gỗ tinh xảo ở đình làng thể hiện sự tài hoa tuyệt đỉnh của tiền nhân.",
+  "Chén trà xanh chát ngọt mở đầu câu chuyện tâm giao giữa những người bạn thâm niên.",
+  "Văn hóa đọc sách đang dần được hồi sinh thông qua các hội sách và đường sách sôi động.",
+  "Sự đa dạng bản sắc của năm mươi tư dân tộc anh em tạo nên bức tranh văn hóa rực rỡ.",
+  "Bức tranh sơn mài truyền thống lấp lánh sắc vàng son qua nhiều lớp mài giũa công phu.",
+  "Đèn lồng Hội An lung linh tỏa sáng soi bóng xuống dòng sông Hoài thơ mộng lúc đêm về.",
+  "Lễ hội đền Hùng nhắc nhở mỗi người con đất Việt luôn nhớ về cội nguồn dân tộc.",
+  "Những khúc hát ru ngọt ngào đưa ta vào giấc ngủ say nồng từ thuở còn nằm nôi.",
+  "Nồi cá kho tộ đậm đà hương vị gừng ớt là món ăn khó quên trong ký ức mỗi người đi xa.",
+  "Trang phục thổ cẩm rực rỡ sắc màu được thêu dệt tỉ mỉ bởi đôi bàn tay khéo léo của các cô gái vùng cao.",
+  "Phong tục xông đất đầu năm mang theo niềm hy vọng về một năm mới an khang và thịnh vượng.",
+  "Sự hiếu học là truyền thống quý báu được gia đình và dòng họ gìn giữ qua nhiều thế hệ.",
+  "Những vần thơ lục bát mượt mà dễ đi vào lòng người như dòng nước mát lành mùa hạ.",
+  "Văn hóa ứng xử nhã nhặn tôn sư trọng đạo là giá trị nền tảng của nền giáo dục truyền thống.",
+  "Tiếng chuông chùa ngân vang lúc hoàng hôn xua tan đi bao muộn phiền của đời thường.",
+  "Bức hoành phi câu đối sơn son thếp vàng lưu giữ những lời răn dạy sâu sắc cho con cháu.",
+  "Chợ hoa ngày Tết rực rỡ sắc thắm của đào mai làm rạo rực lòng người đi trẩy hội.",
+  "Cầu ngói Chùa Cầu là minh chứng sống động cho sự giao thoa văn hóa đặc sắc tại phố cảng xưa.",
+  "Những làn điệu hò khoan ngọt ngào vang lên giữa sông nước mênh mông chan chứa nghĩa tình.",
+  "Lòng yêu nước nồng nàn luôn là ngọn lửa cháy bỏng trong trái tim của mỗi con người đất Việt.",
+  "Gìn giữ tiếng mẹ đẻ trong sáng là trách nhiệm thiêng liêng của mỗi thế hệ mai sau.",
+
+  // 251 - 300: Sức khỏe, rèn luyện & dinh dưỡng
+  "Tập thể dục ít nhất ba mươi phút mỗi ngày giúp tăng cường sức đề kháng cho cơ thể.",
+  "Rau xanh và trái cây tươi cung cấp nhiều vitamin cần thiết để duy trì làn da khỏe đẹp.",
+  "Uống một cốc nước ấm vào buổi sáng giúp khởi động hệ tiêu hóa sau một đêm dài nghỉ ngơi.",
+  "Tư thế ngồi làm việc đúng giúp phòng tránh hiệu quả các bệnh về cột sống và thắt lưng.",
+  "Hạn chế đồ ăn nhiều đường là cách tốt nhất để bảo vệ sức khỏe tim mạch của bạn.",
+  "Chạy bộ nhẹ nhàng vào mỗi buổi chiều giúp xua tan căng thẳng sau giờ làm việc mệt mỏi.",
+  "Hít thở sâu bằng cơ hoành giúp làm dịu hệ thần kinh và giảm lo âu tức thì.",
+  "Thư giãn mắt sau mỗi bốn mươi lăm phút nhìn màn hình giúp phòng ngừa chứng cận thị.",
+  "Bữa ăn sáng đầy đủ dưỡng chất cung cấp năng lượng dồi dào cho mọi hoạt động trong ngày.",
+  "Tập yoga giúp cải thiện sự dẻo dai của các cơ và mang lại sự tĩnh lặng cho tâm trí.",
+  "Một giấc ngủ trưa ngắn khoảng hai mươi phút giúp não bộ phục hồi năng lượng nhanh chóng.",
+  "Rửa tay thường xuyên bằng xà phòng là biện pháp đơn giản nhất để ngăn ngừa lây nhiễm bệnh.",
+  "Kiểm tra sức khỏe định kỳ giúp phát hiện sớm các nguy cơ tiềm ẩn để điều trị kịp thời.",
+  "Đạp xe quanh hồ vào những ngày cuối tuần vừa rèn luyện thể lực vừa hít thở khí trời.",
+  "Giảm bớt lượng muối trong khẩu phần ăn hàng ngày giúp kiểm soát huyết áp ổn định hơn.",
+  "Đi bộ mười ngàn bước mỗi ngày là mục tiêu tuyệt vời để duy trì lối sống vận động tích cực.",
+  "Ngồi thiền mười phút mỗi sáng giúp tâm trí trở nên thông suốt và bình thản hơn.",
+  "Không nên sử dụng điện thoại trước khi đi ngủ để tránh làm gián đoạn chu kỳ giấc ngủ tự nhiên.",
+  "Nước là thành phần không thể thiếu đối với mọi quá trình trao đổi chất trong cơ thể.",
+  "Giữ ấm cơ thể vào những ngày mùa đông lạnh giá giúp phòng tránh các bệnh về đường hô hấp.",
+  "Bổ sung cá biển vào thực đơn hàng tuần giúp bổ sung axit béo có lợi cho não bộ.",
+  "Cười nhiều hơn mỗi ngày giúp cơ thể giải phóng các hoóc môn hạnh phúc tự nhiên.",
+  "Một chế độ dinh dưỡng cân bằng là chìa khóa vàng cho một cuộc sống trường thọ.",
+  "Tránh làm việc quá sức, hãy biết lắng nghe những tín hiệu mệt mỏi từ cơ thể bạn.",
+  "Tắm nắng sớm cung cấp nguồn vitamin tự nhiên giúp xương khớp thêm phần chắc khỏe.",
+  "Các bài tập giãn cơ trước khi đi ngủ giúp giấc ngủ của bạn sâu và ngon hơn.",
+  "Sức khỏe tốt là tài sản quý giá nhất mà không có bất kỳ của cải nào sánh bằng.",
+  "Ăn chậm nhai kỹ giúp hệ tiêu hóa làm việc nhẹ nhàng và hấp thụ dinh dưỡng tốt hơn.",
+  "Hạn chế các đồ uống có cồn để bảo vệ lá gan và giữ cho tinh thần luôn tỉnh táo.",
+  "Bảo vệ thính giác bằng cách không đeo tai nghe với âm lượng quá lớn trong thời gian dài.",
+  "Tạo cho mình một không gian ngủ tối và yên tĩnh để dễ dàng chìm vào giấc ngủ ngon.",
+  "Tham gia các hoạt động thể thao tập thể vừa nâng cao sức khỏe vừa mở rộng vòng tay bè bạn.",
+  "Bổ sung đủ chất xơ từ các loại hạt và ngũ cốc nguyên cám giúp hệ tiêu hóa khỏe mạnh.",
+  "Sự linh hoạt của khớp xương phản ánh sự trẻ trung và sức sống tràn trề của cơ thể.",
+  "Uống trà xanh có chừng mực mang lại nhiều chất chống oxy hóa bảo vệ tế bào.",
+  "Học cách buông bỏ những âu lo không đáng có để giữ cho tâm hồn luôn thanh thản.",
+  "Một tâm trí khỏe mạnh chỉ có thể ngự trị trong một cơ thể cường tráng và dẻo dai.",
+  "Leo cầu thang bộ thay vì đi thang máy là cách rèn luyện sức bền đơn giản mỗi ngày.",
+  "Luôn khởi động kỹ càng trước khi bắt đầu bất kỳ bài tập thể thao cường độ cao nào.",
+  "Hạn chế thức khuya để bảo vệ hệ miễn dịch và duy trì làn da luôn tươi tắn rạng rỡ.",
+  "Bữa tối nên ăn nhẹ nhàng để cơ thể có thời gian chuyển hóa trước khi bước vào giấc ngủ.",
+  "Cân bằng giữa công việc và nghỉ ngơi là cách tốt nhất để phòng tránh hội chứng kiệt sức.",
+  "Khám phá các môn thể thao mới mang lại niềm hứng khởi và thử thách thú vị cho bản thân.",
+  "Đeo kính râm khi ra đường trời nắng gắt giúp bảo vệ đôi mắt khỏi tác hại của tia cực tím.",
+  "Giữ gìn vệ sinh răng miệng sạch sẽ giúp bạn có một nụ cười rạng rỡ và tự tin giao tiếp.",
+  "Tự nấu ăn tại nhà giúp bạn kiểm soát được chất lượng và lượng calo trong từng bữa ăn.",
+  "Học cách giải tỏa căng thẳng lành mạnh thông qua âm nhạc, hội họa hoặc viết nhật ký.",
+  "Tránh ngồi yên một chỗ quá lâu, hãy đứng dậy đi lại nhẹ nhàng sau mỗi tiếng làm việc.",
+  "Sống gần gũi với thiên nhiên cây cỏ có tác dụng xoa dịu tinh thần và giảm bớt mệt mỏi.",
+  "Hãy yêu thương và chăm sóc bản thân nhiều hơn vì sức khỏe là nền tảng của mọi ước mơ.",
+
+  // 301 - 350: Động lực, phát triển bản thân & triết lý
+  "Hành trình vạn dặm luôn bắt đầu bằng một bước chân đầu tiên đầy can đảm.",
+  "Đừng đợi đến khi hoàn hảo mới bắt đầu, hãy bắt đầu để trở nên hoàn hảo hơn.",
+  "Mỗi khó khăn xuất hiện đều mang theo hạt mầm của một cơ hội phát triển mới.",
+  "Thành công thực sự là khi bạn tìm thấy niềm vui trong công việc mình đang làm mỗi ngày.",
+  "Kỷ luật hôm nay là tự do của ngày mai, hãy kiên trì rèn luyện thói quen tốt.",
+  "Đừng để ý kiến của người khác làm lu mờ đi tiếng nói từ sâu thẳm bên trong bạn.",
+  "Người dám chấp nhận thất bại là người có nhiều cơ hội chạm tay tới đỉnh vinh quang.",
+  "Sự trì hoãn chính là kẻ đánh cắp thời gian nguy hiểm nhất của mỗi con người.",
+  "Hãy tập trung năng lượng vào những việc bạn có thể kiểm soát và thay đổi được.",
+  "Thái độ của bạn đối với hoàn cảnh sẽ quyết định vị trí tương lai của bạn trong cuộc đời.",
+  "Hãy là phiên bản độc nhất vô nhị của chính mình thay vì là bản sao của ai khác.",
+  "Chiến thắng lớn nhất của đời người là chiến thắng được sự lười biếng của bản thân.",
+  "Mỗi ngày trôi qua đều là một trang sách mới do chính bạn đặt bút viết nên.",
+  "Hãy biến những lời chỉ trích thành động lực để chứng minh năng lực thực sự của bạn.",
+  "Biết ơn quá khứ, trân trọng hiện tại và không ngừng hy vọng vào những điều tốt đẹp.",
+  "Tự chịu trách nhiệm cho cuộc đời mình là cột mốc đánh dấu sự trưởng thành thực sự.",
+  "Lòng kiên nhẫn có thể giúp bạn vượt qua những giai đoạn tăm tối và khó khăn nhất.",
+  "Một suy nghĩ tích cực vào buổi sáng có thể làm thay đổi hoàn toàn cục diện cả ngày.",
+  "Không có con đường tắt nào dẫn đến thành công bền vững mà không qua lao động chăm chỉ.",
+  "Hãy dũng cảm bước ra khỏi vùng an toàn để khám phá tiềm năng vô hạn của bản thân.",
+  "Thành công không phải là đích đến cuối cùng, mà là toàn bộ quá trình bạn nỗ lực đi qua.",
+  "Biết tha thứ cho lỗi lầm của bản thân để tiếp tục vững bước trên con đường phía trước.",
+  "Hãy nhìn nhận khó khăn như một bài kiểm tra để nâng tầm bản lĩnh và năng lực của bạn.",
+  "Sự tập trung cao độ sẽ nhân đôi kết quả công việc trong một nửa thời gian làm việc.",
+  "Học cách đón nhận sự thay đổi như một quy luật tất yếu và tự nhiên của cuộc sống.",
+  "Khi bạn thay đổi cách nhìn nhận thế giới, thế giới xung quanh bạn cũng sẽ đổi thay.",
+  "Đừng ngại ước mơ lớn, nhưng hãy bắt đầu thực hiện từ những hành động nhỏ nhất.",
+  "Giá trị của bạn không đo bằng của cải mà bằng những đóng góp ý nghĩa cho xã hội.",
+  "Hãy luôn giữ cho ngọn lửa đam mê trong tim mình cháy sáng dù giông bão có tới.",
+  "Sự khiêm nhường là đức tính cao đẹp của những người thực sự có tài năng và trí tuệ.",
+  "Mỗi thử thách là một cơ hội để bạn chứng minh sự kiên cường và lòng can đảm.",
+  "Hãy làm việc trong im lặng và để thành công của bạn cất lên tiếng vang lớn.",
+  "Đừng để quá khứ níu giữ bước chân bạn trên con đường hướng tới tương lai rực rỡ.",
+  "Biết nói lời cảm ơn và xin lỗi đúng lúc là biểu hiện của một nhân cách cao đẹp.",
+  "Người khôn ngoan luôn biết học hỏi từ sai lầm của người khác để tránh vấp ngã.",
+  "Sức mạnh nội tâm sẽ giúp bạn đứng vững trước những lời dèm pha của người đời.",
+  "Hãy luôn tử tế với những người bạn gặp, vì ai cũng đang mang một gánh nặng riêng.",
+  "Sự chuẩn bị kỹ càng là một nửa chìa khóa mở ra cánh cửa dẫn đến thắng lợi.",
+  "Đừng bao giờ đánh giá thấp sức mạnh của sự kiên trì trong suốt một thời gian dài.",
+  "Hãy sống sao cho mỗi ngày trôi qua bạn không phải thốt lên hai từ giá như.",
+  "Niềm tin có thể dời non lấp bể nếu nó được xây dựng trên hành động thực tế.",
+  "Hãy biến ước mơ của bạn thành kế hoạch cụ thể và hành động quyết liệt mỗi ngày.",
+  "Sự đơn giản trong lối sống mang lại sự phong phú và thanh thản cho tâm hồn.",
+  "Đừng quá bận tâm đến kết quả, hãy tận hưởng trọn vẹn từng bước đi trên hành trình.",
+  "Người biết kiềm chế cơn giận là người nắm giữ sức mạnh to lớn trong tay.",
+  "Hãy đối diện với nỗi sợ hãi của bạn, nó sẽ dần tan biến theo từng bước bạn tiến lên.",
+  "Cuộc đời là một tấm gương phản chiếu chính xác những suy nghĩ và hành động của bạn.",
+  "Hãy gieo những hạt mầm yêu thương để gặt hái về những vụ mùa hạnh phúc viên mãn.",
+  "Học cách chấp nhận những điều không thể thay đổi để dành sức cho những việc có thể làm.",
+  "Tương lai tươi sáng thuộc về những ai tin tưởng vào vẻ đẹp của những ước mơ chân chính.",
+
+  // 351 - 400: Đời sống thường nhật, gia đình & bạn bè
+  "Một tách trà nóng vào buổi chiều se lạnh làm ấm áp lòng người biết bao.",
+  "Cùng nhau vào bếp nấu một bữa cơm giản dị mang lại tiếng cười rộn rã khắp gian nhà.",
+  "Những mẩu chuyện phiếm bên quán cóc ven đường giúp vơi đi nỗi mệt nhọc cuối ngày.",
+  "Ánh mắt trìu mến của cha mẹ luôn dõi theo từng bước trưởng thành của con cái.",
+  "Những chuyến đi dã ngoại cùng người thân để lại bao kỷ niệm ngọt ngào khó quên.",
+  "Một cái ôm siết chặt có thể xoa dịu mọi giông bão và lo âu trong lòng người khác.",
+  "Tiếng cười đùa giòn tan của con trẻ làm bừng sáng cả một góc sân nhỏ bình yên.",
+  "Bữa tiệc sinh nhật ấm cúng bên những người bạn thân thiết nhất trần đời.",
+  "Chia sẻ buồn vui cùng người tri kỷ giúp gánh nặng trong lòng nhẹ bớt đi một nửa.",
+  "Bức thư tay viết vội gửi gắm bao ân tình sâu sắc của những ngày xa cách nhớ thương.",
+  "Cùng nhau dọn dẹp nhà cửa chuẩn bị đón chào một năm mới an khang thịnh vượng.",
+  "Mùi hoa bưởi thoang thoảng trong khu vườn nhỏ gợi nhớ bao ký ức tuổi thơ tươi đẹp.",
+  "Chăm sóc cây cối và ngắm nhìn hoa nở là niềm vui tao nhã của những ngày nghỉ ngơi.",
+  "Những lời động viên đúng lúc tiếp thêm sức mạnh to lớn cho người đang gặp khó khăn.",
+  "Ngồi ngắm mưa rơi qua khung cửa sổ và thưởng thức một bản nhạc không lời êm dịu.",
+  "Đi dạo thong thả trên những con phố quen thuộc để cảm nhận nhịp sống chậm rãi trôi.",
+  "Hương vị ấm áp của nồi cháo hoa thơm mùi hành hoa và hạt tiêu cay nồng.",
+  "Những tấm ảnh cũ nhuốm màu thời gian lưu giữ lại khoảnh khắc thanh xuân tươi đẹp.",
+  "Tình bạn chân chính như dòng nước ngầm âm thầm chảy qua năm tháng không hề vơi cạn.",
+  "Ngọn đèn bàn thắp sáng căn phòng nhỏ nơi có người đang miệt mài học tập đêm khuya.",
+  "Bữa sáng giản đơn với chiếc bánh mì giòn tan đủ để khởi đầu ngày mới ngập tràn năng lượng.",
+  "Lời căn dặn ân cần của bà trước lúc cháu lên đường đi học xa nhà.",
+  "Sự quan tâm chân thành thể hiện qua những hành động nhỏ nhặt mà đầy tinh tế.",
+  "Chiếc áo ấm mẹ đan từ những ngày đông cũ vẫn nâng niu hơi ấm qua bao mùa giá rét.",
+  "Gặp lại người bạn thân thuở ấu thơ mang lại niềm xúc động bồi hồi khôn tả.",
+  "Những buổi tối sum vầy bên bàn cờ tướng của các bậc cao niên dưới bóng cây râm mát.",
+  "Một cuộc gọi ngắn về thăm cha mẹ làm vơi đi nỗi nhớ mong của người ở nơi xa.",
+  "Nấu một món ăn ngon cho người mình yêu thương là một niềm hạnh phúc bình dị.",
+  "Sự đồng lòng của cả gia đình giúp vượt qua mọi gian khó và biến cố trong cuộc sống.",
+  "Cùng nhau ngắm hoàng hôn buông xuống nơi chân trời xa xăm để lòng thấy bình yên.",
+  "Mùi sách mới mở ra luôn mang lại cảm giác hào hứng và khát khao khám phá điều mới.",
+  "Những câu chuyện vui bên mâm cơm tối xóa tan mọi căng thẳng của một ngày bận rộn.",
+  "Tình làng nghĩa xóm tối lửa tắt đèn có nhau là nét đẹp ngàn đời của người Việt.",
+  "Một món quà nhỏ bất ngờ đem lại nụ cười rạng rỡ và niềm vui ngập tràn trong mắt ai.",
+  "Trân trọng những giây phút được ở bên cạnh những người thân yêu nhất của cuộc đời.",
+  "Tiếng chim hót ríu rít ngoài ban công đánh thức một ngày mới tràn ngập ánh nắng chan hòa.",
+  "Cùng nhau ngồi lại giải quyết những hiểu lầm để tình cảm thêm phần bền chặt hơn.",
+  "Món canh cua đồng mát rượi giải nhiệt cho những ngày hè oi ả miền Bắc Bộ.",
+  "Sự sẻ chia kịp thời giúp sưởi ấm những mảnh đời bất hạnh và cơ nhỡ ngoài xã hội.",
+  "Những ký ức tuổi học trò bên mái trường xưa mãi là góc ký ức trong trẻo và tươi đẹp nhất.",
+  "Ngồi lại bên nhau ôn lại những kỷ niệm ngày xưa mà ngỡ như vừa mới hôm qua.",
+  "Chiếc xe đạp cũ chở đầy hoa tươi rong ruổi qua khắp các con phố thân thương.",
+  "Dành thời gian chất lượng cho con cái là món quà vô giá mà cha mẹ có thể trao tặng.",
+  "Một cốc nước chanh mát lạnh xua tan đi sự mệt mỏi sau chuyến đi đường dài.",
+  "Sự tha thứ và thấu hiểu là chìa khóa mở ra cánh cửa hạnh phúc cho mái ấm gia đình.",
+  "Những cái bắt tay thật chặt gửi trao niềm tin và sự hợp tác chân thành giữa người với người.",
+  "Hương sen ngào ngạt tỏa bay khắp mặt hồ mỗi độ hè sang làm dịu mát lòng người.",
+  "Tiếng rao hàng rong quen thuộc vang vọng trong con ngõ nhỏ lúc nửa đêm về sáng.",
+  "Hạnh phúc không ở đâu xa mà nằm ngay trong những khoảnh khắc bình dị thường ngày.",
+  "Biết ơn cuộc đời vì mỗi sớm mai thức dậy ta có thêm một ngày nữa để yêu thương.",
+
+  // 401 - 450: Tri thức, khám phá & vũ trụ bao la
+  "Vũ trụ bao la rộng lớn chứa đựng hàng tỷ thiên hà với vô vàn điều bí ẩn chưa lời giải.",
+  "Mỗi hạt cát trên bãi biển đều là một chứng nhân thầm lặng của thời gian đằng đẵng.",
+  "Trái Đất là ngôi nhà chung xinh đẹp duy nhất mà nhân loại đang cùng nhau chia sẻ sự sống.",
+  "Sự tò mò của con người là động lực mở ra những chân trời khám phá khoa học mới.",
+  "Các định luật vật lý mô tả trật tự kỳ diệu của vạn vật trong thế giới tự nhiên.",
+  "Ánh sáng từ các vì sao xa xôi phải mất hàng triệu năm mới đến được mắt của chúng ta.",
+  "Đại dương sâu thẳm vẫn còn ẩn chứa vô số loài sinh vật kỳ lạ mà con người chưa từng biết tới.",
+  "Lịch sử loài người là bản hùng ca về sự kiên cường và khát vọng vươn lên không ngừng.",
+  "Các nền văn minh cổ đại đã để lại những công trình kiến trúc kỳ vĩ thách thức thời gian.",
+  "Ngôn ngữ là công cụ vĩ đại nhất giúp con người truyền tải tư tưởng và tri thức qua ngàn đời.",
+  "Toán học là ngôn ngữ chung của vũ trụ giúp giải mã những quy luật bí ẩn của tự nhiên.",
+  "Sự tiến hóa của các loài sinh vật phản ánh khả năng thích nghi tuyệt vời với môi trường sống.",
+  "Khí quyển Trái Đất như một tấm khiên vô hình che chở sự sống khỏi các bức xạ nguy hiểm.",
+  "Mỗi nguyên tố hóa học đều mang những tính chất độc đáo tạo nên sự phong phú của vật chất.",
+  "Sự quay của các hành tinh quanh Mặt Trời tuân theo những quỹ đạo elip vô cùng chuẩn xác.",
+  "Bản đồ gen mở ra chìa khóa thấu hiểu cội nguồn và cơ chế hoạt động của sự sống con người.",
+  "Các hiện tượng nhật thực và nguyệt thực luôn khơi dậy sự kinh ngạc trước trật tự của vũ trụ.",
+  "Khám phá các vùng đất mới giúp chúng ta nhận ra sự nhỏ bé của bản thân trước thiên nhiên.",
+  "Thời gian là một dòng chảy vô tận không ngừng trôi qua quá khứ, hiện tại và tương lai.",
+  "Tri thức là ngọn đuốc soi đường giúp nhân loại thoát khỏi đêm tối của sự ngu dốt và sợ hãi.",
+  "Bảo tồn các loài động vật hoang dã là trách nhiệm cấp bách để duy trì đa dạng sinh học.",
+  "Sự biến đổi của các mùa trong năm mang lại nhịp điệu sinh sôi nảy nở cho vạn vật.",
+  "Trọng lực là sợi dây vô hình liên kết các vật thể lại với nhau trong không gian bao la.",
+  "Học hỏi từ lịch sử giúp chúng ta tránh lặp lại những sai lầm đau thương của thế hệ trước.",
+  "Mỗi nền văn hóa đều đóng góp những giá trị tinh hoa vào kho tàng tri thức chung của nhân loại.",
+  "Các hóa thạch cổ xưa lưu giữ bằng chứng sống động về sự sống trên Trái Đất hàng triệu năm trước.",
+  "Những phát minh vĩ đại thường bắt nguồn từ những quan sát tỉ mỉ về các hiện tượng quanh ta.",
+  "Khám phá các cực của Trái Đất cho thấy sức chịu đựng phi thường của con người trước nghịch cảnh.",
+  "Sự hiểu biết sâu sắc về tự nhiên giúp con người sống hài hòa và bền vững hơn với môi trường.",
+  "Âm thanh truyền qua không khí dưới dạng những làn sóng rung động tinh tế chạm tới tai ta.",
+  "Thế giới vi mô của các hạt nguyên tử mở ra những góc nhìn hoàn toàn mới về bản chất vật chất.",
+  "Bảo vệ nguồn nước sạch là bảo vệ mạch máu nuôi dưỡng sự sống trên hành tinh xanh tươi này.",
+  "Các dòng hải lưu luân chuyển khắp các đại dương góp phần điều hòa khí hậu toàn cầu.",
+  "Nghiên cứu về não bộ giúp giải mã những bí ẩn sâu kín nhất về ý thức và tư duy con người.",
+  "Sự hình thành của các dãy núi cao là kết quả của sự va chạm giữa các mảng kiến tạo Trái Đất.",
+  "Mỗi cuốn sách lịch sử là một cỗ máy thời gian đưa ta trở về thăm lại những thời khắc hào hùng.",
+  "Tinh thần hoài nghi khoa học giúp chúng ta luôn tìm kiếm sự thật dựa trên các bằng chứng vững chắc.",
+  "Bầu trời đêm không chỉ đẹp mà còn là một cuốn sách mở chứa đầy những câu chuyện cổ xưa.",
+  "Các vệ tinh nhân tạo quay quanh Trái Đất cung cấp dữ liệu quý giá phục vụ cuộc sống hàng ngày.",
+  "Tôn trọng sự đa dạng của các hệ sinh thái là tôn trọng chính cuộc sống của toàn nhân loại.",
+  "Triết học đặt ra những câu hỏi nền tảng giúp con người tìm kiếm ý nghĩa chân thực của cuộc đời.",
+  "Bảo tồn các di sản văn hóa là bảo vệ rễ cây nuôi dưỡng bản sắc của một dân tộc trường tồn.",
+  "Những bước tiến của y học hiện đại đã cứu sống hàng triệu sinh mạng khỏi các căn bệnh hiểm nghèo.",
+  "Sự thấu hiểu quy luật tự nhiên mang lại cho con người sức mạnh để tạo dựng một thế giới tốt đẹp hơn.",
+  "Khoa học và nghệ thuật là đôi cánh nâng tâm hồn con người bay cao tới những tầm vóc mới.",
+  "Mỗi khám phá mới đều mở ra thêm hàng ngàn câu hỏi thú vị đang chờ thế hệ mai sau giải đáp.",
+  "Vũ trụ không ngừng giãn nở nhắc nhở chúng ta về sự vô tận của không gian và thời gian.",
+  "Tình yêu tri thức là ngọn lửa sưởi ấm tâm hồn và thắp sáng con đường tìm kiếm chân lý.",
+  "Hãy luôn giữ tâm thế mở rộng để đón nhận những chân trời kiến thức mới mỗi ngày trôi qua.",
+  "Con người là một phần nhỏ bé nhưng vô cùng kỳ diệu của bức tranh tự nhiên vĩ đại này.",
+
+  // 451 - 500: Lời kết, niềm tin & hy vọng
+  "Sau cơn mưa trời lại sáng, cầu vồng rực rỡ luôn xuất hiện sau những ngày giông bão.",
+  "Hãy luôn tin tưởng vào những điều tốt đẹp, cuộc sống sẽ không phụ lòng những ai biết ước mơ.",
+  "Một tâm hồn thanh tịnh là nơi khởi nguồn của niềm hạnh phúc sâu lắng và bền vững nhất.",
+  "Tình yêu thương chân thành có sức mạnh chuyển hóa mọi thù hận thành sự thấu cảm bao dung.",
+  "Mỗi ngày mới là một món quà vô giá, hãy đón nhận nó với lòng biết ơn sâu sắc nhất.",
+  "Hãy sống sao cho khi nhìn lại, bạn có thể tự hào mỉm cười về những gì mình đã đi qua.",
+  "Lòng tốt trao đi là hạt giống nảy mầm thành những cánh rừng hoa thơm ngát cho cuộc đời.",
+  "Đừng bao giờ đánh mất niềm tin vào bản thân, bởi bạn mạnh mẽ hơn những gì bạn tưởng tượng.",
+  "Cuộc sống như một bản hòa ca, có nốt thăng nốt trầm tạo nên những giai điệu tuyệt vời.",
+  "Mỗi người là một vì sao lấp lánh mang trong mình sứ mệnh tỏa sáng riêng biệt trên bầu trời.",
+  "Sự chân thành trong ánh mắt có thể chạm đến đáy sâu của những trái tim lạnh lùng nhất.",
+  "Hãy học cách tha thứ cho những điều chưa trọn vẹn để mở lòng đón nhận những điều tươi mới.",
+  "Những ước mơ chân chính sẽ luôn tìm được con đường để vươn mình trở thành hiện thực.",
+  "Bình yên không phải là không có giông bão, mà là sự tĩnh lặng ngay giữa tâm bão táp cuộc đời.",
+  "Hãy trân quý từng phút giây bạn được sống, được hít thở và được sẻ chia yêu thương này.",
+  "Tương lai không phải là nơi ta bước tới, mà là nơi do chính bàn tay ta cùng nhau dựng xây.",
+  "Ánh sáng của lòng vị tha sẽ xua tan đi bóng tối của những hiểu lầm và hờn giận vu vơ.",
+  "Một cái nắm tay ấm áp trong lúc hoạn nạn có giá trị hơn ngàn vạn lời an ủi xa xôi.",
+  "Hãy để nụ cười của bạn làm thay đổi thế giới xung quanh, đừng để thế giới làm tắt nụ cười đó.",
+  "Sức mạnh lớn nhất của con người nằm ở khả năng đứng dậy kiên cường sau mỗi lần vấp ngã.",
+  "Thời gian có thể làm phai mờ nhiều thứ, nhưng tình yêu thương chân thành sẽ mãi trường tồn.",
+  "Hãy gieo vào tâm hồn mình những suy nghĩ đẹp đẽ để cuộc đời trổ ra những đóa hoa thơm mát.",
+  "Mỗi khó khăn hôm nay là bậc thang vững chắc nâng bước chân bạn lên những tầm cao mới.",
+  "Hạnh phúc là một cuộc hành trình trải nghiệm, không phải là một đích đến cố định nào đó.",
+  "Hãy sống hết mình với hiện tại, bởi hôm nay chính là ngày mai mà bạn từng ao ước hôm qua.",
+  "Lòng can đảm không phải là không biết sợ, mà là dám hành động ngay cả khi nỗi sợ vẫn còn đó.",
+  "Sự tử tế là ngôn ngữ diệu kỳ mà người điếc có thể nghe và người mù có thể nhìn thấy được.",
+  "Mỗi sớm mai thức dậy là một cơ hội mới để bạn bắt đầu lại mọi thứ theo cách tốt đẹp hơn.",
+  "Hãy giữ cho trái tim mình luôn ấm nóng và khối óc luôn tỉnh táo trước mọi ngả rẽ cuộc đời.",
+  "Cuộc đời này công bằng theo cách riêng của nó, hãy kiên nhẫn chờ đợi quả ngọt cho những nỗ lực.",
+  "Một lời nói chân thành có thể thắp lên ngọn lửa hy vọng trong tâm hồn đang tuyệt vọng nhất.",
+  "Hãy là ánh mặt trời ấm áp mang lại niềm vui và nguồn cảm hứng tích cực cho những người xung quanh.",
+  "Đừng sợ những khởi đầu mới, đó là cơ hội để bạn tái tạo lại bản thân một cách mạnh mẽ hơn.",
+  "Sự bình an trong tâm hồn là tài sản vô giá nhất mà không vàng bạc nào có thể mua được.",
+  "Hãy luôn nhớ rằng, ngay trong mùa đông lạnh giá nhất, mầm xuân vẫn âm thầm cựa quậy sinh sôi.",
+  "Niềm hy vọng là chiếc mỏ neo vững chắc giữ cho con thuyền cuộc đời bạn không bị sóng xô chìm nghỉm.",
+  "Hãy yêu thương cuộc sống này với tất cả những điều giản dị và khiếm khuyết vốn có của nó.",
+  "Bước đi chậm lại một chút để cảm nhận được hương hoa thơm ngát hai bên con đường bạn đi qua.",
+  "Mỗi người bạn gặp đều mang theo một ngọn nến sáng, hãy cùng nhau thắp sáng cả bầu trời đêm.",
+  "Sự chân thực là chiếc cầu nối ngắn nhất và bền chắc nhất đưa hai tâm hồn lại gần bên nhau.",
+  "Hãy để lòng biết ơn dẫn lối cho mọi suy nghĩ và hành động của bạn trong từng khoảnh khắc.",
+  "Cuộc hành trình đẹp nhất là hành trình quay về tìm lại chính bản thân mình nguyên vẹn nhất.",
+  "Những điều kỳ diệu nhất trong cuộc sống thường đến vào những lúc bạn ít ngờ tới nhất trần đời.",
+  "Hãy dũng cảm sống cuộc đời theo cách của riêng bạn, miễn là nó mang lại điều lành cho đời.",
+  "Tình người nồng ấm là chiếc chăn êm ái nhất xua tan đi cái lạnh lẽo giá buốt của mùa đông.",
+  "Hãy luôn ngẩng cao đầu bước về phía trước, bởi ánh sáng mặt trời luôn ở phía trước con đường bạn đi.",
+  "Mỗi nỗ lực nhỏ bé của ngày hôm nay đều góp phần tạo nên những điều phi thường của ngày mai.",
+  "Hạnh phúc trọn vẹn nhất là khi bạn biết cho đi mà không hề mong cầu nhận lại bất cứ điều gì.",
+  "Hãy mỉm cười với cuộc đời, rồi cuộc đời sẽ mỉm cười rạng rỡ lại với bạn bằng cả tấm lòng.",
+  "Chúc bạn luôn giữ vững niềm tin, nghị lực và gặt hái được thật nhiều thành công trên con đường phía trước."
+        ];
+
+        // --- TRẠNG THÁI (STATE) ---
+        let currentMode = 'random'; // 'random' or 'custom'
+        let targetText = "";
+        let isPracticing = false;
+        
+        let startTime = 0;
+        let timerInterval = null;
+        
+        let backspaceCount = 0;
+
+        // DOM Elements
+        const screens = {
+            setup: document.getElementById('screen-setup'),
+            typing: document.getElementById('screen-typing'),
+            stats: document.getElementById('screen-stats')
+        };
+        
+        const ui = {
+            btnRandom: document.getElementById('btn-mode-random'),
+            btnCustom: document.getElementById('btn-mode-custom'),
+            setupTextarea: document.getElementById('setup-textarea'),
+            btnStart: document.getElementById('btn-start'),
+            btnEndEarly: document.getElementById('btn-end-early'),
+            btnRestart: document.getElementById('btn-restart'),
+            
+            hiddenInput: document.getElementById('hidden-input'),
+            textDisplay: document.getElementById('text-display'),
+            focusOverlay: document.getElementById('focus-overlay'),
+            typingContainer: document.getElementById('typing-container'),
+            
+            liveTime: document.getElementById('live-time'),
+            liveChars: document.getElementById('live-chars'),
+            
+            resWpm: document.getElementById('res-wpm'),
+            resChars: document.getElementById('res-chars'),
+            resErrors: document.getElementById('res-errors'),
+            resErrRate: document.getElementById('res-err-rate'),
+            resBackspace: document.getElementById('res-backspace')
+        };
+
+        // Render Bàn phím Ảo (2D phẳng)
+        function initKeyboard() {
+            const container = document.getElementById('keyboard-container');
+            keyboardLayout.forEach(row => {
+                const rowDiv = document.createElement('div');
+                rowDiv.className = 'flex w-full gap-2';
+                row.forEach(key => {
+                    const keyEl = document.createElement('div');
+                    keyEl.id = 'key-' + key.code;
+                    // Lớp CSS 2D phẳng, bỏ shadow và border bottom
+                    keyEl.className = 'h-11 bg-slate-700 rounded flex items-center justify-center text-[11px] md:text-xs font-semibold text-slate-300 uppercase key-base';
+                    keyEl.innerText = key.label;
+                    keyEl.style.flex = key.flex || 1;
+                    rowDiv.appendChild(keyEl);
+                });
+                container.appendChild(rowDiv);
+            });
+        }
+        initKeyboard();
+
+        // Đổi Màn Hình
+        function switchScreen(screenName) {
+            Object.values(screens).forEach(screen => {
+                screen.classList.remove('z-20');
+                screen.classList.add('z-0', 'opacity-0', 'pointer-events-none');
+            });
+            const activeScreen = screens[screenName];
+            activeScreen.classList.remove('z-0', 'opacity-0', 'pointer-events-none');
+            activeScreen.classList.add('z-20');
+        }
+
+        // Xử lý Setup Mode
+        function setMode(mode) {
+            currentMode = mode;
+            if (mode === 'random') {
+                ui.btnRandom.classList.replace('border-slate-700', 'border-blue-500');
+                ui.btnRandom.classList.replace('bg-slate-800', 'bg-blue-500/10');
+                ui.btnCustom.classList.replace('border-blue-500', 'border-slate-700');
+                ui.btnCustom.classList.replace('bg-blue-500/10', 'bg-slate-800');
+                
+                ui.setupTextarea.disabled = true;
+                ui.setupTextarea.classList.add('opacity-50', 'cursor-not-allowed');
+                ui.setupTextarea.value = '';
+            } else {
+                ui.btnCustom.classList.replace('border-slate-700', 'border-blue-500');
+                ui.btnCustom.classList.replace('bg-slate-800', 'bg-blue-500/10');
+                ui.btnRandom.classList.replace('border-blue-500', 'border-slate-700');
+                ui.btnRandom.classList.replace('bg-blue-500/10', 'bg-slate-800');
+                
+                ui.setupTextarea.disabled = false;
+                ui.setupTextarea.classList.remove('opacity-50', 'cursor-not-allowed');
+                ui.setupTextarea.placeholder = "Dán hoặc nhập đoạn văn bản bạn muốn gõ vào đây...";
+                ui.setupTextarea.focus();
+            }
+        }
+        ui.btnRandom.addEventListener('click', () => setMode('random'));
+        ui.btnCustom.addEventListener('click', () => setMode('custom'));
+
+        // Sinh văn bản ngẫu nhiên
+        function generateRandomText(sentencesCount) {
+            let res = [];
+            for(let i=0; i<sentencesCount; i++) {
+                res.push(vietnameseSentences[Math.floor(Math.random() * vietnameseSentences.length)]);
+            }
+            return res.join(" ");
+        }
+
+        // Định dạng thời gian
+        function formatTime(ms) {
+            let totalSecs = Math.floor(ms / 1000);
+            let m = Math.floor(totalSecs / 60).toString().padStart(2, '0');
+            let s = (totalSecs % 60).toString().padStart(2, '0');
+            return `${m}:${s}`;
+        }
+
+        // Render chữ đang luyện tập: Đảm bảo không padding, không margin
+        function renderTypingText() {
+            const typed = ui.hiddenInput.value;
+            let html = '';
+            
+            for (let i = 0; i < targetText.length; i++) {
+                const targetChar = targetText[i];
+                
+                if (i < typed.length) {
+                    const typedChar = typed[i];
+                    if (typedChar === targetChar) {
+                        // Gõ Đúng: Chữ xanh, nền xanh mờ, giữ nguyên ký tự gốc
+                        html += `<span class="text-green-400 bg-green-500/20">${targetChar}</span>`;
+                    } else {
+                        // Gõ Sai: Chữ đỏ, nền đỏ mờ, giữ nguyên ký tự gốc
+                        html += `<span class="text-red-400 bg-red-500/30">${targetChar}</span>`;
+                    }
+                } else if (i === typed.length) {
+                    // Vị trí con trỏ hiện tại (dùng cursor-active với CSS absolute)
+                    html += `<span class="cursor-active text-slate-400">${targetChar}</span>`;
+                } else {
+                    // Chữ chưa gõ
+                    html += `<span class="text-slate-500">${targetChar}</span>`;
+                }
+            }
+            
+            ui.textDisplay.innerHTML = html;
+            
+            // Xử lý auto-scroll mượt mà
+            const cursorEl = ui.textDisplay.querySelector('.cursor-active');
+            if (cursorEl) {
+                const scrollTarget = cursorEl.offsetTop - (ui.textDisplay.clientHeight / 2) + 20;
+                ui.textDisplay.scrollTop = scrollTarget > 0 ? scrollTarget : 0;
+            }
+        }
+
+        // Bắt đầu game
+        ui.btnStart.addEventListener('click', () => {
+            if (currentMode === 'random') {
+                targetText = generateRandomText(10);
+            } else {
+                let customText = ui.setupTextarea.value.trim();
+                if (!customText) customText = "Bạn chưa nhập gì cả, đây là đoạn văn bản mặc định để bạn gõ.";
+                targetText = customText.replace(/\s+/g, ' '); 
+            }
+            
+            ui.hiddenInput.value = '';
+            backspaceCount = 0;
+            isPracticing = true;
+            
+            switchScreen('typing');
+            renderTypingText();
+            
+            ui.liveTime.innerText = "00:00";
+            ui.liveChars.innerText = "0";
+            
+            clearInterval(timerInterval);
+            startTime = Date.now();
+            timerInterval = setInterval(() => {
+                ui.liveTime.innerText = formatTime(Date.now() - startTime);
+            }, 1000);
+            
+            setTimeout(() => ui.hiddenInput.focus(), 100);
+        });
+
+        // Xử lý sự kiện input (IME hỗ trợ)
+        ui.hiddenInput.addEventListener('input', () => {
+            if (!isPracticing) return;
+            const typed = ui.hiddenInput.value;
+            
+            ui.liveChars.innerText = typed.length;
+            
+            // Auto-append cho chế độ Vô Tận (Random)
+            if (currentMode === 'random' && typed.length > targetText.length - 100) {
+                targetText += " " + generateRandomText(5);
+            }
+            
+            renderTypingText();
+            
+            // Kết thúc ở chế độ tự chọn
+            if (typed.length >= targetText.length && currentMode === 'custom') {
+                finishGame();
+            }
+        });
+
+        // Quản lý Focus
+        ui.hiddenInput.addEventListener('blur', () => {
+            if (isPracticing) {
+                ui.focusOverlay.classList.remove('hidden');
+                ui.focusOverlay.classList.add('flex');
+            }
+        });
+        ui.focusOverlay.addEventListener('click', () => {
+            ui.focusOverlay.classList.add('hidden');
+            ui.focusOverlay.classList.remove('flex');
+            ui.hiddenInput.focus();
+        });
+        ui.typingContainer.addEventListener('click', () => ui.hiddenInput.focus());
+
+
+        // Nút Kết Thúc Sớm
+        ui.btnEndEarly.addEventListener('click', () => {
+            if(isPracticing) finishGame();
+        });
+
+        // Kết thúc & Hiển thị kết quả
+        function finishGame() {
+            isPracticing = false;
+            clearInterval(timerInterval);
+            ui.hiddenInput.blur();
+            
+            const typed = ui.hiddenInput.value;
+            const finalLength = typed.length;
+            
+            // Đếm lỗi dựa trên trạng thái cuối cùng
+            let finalErrors = 0;
+            for(let i = 0; i < finalLength; i++) {
+                if (typed[i] !== targetText[i]) {
+                    finalErrors++;
+                }
+            }
+            
+            // Tính toán WPM & Tỷ lệ sai
+            const elapsedMins = (Date.now() - startTime) / 60000;
+            let wpm = 0;
+            if (elapsedMins > 0) {
+                wpm = Math.round((finalLength / 5) / elapsedMins);
+            }
+            
+            let errRate = 0;
+            if (finalLength > 0) {
+                errRate = (finalErrors / finalLength) * 100;
+            }
+
+            // Đổ dữ liệu ra UI
+            ui.resWpm.innerText = wpm;
+            ui.resChars.innerText = finalLength;
+            ui.resErrors.innerText = finalErrors;
+            ui.resErrRate.innerText = errRate.toFixed(1) + '%';
+            ui.resBackspace.innerText = backspaceCount;
+
+            switchScreen('stats');
+        }
+
+        // Chơi lại
+        ui.btnRestart.addEventListener('click', () => {
+            switchScreen('setup');
+            if(currentMode === 'custom') {
+                ui.setupTextarea.focus();
+            }
+        });
+
+        // Đồng bộ hiệu ứng bàn phím
+        window.addEventListener('keydown', (e) => {
+            if (isPracticing && e.code === 'Backspace') {
+                backspaceCount++;
+            }
+            const keyEl = document.getElementById('key-' + e.code);
+            if (keyEl) keyEl.classList.add('key-active');
+        });
+
+        window.addEventListener('keyup', (e) => {
+            const keyEl = document.getElementById('key-' + e.code);
+            if (keyEl) keyEl.classList.remove('key-active');
+        });
+
+    </script>
+</body>
+</html>
