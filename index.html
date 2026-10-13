@@ -4,6 +4,19 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Bảng Điều Khiển Tính Năng</title>
+  
+  <!-- BẮT ĐẦU: Code Google Analytics (Theo dõi truy cập tổng thể) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-E30LC79Y4W"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    // Thay G-XXXXXXXXXX bằng mã đo lường của bạn
+    gtag('config', 'G-E30LC79Y4W');
+  </script>
+  <!-- KẾT THÚC: Code Google Analytics -->
+
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -53,8 +66,8 @@
     <button class="btn-switch active" onclick="switchFeature('tinh-nang-1.html', this)">Quiz 600 TOEIC</button>
     <button class="btn-switch" onclick="switchFeature('tinh-nang-2.html', this)">Quiz 900 IELTS</button>
     <button class="btn-switch" onclick="switchFeature('tinh-nang-3.html', this)">Quiz 3000 DAILY</button>
-	<button class="btn-switch" onclick="switchFeature('tinh-nang-4.html', this)">Quiz 600 Ôn thi lái xe</button>
-	<button class="btn-switch" onclick="switchFeature('tinh-nang-5.html', this)">PC Type Master</button>
+    <button class="btn-switch" onclick="switchFeature('tinh-nang-4.html', this)">Quiz 600 Ôn thi lái xe</button>
+    <button class="btn-switch" onclick="switchFeature('tinh-nang-5.html', this)">PC Type Master</button>
   </div>
 
   <!-- Khung hiển thị nội dung file được chọn -->
@@ -69,6 +82,18 @@
       const buttons = document.querySelectorAll('.btn-switch');
       buttons.forEach(btn => btn.classList.remove('active'));
       element.classList.add('active');
+
+      // BẮT ĐẦU: Gửi sự kiện click lên Google Analytics
+      if (typeof gtag !== 'undefined') {
+        // Lấy tên hiển thị trên nút (VD: "Quiz 600 TOEIC")
+        const featureName = element.innerText; 
+        
+        gtag('event', 'select_feature', {
+          'feature_name': featureName,    // Tên của nút được bấm
+          'file_html': fileName           // Tên file iframe được load
+        });
+      }
+      // KẾT THÚC: Gửi sự kiện
     }
   </script>
 

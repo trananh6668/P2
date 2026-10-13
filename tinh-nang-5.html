@@ -3,173 +3,334 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TypeMaster | Tiếng Việt</title>
-    <!-- Tải Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <title>TypeMaster | Tiếng Việt (Offline Version)</title>
     <style>
+        /* --- CÀI ĐẶT MÀU SẮC & BIẾN CƠ BẢN --- */
+        :root {
+            --bg-body: #0f172a;      /* slate-900 */
+            --bg-panel: #1e293b;     /* slate-800 */
+            --bg-panel-dark: #151e2e; 
+            --bg-input: #0f172a;     /* slate-900 */
+            --border-color: #334155; /* slate-700 */
+            
+            --text-main: #f8fafc;    /* slate-50 */
+            --text-muted: #94a3b8;   /* slate-400 */
+            --text-dark: #64748b;    /* slate-500 */
+            
+            --primary: #3b82f6;      /* blue-500 */
+            --primary-hover: #2563eb;/* blue-600 */
+            --success: #4ade80;      /* green-400 */
+            --danger: #f87171;       /* red-400 */
+            --warning: #fb923c;      /* orange-400 */
+            
+            /* Dùng font hệ thống để không cần tải mạng */
+            --font-sans: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+        }
+
+        /* --- RESET & GLOBAL --- */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: #0f172a; /* slate-900 */
-            color: #f8fafc;
+            font-family: var(--font-sans);
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
             overflow-x: hidden;
         }
-        .mono { font-family: 'Fira Code', monospace; }
+        .mono { font-family: var(--font-mono); }
+        button { cursor: pointer; border: none; font-family: inherit; }
+        
+        /* --- BỐ CỤC CHÍNH --- */
+        .container {
+            width: 100%;
+            max-width: 1024px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
 
-        /* Ẩn thanh cuộn mặc định cho khu vực văn bản */
+        /* HEADER */
+        .header { text-align: center; }
+        .header h1 { font-size: 2.5rem; font-weight: 700; color: var(--primary); letter-spacing: -1px; }
+        .header span { font-size: 1.75rem; font-weight: 300; color: var(--text-muted); }
+
+        /* MAIN BOX */
+        .main-box {
+            width: 100%;
+            height: 450px;
+            background-color: var(--bg-panel);
+            border-radius: 16px;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+            border: 1px solid var(--border-color);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* QUẢN LÝ CÁC MÀN HÌNH */
+        .screen {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            display: flex;
+            flex-direction: column;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 0;
+            transition: opacity 0.3s ease;
+        }
+        .screen.active {
+            opacity: 1;
+            pointer-events: auto;
+            z-index: 20;
+        }
+
+        /* --- SCREEN 1: SETUP --- */
+        #screen-setup { padding: 32px; background-color: var(--bg-panel); }
+        #screen-setup h2 { text-align: center; font-size: 1.25rem; margin-bottom: 24px; color: #e2e8f0; }
+        .mode-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+        
+        .mode-btn {
+            padding: 16px; border-radius: 12px; border: 2px solid var(--border-color);
+            background-color: var(--bg-panel-dark); text-align: center; transition: all 0.2s;
+        }
+        .mode-btn:hover { border-color: #64748b; }
+        .mode-btn.active { border-color: var(--primary); background-color: rgba(59, 130, 246, 0.1); }
+        .mode-btn .title { font-weight: 700; margin-bottom: 4px; color: #cbd5e1; }
+        .mode-btn.active .title { color: #60a5fa; }
+        .mode-btn .desc { font-size: 0.75rem; color: var(--text-muted); }
+
+        .input-group { flex: 1; display: flex; flex-direction: column; }
+        .input-group label { font-size: 0.875rem; font-weight: 600; color: var(--text-muted); margin-bottom: 8px; }
+        .setup-textarea {
+            flex: 1; width: 100%; background-color: var(--bg-input); border: 1px solid var(--border-color);
+            border-radius: 12px; padding: 16px; color: #cbd5e1; resize: none; font-size: 0.875rem;
+            transition: all 0.2s;
+        }
+        .setup-textarea:focus { outline: none; border-color: var(--primary); }
+        .setup-textarea:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .start-btn-wrapper { margin-top: 24px; text-align: center; }
+        .btn-primary {
+            background-color: var(--primary-hover); color: white; padding: 12px 48px;
+            border-radius: 12px; font-weight: 700; font-size: 1.125rem; transition: background 0.2s;
+        }
+        .btn-primary:hover { background-color: var(--primary); }
+
+        /* --- SCREEN 2: TYPING --- */
+        #screen-typing { background-color: var(--bg-panel); z-index: 10; }
+        .stats-bar {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 16px; border-bottom: 1px solid var(--border-color); background-color: rgba(30, 41, 59, 0.5);
+        }
+        .stats-info { display: flex; gap: 24px; font-size: 0.875rem; font-weight: 600; color: var(--text-muted); }
+        .stats-info span { font-size: 1.125rem; }
+        .live-time { color: #60a5fa; }
+        .live-chars { color: #e2e8f0; }
+        
+        .btn-end {
+            background-color: rgba(239, 68, 68, 0.2); color: var(--danger);
+            padding: 6px 16px; border-radius: 8px; font-size: 0.875rem; font-weight: 700; transition: all 0.2s;
+        }
+        .btn-end:hover { background-color: var(--danger); color: white; }
+
+        .typing-area { position: relative; flex: 1; overflow: hidden; }
+        #hidden-input {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            opacity: 0; z-index: 10; resize: none; color: transparent; background: transparent; border: none; outline: none; cursor: default;
+        }
+        
         #text-display::-webkit-scrollbar { display: none; }
         #text-display {
-            -ms-overflow-style: none;  /* IE and Edge */
-            scrollbar-width: none;  /* Firefox */
-            scroll-behavior: smooth;
+            -ms-overflow-style: none; scrollbar-width: none; scroll-behavior: smooth;
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            padding: 24px; font-size: 28px; line-height: 2.2; letter-spacing: 0.05em;
+            user-select: none; white-space: pre-wrap; word-wrap: break-word;
+            overflow-y: auto; color: var(--text-dark);
         }
+
+        .char-correct { color: var(--success); background-color: rgba(74, 222, 128, 0.2); }
+        .char-wrong { color: var(--danger); background-color: rgba(248, 113, 113, 0.3); }
+        .char-pending { color: var(--text-dark); }
         
-        /* Bàn phím phẳng 2D: KHÔNG shadow, KHÔNG translateY */
-        .key-base {
-            transition: background-color 0.05s ease;
-        }
-        .key-active {
-            background-color: #3b82f6 !important; /* blue-500 */
-            color: white !important;
-        }
-        
-        /* Con trỏ absolute không chiếm diện tích (width) của chuỗi */
-        .cursor-active {
-            position: relative;
-        }
+        .cursor-active { position: relative; color: var(--text-muted); }
         .cursor-active::before {
-            content: '';
-            position: absolute;
-            left: 0;
-            top: 15%;
-            height: 70%;
-            width: 2.5px;
-            background-color: #3b82f6;
-            animation: blink 1s infinite;
-            border-radius: 1px;
-            z-index: 10;
+            content: ''; position: absolute; left: 0; top: 15%; height: 70%; width: 2.5px;
+            background-color: var(--primary); animation: blink 1s infinite; border-radius: 1px; z-index: 10;
         }
-        @keyframes blink {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0; }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
+        .focus-overlay {
+            position: absolute; inset: 0; z-index: 20; background-color: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(4px); display: none; flex-direction: column; align-items: center;
+            justify-content: center; cursor: pointer; color: white; font-size: 1.25rem; font-weight: 700;
+        }
+        .focus-overlay.active { display: flex; }
+
+        /* --- SCREEN 3: STATS --- */
+        #screen-stats { background-color: var(--bg-panel-dark); align-items: center; justify-content: center; padding: 24px; }
+        #screen-stats h2 { font-size: 1.875rem; font-weight: 700; color: #e2e8f0; margin-bottom: 8px; }
+        #screen-stats p { color: var(--text-muted); margin-bottom: 32px; }
+        
+        .results-wrapper { width: 100%; max-width: 768px; display: flex; flex-direction: column; gap: 16px; margin-bottom: 14px; }
+        .res-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+        .res-grid-2 { display: flex; justify-content: center; gap: 16px; }
+        .res-box {
+            background-color: var(--bg-panel); padding: 24px; border-radius: 12px;
+            border: 1px solid var(--border-color); text-align: center;
+            display: flex; flex-direction: column; justify-content: center;
+        }
+        .res-grid-2 .res-box { width: 33.333%; }
+        
+        .res-title { color: var(--text-muted); font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+        .res-val { font-size: 3rem; font-weight: 700; }
+        .val-wpm { color: var(--success); }
+        .val-chars { color: #60a5fa; }
+        .val-errs { color: var(--danger); }
+        .val-rate { color: var(--warning); font-size: 2.25rem; }
+        .val-bs { color: #e2e8f0; font-size: 2.25rem; }
+
+        .btn-restart {
+            background-color: var(--primary-hover); color: white; padding: 12px 32px; border-radius: 12px;
+            font-weight: 700; font-size: 1.125rem; display: flex; align-items: center; gap: 8px; transition: background 0.2s;
+        }
+        .btn-restart:hover { background-color: var(--primary); }
+        .btn-restart svg { width: 20px; height: 20px; }
+
+        /* --- BÀN PHÍM --- */
+        .keyboard-wrapper {
+            width: 100%; background-color: var(--bg-panel); padding: 20px;
+            border-radius: 16px; border: 1px solid var(--border-color); overflow-x: auto; user-select: none;
+        }
+        .keyboard-container {
+            min-width: 850px; max-width: 1024px; margin: 0 auto; display: flex; flex-direction: column; gap: 8px;
+        }
+        .key-row { display: flex; width: 100%; gap: 8px; }
+        .key-base {
+            height: 44px; background-color: var(--border-color); border-radius: 4px;
+            display: flex; align-items: center; justify-content: center; font-size: 12px;
+            font-weight: 600; color: #cbd5e1; text-transform: uppercase; transition: background-color 0.05s ease;
+        }
+        .key-active { background-color: var(--primary) !important; color: white !important; }
+
+        /* RESPONSIVE NHỎ */
+        @media (max-width: 768px) {
+            .header h1 { font-size: 2rem; }
+            .header span { font-size: 1.25rem; }
+            #text-display { font-size: 20px; padding: 16px; }
+            .res-val { font-size: 2rem; }
+            .val-rate, .val-bs { font-size: 1.5rem; }
+            .mode-grid { grid-template-columns: 1fr; }
         }
     </style>
 </head>
-<body class="min-h-screen flex flex-col items-center justify-center p-4 md:p-6">
+<body>
 
-    <div class="w-full max-w-5xl flex flex-col gap-6">
-        
+    <div class="container">
         <!-- Header -->
-        <header class="text-center">
-            <h1 class="text-4xl md:text-5xl font-bold text-blue-500 tracking-tight">
-                TypeMaster <span class="text-slate-400 text-2xl md:text-3xl font-light">| Tiếng Việt</span>
-            </h1>
+        <header class="header">
+            <h1>TypeMaster <span>| Tiếng Việt</span></h1>
         </header>
 
-        <!-- Main Fixed Box: Chiều cao cố định 450px -->
-        <main class="w-full h-[450px] bg-[#1e293b] rounded-2xl shadow-2xl border border-slate-700 relative overflow-hidden flex flex-col">
+        <!-- Main Fixed Box -->
+        <main class="main-box">
             
             <!-- 1. Màn hình Setup -->
-            <div id="screen-setup" class="absolute inset-0 flex flex-col p-6 lg:p-8 z-20 bg-[#1e293b] transition-opacity duration-300">
-                <h2 class="text-xl font-bold text-center text-slate-200 mb-6">Tùy Chọn Luyện Tập</h2>
+            <div id="screen-setup" class="screen active">
+                <h2>Tùy Chọn Luyện Tập</h2>
                 
-                <div class="grid grid-cols-2 gap-4 mb-6">
-                    <button id="btn-mode-random" class="p-4 rounded-xl border-2 border-blue-500 bg-blue-500/10 text-center transition-colors">
-                        <div class="font-bold text-blue-400 mb-1">Vô Tận (Random)</div>
-                        <div class="text-xs text-slate-400">Tự tạo văn bản Tiếng Việt ngẫu nhiên.</div>
+                <div class="mode-grid">
+                    <button id="btn-mode-random" class="mode-btn active">
+                        <div class="title">Vô Tận (Random)</div>
+                        <div class="desc">Tự tạo văn bản Tiếng Việt ngẫu nhiên.</div>
                     </button>
-                    <button id="btn-mode-custom" class="p-4 rounded-xl border-2 border-slate-700 bg-slate-800 text-center transition-colors hover:border-slate-500">
-                        <div class="font-bold text-slate-300 mb-1">Tự Chọn</div>
-                        <div class="text-xs text-slate-400">Dán đoạn văn bản bạn muốn gõ.</div>
+                    <button id="btn-mode-custom" class="mode-btn">
+                        <div class="title">Tự Chọn</div>
+                        <div class="desc">Dán đoạn văn bản bạn muốn gõ.</div>
                     </button>
                 </div>
 
-                <div class="flex-1 flex flex-col">
-                    <label class="text-sm font-semibold text-slate-400 mb-2">Nhập văn bản của bạn:</label>
-                    <textarea id="setup-textarea" class="w-full flex-1 bg-slate-900 border border-slate-700 rounded-xl p-4 text-slate-300 focus:outline-none focus:border-blue-500 resize-none mono text-sm opacity-50 cursor-not-allowed transition-all" disabled placeholder="Chế độ Random đang bật. Tự động sinh văn bản..."></textarea>
+                <div class="input-group">
+                    <label>Nhập văn bản của bạn:</label>
+                    <textarea id="setup-textarea" class="setup-textarea mono" disabled placeholder="Chế độ Random đang bật. Tự động sinh văn bản..."></textarea>
                 </div>
 
-                <div class="mt-6 text-center">
-                    <button id="btn-start" class="bg-blue-600 hover:bg-blue-500 text-white px-12 py-3 rounded-xl font-bold text-lg transition-colors">Bắt Đầu</button>
+                <div class="start-btn-wrapper">
+                    <button id="btn-start" class="btn-primary">Bắt Đầu</button>
                 </div>
             </div>
 
             <!-- 2. Màn hình Typing -->
-            <div id="screen-typing" class="absolute inset-0 flex flex-col z-10 bg-[#1e293b] opacity-0 pointer-events-none transition-opacity duration-300">
-                
-                <!-- Thanh Stats nhỏ -->
-                <div class="flex justify-between items-center p-4 border-b border-slate-700 bg-slate-800/50">
-                    <div class="flex gap-6">
-                        <div class="text-slate-400 font-semibold text-sm">Thời gian: <span id="live-time" class="text-blue-400 mono text-lg">00:00</span></div>
-                        <div class="text-slate-400 font-semibold text-sm">Ký tự: <span id="live-chars" class="text-slate-200 mono text-lg">0</span></div>
+            <div id="screen-typing" class="screen">
+                <div class="stats-bar">
+                    <div class="stats-info">
+                        <div>Thời gian: <span id="live-time" class="live-time mono">00:00</span></div>
+                        <div>Ký tự: <span id="live-chars" class="live-chars mono">0</span></div>
                     </div>
-                    <button id="btn-end-early" class="bg-red-500/20 text-red-400 hover:bg-red-500 hover:text-white px-4 py-1.5 rounded-lg text-sm font-bold transition-colors">Kết thúc sớm</button>
+                    <button id="btn-end-early" class="btn-end">Kết thúc sớm</button>
                 </div>
 
-                <!-- Khu vực gõ chữ -->
-                <div class="relative flex-1 overflow-hidden" id="typing-container">
-                    <!-- Textarea ẨN bắt sự kiện gõ thực tế -->
-                    <textarea id="hidden-input" class="absolute inset-0 w-full h-full opacity-0 z-10 resize-none text-transparent bg-transparent cursor-default focus:outline-none" spellcheck="false" autocomplete="off" autocorrect="off"></textarea>
+                <div class="typing-area" id="typing-container">
+                    <textarea id="hidden-input" spellcheck="false" autocomplete="off" autocorrect="off"></textarea>
                     
-                    <!-- Lớp hiển thị chữ Text Display -->
-                    <!-- Dùng whitespace-pre-wrap để giữ nguyên khoảng trắng -->
-                    <div id="text-display" class="absolute inset-0 w-full h-full p-6 text-2xl lg:text-[28px] font-mono leading-[2.2] tracking-wide select-none whitespace-pre-wrap break-words overflow-y-auto text-slate-500">
+                    <div id="text-display" class="mono">
                         <!-- Chữ sinh ra bằng JS -->
                     </div>
                     
-                    <!-- Lớp phủ yêu cầu Click khi mất focus -->
-                    <div id="focus-overlay" class="absolute inset-0 z-20 bg-slate-900/80 backdrop-blur-sm hidden flex-col items-center justify-center cursor-pointer">
-                        <div class="text-xl font-bold text-white mb-2">Nhấn vào đây để tiếp tục gõ</div>
+                    <div id="focus-overlay" class="focus-overlay">
+                        <div>Nhấn vào đây để tiếp tục gõ</div>
                     </div>
                 </div>
             </div>
 
             <!-- 3. Màn hình Stats (Kết quả) -->
-            <div id="screen-stats" class="absolute inset-0 flex flex-col items-center justify-center p-6 z-0 bg-[#151e2e] opacity-0 pointer-events-none transition-opacity duration-300">
-                <h2 class="text-3xl font-bold text-slate-200 mb-2">Thống Kê</h2>
-                <p class="text-slate-400 mb-8">Kết quả lượt gõ của bạn</p>
+            <div id="screen-stats" class="screen">
+                <h2>Thống Kê</h2>
+                <p>Kết quả lượt gõ của bạn</p>
                 
-                <div class="w-full max-w-3xl flex flex-col gap-4 mb-8">
-                    <!-- Hàng 1: 3 Cột -->
-                    <div class="grid grid-cols-3 gap-4">
-                        <div class="bg-[#1e293b] p-6 rounded-xl border border-slate-700 text-center flex flex-col justify-center">
-                            <div class="text-slate-400 text-xs font-bold uppercase tracking-wider mb-2">Tốc độ (WPM)</div>
-                            <div id="res-wpm" class="text-5xl font-bold text-green-400 mono">0</div>
+                <div class="results-wrapper">
+                    <div class="res-grid-3">
+                        <div class="res-box">
+                            <div class="res-title">Tốc độ (WPM)</div>
+                            <div id="res-wpm" class="res-val val-wpm mono">0</div>
                         </div>
-                        <div class="bg-[#1e293b] p-6 rounded-xl border border-slate-700 text-center flex flex-col justify-center">
-                            <div class="text-slate-400 text-xs font-bold uppercase tracking-wider mb-2">Tổng Ký Tự</div>
-                            <div id="res-chars" class="text-5xl font-bold text-blue-400 mono">0</div>
+                        <div class="res-box">
+                            <div class="res-title">Tổng Ký Tự</div>
+                            <div id="res-chars" class="res-val val-chars mono">0</div>
                         </div>
-                        <div class="bg-[#1e293b] p-6 rounded-xl border border-slate-700 text-center flex flex-col justify-center">
-                            <div class="text-slate-400 text-xs font-bold uppercase tracking-wider mb-2">Lỗi Sai</div>
-                            <div id="res-errors" class="text-5xl font-bold text-red-400 mono">0</div>
+                        <div class="res-box">
+                            <div class="res-title">Lỗi Sai</div>
+                            <div id="res-errors" class="res-val val-errs mono">0</div>
                         </div>
                     </div>
                     
-                    <!-- Hàng 2: 2 Cột Căn Giữa Hoàn Hảo -->
-                    <div class="flex justify-center gap-4">
-                        <!-- Box width tương đương 1/3 grid phía trên (khoảng 33%) để thẳng cột đẹp mắt -->
-                        <div class="w-1/3 bg-[#1e293b] p-6 rounded-xl border border-slate-700 text-center flex flex-col justify-center">
-                            <div class="text-slate-400 text-xs font-bold uppercase tracking-wider mb-2">Tỷ Lệ Sai</div>
-                            <div id="res-err-rate" class="text-4xl font-bold text-orange-400 mono">0%</div>
+                    <div class="res-grid-2">
+                        <div class="res-box">
+                            <div class="res-title">Tỷ Lệ Sai</div>
+                            <div id="res-err-rate" class="res-val val-rate mono">0%</div>
                         </div>
-                        <div class="w-1/3 bg-[#1e293b] p-6 rounded-xl border border-slate-700 text-center flex flex-col justify-center">
-                            <div class="text-slate-400 text-xs font-bold uppercase tracking-wider mb-2">Backspace</div>
-                            <div id="res-backspace" class="text-4xl font-bold text-slate-200 mono">0</div>
+                        <div class="res-box">
+                            <div class="res-title">Backspace</div>
+                            <div id="res-backspace" class="res-val val-bs mono">0</div>
                         </div>
                     </div>
                 </div>
 
-                <button id="btn-restart" class="bg-blue-600 hover:bg-blue-500 text-white px-8 py-3 rounded-xl font-bold text-lg flex items-center gap-2 transition-colors">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                <button id="btn-restart" class="btn-restart">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
                     Bắt đầu lại
                 </button>
             </div>
         </main>
 
-        <!-- Khu vực Bàn phím Mô phỏng (Luôn cố định phía dưới) -->
-        <div class="w-full bg-[#1e293b] p-3 md:p-5 rounded-2xl border border-slate-700 overflow-x-auto select-none">
-            <div id="keyboard-container" class="min-w-[850px] flex flex-col gap-2 max-w-5xl mx-auto">
+        <!-- Bàn phím Mô phỏng -->
+        <div class="keyboard-wrapper">
+            <div id="keyboard-container" class="keyboard-container">
                 <!-- Bàn phím render bằng JS -->
             </div>
         </div>
@@ -209,7 +370,7 @@
             ]
         ];
 
-        // --- TỪ ĐIỂN VĂN BẢN (Cho chế độ Random) ---
+        // --- TỪ ĐIỂN VĂN BẢN (Offline) ---
         const vietnameseSentences = [
             "Hà Nội mùa thu thật đẹp với những con đường rợp bóng cây xanh.",
             "Công nghệ thông tin đang thay đổi cách chúng ta làm việc mỗi ngày.",
@@ -754,7 +915,6 @@
         
         let startTime = 0;
         let timerInterval = null;
-        
         let backspaceCount = 0;
 
         // DOM Elements
@@ -787,17 +947,16 @@
             resBackspace: document.getElementById('res-backspace')
         };
 
-        // Render Bàn phím Ảo (2D phẳng)
+        // Render Bàn phím Ảo
         function initKeyboard() {
             const container = document.getElementById('keyboard-container');
             keyboardLayout.forEach(row => {
                 const rowDiv = document.createElement('div');
-                rowDiv.className = 'flex w-full gap-2';
+                rowDiv.className = 'key-row';
                 row.forEach(key => {
                     const keyEl = document.createElement('div');
                     keyEl.id = 'key-' + key.code;
-                    // Lớp CSS 2D phẳng, bỏ shadow và border bottom
-                    keyEl.className = 'h-11 bg-slate-700 rounded flex items-center justify-center text-[11px] md:text-xs font-semibold text-slate-300 uppercase key-base';
+                    keyEl.className = 'key-base';
                     keyEl.innerText = key.label;
                     keyEl.style.flex = key.flex || 1;
                     rowDiv.appendChild(keyEl);
@@ -810,34 +969,24 @@
         // Đổi Màn Hình
         function switchScreen(screenName) {
             Object.values(screens).forEach(screen => {
-                screen.classList.remove('z-20');
-                screen.classList.add('z-0', 'opacity-0', 'pointer-events-none');
+                screen.classList.remove('active');
             });
-            const activeScreen = screens[screenName];
-            activeScreen.classList.remove('z-0', 'opacity-0', 'pointer-events-none');
-            activeScreen.classList.add('z-20');
+            screens[screenName].classList.add('active');
         }
 
         // Xử lý Setup Mode
         function setMode(mode) {
             currentMode = mode;
             if (mode === 'random') {
-                ui.btnRandom.classList.replace('border-slate-700', 'border-blue-500');
-                ui.btnRandom.classList.replace('bg-slate-800', 'bg-blue-500/10');
-                ui.btnCustom.classList.replace('border-blue-500', 'border-slate-700');
-                ui.btnCustom.classList.replace('bg-blue-500/10', 'bg-slate-800');
-                
+                ui.btnRandom.classList.add('active');
+                ui.btnCustom.classList.remove('active');
                 ui.setupTextarea.disabled = true;
-                ui.setupTextarea.classList.add('opacity-50', 'cursor-not-allowed');
                 ui.setupTextarea.value = '';
+                ui.setupTextarea.placeholder = "Chế độ Random đang bật. Tự động sinh văn bản...";
             } else {
-                ui.btnCustom.classList.replace('border-slate-700', 'border-blue-500');
-                ui.btnCustom.classList.replace('bg-slate-800', 'bg-blue-500/10');
-                ui.btnRandom.classList.replace('border-blue-500', 'border-slate-700');
-                ui.btnRandom.classList.replace('bg-blue-500/10', 'bg-slate-800');
-                
+                ui.btnCustom.classList.add('active');
+                ui.btnRandom.classList.remove('active');
                 ui.setupTextarea.disabled = false;
-                ui.setupTextarea.classList.remove('opacity-50', 'cursor-not-allowed');
                 ui.setupTextarea.placeholder = "Dán hoặc nhập đoạn văn bản bạn muốn gõ vào đây...";
                 ui.setupTextarea.focus();
             }
@@ -862,7 +1011,7 @@
             return `${m}:${s}`;
         }
 
-        // Render chữ đang luyện tập: Đảm bảo không padding, không margin
+        // Render chữ đang luyện tập
         function renderTypingText() {
             const typed = ui.hiddenInput.value;
             let html = '';
@@ -873,24 +1022,19 @@
                 if (i < typed.length) {
                     const typedChar = typed[i];
                     if (typedChar === targetChar) {
-                        // Gõ Đúng: Chữ xanh, nền xanh mờ, giữ nguyên ký tự gốc
-                        html += `<span class="text-green-400 bg-green-500/20">${targetChar}</span>`;
+                        html += `<span class="char-correct">${targetChar}</span>`;
                     } else {
-                        // Gõ Sai: Chữ đỏ, nền đỏ mờ, giữ nguyên ký tự gốc
-                        html += `<span class="text-red-400 bg-red-500/30">${targetChar}</span>`;
+                        html += `<span class="char-wrong">${targetChar}</span>`;
                     }
                 } else if (i === typed.length) {
-                    // Vị trí con trỏ hiện tại (dùng cursor-active với CSS absolute)
-                    html += `<span class="cursor-active text-slate-400">${targetChar}</span>`;
+                    html += `<span class="cursor-active">${targetChar}</span>`;
                 } else {
-                    // Chữ chưa gõ
-                    html += `<span class="text-slate-500">${targetChar}</span>`;
+                    html += `<span class="char-pending">${targetChar}</span>`;
                 }
             }
             
             ui.textDisplay.innerHTML = html;
             
-            // Xử lý auto-scroll mượt mà
             const cursorEl = ui.textDisplay.querySelector('.cursor-active');
             if (cursorEl) {
                 const scrollTarget = cursorEl.offsetTop - (ui.textDisplay.clientHeight / 2) + 20;
@@ -898,7 +1042,7 @@
             }
         }
 
-        // Bắt đầu game
+// Bắt đầu game
         ui.btnStart.addEventListener('click', () => {
             if (currentMode === 'random') {
                 targetText = generateRandomText(10);
@@ -924,24 +1068,33 @@
                 ui.liveTime.innerText = formatTime(Date.now() - startTime);
             }, 1000);
             
-            setTimeout(() => ui.hiddenInput.focus(), 100);
+            // --- ĐOẠN MÃ ĐÃ SỬA ---
+            // 1. Ẩn lớp focus-overlay ngay lập tức để tránh nháy màn hình
+            ui.focusOverlay.classList.remove('active'); 
+            
+            // 2. Focus vào hidden-input
+            ui.hiddenInput.focus();
+            
+            // 3. Dự phòng focus lại sau một khoảng thời gian ngắn để đảm bảo focus thành công
+            setTimeout(() => {
+                if(isPracticing) ui.hiddenInput.focus();
+            }, 50); 
+            // -----------------------
         });
 
-        // Xử lý sự kiện input (IME hỗ trợ)
+        // Xử lý sự kiện input
         ui.hiddenInput.addEventListener('input', () => {
             if (!isPracticing) return;
             const typed = ui.hiddenInput.value;
             
             ui.liveChars.innerText = typed.length;
             
-            // Auto-append cho chế độ Vô Tận (Random)
             if (currentMode === 'random' && typed.length > targetText.length - 100) {
                 targetText += " " + generateRandomText(5);
             }
             
             renderTypingText();
             
-            // Kết thúc ở chế độ tự chọn
             if (typed.length >= targetText.length && currentMode === 'custom') {
                 finishGame();
             }
@@ -950,17 +1103,14 @@
         // Quản lý Focus
         ui.hiddenInput.addEventListener('blur', () => {
             if (isPracticing) {
-                ui.focusOverlay.classList.remove('hidden');
-                ui.focusOverlay.classList.add('flex');
+                ui.focusOverlay.classList.add('active');
             }
         });
         ui.focusOverlay.addEventListener('click', () => {
-            ui.focusOverlay.classList.add('hidden');
-            ui.focusOverlay.classList.remove('flex');
+            ui.focusOverlay.classList.remove('active');
             ui.hiddenInput.focus();
         });
         ui.typingContainer.addEventListener('click', () => ui.hiddenInput.focus());
-
 
         // Nút Kết Thúc Sớm
         ui.btnEndEarly.addEventListener('click', () => {
@@ -976,7 +1126,6 @@
             const typed = ui.hiddenInput.value;
             const finalLength = typed.length;
             
-            // Đếm lỗi dựa trên trạng thái cuối cùng
             let finalErrors = 0;
             for(let i = 0; i < finalLength; i++) {
                 if (typed[i] !== targetText[i]) {
@@ -984,7 +1133,6 @@
                 }
             }
             
-            // Tính toán WPM & Tỷ lệ sai
             const elapsedMins = (Date.now() - startTime) / 60000;
             let wpm = 0;
             if (elapsedMins > 0) {
@@ -996,7 +1144,6 @@
                 errRate = (finalErrors / finalLength) * 100;
             }
 
-            // Đổ dữ liệu ra UI
             ui.resWpm.innerText = wpm;
             ui.resChars.innerText = finalLength;
             ui.resErrors.innerText = finalErrors;
