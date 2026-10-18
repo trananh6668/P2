@@ -1,0 +1,3273 @@
+<!DOCTYPE html>
+<html lang="vi" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CAD Studio 3D - Thiết Kế Biên Dạng & Mô Phỏng Báo Cáo</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts: Inter & JetBrains Mono for technical readouts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <!-- Three.js r128 & Controls -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/TransformControls.js"></script>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        cad: {
+                            bg: '#181b20',
+                            panel: '#21252b',
+                            header: '#282c34',
+                            border: '#333842',
+                            accent: '#0ea5e9',
+                            accentHover: '#0284c7',
+                            amber: '#f59e0b'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        * {
+            box-sizing: border-box;
+            user-select: none;
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            font-family: 'Inter', sans-serif;
+        }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.15);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(148, 163, 184, 0.35);
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(148, 163, 184, 0.6);
+        }
+        /* Ribbon button styling */
+        .ribbon-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 0.35rem 0.6rem;
+            border-radius: 0.375rem;
+            font-size: 0.72rem;
+            line-height: 1rem;
+            font-weight: 500;
+            transition: all 0.15s ease;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        .ribbon-btn i {
+            font-size: 1.05rem;
+            margin-bottom: 0.2rem;
+        }
+        .ribbon-btn.active {
+            background-color: rgba(14, 165, 233, 0.22);
+            color: #38bdf8;
+            border: 1px solid rgba(56, 189, 248, 0.5);
+        }
+        /* 3D Floating Labels */
+        .dim-label {
+            position: absolute;
+            pointer-events: none;
+            transform: translate(-50%, -50%);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 2px 6px;
+            border-radius: 4px;
+            white-space: nowrap;
+            z-index: 15;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+        }
+        /* Technical Title Block border for Report Mode */
+        #reportFrameOverlay {
+            pointer-events: none;
+            z-index: 20;
+        }
+        #reportFrameOverlay .editable-area {
+            pointer-events: auto;
+        }
+        /* Sketch Canvas Cursor */
+        #sketchCanvas {
+            cursor: crosshair;
+            touch-action: none;
+        }
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body class="bg-cad-bg text-slate-100 h-screen w-screen flex flex-col overflow-hidden">
+
+    <header class="h-10 bg-cad-header border-b border-cad-border px-3 flex items-center justify-between shrink-0 z-30">
+        <!-- Brand & File Name -->
+        <div class="flex items-center space-x-3">
+            <div class="flex items-center space-x-2 bg-sky-500/15 border border-sky-500/40 px-2.5 py-1 rounded-md">
+                <i class="fa-solid fa-cubes-stacked text-sky-400 text-sm"></i>
+                <span class="font-bold text-xs tracking-wide text-sky-300">SOLID-CAD 3D STUDIO</span>
+                <span class="text-[10px] bg-sky-500 text-slate-950 font-bold px-1.5 py-0.2 rounded">PRO</span>
+            </div>
+            <div class="hidden md:flex items-center space-x-1 text-xs text-slate-400">
+                <span>Dự án:</span>
+                <input id="projectTitleInput" type="text" value="Cụm Chi Tiết Cơ Khí - Báo Cáo Kỹ Thuật" 
+                    class="bg-transparent border border-transparent hover:border-slate-600 focus:border-sky-500 focus:bg-slate-900 px-2 py-0.5 rounded text-slate-200 font-medium w-64 outline-none transition"
+                    oninput="syncTitleBlock()">
+            </div>
+        </div>
+
+        <!-- Quick File & Report Theme Controls -->
+        <div class="flex items-center space-x-1.5">
+            <!-- Environment Theme Switcher -->
+            <div class="flex items-center bg-slate-900/90 p-0.5 rounded-lg border border-slate-700/80 text-xs">
+                <button onclick="setViewportTheme('dark')" id="themeBtn-dark" class="px-2.5 py-1 rounded-md font-medium bg-sky-600 text-white transition flex items-center space-x-1" title="Nền tối CAD chuyên nghiệp">
+                    <i class="fa-solid fa-moon text-[11px]"></i>
+                    <span class="hidden sm:inline">CAD Tối</span>
+                </button>
+                <button onclick="setViewportTheme('studio')" id="themeBtn-studio" class="px-2.5 py-1 rounded-md font-medium text-slate-300 hover:text-white transition flex items-center space-x-1" title="Nền xám xanh SolidWorks">
+                    <i class="fa-solid fa-cloud-sun text-[11px]"></i>
+                    <span class="hidden sm:inline">SolidWorks</span>
+                </button>
+                <button onclick="setViewportTheme('report')" id="themeBtn-report" class="px-2.5 py-1 rounded-md font-medium text-slate-300 hover:text-white transition flex items-center space-x-1" title="Nền Trắng Tinh Khiết để chụp ảnh chèn vào Báo Cáo Word/PDF">
+                    <i class="fa-solid fa-file-lines text-[11px] text-amber-400"></i>
+                    <span>Chế Độ Báo Cáo (Nền Trắng)</span>
+                </button>
+            </div>
+
+            <div class="h-4 w-px bg-slate-700 mx-1"></div>
+
+            <!-- Save / Load JSON / Sample -->
+            <button onclick="loadDemoAssembly()" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded border border-slate-700 text-xs flex items-center space-x-1 transition" title="Tải lại cụm lắp ghép mẫu">
+                <i class="fa-solid fa-gears text-amber-400"></i>
+                <span class="hidden lg:inline">Mẫu Lắp Ghép</span>
+            </button>
+            <button onclick="saveProjectJSON()" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded border border-slate-700 text-xs flex items-center space-x-1 transition" title="Lưu dự án ra file .JSON">
+                <i class="fa-solid fa-floppy-disk text-sky-400"></i>
+                <span class="hidden lg:inline">Lưu</span>
+            </button>
+            <label class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded border border-slate-700 text-xs flex items-center space-x-1 cursor-pointer transition" title="Mở file dự án .JSON">
+                <i class="fa-solid fa-folder-open text-emerald-400"></i>
+                <span class="hidden lg:inline">Mở</span>
+                <input type="file" accept=".json" class="hidden" onchange="loadProjectJSON(event)">
+            </label>
+        </div>
+    </header>
+
+    <nav class="bg-cad-panel border-b border-cad-border px-2 py-1.5 flex items-center justify-between overflow-x-auto shrink-0 z-20 gap-2">
+        <div class="flex items-center space-x-2">
+            
+            <!-- GROUP 1: 2D SKETCH & EXTRUDE (CORE SOLIDWORKS WORKFLOW) -->
+            <div class="flex items-center space-x-1 bg-slate-900/60 px-2 py-1 rounded-lg border border-sky-500/30">
+                <button onclick="openSketchModal()" class="flex items-center space-x-2 bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-500 hover:to-blue-500 text-white font-semibold px-3 py-1.5 rounded-md shadow-md shadow-sky-950/50 transition transform active:scale-95">
+                    <i class="fa-solid fa-pen-ruler text-base"></i>
+                    <div class="text-left">
+                        <div class="text-xs leading-tight font-bold">Vẽ Biên Dạng 2D</div>
+                        <div class="text-[10px] text-sky-100 font-normal">Sketch & Extrude / Revolve</div>
+                    </div>
+                </button>
+
+                <div class="h-8 w-px bg-slate-700/80 mx-1"></div>
+
+                <!-- Quick Extruded Engineering Profiles -->
+                <div class="flex items-center space-x-0.5">
+                    <button onclick="createProfilePreset('l_bracket')" class="ribbon-btn text-slate-300 hover:bg-slate-800" title="Tạo nhanh Ke góc chữ L (Extrude)">
+                        <i class="fa-solid fa-l text-sky-400"></i>
+                        <span>Chữ L</span>
+                    </button>
+                    <button onclick="createProfilePreset('u_channel')" class="ribbon-btn text-slate-300 hover:bg-slate-800" title="Tạo nhanh Thép hình chữ U">
+                        <i class="fa-solid fa-u text-sky-400"></i>
+                        <span>Chữ U</span>
+                    </button>
+                    <button onclick="createProfilePreset('i_beam')" class="ribbon-btn text-slate-300 hover:bg-slate-800" title="Tạo nhanh Dầm chữ I">
+                        <i class="fa-solid fa-i text-sky-400"></i>
+                        <span>Dầm I</span>
+                    </button>
+                    <button onclick="createProfilePreset('flange')" class="ribbon-btn text-slate-300 hover:bg-slate-800" title="Tạo nhanh Mặt bích có lỗ bulông">
+                        <i class="fa-solid fa-circle-dot text-emerald-400"></i>
+                        <span>Mặt Bích</span>
+                    </button>
+                    <button onclick="createProfilePreset('gear')" class="ribbon-btn text-slate-300 hover:bg-slate-800" title="Tạo nhanh Bánh răng cơ khí 3D">
+                        <i class="fa-solid fa-gear text-amber-400"></i>
+                        <span>Bánh Răng</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- GROUP 2: 3D PRIMITIVES (KHỐI CƠ BẢN) -->
+            <div class="flex items-center space-x-0.5 bg-slate-900/40 px-1.5 py-1 rounded-lg border border-slate-800">
+                <button onclick="addPrimitive('box')" class="ribbon-btn text-slate-300 hover:bg-slate-800" title="Thêm Khối Hộp (Box)">
+                    <i class="fa-solid fa-cube text-indigo-400"></i>
+                    <span>Khối Hộp</span>
+                </button>
+                <button onclick="addPrimitive('cylinder')" class="ribbon-btn text-slate-300 hover:bg-slate-800" title="Thêm Khối Trụ (Cylinder)">
+                    <i class="fa-solid fa-database text-indigo-400"></i>
+                    <span>Khối Trụ</span>
+                </button>
+                <button onclick="addPrimitive('tube')" class="ribbon-btn text-slate-300 hover:bg-slate-800" title="Thêm Ống Trụ Rỗng (Hollow Pipe)">
+                    <i class="fa-regular fa-circle text-indigo-400"></i>
+                    <span>Ống Rỗng</span>
+                </button>
+                <button onclick="addPrimitive('hex')" class="ribbon-btn text-slate-300 hover:bg-slate-800" title="Thêm Đai Ốc Lục Giác (Hex Nut)">
+                    <i class="fa-solid fa-hexagon-nodes text-indigo-400"></i>
+                    <span>Lục Giác</span>
+                </button>
+                <button onclick="addPrimitive('cone')" class="ribbon-btn text-slate-300 hover:bg-slate-800" title="Thêm Khối Nón (Cone)">
+                    <i class="fa-solid fa-caret-up text-indigo-400"></i>
+                    <span>Khối Nón</span>
+                </button>
+                <button onclick="addPrimitive('sphere')" class="ribbon-btn text-slate-300 hover:bg-slate-800" title="Thêm Khối Cầu (Sphere)">
+                    <i class="fa-solid fa-globe text-indigo-400"></i>
+                    <span>Khối Cầu</span>
+                </button>
+                <button onclick="addPrimitive('torus')" class="ribbon-btn text-slate-300 hover:bg-slate-800" title="Thêm Vòng Xuyến / Gioăng (Torus)">
+                    <i class="fa-solid fa-ring text-indigo-400"></i>
+                    <span>Vòng Đệm</span>
+                </button>
+            </div>
+
+            <!-- GROUP 3: TRANSFORM TOOLS (BIẾN ĐỔI) -->
+            <div class="flex items-center space-x-0.5 bg-slate-900/40 px-1.5 py-1 rounded-lg border border-slate-800">
+                <button id="tool-translate" onclick="setTransformMode('translate')" class="ribbon-btn active text-slate-300 hover:bg-slate-800" title="Di chuyển vật thể (Phím W)">
+                    <i class="fa-solid fa-up-down-left-right"></i>
+                    <span>Di Chuyển</span>
+                </button>
+                <button id="tool-rotate" onclick="setTransformMode('rotate')" class="ribbon-btn text-slate-300 hover:bg-slate-800" title="Xoay vật thể (Phím E)">
+                    <i class="fa-solid fa-rotate"></i>
+                    <span>Xoay</span>
+                </button>
+                <button id="tool-scale" onclick="setTransformMode('scale')" class="ribbon-btn text-slate-300 hover:bg-slate-800" title="Co giãn tỷ lệ (Phím R)">
+                    <i class="fa-solid fa-expand"></i>
+                    <span>Tỷ Lệ</span>
+                </button>
+                <button onclick="dropSelectedToFloor()" class="ribbon-btn text-slate-300 hover:bg-slate-800" title="Hạ vật thể chạm mặt sàn Y=0 (Phím F)">
+                    <i class="fa-solid fa-arrow-down-to-line text-emerald-400"></i>
+                    <span>Chạm Sàn</span>
+                </button>
+            </div>
+
+            <!-- GROUP 4: CAD DISPLAY & CAMERA VIEWS -->
+            <div class="flex items-center space-x-0.5 bg-slate-900/40 px-1.5 py-1 rounded-lg border border-slate-800">
+                <button id="renderModeBtn" onclick="cycleRenderMode()" class="ribbon-btn text-slate-300 hover:bg-slate-800" title="Chuyển chế độ hiển thị: Khối có Cạnh Đen / Bản Vẽ Trắng / Khung Dây / X-Ray">
+                    <i class="fa-solid fa-cube text-sky-400"></i>
+                    <span id="renderModeLabel">Khối + Cạnh</span>
+                </button>
+                <button id="dimToggleBtn" onclick="toggleDimensions()" class="ribbon-btn active text-slate-300 hover:bg-slate-800" title="Bật/Tắt đường đo kích thước 3D (Dài x Rộng x Cao)">
+                    <i class="fa-solid fa-ruler-combined text-amber-400"></i>
+                    <span>Kích Thước</span>
+                </button>
+                <button id="sectionToggleBtn" onclick="toggleSectionCut()" class="ribbon-btn text-slate-300 hover:bg-slate-800" title="Mặt cắt dọc (Section View) để xem chi tiết lỗ bên trong">
+                    <i class="fa-solid fa-scissors text-rose-400"></i>
+                    <span>Mặt Cắt</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- GROUP 5: REPORT CAPTURE & EXPORT -->
+        <div class="flex items-center space-x-1.5 bg-slate-900/70 px-2 py-1 rounded-lg border border-emerald-500/30">
+            <button id="titleBlockToggleBtn" onclick="toggleTitleBlock()" class="ribbon-btn text-slate-300 hover:bg-slate-800" title="Hiển thị Khung Tên Bản Vẽ Kỹ Thuật trên màn hình để chụp ảnh báo cáo">
+                <i class="fa-solid fa-table-list text-amber-400"></i>
+                <span>Khung Tên</span>
+            </button>
+
+            <button onclick="openScreenshotModal()" class="flex items-center space-x-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-semibold px-3 py-1.5 rounded-md shadow-md shadow-emerald-950/50 transition transform active:scale-95">
+                <i class="fa-solid fa-camera-retro text-base"></i>
+                <div class="text-left">
+                    <div class="text-xs leading-tight font-bold">Chụp Ảnh Báo Cáo</div>
+                    <div class="text-[10px] text-emerald-100 font-normal">Xuất PNG Nét Cao</div>
+                </div>
+            </button>
+
+            <button onclick="exportSceneSTL()" class="ribbon-btn text-slate-300 hover:bg-slate-800" title="Xuất mô hình 3D sang chuẩn in 3D / CAD (.STL)">
+                <i class="fa-solid fa-file-export text-sky-400"></i>
+                <span>Xuất .STL</span>
+            </button>
+        </div>
+    </nav>
+
+    <div class="flex-1 flex overflow-hidden relative">
+
+        <!-- LEFT SIDEBAR: FEATURE TREE & SCENE HIERARCHY -->
+        <aside class="w-64 bg-cad-panel border-r border-cad-border flex flex-col shrink-0 z-20 select-none">
+            <!-- Feature Manager Header -->
+            <div class="px-3 py-2 bg-cad-header border-b border-cad-border flex items-center justify-between">
+                <div class="flex items-center space-x-2">
+                    <i class="fa-solid fa-sitemap text-sky-400 text-xs"></i>
+                    <span class="text-xs font-bold uppercase tracking-wider text-slate-200">Cây Thiết Kế (Features)</span>
+                </div>
+                <span id="partCountBadge" class="text-[11px] font-mono bg-slate-800 text-sky-400 px-2 py-0.5 rounded-full border border-slate-700">0 chi tiết</span>
+            </div>
+
+            <!-- Reference Planes Info (SolidWorks style) -->
+            <div class="px-2 py-1.5 border-b border-cad-border/70 bg-slate-900/30 text-[11px] text-slate-400 space-y-1">
+                <div class="flex items-center justify-between px-1.5 py-0.5 rounded hover:bg-slate-800/60 cursor-pointer" onclick="setCameraView('front')">
+                    <span><i class="fa-regular fa-square text-sky-400 mr-1.5"></i>Mặt phẳng Đứng (Front XY)</span>
+                    <span class="text-[10px] text-slate-500">Chuẩn</span>
+                </div>
+                <div class="flex items-center justify-between px-1.5 py-0.5 rounded hover:bg-slate-800/60 cursor-pointer" onclick="setCameraView('top')">
+                    <span><i class="fa-regular fa-square text-emerald-400 mr-1.5"></i>Mặt phẳng Bằng (Top XZ)</span>
+                    <span class="text-[10px] text-slate-500">Sàn</span>
+                </div>
+                <div class="flex items-center justify-between px-1.5 py-0.5 rounded hover:bg-slate-800/60 cursor-pointer" onclick="setCameraView('right')">
+                    <span><i class="fa-regular fa-square text-rose-400 mr-1.5"></i>Mặt phẳng Cạnh (Right YZ)</span>
+                    <span class="text-[10px] text-slate-500">Bên</span>
+                </div>
+            </div>
+
+            <!-- Parts List -->
+            <div id="featureTreeList" class="flex-1 overflow-y-auto p-2 space-y-1">
+                <!-- Populated dynamically via JS -->
+            </div>
+
+            <!-- Bottom Actions for Selected Part -->
+            <div class="p-2 border-t border-cad-border bg-slate-900/50 grid grid-cols-3 gap-1.5">
+                <button onclick="duplicateSelected()" class="px-2 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded text-xs flex items-center justify-center space-x-1 border border-slate-700 transition" title="Nhân bản chi tiết đang chọn (Ctrl+D)">
+                    <i class="fa-regular fa-copy text-sky-400"></i>
+                    <span>Nhân bản</span>
+                </button>
+                <button onclick="editSelectedSketch()" id="btnEditSketchSidebar" class="px-2 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded text-xs flex items-center justify-center space-x-1 border border-slate-700 transition" title="Sửa lại biên dạng 2D của khối Extrude">
+                    <i class="fa-solid fa-pen-to-square text-amber-400"></i>
+                    <span>Sửa 2D</span>
+                </button>
+                <button onclick="deleteSelected()" class="px-2 py-1.5 bg-rose-950/60 hover:bg-rose-900/80 text-rose-200 rounded text-xs flex items-center justify-center space-x-1 border border-rose-800/60 transition" title="Xóa chi tiết đang chọn (Delete)">
+                    <i class="fa-regular fa-trash-can text-rose-400"></i>
+                    <span>Xóa</span>
+                </button>
+            </div>
+        </aside>
+
+        <main id="viewportContainer" class="flex-1 relative overflow-hidden bg-[#181b20]">
+            
+            <!-- Floating Heads-Up Camera Toolbar (Top-Center of Viewport, SolidWorks Style) -->
+            <div class="absolute top-3 left-1/2 -translate-x-1/2 z-20 flex items-center space-x-1 bg-slate-900/85 backdrop-blur-md px-2.5 py-1 rounded-full border border-slate-700/80 shadow-lg">
+                <button onclick="setCameraView('iso')" class="px-2 py-1 text-xs text-slate-200 hover:text-sky-400 hover:bg-slate-800 rounded-full transition flex items-center space-x-1" title="Góc nhìn trục đo Isometric">
+                    <i class="fa-solid fa-dice-d6 text-sky-400"></i>
+                    <span class="font-medium">Isometric</span>
+                </button>
+                <div class="h-3.5 w-px bg-slate-700"></div>
+                <button onclick="setCameraView('front')" class="px-2 py-1 text-xs text-slate-300 hover:text-white hover:bg-slate-800 rounded-full transition" title="Mặt Đứng (Front)">Đứng</button>
+                <button onclick="setCameraView('top')" class="px-2 py-1 text-xs text-slate-300 hover:text-white hover:bg-slate-800 rounded-full transition" title="Mặt Bằng (Top)">Bằng</button>
+                <button onclick="setCameraView('right')" class="px-2 py-1 text-xs text-slate-300 hover:text-white hover:bg-slate-800 rounded-full transition" title="Mặt Cạnh Phải (Right)">Cạnh</button>
+                <button onclick="setCameraView('back')" class="px-2 py-1 text-xs text-slate-300 hover:text-white hover:bg-slate-800 rounded-full transition" title="Mặt Sau (Back)">Sau</button>
+                <div class="h-3.5 w-px bg-slate-700"></div>
+                <button id="projToggleBtn" onclick="toggleCameraProjection()" class="px-2 py-1 text-xs text-amber-300 hover:bg-slate-800 rounded-full transition font-mono" title="Chuyển đổi Phối cảnh (Perspective) / Trực giao chuẩn bản vẽ (Orthographic)">
+                    Phối cảnh (3D)
+                </button>
+                <button onclick="fitCameraToScene()" class="px-2 py-1 text-xs text-emerald-400 hover:bg-slate-800 rounded-full transition" title="Thu phóng vừa khít toàn bộ mô hình (Phím Space)">
+                    <i class="fa-solid fa-compress"></i>
+                </button>
+                <button onclick="toggleGridHelper()" class="px-2 py-1 text-xs text-slate-300 hover:bg-slate-800 rounded-full transition" title="Ẩn/Hiện lưới tọa độ và trục">
+                    <i class="fa-solid fa-border-all"></i>
+                </button>
+            </div>
+
+            <!-- Section Plane Slider (Hidden unless Section View is active) -->
+            <div id="sectionSliderPanel" class="hidden absolute top-14 left-1/2 -translate-x-1/2 z-20 bg-slate-900/90 backdrop-blur px-4 py-2 rounded-xl border border-rose-500/40 flex items-center space-x-3 shadow-xl">
+                <span class="text-xs font-semibold text-rose-300"><i class="fa-solid fa-scissors mr-1"></i>Vị trí mặt cắt (Trục Z):</span>
+                <input id="sectionOffsetSlider" type="range" min="-80" max="80" step="1" value="0" oninput="updateSectionPlane(this.value)" class="w-40 accent-rose-500">
+                <span id="sectionOffsetVal" class="text-xs font-mono text-white w-12">0 mm</span>
+            </div>
+
+            <!-- 3D Dimension Labels Overlay Container -->
+            <div id="dimensionLabelsContainer" class="absolute inset-0 pointer-events-none overflow-hidden z-10">
+                <div id="dimLabelX" class="dim-label hidden bg-rose-600/95 text-white border border-rose-300">Dài (X): 0 mm</div>
+                <div id="dimLabelY" class="dim-label hidden bg-emerald-600/95 text-white border border-emerald-300">Cao (Y): 0 mm</div>
+                <div id="dimLabelZ" class="dim-label hidden bg-sky-600/95 text-white border border-sky-300">Rộng (Z): 0 mm</div>
+            </div>
+
+            <!-- Technical Drawing Border & Title Block Overlay (For Engineering Reports) -->
+            <div id="reportFrameOverlay" class="hidden absolute inset-3 border-2 border-slate-800 flex flex-col justify-end">
+                <!-- Corner Crosshairs -->
+                <div class="w-full flex justify-between px-2 pt-1 text-[10px] font-mono text-slate-600">
+                    <span>TIÊU CHUẨN MÔ PHỎNG CAD 3D - TCVN</span>
+                    <span id="reportHeaderDate">NGÀY: 14/10/2026</span>
+                </div>
+                <div class="mt-auto flex justify-end p-2">
+                    <!-- Standard Engineering Title Block (Khung Tên Kỹ Thuật) -->
+                    <div class="editable-area bg-white/95 text-slate-900 border-2 border-slate-900 shadow-lg w-full max-w-lg text-xs font-sans">
+                        <div class="grid grid-cols-12 border-b border-slate-800">
+                            <div class="col-span-8 p-1.5 border-r border-slate-800">
+                                <div class="text-[9px] font-bold text-slate-500 uppercase">TÊN CHI TIẾT / ĐỀ TÀI MÔ PHỎNG:</div>
+                                <input id="tbTitle" type="text" value="Cụm Chi Tiết Cơ Khí - Báo Cáo Kỹ Thuật" class="w-full font-bold text-sm text-slate-900 bg-transparent outline-none">
+                            </div>
+                            <div class="col-span-4 p-1.5">
+                                <div class="text-[9px] font-bold text-slate-500 uppercase">KÍCH THƯỚC BAO (MM):</div>
+                                <div id="tbDimensions" class="font-mono font-bold text-xs text-blue-700 mt-0.5">120 × 65 × 80 mm</div>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-12">
+                            <div class="col-span-4 p-1.5 border-r border-slate-800">
+                                <div class="text-[9px] font-bold text-slate-500 uppercase">NGƯỜI THỰC HIỆN:</div>
+                                <input id="tbAuthor" type="text" value="Kỹ sư Thiết kế" class="w-full font-semibold text-xs text-slate-900 bg-transparent outline-none">
+                            </div>
+                            <div class="col-span-4 p-1.5 border-r border-slate-800">
+                                <div class="text-[9px] font-bold text-slate-500 uppercase">ĐƠN VỊ / VẬT LIỆU:</div>
+                                <input id="tbMaterial" type="text" value="Thép C45 / Nhôm 6061" class="w-full font-semibold text-xs text-slate-900 bg-transparent outline-none">
+                            </div>
+                            <div class="col-span-4 p-1.5 flex items-center justify-between">
+                                <div>
+                                    <div class="text-[9px] font-bold text-slate-500 uppercase">GÓC CHIẾU:</div>
+                                    <div id="tbViewName" class="font-mono font-semibold text-xs text-slate-800">Isometric 3D</div>
+                                </div>
+                                <div class="text-right">
+                                    <span class="px-1.5 py-0.5 bg-slate-900 text-white font-mono text-[10px] font-bold rounded">CAD 3D</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bottom-Left Axis / Status Indicator -->
+            <div class="absolute bottom-3 left-3 z-10 pointer-events-none flex items-center space-x-3 bg-slate-900/80 backdrop-blur px-3 py-1.5 rounded-lg border border-slate-700/80 text-[11px]">
+                <div class="flex items-center space-x-2 font-mono">
+                    <span class="inline-block w-2.5 h-2.5 rounded-full bg-rose-500"></span><span class="text-rose-400">X (Dài)</span>
+                    <span class="inline-block w-2.5 h-2.5 rounded-full bg-emerald-500 ml-1"></span><span class="text-emerald-400">Y (Cao)</span>
+                    <span class="inline-block w-2.5 h-2.5 rounded-full bg-sky-500 ml-1"></span><span class="text-sky-400">Z (Sâu)</span>
+                </div>
+                <div class="h-3 w-px bg-slate-700"></div>
+                <span class="text-slate-400">Đơn vị: <strong class="text-slate-200">mm</strong></span>
+            </div>
+
+            <!-- WebGL 3D Canvas Target -->
+            <canvas id="threeCanvas" class="w-full h-full block outline-none"></canvas>
+        </main>
+
+        <aside class="w-72 bg-cad-panel border-l border-cad-border flex flex-col shrink-0 z-20 overflow-y-auto">
+            <div class="px-3 py-2 bg-cad-header border-b border-cad-border flex items-center justify-between">
+                <div class="flex items-center space-x-2">
+                    <i class="fa-solid fa-sliders text-sky-400 text-xs"></i>
+                    <span class="text-xs font-bold uppercase tracking-wider text-slate-200">Thông Số Chi Tiết</span>
+                </div>
+                <span id="selectedTypeBadge" class="text-[10px] font-mono bg-sky-500/20 text-sky-300 px-2 py-0.5 rounded border border-sky-500/30">Chưa chọn</span>
+            </div>
+
+            <!-- Empty Selection State -->
+            <div id="inspectorEmptyState" class="p-6 text-center my-auto space-y-3">
+                <div class="w-12 h-12 rounded-full bg-slate-800/90 border border-slate-700 flex items-center justify-center mx-auto text-slate-400">
+                    <i class="fa-solid fa-arrow-pointer text-lg"></i>
+                </div>
+                <div class="text-xs font-semibold text-slate-300">Chưa chọn chi tiết nào</div>
+                <p class="text-[11px] text-slate-400 leading-relaxed">
+                    Nhấp chuột vào một vật thể 3D trên màn hình hoặc trong <strong>Cây Thiết Kế</strong> bên trái để chỉnh sửa kích thước, thông số Extrude, tọa độ và màu sắc vật liệu.
+                </p>
+                <div class="pt-2">
+                    <button onclick="openSketchModal()" class="w-full py-2 bg-sky-600/20 hover:bg-sky-600/30 text-sky-300 border border-sky-500/40 rounded-lg text-xs font-semibold transition">
+                        <i class="fa-solid fa-pen-ruler mr-1"></i> Mở Phác Thảo 2D Mới
+                    </button>
+                </div>
+            </div>
+
+            <!-- Active Object Properties Content -->
+            <div id="inspectorContent" class="hidden p-3 space-y-4 text-xs">
+                
+                <!-- Object Name -->
+                <div>
+                    <label class="block text-[11px] text-slate-400 mb-1 font-medium">Tên chi tiết (Part Name):</label>
+                    <input id="propName" type="text" oninput="updateSelectedName(this.value)"
+                        class="w-full bg-slate-900 border border-slate-700 focus:border-sky-500 rounded px-2.5 py-1.5 text-slate-100 font-medium outline-none">
+                </div>
+
+                <!-- Parametric Extrude / Revolve Controls (Shown if Sketch-based part) -->
+                <div id="parametricExtrudeBox" class="hidden p-2.5 rounded-lg bg-sky-950/30 border border-sky-500/40 space-y-2.5">
+                    <div class="flex items-center justify-between">
+                        <span class="font-bold text-sky-300 text-[11px] uppercase tracking-wider">
+                            <i class="fa-solid fa-layer-group mr-1"></i>Thông Số Extrude / 2D
+                        </span>
+                        <button onclick="editSelectedSketch()" class="px-2 py-0.5 bg-sky-600 hover:bg-sky-500 text-white rounded text-[11px] font-semibold transition">
+                            Sửa Sketch 2D
+                        </button>
+                    </div>
+
+                    <div id="extrudeDepthControlRow">
+                        <div class="flex justify-between text-[11px] mb-1">
+                            <span class="text-slate-300">Chiều dày đùn khối (Depth):</span>
+                            <span id="propExtrudeDepthLabel" class="font-mono text-sky-300 font-bold">25 mm</span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <input id="propExtrudeDepthSlider" type="range" min="2" max="200" step="1" oninput="updateSelectedExtrudeDepth(this.value)" class="flex-1 accent-sky-500">
+                            <input id="propExtrudeDepthInput" type="number" min="1" max="500" oninput="updateSelectedExtrudeDepth(this.value)" class="w-16 bg-slate-900 border border-slate-700 rounded px-1.5 py-1 font-mono text-center text-white">
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between pt-1 border-t border-sky-500/20">
+                        <label class="text-[11px] text-slate-300 flex items-center space-x-1.5 cursor-pointer">
+                            <input id="propBevelToggle" type="checkbox" onchange="updateSelectedBevel()" class="rounded accent-sky-500">
+                            <span>Vát mép cạnh (Chamfer/Bevel)</span>
+                        </label>
+                        <input id="propBevelSize" type="number" min="0.5" max="10" step="0.5" value="1.5" onchange="updateSelectedBevel()" class="w-14 bg-slate-900 border border-slate-700 rounded px-1.5 py-0.5 font-mono text-center text-white text-[11px]" title="Độ rộng vát mép (mm)">
+                    </div>
+                </div>
+
+                <!-- Bounding Box Readout (Kích thước bao thực tế) -->
+                <div class="p-2.5 rounded-lg bg-slate-900/90 border border-slate-800 space-y-1.5">
+                    <div class="text-[11px] font-semibold text-amber-400 flex items-center justify-between">
+                        <span><i class="fa-solid fa-ruler-combined mr-1"></i>Kích thước bao (Bounding):</span>
+                        <span class="text-[10px] font-mono text-slate-400">mm</span>
+                    </div>
+                    <div class="grid grid-cols-3 gap-1.5 pt-1 font-mono text-center">
+                        <div class="bg-slate-950 p-1.5 rounded border border-rose-500/30">
+                            <div class="text-[10px] text-rose-400">Dài (X)</div>
+                            <div id="bboxX" class="font-bold text-slate-100 text-xs">0.0</div>
+                        </div>
+                        <div class="bg-slate-950 p-1.5 rounded border border-emerald-500/30">
+                            <div class="text-[10px] text-emerald-400">Cao (Y)</div>
+                            <div id="bboxY" class="font-bold text-slate-100 text-xs">0.0</div>
+                        </div>
+                        <div class="bg-slate-950 p-1.5 rounded border border-sky-500/30">
+                            <div class="text-[10px] text-sky-400">Rộng (Z)</div>
+                            <div id="bboxZ" class="font-bold text-slate-100 text-xs">0.0</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Position Coordinates (Tọa độ X, Y, Z) -->
+                <div>
+                    <div class="flex items-center justify-between mb-1.5">
+                        <label class="text-[11px] text-slate-400 font-medium">Vị trí Tâm (Position mm):</label>
+                        <button onclick="resetSelectedTransform('pos')" class="text-[10px] text-sky-400 hover:underline">Về gốc (0,0,0)</button>
+                    </div>
+                    <div class="grid grid-cols-3 gap-1.5 font-mono">
+                        <div>
+                            <span class="text-[10px] text-rose-400 block mb-0.5">X</span>
+                            <input id="posX" type="number" step="1" oninput="applyTransformFromInputs()" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-white text-center">
+                        </div>
+                        <div>
+                            <span class="text-[10px] text-emerald-400 block mb-0.5">Y</span>
+                            <input id="posY" type="number" step="1" oninput="applyTransformFromInputs()" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-white text-center">
+                        </div>
+                        <div>
+                            <span class="text-[10px] text-sky-400 block mb-0.5">Z</span>
+                            <input id="posZ" type="number" step="1" oninput="applyTransformFromInputs()" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-white text-center">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Rotation Angles (Góc xoay RX, RY, RZ) -->
+                <div>
+                    <div class="flex items-center justify-between mb-1.5">
+                        <label class="text-[11px] text-slate-400 font-medium">Góc xoay (Rotation °):</label>
+                        <button onclick="resetSelectedTransform('rot')" class="text-[10px] text-sky-400 hover:underline">Đặt lại 0°</button>
+                    </div>
+                    <div class="grid grid-cols-3 gap-1.5 font-mono">
+                        <div>
+                            <span class="text-[10px] text-rose-400 block mb-0.5">RX°</span>
+                            <input id="rotX" type="number" step="15" oninput="applyTransformFromInputs()" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-white text-center">
+                        </div>
+                        <div>
+                            <span class="text-[10px] text-emerald-400 block mb-0.5">RY°</span>
+                            <input id="rotY" type="number" step="15" oninput="applyTransformFromInputs()" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-white text-center">
+                        </div>
+                        <div>
+                            <span class="text-[10px] text-sky-400 block mb-0.5">RZ°</span>
+                            <input id="rotZ" type="number" step="15" oninput="applyTransformFromInputs()" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-white text-center">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Scale Multipliers -->
+                <div>
+                    <div class="flex items-center justify-between mb-1.5">
+                        <label class="text-[11px] text-slate-400 font-medium">Tỷ lệ co giãn (Scale):</label>
+                        <button onclick="resetSelectedTransform('scale')" class="text-[10px] text-sky-400 hover:underline">1 : 1 : 1</button>
+                    </div>
+                    <div class="grid grid-cols-3 gap-1.5 font-mono">
+                        <input id="scaleX" type="number" step="0.1" min="0.1" oninput="applyTransformFromInputs()" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-white text-center">
+                        <input id="scaleY" type="number" step="0.1" min="0.1" oninput="applyTransformFromInputs()" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-white text-center">
+                        <input id="scaleZ" type="number" step="0.1" min="0.1" oninput="applyTransformFromInputs()" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-white text-center">
+                    </div>
+                </div>
+
+                <!-- Material & Appearance (Vật liệu & Màu sắc) -->
+                <div class="pt-2 border-t border-cad-border space-y-2.5">
+                    <label class="block text-[11px] text-slate-400 font-medium">Vật liệu & Màu sắc bề mặt:</label>
+                    <div class="flex items-center space-x-2">
+                        <input id="propColor" type="color" value="#38bdf8" oninput="updateSelectedMaterial()" class="w-9 h-8 rounded cursor-pointer bg-transparent border border-slate-700">
+                        <!-- Quick CAD Material Swatches -->
+                        <div class="flex-1 grid grid-cols-6 gap-1">
+                            <button onclick="applyQuickMaterial('#94a3b8', 0.65, 0.25)" class="h-6 rounded border border-slate-600 bg-[#94a3b8]" title="Thép hợp kim (Steel)"></button>
+                            <button onclick="applyQuickMaterial('#38bdf8', 0.35, 0.3)" class="h-6 rounded border border-slate-600 bg-[#38bdf8]" title="Nhôm Anode Xanh"></button>
+                            <button onclick="applyQuickMaterial('#f59e0b', 0.7, 0.2)" class="h-6 rounded border border-slate-600 bg-[#f59e0b]" title="Đồng thau (Brass)"></button>
+                            <button onclick="applyQuickMaterial('#ef4444', 0.2, 0.4)" class="h-6 rounded border border-slate-600 bg-[#ef4444]" title="Sơn tĩnh điện Đỏ"></button>
+                            <button onclick="applyQuickMaterial('#10b981', 0.25, 0.35)" class="h-6 rounded border border-slate-600 bg-[#10b981]" title="Nhựa kỹ thuật Xanh"></button>
+                            <button onclick="applyQuickMaterial('#e2e8f0', 0.1, 0.5)" class="h-6 rounded border border-slate-600 bg-[#e2e8f0]" title="Trắng Sứ / Báo cáo"></button>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2 pt-1">
+                        <div>
+                            <div class="flex justify-between text-[10px] text-slate-400">
+                                <span>Độ kim loại:</span>
+                                <span id="metalVal">0.4</span>
+                            </div>
+                            <input id="propMetalness" type="range" min="0" max="1" step="0.05" value="0.4" oninput="updateSelectedMaterial()" class="w-full accent-sky-500">
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-[10px] text-slate-400">
+                                <span>Độ nhám:</span>
+                                <span id="roughVal">0.35</span>
+                            </div>
+                            <input id="propRoughness" type="range" min="0" max="1" step="0.05" value="0.35" oninput="updateSelectedMaterial()" class="w-full accent-sky-500">
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between text-[10px] text-slate-400">
+                            <span>Độ đặc / Trong suốt (Opacity):</span>
+                            <span id="opacityVal">100%</span>
+                        </div>
+                        <input id="propOpacity" type="range" min="0.15" max="1" step="0.05" value="1" oninput="updateSelectedMaterial()" class="w-full accent-sky-500">
+                    </div>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <div id="sketchModal" class="hidden fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-sm flex items-center justify-center p-2 md:p-5">
+        <div class="bg-cad-panel border border-slate-700 rounded-xl shadow-2xl w-full max-w-6xl h-[92vh] flex flex-col overflow-hidden">
+            
+            <!-- Modal Header -->
+            <div class="px-4 py-2.5 bg-cad-header border-b border-cad-border flex items-center justify-between">
+                <div class="flex items-center space-x-2.5">
+                    <div class="w-7 h-7 rounded-lg bg-sky-500/20 border border-sky-500/40 flex items-center justify-center text-sky-400">
+                        <i class="fa-solid fa-pen-ruler"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-sm font-bold text-white leading-tight">Phác Thảo Biên Dạng 2D & Tạo Khối 3D (Sketch to Extrude / Revolve)</h2>
+                        <p class="text-[11px] text-slate-400">Vẽ biên dạng kín hoặc kết hợp khoét lỗ bên trong, sau đó đùn thẳng (Extrude) hoặc xoay tròn (Revolve) thành vật thể 3D</p>
+                    </div>
+                </div>
+                <button onclick="closeSketchModal()" class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-rose-600 text-slate-300 hover:text-white transition flex items-center justify-center">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <!-- Sketcher Toolbar -->
+            <div class="px-3 py-2 bg-slate-900 border-b border-cad-border flex flex-wrap items-center justify-between gap-2">
+                <!-- Left: 2D Drawing Tools -->
+                <div class="flex items-center space-x-1">
+                    <span class="text-[11px] text-slate-400 font-medium mr-1">Công cụ vẽ:</span>
+                    <button id="sketchTool-poly" onclick="setSketchTool('poly')" class="px-2.5 py-1.5 rounded text-xs font-medium bg-sky-600 text-white flex items-center space-x-1.5 transition" title="Vẽ đa giác / đường gấp khúc tự do (Nhấp từng điểm, nhấp điểm đầu để đóng kín)">
+                        <i class="fa-solid fa-draw-polygon"></i>
+                        <span>Đa Giác / Polyline</span>
+                    </button>
+                    <button id="sketchTool-rect" onclick="setSketchTool('rect')" class="px-2.5 py-1.5 rounded text-xs font-medium bg-slate-800 text-slate-300 hover:bg-slate-700 flex items-center space-x-1.5 transition" title="Kéo thả vẽ Hình chữ nhật chuẩn kích thước">
+                        <i class="fa-regular fa-square"></i>
+                        <span>Chữ Nhật</span>
+                    </button>
+                    <button id="sketchTool-circle" onclick="setSketchTool('circle')" class="px-2.5 py-1.5 rounded text-xs font-medium bg-slate-800 text-slate-300 hover:bg-slate-700 flex items-center space-x-1.5 transition" title="Kéo thả vẽ Hình tròn theo bán kính">
+                        <i class="fa-regular fa-circle"></i>
+                        <span>Hình Tròn</span>
+                    </button>
+                    <button id="sketchTool-slot" onclick="setSketchTool('slot')" class="px-2.5 py-1.5 rounded text-xs font-medium bg-slate-800 text-slate-300 hover:bg-slate-700 flex items-center space-x-1.5 transition" title="Kéo thả vẽ Rãnh then / Lỗ hạt đậu (Mechanical Slot)">
+                        <i class="fa-solid fa-capsules"></i>
+                        <span>Rãnh Then</span>
+                    </button>
+                    <button id="sketchTool-regpoly" onclick="setSketchTool('regpoly')" class="px-2.5 py-1.5 rounded text-xs font-medium bg-slate-800 text-slate-300 hover:bg-slate-700 flex items-center space-x-1.5 transition" title="Vẽ Lục giác / Đa giác đều">
+                        <i class="fa-solid fa-hexagon-nodes"></i>
+                        <span>Lục Giác</span>
+                    </button>
+                </div>
+
+                <!-- Center: Outer Contour vs Cut Hole Mode -->
+                <div class="flex items-center space-x-1 bg-slate-950 p-1 rounded-lg border border-slate-800">
+                    <button id="contourMode-outer" onclick="setContourRole('outer')" class="px-2.5 py-1 rounded text-xs font-semibold bg-sky-600 text-white transition flex items-center space-x-1" title="Vẽ đường bao ngoài tạo thịt chi tiết">
+                        <i class="fa-solid fa-square text-[10px]"></i>
+                        <span>Biên Dạng Ngoài (Đặc)</span>
+                    </button>
+                    <button id="contourMode-hole" onclick="setContourRole('hole')" class="px-2.5 py-1 rounded text-xs font-semibold text-slate-300 hover:text-white transition flex items-center space-x-1" title="Vẽ lỗ khoét xuyên qua biên dạng ngoài">
+                        <i class="fa-regular fa-circle-dot text-rose-400 text-[11px]"></i>
+                        <span>Khoét Lỗ Trong (Hole)</span>
+                    </button>
+                </div>
+
+                <!-- Right: Snap & Clear Actions -->
+                <div class="flex items-center space-x-2 text-xs">
+                    <label class="flex items-center space-x-1 text-slate-300 cursor-pointer">
+                        <input id="snapGridCheck" type="checkbox" checked class="rounded accent-sky-500">
+                        <span>Bắt điểm lưới (5mm)</span>
+                    </label>
+                    <button onclick="undoLastSketchAction()" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded border border-slate-700" title="Hoàn tác nét vừa vẽ">
+                        <i class="fa-solid fa-rotate-left mr-1"></i>Hoàn tác
+                    </button>
+                    <button onclick="clearSketchCanvas()" class="px-2.5 py-1 bg-rose-950/70 hover:bg-rose-900 text-rose-200 rounded border border-rose-800/60">
+                        <i class="fa-solid fa-eraser mr-1"></i>Xóa sạch
+                    </button>
+                </div>
+            </div>
+
+            <!-- Main Split Workspace: 2D Canvas (Left) & 3D Extrude Preview + Settings (Right) -->
+            <div class="flex-1 flex flex-col lg:flex-row overflow-hidden">
+                
+                <!-- 2D Interactive Sketch Pad -->
+                <div class="flex-1 relative bg-[#111418] overflow-hidden flex flex-col">
+                    <!-- Quick Engineering Profile Templates Bar -->
+                    <div class="px-3 py-1.5 bg-slate-900/90 border-b border-slate-800 flex items-center space-x-1.5 overflow-x-auto text-[11px]">
+                        <span class="text-slate-400 font-medium shrink-0"><i class="fa-solid fa-wand-magic-sparkles text-amber-400 mr-1"></i>Mẫu biên dạng:</span>
+                        <button onclick="loadSketchTemplate('l_bracket')" class="px-2 py-0.5 bg-slate-800 hover:bg-sky-600/30 text-slate-200 rounded border border-slate-700 shrink-0">Ke chữ L</button>
+                        <button onclick="loadSketchTemplate('u_channel')" class="px-2 py-0.5 bg-slate-800 hover:bg-sky-600/30 text-slate-200 rounded border border-slate-700 shrink-0">Thép chữ U</button>
+                        <button onclick="loadSketchTemplate('t_beam')" class="px-2 py-0.5 bg-slate-800 hover:bg-sky-600/30 text-slate-200 rounded border border-slate-700 shrink-0">Thép chữ T</button>
+                        <button onclick="loadSketchTemplate('i_beam')" class="px-2 py-0.5 bg-slate-800 hover:bg-sky-600/30 text-slate-200 rounded border border-slate-700 shrink-0">Dầm chữ I</button>
+                        <button onclick="loadSketchTemplate('flange_holes')" class="px-2 py-0.5 bg-slate-800 hover:bg-sky-600/30 text-slate-200 rounded border border-slate-700 shrink-0">Mặt bích 4 lỗ</button>
+                        <button onclick="loadSketchTemplate('plate_slot')" class="px-2 py-0.5 bg-slate-800 hover:bg-sky-600/30 text-slate-200 rounded border border-slate-700 shrink-0">Bản mã rãnh then</button>
+                        <button onclick="loadSketchTemplate('gear_profile')" class="px-2 py-0.5 bg-slate-800 hover:bg-sky-600/30 text-slate-200 rounded border border-slate-700 shrink-0">Bánh răng 12 răng</button>
+                        <button onclick="loadSketchTemplate('revolve_pulley')" class="px-2 py-0.5 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 rounded border border-amber-500/40 shrink-0">Biên dạng Puli (Revolve)</button>
+                    </div>
+
+                    <!-- 2D Canvas Container -->
+                    <div id="sketchCanvasWrapper" class="flex-1 relative overflow-hidden">
+                        <canvas id="sketchCanvas" class="w-full h-full block"></canvas>
+
+                        <!-- Live Coordinate & Instruction HUD -->
+                        <div class="absolute bottom-3 left-3 pointer-events-none bg-slate-900/90 border border-slate-700 px-3 py-1.5 rounded-lg text-xs flex items-center space-x-3">
+                            <span id="sketchCursorCoord" class="font-mono text-sky-400 font-semibold">X: 0 mm, Y: 0 mm</span>
+                            <span class="text-slate-600">|</span>
+                            <span id="sketchHintText" class="text-slate-300">Nhấp chuột để đặt các đỉnh đa giác, nhấp vào điểm đầu tiên (màu vàng) để khép kín.</span>
+                        </div>
+
+                        <!-- Finish Polyline Button when actively drawing polyline -->
+                        <button id="closePolyBtn" onclick="finishActivePolyline()" class="hidden absolute top-3 right-3 px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs rounded-lg shadow-lg">
+                            <i class="fa-solid fa-check mr-1"></i>Đóng Kín Đa Giác (Enter)
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Right Panel: Live 3D Preview & Extrude/Revolve Configuration -->
+                <div class="w-full lg:w-96 bg-cad-panel border-t lg:border-t-0 lg:border-l border-cad-border flex flex-col justify-between p-4 overflow-y-auto space-y-4">
+                    <div class="space-y-3">
+                        <!-- Live 3D Mini Viewport -->
+                        <div>
+                            <div class="flex items-center justify-between mb-1">
+                                <span class="text-xs font-bold uppercase tracking-wider text-sky-400">
+                                    <i class="fa-solid fa-cube mr-1"></i>Xem Trước Khối 3D (Live Preview)
+                                </span>
+                                <span id="sketchContourStatus" class="text-[11px] font-mono text-emerald-400">1 Biên dạng kín</span>
+                            </div>
+                            <div class="h-48 w-full bg-slate-950 rounded-lg border border-slate-800 relative overflow-hidden">
+                                <canvas id="preview3DCanvas" class="w-full h-full block"></canvas>
+                                <div class="absolute bottom-1.5 right-2 text-[10px] text-slate-500 pointer-events-none">Chuột trái xoay xem trước</div>
+                            </div>
+                        </div>
+
+                        <!-- Operation Type: Boss-Extrude vs Revolve -->
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-300 mb-1.5">Phương pháp tạo khối 3D:</label>
+                            <div class="grid grid-cols-2 gap-2">
+                                <button id="opType-extrude" onclick="setSketchOpType('extrude')" class="py-2 px-3 rounded-lg border border-sky-500 bg-sky-500/20 text-sky-300 font-semibold text-xs flex items-center justify-center space-x-1.5">
+                                    <i class="fa-solid fa-arrows-up-down"></i>
+                                    <span>Đùn Thẳng (Extrude)</span>
+                                </button>
+                                <button id="opType-revolve" onclick="setSketchOpType('revolve')" class="py-2 px-3 rounded-lg border border-slate-700 bg-slate-800 text-slate-300 hover:bg-slate-700 font-semibold text-xs flex items-center justify-center space-x-1.5">
+                                    <i class="fa-solid fa-arrows-spin"></i>
+                                    <span>Xoay Tròn (Revolve)</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Extrude Parameters -->
+                        <div id="sketchExtrudeParams" class="space-y-3 bg-slate-900/70 p-3 rounded-lg border border-slate-800">
+                            <div>
+                                <div class="flex justify-between text-xs mb-1">
+                                    <span class="text-slate-300 font-medium">Chiều cao / Dày đùn khối (mm):</span>
+                                    <span id="sketchDepthVal" class="font-mono font-bold text-sky-400">30 mm</span>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <input id="sketchDepthSlider" type="range" min="2" max="150" value="30" oninput="syncSketchDepth(this.value)" class="flex-1 accent-sky-500">
+                                    <input id="sketchDepthInput" type="number" min="1" max="500" value="30" oninput="syncSketchDepth(this.value)" class="w-16 bg-slate-950 border border-slate-700 rounded px-2 py-1 text-xs font-mono text-center text-white">
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs text-slate-300 font-medium mb-1">Mặt phẳng đặt khối (Sketch Plane):</label>
+                                <select id="sketchPlaneSelect" onchange="updateSketchPreview3D()" class="w-full bg-slate-950 border border-slate-700 rounded px-2.5 py-1.5 text-xs text-slate-200 outline-none">
+                                    <option value="XY">Mặt phẳng Đứng (Front XY - Đùn theo trục Z)</option>
+                                    <option value="XZ">Mặt phẳng Bằng (Top XZ - Đùn thẳng đứng theo trục Y)</option>
+                                    <option value="YZ">Mặt phẳng Cạnh (Right YZ - Đùn ngang theo trục X)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Revolve Parameters (Hidden unless Revolve is selected) -->
+                        <div id="sketchRevolveParams" class="hidden space-y-3 bg-slate-900/70 p-3 rounded-lg border border-amber-500/30">
+                            <div>
+                                <div class="flex justify-between text-xs mb-1">
+                                    <span class="text-slate-300 font-medium">Góc xoay tròn quanh trục Y (°):</span>
+                                    <span id="sketchRevolveAngleVal" class="font-mono font-bold text-amber-400">360°</span>
+                                </div>
+                                <input id="sketchRevolveAngle" type="range" min="45" max="360" step="15" value="360" oninput="updateSketchPreview3D()" class="w-full accent-amber-500">
+                            </div>
+                            <p class="text-[11px] text-amber-200/80 leading-relaxed">
+                                <i class="fa-solid fa-circle-info mr-1"></i>Biên dạng sẽ xoay quanh trục đứng tâm (X = 0) để tạo chi tiết tròn xoay (trục bậc, bích tròn, puli, cốc...).
+                            </p>
+                        </div>
+
+                        <!-- Bevel / Chamfer & Part Info -->
+                        <div class="bg-slate-900/70 p-3 rounded-lg border border-slate-800 space-y-2.5 text-xs">
+                            <div class="flex items-center justify-between">
+                                <label class="flex items-center space-x-2 text-slate-300 cursor-pointer font-medium">
+                                    <input id="sketchBevelCheck" type="checkbox" checked onchange="updateSketchPreview3D()" class="rounded accent-sky-500">
+                                    <span>Vát mép / Bo cạnh (Chamfer)</span>
+                                </label>
+                                <div class="flex items-center space-x-1">
+                                    <span class="text-[11px] text-slate-400">Cỡ:</span>
+                                    <input id="sketchBevelSize" type="number" min="0.5" max="8" step="0.5" value="1.2" onchange="updateSketchPreview3D()" class="w-14 bg-slate-950 border border-slate-700 rounded px-1.5 py-0.5 font-mono text-center text-white">
+                                    <span class="text-[10px] text-slate-500">mm</span>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-3 gap-2 pt-1 border-t border-slate-800 items-center">
+                                <div class="col-span-2">
+                                    <label class="block text-[11px] text-slate-400 mb-0.5">Tên chi tiết mới:</label>
+                                    <input id="sketchPartName" type="text" value="Khối Extrude Biên Dạng" class="w-full bg-slate-950 border border-slate-700 rounded px-2 py-1 text-white">
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] text-slate-400 mb-0.5">Màu sắc:</label>
+                                    <input id="sketchPartColor" type="color" value="#38bdf8" onchange="updateSketchPreview3D()" class="w-full h-7 rounded cursor-pointer bg-transparent border border-slate-700">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Modal Footer Buttons -->
+                    <div class="pt-3 border-t border-cad-border flex items-center space-x-2">
+                        <button onclick="closeSketchModal()" class="px-4 py-2.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold transition">
+                            Hủy Bỏ
+                        </button>
+                        <button onclick="commitSketchTo3DScene()" class="flex-1 py-2.5 px-4 rounded-lg bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-white font-bold text-xs shadow-lg shadow-sky-950 flex items-center justify-center space-x-2 transition">
+                            <i class="fa-solid fa-cube text-sm"></i>
+                            <span id="commitSketchBtnText">Tạo Khối 3D Đưa Vào Bản Vẽ</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="screenshotModal" class="hidden fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-cad-panel border border-slate-700 rounded-xl shadow-2xl w-full max-w-4xl overflow-hidden flex flex-col max-h-[90vh]">
+            <div class="px-4 py-3 bg-cad-header border-b border-cad-border flex items-center justify-between">
+                <div class="flex items-center space-x-2">
+                    <i class="fa-solid fa-camera-retro text-emerald-400 text-base"></i>
+                    <h3 class="text-sm font-bold text-white">Chụp & Xuất Ảnh Mô Hình 3D Cho Báo Cáo Kỹ Thuật</h3>
+                </div>
+                <button onclick="closeScreenshotModal()" class="w-7 h-7 rounded bg-slate-800 hover:bg-rose-600 text-slate-300 hover:text-white flex items-center justify-center">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="p-4 flex-1 overflow-y-auto grid grid-cols-1 md:grid-cols-12 gap-4">
+                <!-- Preview Image Box -->
+                <div class="md:col-span-8 bg-slate-950 rounded-lg border border-slate-800 p-2 flex flex-col items-center justify-center">
+                    <img id="reportScreenshotPreview" alt="Bản xem trước ảnh báo cáo" class="max-h-[52vh] w-auto object-contain rounded border border-slate-700 shadow-md bg-white">
+                    <span class="text-[11px] text-slate-400 mt-2 font-mono" id="screenshotResInfo">Độ phân giải nét cao phục vụ in ấn Word / PDF / LaTeX</span>
+                </div>
+
+                <!-- Capture Options -->
+                <div class="md:col-span-4 flex flex-col justify-between space-y-4 text-xs">
+                    <div class="space-y-3">
+                        <div class="p-3 rounded-lg bg-slate-900 border border-slate-800 space-y-2.5">
+                            <div class="font-bold text-slate-200 uppercase text-[11px] tracking-wider">Tùy chọn ảnh báo cáo:</div>
+                            
+                            <label class="flex items-center space-x-2 text-slate-200 cursor-pointer">
+                                <input id="capWhiteBg" type="checkbox" checked onchange="renderReportPreviewImage()" class="rounded accent-emerald-500">
+                                <span>Nền trắng tinh khiết (Chuẩn Word/PDF)</span>
+                            </label>
+
+                            <label class="flex items-center space-x-2 text-slate-200 cursor-pointer">
+                                <input id="capShowDims" type="checkbox" checked onchange="renderReportPreviewImage()" class="rounded accent-emerald-500">
+                                <span>Kèm nhãn kích thước (Dài × Rộng × Cao)</span>
+                            </label>
+
+                            <label class="flex items-center space-x-2 text-slate-200 cursor-pointer">
+                                <input id="capShowTitleBlock" type="checkbox" checked onchange="renderReportPreviewImage()" class="rounded accent-emerald-500">
+                                <span>Vẽ Khung tên kỹ thuật (Title Block)</span>
+                            </label>
+
+                            <label class="flex items-center space-x-2 text-slate-200 cursor-pointer">
+                                <input id="capHideGrid" type="checkbox" checked onchange="renderReportPreviewImage()" class="rounded accent-emerald-500">
+                                <span>Ẩn lưới sàn & trục điều khiển</span>
+                            </label>
+                        </div>
+
+                        <div class="p-3 rounded-lg bg-slate-900 border border-slate-800 space-y-2">
+                            <div class="font-bold text-slate-200 uppercase text-[11px] tracking-wider">Thông tin khung tên trên ảnh:</div>
+                            <div>
+                                <span class="text-[10px] text-slate-400 block">Tiêu đề hình vẽ / Chi tiết:</span>
+                                <input id="capTitleText" type="text" value="Hình 1: Mô hình 3D Cụm Chi Tiết Cơ Khí" oninput="renderReportPreviewImage()" class="w-full bg-slate-950 border border-slate-700 rounded px-2 py-1 text-white mt-0.5">
+                            </div>
+                            <div>
+                                <span class="text-[10px] text-slate-400 block">Ghi chú / Người thiết kế:</span>
+                                <input id="capAuthorText" type="text" value="Đơn vị: mm | Tỷ lệ: Tự động" oninput="renderReportPreviewImage()" class="w-full bg-slate-950 border border-slate-700 rounded px-2 py-1 text-white mt-0.5">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-2 pt-2 border-t border-slate-800">
+                        <button onclick="downloadCapturedPNG()" class="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg shadow-lg flex items-center justify-center space-x-2 transition">
+                            <i class="fa-solid fa-download"></i>
+                            <span>Tải Ảnh Báo Cáo (.PNG)</span>
+                        </button>
+                        <button onclick="closeScreenshotModal()" class="w-full py-2 px-4 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold rounded-lg transition">
+                            Đóng cửa sổ
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="toastNotification" class="fixed bottom-4 right-4 z-50 pointer-events-none opacity-0 translate-y-2 transition-all duration-200 bg-slate-900/95 border border-sky-500/50 text-white px-4 py-2.5 rounded-xl shadow-2xl flex items-center space-x-2.5 text-xs">
+        <i id="toastIcon" class="fa-solid fa-circle-check text-emerald-400 text-sm"></i>
+        <span id="toastMessage" class="font-medium">Đã tạo khối 3D thành công!</span>
+    </div>
+
+    <script>
+        // ============================================================================
+        // GLOBAL STATE & CAD SCENE VARIABLES
+        // ============================================================================
+        let scene, renderer, activeCamera, perspectiveCamera, orthoCamera;
+        let orbitControls, transformControls;
+        let gridHelper, axesHelper, floorShadowMesh;
+        let raycaster = new THREE.Raycaster();
+        let mouse = new THREE.Vector2();
+
+        // List of CAD Part records: { id, name, type, mesh, edgeLines, sketchData, params, visible, locked }
+        let cadParts = [];
+        let selectedPart = null;
+        let partCounter = 1;
+
+        // Display & CAD Modes
+        let currentTheme = 'dark'; // 'dark' | 'studio' | 'report'
+        let renderMode = 'shaded_edges'; // 'shaded_edges' | 'shaded' | 'technical_line' | 'wireframe' | 'xray'
+        let showDimensions = true;
+        let showTitleBlock = false;
+        let showHelpers = true;
+        let sectionCutActive = false;
+        let sectionPlane = new THREE.Plane(new THREE.Vector3(0, 0, -1), 0);
+
+        // 3D Dimension Measurement Visuals
+        let dimGroup = new THREE.Group();
+
+        // ============================================================================
+        // INITIALIZE 3D WORKSPACE
+        // ============================================================================
+        function initCAD3D() {
+            const container = document.getElementById('viewportContainer');
+            const canvas = document.getElementById('threeCanvas');
+            const width = container.clientWidth;
+            const height = container.clientHeight;
+
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x181b20);
+
+            // Perspective Camera
+            perspectiveCamera = new THREE.PerspectiveCamera(42, width / height, 1, 5000);
+            perspectiveCamera.position.set(160, 130, 180);
+
+            // Orthographic Camera for true technical projection
+            const aspect = width / height;
+            const frustumSize = 220;
+            orthoCamera = new THREE.OrthographicCamera(
+                -frustumSize * aspect / 2, frustumSize * aspect / 2,
+                frustumSize / 2, -frustumSize / 2,
+                -2000, 3000
+            );
+            orthoCamera.position.copy(perspectiveCamera.position);
+
+            activeCamera = perspectiveCamera;
+
+            // WebGL Renderer with preserveDrawingBuffer for instant Report Screenshots
+            renderer = new THREE.WebGLRenderer({
+                canvas: canvas,
+                antialias: true,
+                preserveDrawingBuffer: true,
+                alpha: false
+            });
+            renderer.setSize(width, height);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            renderer.localClippingEnabled = false;
+
+            // Studio 3-Point Engineering Lighting
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.65);
+            scene.add(ambientLight);
+
+            const mainDirLight = new THREE.DirectionalLight(0xffffff, 0.85);
+            mainDirLight.position.set(180, 260, 200);
+            mainDirLight.castShadow = true;
+            mainDirLight.shadow.mapSize.width = 2048;
+            mainDirLight.shadow.mapSize.height = 2048;
+            mainDirLight.shadow.camera.near = 10;
+            mainDirLight.shadow.camera.far = 800;
+            const d = 180;
+            mainDirLight.shadow.camera.left = -d;
+            mainDirLight.shadow.camera.right = d;
+            mainDirLight.shadow.camera.top = d;
+            mainDirLight.shadow.camera.bottom = -d;
+            mainDirLight.shadow.bias = -0.0005;
+            scene.add(mainDirLight);
+
+            const fillDirLight = new THREE.DirectionalLight(0x93c5fd, 0.35);
+            fillDirLight.position.set(-180, 100, -140);
+            scene.add(fillDirLight);
+
+            const bottomLight = new THREE.DirectionalLight(0xffffff, 0.2);
+            bottomLight.position.set(0, -150, 0);
+            scene.add(bottomLight);
+
+            // CAD Millimeter Grid & Origin Axes
+            gridHelper = new THREE.GridHelper(300, 30, 0x38bdf8, 0x2d3440);
+            gridHelper.position.y = -0.05;
+            scene.add(gridHelper);
+
+            axesHelper = new THREE.AxesHelper(65);
+            axesHelper.position.set(0, 0.1, 0);
+            scene.add(axesHelper);
+
+            // Subtle Shadow Receiver Floor
+            const floorGeo = new THREE.PlaneGeometry(500, 500);
+            const floorMat = new THREE.ShadowMaterial({ opacity: 0.18 });
+            floorShadowMesh = new THREE.Mesh(floorGeo, floorMat);
+            floorShadowMesh.rotation.x = -Math.PI / 2;
+            floorShadowMesh.position.y = -0.08;
+            floorShadowMesh.receiveShadow = true;
+            scene.add(floorShadowMesh);
+
+            // Dimension Visualization Group
+            scene.add(dimGroup);
+
+            // OrbitControls
+            orbitControls = new THREE.OrbitControls(activeCamera, renderer.domElement);
+            orbitControls.enableDamping = true;
+            orbitControls.dampingFactor = 0.08;
+            orbitControls.target.set(0, 20, 0);
+
+            // TransformControls
+            transformControls = new THREE.TransformControls(activeCamera, renderer.domElement);
+            transformControls.setTranslationSnap(1);
+            transformControls.setRotationSnap(THREE.MathUtils.degToRad(5));
+            transformControls.addEventListener('dragging-changed', (event) => {
+                orbitControls.enabled = !event.value;
+            });
+            transformControls.addEventListener('change', () => {
+                if (selectedPart) {
+                    syncInspectorFromSelected();
+                    updateDimensionVisuals();
+                }
+            });
+            scene.add(transformControls);
+
+            // Viewport Events
+            setupViewportInteraction();
+            window.addEventListener('resize', onViewportResize);
+
+            // Initialize 2D Sketcher & Mini 3D Preview
+            initSketcherSystem();
+
+            // Load Default Mechanical Assembly Demo
+            loadDemoAssembly();
+
+            // Start Animation Loop
+            animateCAD();
+        }
+
+        // ============================================================================
+        // CAD MESH & FEATURE EDGE GENERATOR
+        // ============================================================================
+        function createCADPartFromGeometry(geometry, options = {}) {
+            const name = options.name || `Chi tiết #${partCounter}`;
+            const colorHex = options.color || '#38bdf8';
+            const metalness = options.metalness !== undefined ? options.metalness : 0.4;
+            const roughness = options.roughness !== undefined ? options.roughness : 0.35;
+            const opacity = options.opacity !== undefined ? options.opacity : 1.0;
+
+            // Compute normals and center bounding info if requested
+            geometry.computeVertexNormals();
+            geometry.computeBoundingBox();
+
+            const material = new THREE.MeshStandardMaterial({
+                color: new THREE.Color(colorHex),
+                metalness: metalness,
+                roughness: roughness,
+                transparent: opacity < 1.0,
+                opacity: opacity,
+                polygonOffset: true,
+                polygonOffsetFactor: 1,
+                polygonOffsetUnits: 1,
+                side: THREE.DoubleSide,
+                clippingPlanes: sectionCutActive ? [sectionPlane] : []
+            });
+
+            const mesh = new THREE.Mesh(geometry, material);
+            mesh.castShadow = true;
+            mesh.receiveShadow = true;
+
+            // Create Sharp SolidWorks Feature Edges (Threshold 24 degrees)
+            const edgesGeo = new THREE.EdgesGeometry(geometry, 24);
+            const edgesMat = new THREE.LineBasicMaterial({
+                color: 0x0f172a,
+                linewidth: 1,
+                clippingPlanes: sectionCutActive ? [sectionPlane] : []
+            });
+            const edgeLines = new THREE.LineSegments(edgesGeo, edgesMat);
+            mesh.add(edgeLines);
+
+            // Apply initial transforms
+            if (options.position) mesh.position.set(options.position.x, options.position.y, options.position.z);
+            if (options.rotation) {
+                mesh.rotation.set(
+                    THREE.MathUtils.degToRad(options.rotation.x || 0),
+                    THREE.MathUtils.degToRad(options.rotation.y || 0),
+                    THREE.MathUtils.degToRad(options.rotation.z || 0)
+                );
+            }
+            if (options.scale) mesh.scale.set(options.scale.x || 1, options.scale.y || 1, options.scale.z || 1);
+
+            scene.add(mesh);
+
+            const partRecord = {
+                id: 'part_' + Date.now() + '_' + (partCounter++),
+                name: name,
+                type: options.type || 'primitive', // 'extrude' | 'revolve' | 'primitive'
+                mesh: mesh,
+                edgeLines: edgeLines,
+                color: colorHex,
+                metalness: metalness,
+                roughness: roughness,
+                opacity: opacity,
+                visible: true,
+                locked: false,
+                sketchData: options.sketchData ? JSON.parse(JSON.stringify(options.sketchData)) : null,
+                extrudeParams: options.extrudeParams ? Object.assign({}, options.extrudeParams) : null
+            };
+
+            mesh.userData.partId = partRecord.id;
+            cadParts.push(partRecord);
+
+            applyCurrentRenderModeToPart(partRecord);
+            renderFeatureTree();
+            selectPart(partRecord);
+            return partRecord;
+        }
+
+        // ============================================================================
+        // BUILD 3D GEOMETRY FROM 2D SKETCH CONTOURS (EXTRUDE & REVOLVE)
+        // ============================================================================
+        function buildGeometryFromSketch(sketchData, extrudeParams) {
+            const outerContours = sketchData.filter(c => c.role === 'outer' && c.points.length >= 3);
+            const holeContours = sketchData.filter(c => c.role === 'hole' && c.points.length >= 3);
+
+            // Fallback if user only drew holes or no outer contour
+            const targetOuters = outerContours.length > 0 ? outerContours : sketchData.filter(c => c.points.length >= 3);
+            if (targetOuters.length === 0) return new THREE.BoxGeometry(20, 20, 20);
+
+            // 1. REVOLVE MODE (LatheGeometry around Y axis)
+            if (extrudeParams.opType === 'revolve') {
+                const pts2D = targetOuters[0].points.map(p => new THREE.Vector2(Math.max(0.5, Math.abs(p.x)), -p.y));
+                // Close loop by connecting last to first
+                if (pts2D.length > 2) pts2D.push(pts2D[0].clone());
+                const angleRad = THREE.MathUtils.degToRad(extrudeParams.revolveAngle || 360);
+                const geo = new THREE.LatheGeometry(pts2D, 48, 0, angleRad);
+                geo.center();
+                return geo;
+            }
+
+            // 2. BOSS-EXTRUDE MODE (With Holes & Chamfer/Bevel)
+            const shapes = [];
+            targetOuters.forEach((outer, idx) => {
+                const shape = new THREE.Shape();
+                outer.points.forEach((pt, i) => {
+                    if (i === 0) shape.moveTo(pt.x, -pt.y);
+                    else shape.lineTo(pt.x, -pt.y);
+                });
+                shape.closePath();
+
+                // Attach all hole paths to the primary outer shape
+                if (idx === 0 && holeContours.length > 0) {
+                    holeContours.forEach(hole => {
+                        const holePath = new THREE.Path();
+                        hole.points.forEach((pt, i) => {
+                            if (i === 0) holePath.moveTo(pt.x, -pt.y);
+                            else holePath.lineTo(pt.x, -pt.y);
+                        });
+                        holePath.closePath();
+                        shape.holes.push(holePath);
+                    });
+                }
+                shapes.push(shape);
+            });
+
+            const depth = Math.max(1, parseFloat(extrudeParams.depth) || 25);
+            const bevelEnabled = Boolean(extrudeParams.bevelEnabled);
+            const bevelSize = Math.max(0.2, parseFloat(extrudeParams.bevelSize) || 1.2);
+
+            const geo = new THREE.ExtrudeGeometry(shapes, {
+                depth: depth,
+                bevelEnabled: bevelEnabled,
+                bevelThickness: bevelEnabled ? bevelSize : 0,
+                bevelSize: bevelEnabled ? bevelSize : 0,
+                bevelSegments: 2,
+                curveSegments: 32
+            });
+
+            // Center geometry and orient according to chosen Sketch Plane
+            geo.center();
+            if (extrudeParams.plane === 'XZ') {
+                geo.rotateX(-Math.PI / 2);
+            } else if (extrudeParams.plane === 'YZ') {
+                geo.rotateY(Math.PI / 2);
+            }
+            return geo;
+        }
+
+        // ============================================================================
+        // ADD 3D PRIMITIVES & QUICK ENGINEERING PROFILES
+        // ============================================================================
+        function addPrimitive(kind) {
+            let geo, name, color = '#60a5fa', yPos = 20;
+
+            switch (kind) {
+                case 'box':
+                    geo = new THREE.BoxGeometry(50, 35, 40);
+                    name = 'Khối Hộp (Box)';
+                    color = '#38bdf8';
+                    yPos = 17.5;
+                    break;
+                case 'cylinder':
+                    geo = new THREE.CylinderGeometry(20, 20, 50, 40);
+                    name = 'Trục Trụ Đặc (Cylinder)';
+                    color = '#94a3b8';
+                    yPos = 25;
+                    break;
+                case 'tube': {
+                    // Extrude a hollow pipe using THREE.Shape + hole
+                    const outer = makeCirclePoints(0, 0, 24, 40);
+                    const inner = makeCirclePoints(0, 0, 16, 40);
+                    const sketchData = [
+                        { role: 'outer', points: outer },
+                        { role: 'hole', points: inner }
+                    ];
+                    const params = { opType: 'extrude', depth: 50, bevelEnabled: true, bevelSize: 0.8, plane: 'XZ' };
+                    geo = buildGeometryFromSketch(sketchData, params);
+                    return createCADPartFromGeometry(geo, {
+                        name: 'Ống Trụ Rỗng (Pipe)',
+                        type: 'extrude',
+                        color: '#64748b',
+                        position: { x: 0, y: 26, z: 0 },
+                        sketchData,
+                        extrudeParams: params
+                    });
+                }
+                case 'hex': {
+                    const hexOuter = makeCirclePoints(0, 0, 22, 6);
+                    const hexHole = makeCirclePoints(0, 0, 10, 32);
+                    const sketchData = [
+                        { role: 'outer', points: hexOuter },
+                        { role: 'hole', points: hexHole }
+                    ];
+                    const params = { opType: 'extrude', depth: 18, bevelEnabled: true, bevelSize: 1.2, plane: 'XZ' };
+                    geo = buildGeometryFromSketch(sketchData, params);
+                    return createCADPartFromGeometry(geo, {
+                        name: 'Đai Ốc Lục Giác M20',
+                        type: 'extrude',
+                        color: '#f59e0b',
+                        metalness: 0.65,
+                        roughness: 0.25,
+                        position: { x: 0, y: 10, z: 0 },
+                        sketchData,
+                        extrudeParams: params
+                    });
+                }
+                case 'cone':
+                    geo = new THREE.ConeGeometry(24, 50, 36);
+                    name = 'Khối Nón (Cone)';
+                    color = '#818cf8';
+                    yPos = 25;
+                    break;
+                case 'sphere':
+                    geo = new THREE.SphereGeometry(22, 36, 24);
+                    name = 'Bi Cầu (Sphere)';
+                    color = '#cbd5e1';
+                    yPos = 22;
+                    break;
+                case 'torus':
+                    geo = new THREE.TorusGeometry(22, 6, 24, 48);
+                    geo.rotateX(Math.PI / 2);
+                    name = 'Vòng Đệm / Gioăng (Torus)';
+                    color = '#f43f5e';
+                    yPos = 6;
+                    break;
+            }
+
+            createCADPartFromGeometry(geo, {
+                name: name,
+                type: 'primitive',
+                color: color,
+                position: { x: (Math.random() - 0.5) * 30, y: yPos, z: (Math.random() - 0.5) * 30 }
+            });
+            showToast(`Đã thêm ${name} vào không gian 3D`);
+        }
+
+        // Helper for circle/polygon points
+        function makeCirclePoints(cx, cy, radius, segments = 32) {
+            const pts = [];
+            for (let i = 0; i < segments; i++) {
+                const a = (i / segments) * Math.PI * 2;
+                pts.push({
+                    x: Number((cx + Math.cos(a) * radius).toFixed(2)),
+                    y: Number((cy + Math.sin(a) * radius).toFixed(2))
+                });
+            }
+            return pts;
+        }
+
+        // Helper for Mechanical Slot (Obround) points
+        function makeSlotPoints(x1, y1, x2, y2, radius, segments = 16) {
+            const pts = [];
+            const dx = x2 - x1;
+            const dy = y2 - y1;
+            const baseAngle = Math.atan2(dy, dx);
+            for (let i = 0; i <= segments; i++) {
+                const a = baseAngle - Math.PI / 2 + (i / segments) * Math.PI;
+                pts.push({ x: x2 + Math.cos(a) * radius, y: y2 + Math.sin(a) * radius });
+            }
+            for (let i = 0; i <= segments; i++) {
+                const a = baseAngle + Math.PI / 2 + (i / segments) * Math.PI;
+                pts.push({ x: x1 + Math.cos(a) * radius, y: y1 + Math.sin(a) * radius });
+            }
+            return pts;
+        }
+
+        // Generate 2D Contour Data for Preset Engineering Profiles
+        function getProfilePresetContours(presetName) {
+            if (presetName === 'l_bracket') {
+                return {
+                    name: 'Ke Góc Chữ L (L-Bracket)',
+                    color: '#38bdf8',
+                    params: { opType: 'extrude', depth: 45, bevelEnabled: true, bevelSize: 1.0, plane: 'XY' },
+                    contours: [{
+                        role: 'outer',
+                        points: [
+                            { x: -35, y: 35 }, { x: 35, y: 35 }, { x: 35, y: 20 },
+                            { x: -20, y: 20 }, { x: -20, y: -35 }, { x: -35, y: -35 }
+                        ]
+                    }]
+                };
+            }
+            if (presetName === 'u_channel') {
+                return {
+                    name: 'Thép Hình Chữ U (U-Channel)',
+                    color: '#60a5fa',
+                    params: { opType: 'extrude', depth: 70, bevelEnabled: true, bevelSize: 0.8, plane: 'XY' },
+                    contours: [{
+                        role: 'outer',
+                        points: [
+                            { x: -40, y: 30 }, { x: 40, y: 30 }, { x: 40, y: -30 },
+                            { x: 28, y: -30 }, { x: 28, y: 18 }, { x: -28, y: 18 },
+                            { x: -28, y: -30 }, { x: -40, y: -30 }
+                        ]
+                    }]
+                };
+            }
+            if (presetName === 't_beam') {
+                return {
+                    name: 'Dầm Thép Chữ T (T-Profile)',
+                    color: '#818cf8',
+                    params: { opType: 'extrude', depth: 60, bevelEnabled: true, bevelSize: 1.0, plane: 'XY' },
+                    contours: [{
+                        role: 'outer',
+                        points: [
+                            { x: -40, y: -30 }, { x: 40, y: -30 }, { x: 40, y: -16 },
+                            { x: 8, y: -16 }, { x: 8, y: 35 }, { x: -8, y: 35 },
+                            { x: -8, y: -16 }, { x: -40, y: -16 }
+                        ]
+                    }]
+                };
+            }
+            if (presetName === 'i_beam') {
+                return {
+                    name: 'Dầm Chữ I Chịu Lực (I-Beam)',
+                    color: '#94a3b8',
+                    params: { opType: 'extrude', depth: 90, bevelEnabled: true, bevelSize: 1.0, plane: 'XY' },
+                    contours: [{
+                        role: 'outer',
+                        points: [
+                            { x: -35, y: -40 }, { x: 35, y: -40 }, { x: 35, y: -28 },
+                            { x: 7, y: -28 }, { x: 7, y: 28 }, { x: 35, y: 28 },
+                            { x: 35, y: 40 }, { x: -35, y: 40 }, { x: -35, y: 28 },
+                            { x: -7, y: 28 }, { x: -7, y: -28 }, { x: -35, y: -28 }
+                        ]
+                    }]
+                };
+            }
+            if (presetName === 'flange' || presetName === 'flange_holes') {
+                const contours = [
+                    { role: 'outer', points: makeCirclePoints(0, 0, 48, 48) },
+                    { role: 'hole', points: makeCirclePoints(0, 0, 18, 36) },
+                    { role: 'hole', points: makeCirclePoints(32, 0, 6, 24) },
+                    { role: 'hole', points: makeCirclePoints(-32, 0, 6, 24) },
+                    { role: 'hole', points: makeCirclePoints(0, 32, 6, 24) },
+                    { role: 'hole', points: makeCirclePoints(0, -32, 6, 24) }
+                ];
+                return {
+                    name: 'Mặt Bích Lắp Ghép 4 Lỗ',
+                    color: '#10b981',
+                    params: { opType: 'extrude', depth: 14, bevelEnabled: true, bevelSize: 1.0, plane: 'XZ' },
+                    contours
+                };
+            }
+            if (presetName === 'plate_slot') {
+                return {
+                    name: 'Bản Mã Rãnh Then (Slotted Plate)',
+                    color: '#0ea5e9',
+                    params: { opType: 'extrude', depth: 16, bevelEnabled: true, bevelSize: 1.0, plane: 'XZ' },
+                    contours: [
+                        {
+                            role: 'outer',
+                            points: [
+                                { x: -55, y: -30 }, { x: 55, y: -30 },
+                                { x: 55, y: 30 }, { x: -55, y: 30 }
+                            ]
+                        },
+                        {
+                            role: 'hole',
+                            points: makeSlotPoints(-22, 0, 22, 0, 10, 16)
+                        }
+                    ]
+                };
+            }
+            if (presetName === 'gear' || presetName === 'gear_profile') {
+                const teeth = 12;
+                const outerR = 40;
+                const rootR = 31;
+                const pts = [];
+                const totalSteps = teeth * 4;
+                for (let i = 0; i < totalSteps; i++) {
+                    const angle = (i / totalSteps) * Math.PI * 2;
+                    const mod = i % 4;
+                    const r = (mod === 1 || mod === 2) ? outerR : rootR;
+                    pts.push({
+                        x: Number((Math.cos(angle) * r).toFixed(2)),
+                        y: Number((Math.sin(angle) * r).toFixed(2))
+                    });
+                }
+                return {
+                    name: 'Bánh Răng Trụ Thẳng Z=12',
+                    color: '#f59e0b',
+                    params: { opType: 'extrude', depth: 18, bevelEnabled: true, bevelSize: 1.0, plane: 'XY' },
+                    contours: [
+                        { role: 'outer', points: pts },
+                        { role: 'hole', points: makeCirclePoints(0, 0, 12, 32) }
+                    ]
+                };
+            }
+            if (presetName === 'revolve_pulley') {
+                return {
+                    name: 'Puli Đai Thang (Revolve 360°)',
+                    color: '#eab308',
+                    params: { opType: 'revolve', depth: 30, revolveAngle: 360, bevelEnabled: false, bevelSize: 1, plane: 'XY' },
+                    contours: [{
+                        role: 'outer',
+                        points: [
+                            { x: 10, y: -25 }, { x: 42, y: -25 }, { x: 42, y: -15 },
+                            { x: 30, y: -5 }, { x: 30, y: 5 }, { x: 42, y: 15 },
+                            { x: 42, y: 25 }, { x: 10, y: 25 }
+                        ]
+                    }]
+                };
+            }
+        }
+
+        function createProfilePreset(presetName) {
+            const preset = getProfilePresetContours(presetName);
+            if (!preset) return;
+            const geo = buildGeometryFromSketch(preset.contours, preset.params);
+            geo.computeBoundingBox();
+            const heightY = geo.boundingBox.max.y - geo.boundingBox.min.y;
+            createCADPartFromGeometry(geo, {
+                name: preset.name,
+                type: 'extrude',
+                color: preset.color,
+                position: { x: 0, y: heightY / 2, z: 0 },
+                sketchData: preset.contours,
+                extrudeParams: preset.params
+            });
+            showToast(`Đã đùn khối 3D: ${preset.name}`);
+        }
+
+        // ============================================================================
+        // INITIAL MECHANICAL ASSEMBLY DEMO
+        // ============================================================================
+        function loadDemoAssembly() {
+            // Clear existing parts
+            [...cadParts].forEach(p => removePartRecord(p));
+            partCounter = 1;
+
+            // 1. Base Plate with 4 Mounting Holes (Đế máy có 4 lỗ bulông)
+            const baseContours = [
+                {
+                    role: 'outer',
+                    points: [
+                        { x: -65, y: -45 }, { x: 65, y: -45 },
+                        { x: 65, y: 45 }, { x: -65, y: 45 }
+                    ]
+                },
+                { role: 'hole', points: makeCirclePoints(-48, -28, 6, 24) },
+                { role: 'hole', points: makeCirclePoints(48, -28, 6, 24) },
+                { role: 'hole', points: makeCirclePoints(48, 28, 6, 24) },
+                { role: 'hole', points: makeCirclePoints(-48, 28, 6, 24) },
+                { role: 'hole', points: makeSlotPoints(-18, 0, 18, 0, 8, 16) }
+            ];
+            const baseParams = { opType: 'extrude', depth: 14, bevelEnabled: true, bevelSize: 1.2, plane: 'XZ' };
+            const baseGeo = buildGeometryFromSketch(baseContours, baseParams);
+            createCADPartFromGeometry(baseGeo, {
+                name: '01. Bản Đế Máy Đa Năng (Extrude)',
+                type: 'extrude',
+                color: '#475569',
+                metalness: 0.55,
+                roughness: 0.35,
+                position: { x: 0, y: 7, z: 0 },
+                sketchData: baseContours,
+                extrudeParams: baseParams
+            });
+
+            // 2. Vertical Support Bracket (Gối đỡ trục đứng)
+            const bracketContours = [
+                {
+                    role: 'outer',
+                    points: [
+                        { x: -32, y: 35 }, { x: 32, y: 35 },
+                        { x: 24, y: -22 }, { x: 12, y: -34 },
+                        { x: -12, y: -34 }, { x: -24, y: -22 }
+                    ]
+                },
+                { role: 'hole', points: makeCirclePoints(0, -10, 12, 32) }
+            ];
+            const bracketParams = { opType: 'extrude', depth: 18, bevelEnabled: true, bevelSize: 1.0, plane: 'XY' };
+            const bracketGeo = buildGeometryFromSketch(bracketContours, bracketParams);
+            createCADPartFromGeometry(bracketGeo, {
+                name: '02. Giá Đỡ Trục Đứng (Extrude)',
+                type: 'extrude',
+                color: '#0ea5e9',
+                metalness: 0.35,
+                roughness: 0.3,
+                position: { x: 0, y: 49, z: -20 },
+                sketchData: bracketContours,
+                extrudeParams: bracketParams
+            });
+
+            // 3. Transmission Shaft (Trục truyền động)
+            const shaftGeo = new THREE.CylinderGeometry(11.5, 11.5, 68, 36);
+            shaftGeo.rotateX(Math.PI / 2);
+            createCADPartFromGeometry(shaftGeo, {
+                name: '03. Trục Truyền Động Chính Ø23',
+                type: 'primitive',
+                color: '#cbd5e1',
+                metalness: 0.75,
+                roughness: 0.2,
+                position: { x: 0, y: 59, z: -4 }
+            });
+
+            // 4. Spur Gear Z=12 (Bánh răng truyền động)
+            const gearPreset = getProfilePresetContours('gear');
+            const gearGeo = buildGeometryFromSketch(gearPreset.contours, gearPreset.params);
+            const gearPart = createCADPartFromGeometry(gearGeo, {
+                name: '04. Bánh Răng Chủ Động Z=12',
+                type: 'extrude',
+                color: '#f59e0b',
+                metalness: 0.65,
+                roughness: 0.25,
+                position: { x: 0, y: 59, z: 14 },
+                sketchData: gearPreset.contours,
+                extrudeParams: gearPreset.params
+            });
+
+            selectPart(gearPart);
+            fitCameraToScene();
+            showToast('Đã tải Cụm Lắp Ghép Cơ Khí Mẫu (4 chi tiết)');
+        }
+
+        // ============================================================================
+        // 3D CAD DIMENSION LINES & BOUNDING BOX MEASUREMENTS
+        // ============================================================================
+        function updateDimensionVisuals() {
+            // Clear existing lines in dimGroup
+            while (dimGroup.children.length > 0) {
+                const child = dimGroup.children.pop();
+                if (child.geometry) child.geometry.dispose();
+            }
+
+            const labelX = document.getElementById('dimLabelX');
+            const labelY = document.getElementById('dimLabelY');
+            const labelZ = document.getElementById('dimLabelZ');
+
+            if (!showDimensions || cadParts.length === 0) {
+                labelX.classList.add('hidden');
+                labelY.classList.add('hidden');
+                labelZ.classList.add('hidden');
+                return;
+            }
+
+            // Measure either the selected part or the entire visible assembly
+            const box = new THREE.Box3();
+            if (selectedPart && selectedPart.visible) {
+                box.setFromObject(selectedPart.mesh);
+            } else {
+                cadParts.forEach(p => {
+                    if (p.visible) box.expandByObject(p.mesh);
+                });
+            }
+
+            if (box.isEmpty()) {
+                labelX.classList.add('hidden');
+                labelY.classList.add('hidden');
+                labelZ.classList.add('hidden');
+                return;
+            }
+
+            const size = new THREE.Vector3();
+            box.getSize(size);
+            const min = box.min;
+            const max = box.max;
+            const pad = 10; // Extension offset in mm
+
+            // Update Title Block Dimensions readout
+            const dimString = `${size.x.toFixed(1)} × ${size.y.toFixed(1)} × ${size.z.toFixed(1)} mm`;
+            const tbDimEl = document.getElementById('tbDimensions');
+            if (tbDimEl) tbDimEl.textContent = dimString;
+
+            // Update Inspector Bounding Box
+            if (selectedPart) {
+                document.getElementById('bboxX').textContent = size.x.toFixed(1);
+                document.getElementById('bboxY').textContent = size.y.toFixed(1);
+                document.getElementById('bboxZ').textContent = size.z.toFixed(1);
+            }
+
+            // Build 3 Dimension Lines (X-Length in Red, Y-Height in Green, Z-Depth in Blue)
+            const makeDimLine = (p1, p2, ext1, ext2, colorHex) => {
+                const mat = new THREE.LineBasicMaterial({ color: colorHex, depthTest: false });
+                const pts = [ext1, p1, p1, p2, p2, ext2];
+                const geo = new THREE.BufferGeometry().setFromPoints(pts);
+                const line = new THREE.LineSegments(geo, mat);
+                line.renderOrder = 999;
+                dimGroup.add(line);
+            };
+
+            // X Dimension (Along front bottom edge)
+            const xStart = new THREE.Vector3(min.x, min.y, max.z + pad);
+            const xEnd = new THREE.Vector3(max.x, min.y, max.z + pad);
+            makeDimLine(
+                xStart, xEnd,
+                new THREE.Vector3(min.x, min.y, max.z),
+                new THREE.Vector3(max.x, min.y, max.z),
+                0xf43f5e
+            );
+
+            // Y Dimension (Along right front vertical edge)
+            const yStart = new THREE.Vector3(max.x + pad, min.y, max.z);
+            const yEnd = new THREE.Vector3(max.x + pad, max.y, max.z);
+            makeDimLine(
+                yStart, yEnd,
+                new THREE.Vector3(max.x, min.y, max.z),
+                new THREE.Vector3(max.x, max.y, max.z),
+                0x10b981
+            );
+
+            // Z Dimension (Along right bottom side edge)
+            const zStart = new THREE.Vector3(max.x + pad, min.y, min.z);
+            const zEnd = new THREE.Vector3(max.x + pad, min.y, max.z);
+            makeDimLine(
+                zStart, zEnd,
+                new THREE.Vector3(max.x, min.y, min.z),
+                new THREE.Vector3(max.x, min.y, max.z),
+                0x0ea5e9
+            );
+
+            // Store world midpoints for HTML badge projection
+            dimGroup.userData.midX = new THREE.Vector3().addVectors(xStart, xEnd).multiplyScalar(0.5);
+            dimGroup.userData.midY = new THREE.Vector3().addVectors(yStart, yEnd).multiplyScalar(0.5);
+            dimGroup.userData.midZ = new THREE.Vector3().addVectors(zStart, zEnd).multiplyScalar(0.5);
+            dimGroup.userData.size = size;
+
+            projectDimensionLabelsToScreen();
+        }
+
+        function projectDimensionLabelsToScreen() {
+            const labelX = document.getElementById('dimLabelX');
+            const labelY = document.getElementById('dimLabelY');
+            const labelZ = document.getElementById('dimLabelZ');
+
+            if (!showDimensions || !dimGroup.userData.midX || cadParts.length === 0) {
+                labelX.classList.add('hidden');
+                labelY.classList.add('hidden');
+                labelZ.classList.add('hidden');
+                return;
+            }
+
+            const container = document.getElementById('viewportContainer');
+            const w = container.clientWidth;
+            const h = container.clientHeight;
+            const size = dimGroup.userData.size;
+
+            const placeBadge = (el, worldPos, text) => {
+                const v = worldPos.clone().project(activeCamera);
+                if (v.z > 1 || v.z < -1) {
+                    el.classList.add('hidden');
+                    return;
+                }
+                const sx = (v.x * 0.5 + 0.5) * w;
+                const sy = (-v.y * 0.5 + 0.5) * h;
+                el.style.left = `${sx}px`;
+                el.style.top = `${sy}px`;
+                el.textContent = text;
+                el.classList.remove('hidden');
+            };
+
+            placeBadge(labelX, dimGroup.userData.midX, `Dài X: ${size.x.toFixed(1)} mm`);
+            placeBadge(labelY, dimGroup.userData.midY, `Cao Y: ${size.y.toFixed(1)} mm`);
+            placeBadge(labelZ, dimGroup.userData.midZ, `Rộng Z: ${size.z.toFixed(1)} mm`);
+        }
+
+        // ============================================================================
+        // SELECTION, FEATURE TREE & PROPERTY INSPECTOR
+        // ============================================================================
+        function selectPart(part) {
+            // Reset previous highlight
+            cadParts.forEach(p => {
+                if (p.edgeLines && p.edgeLines.material) {
+                    p.edgeLines.material.color.setHex(renderMode === 'wireframe' ? 0x38bdf8 : 0x0f172a);
+                }
+            });
+
+            selectedPart = part;
+
+            if (part && part.visible && !part.locked) {
+                transformControls.attach(part.mesh);
+                if (part.edgeLines && part.edgeLines.material) {
+                    part.edgeLines.material.color.setHex(0x0284c7);
+                }
+            } else {
+                transformControls.detach();
+            }
+
+            renderFeatureTree();
+            syncInspectorFromSelected();
+            updateDimensionVisuals();
+        }
+
+        function renderFeatureTree() {
+            const listEl = document.getElementById('featureTreeList');
+            document.getElementById('partCountBadge').textContent = `${cadParts.length} chi tiết`;
+            listEl.innerHTML = '';
+
+            cadParts.forEach(part => {
+                const isSelected = selectedPart && selectedPart.id === part.id;
+                const row = document.createElement('div');
+                row.className = `flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs cursor-pointer transition border ${
+                    isSelected
+                        ? 'bg-sky-500/20 border-sky-500/50 text-white font-semibold'
+                        : 'bg-slate-900/40 border-transparent hover:bg-slate-800/70 text-slate-300'
+                }`;
+
+                const iconClass = part.type === 'extrude'
+                    ? 'fa-layer-group text-sky-400'
+                    : part.type === 'revolve'
+                        ? 'fa-arrows-spin text-amber-400'
+                        : 'fa-cube text-indigo-400';
+
+                row.innerHTML = `
+                    <div class="flex items-center space-x-2 truncate flex-1" onclick="selectPartById('${part.id}')">
+                        <i class="fa-solid ${iconClass} text-xs shrink-0"></i>
+                        <span class="truncate ${!part.visible ? 'line-through opacity-50' : ''}">${part.name}</span>
+                    </div>
+                    <div class="flex items-center space-x-1 ml-1 shrink-0">
+                        ${part.sketchData ? `
+                        <button onclick="event.stopPropagation(); openSketchModalForPart('${part.id}')" class="w-5 h-5 rounded hover:bg-slate-700 text-amber-400 flex items-center justify-center" title="Sửa biên dạng 2D">
+                            <i class="fa-solid fa-pen text-[10px]"></i>
+                        </button>` : ''}
+                        <button onclick="event.stopPropagation(); togglePartVisibility('${part.id}')" class="w-5 h-5 rounded hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center" title="Ẩn/Hiện chi tiết">
+                            <i class="fa-regular ${part.visible ? 'fa-eye' : 'fa-eye-slash text-rose-400'} text-[11px]"></i>
+                        </button>
+                    </div>
+                `;
+                listEl.appendChild(row);
+            });
+        }
+
+        function selectPartById(id) {
+            const found = cadParts.find(p => p.id === id);
+            if (found) selectPart(found);
+        }
+
+        function togglePartVisibility(id) {
+            const part = cadParts.find(p => p.id === id);
+            if (!part) return;
+            part.visible = !part.visible;
+            part.mesh.visible = part.visible;
+            if (!part.visible && selectedPart === part) {
+                transformControls.detach();
+            } else if (part.visible && selectedPart === part) {
+                transformControls.attach(part.mesh);
+            }
+            renderFeatureTree();
+            updateDimensionVisuals();
+        }
+
+        function syncInspectorFromSelected() {
+            const emptyState = document.getElementById('inspectorEmptyState');
+            const content = document.getElementById('inspectorContent');
+            const badge = document.getElementById('selectedTypeBadge');
+            const extrudeBox = document.getElementById('parametricExtrudeBox');
+
+            if (!selectedPart) {
+                emptyState.classList.remove('hidden');
+                content.classList.add('hidden');
+                badge.textContent = 'Chưa chọn';
+                return;
+            }
+
+            emptyState.classList.add('hidden');
+            content.classList.remove('hidden');
+            badge.textContent = selectedPart.type === 'extrude' ? 'Boss-Extrude' : (selectedPart.type === 'revolve' ? 'Revolve' : 'Khối 3D');
+
+            document.getElementById('propName').value = selectedPart.name;
+
+            // Show parametric extrude controls if sketch-based
+            if (selectedPart.sketchData && selectedPart.extrudeParams) {
+                extrudeBox.classList.remove('hidden');
+                const depth = selectedPart.extrudeParams.depth || 25;
+                document.getElementById('propExtrudeDepthLabel').textContent = `${depth} mm`;
+                document.getElementById('propExtrudeDepthSlider').value = depth;
+                document.getElementById('propExtrudeDepthInput').value = depth;
+                document.getElementById('propBevelToggle').checked = Boolean(selectedPart.extrudeParams.bevelEnabled);
+                document.getElementById('propBevelSize').value = selectedPart.extrudeParams.bevelSize || 1.2;
+            } else {
+                extrudeBox.classList.add('hidden');
+            }
+
+            // Transform values
+            const m = selectedPart.mesh;
+            document.getElementById('posX').value = m.position.x.toFixed(1);
+            document.getElementById('posY').value = m.position.y.toFixed(1);
+            document.getElementById('posZ').value = m.position.z.toFixed(1);
+
+            document.getElementById('rotX').value = Math.round(THREE.MathUtils.radToDeg(m.rotation.x));
+            document.getElementById('rotY').value = Math.round(THREE.MathUtils.radToDeg(m.rotation.y));
+            document.getElementById('rotZ').value = Math.round(THREE.MathUtils.radToDeg(m.rotation.z));
+
+            document.getElementById('scaleX').value = m.scale.x.toFixed(2);
+            document.getElementById('scaleY').value = m.scale.y.toFixed(2);
+            document.getElementById('scaleZ').value = m.scale.z.toFixed(2);
+
+            // Material values
+            document.getElementById('propColor').value = selectedPart.color;
+            document.getElementById('propMetalness').value = selectedPart.metalness;
+            document.getElementById('metalVal').textContent = selectedPart.metalness;
+            document.getElementById('propRoughness').value = selectedPart.roughness;
+            document.getElementById('roughVal').textContent = selectedPart.roughness;
+            document.getElementById('propOpacity').value = selectedPart.opacity;
+            document.getElementById('opacityVal').textContent = Math.round(selectedPart.opacity * 100) + '%';
+        }
+
+        function updateSelectedName(val) {
+            if (!selectedPart) return;
+            selectedPart.name = val || 'Chi tiết 3D';
+            renderFeatureTree();
+        }
+
+        // Live Parametric Extrude Depth Rebuild
+        function updateSelectedExtrudeDepth(newDepth) {
+            if (!selectedPart || !selectedPart.sketchData) return;
+            const d = Math.max(1, parseFloat(newDepth) || 10);
+            selectedPart.extrudeParams.depth = d;
+            document.getElementById('propExtrudeDepthLabel').textContent = `${d} mm`;
+            document.getElementById('propExtrudeDepthSlider').value = d;
+            document.getElementById('propExtrudeDepthInput').value = d;
+            rebuildSelectedSketchGeometry();
+        }
+
+        function updateSelectedBevel() {
+            if (!selectedPart || !selectedPart.sketchData) return;
+            selectedPart.extrudeParams.bevelEnabled = document.getElementById('propBevelToggle').checked;
+            selectedPart.extrudeParams.bevelSize = parseFloat(document.getElementById('propBevelSize').value) || 1.2;
+            rebuildSelectedSketchGeometry();
+        }
+
+        function rebuildSelectedSketchGeometry() {
+            if (!selectedPart || !selectedPart.sketchData) return;
+            const newGeo = buildGeometryFromSketch(selectedPart.sketchData, selectedPart.extrudeParams);
+            selectedPart.mesh.geometry.dispose();
+            selectedPart.mesh.geometry = newGeo;
+
+            // Rebuild sharp CAD edges
+            if (selectedPart.edgeLines) {
+                selectedPart.edgeLines.geometry.dispose();
+                selectedPart.edgeLines.geometry = new THREE.EdgesGeometry(newGeo, 24);
+            }
+            updateDimensionVisuals();
+        }
+
+        function applyTransformFromInputs() {
+            if (!selectedPart) return;
+            const m = selectedPart.mesh;
+            m.position.set(
+                parseFloat(document.getElementById('posX').value) || 0,
+                parseFloat(document.getElementById('posY').value) || 0,
+                parseFloat(document.getElementById('posZ').value) || 0
+            );
+            m.rotation.set(
+                THREE.MathUtils.degToRad(parseFloat(document.getElementById('rotX').value) || 0),
+                THREE.MathUtils.degToRad(parseFloat(document.getElementById('rotY').value) || 0),
+                THREE.MathUtils.degToRad(parseFloat(document.getElementById('rotZ').value) || 0)
+            );
+            m.scale.set(
+                Math.max(0.05, parseFloat(document.getElementById('scaleX').value) || 1),
+                Math.max(0.05, parseFloat(document.getElementById('scaleY').value) || 1),
+                Math.max(0.05, parseFloat(document.getElementById('scaleZ').value) || 1)
+            );
+            updateDimensionVisuals();
+        }
+
+        function resetSelectedTransform(which) {
+            if (!selectedPart) return;
+            if (which === 'pos') selectedPart.mesh.position.set(0, 15, 0);
+            if (which === 'rot') selectedPart.mesh.rotation.set(0, 0, 0);
+            if (which === 'scale') selectedPart.mesh.scale.set(1, 1, 1);
+            syncInspectorFromSelected();
+            updateDimensionVisuals();
+        }
+
+        function updateSelectedMaterial() {
+            if (!selectedPart) return;
+            const color = document.getElementById('propColor').value;
+            const metal = parseFloat(document.getElementById('propMetalness').value);
+            const rough = parseFloat(document.getElementById('propRoughness').value);
+            const opacity = parseFloat(document.getElementById('propOpacity').value);
+
+            selectedPart.color = color;
+            selectedPart.metalness = metal;
+            selectedPart.roughness = rough;
+            selectedPart.opacity = opacity;
+
+            document.getElementById('metalVal').textContent = metal;
+            document.getElementById('roughVal').textContent = rough;
+            document.getElementById('opacityVal').textContent = Math.round(opacity * 100) + '%';
+
+            applyCurrentRenderModeToPart(selectedPart);
+        }
+
+        function applyQuickMaterial(hex, metal, rough) {
+            if (!selectedPart) return;
+            document.getElementById('propColor').value = hex;
+            document.getElementById('propMetalness').value = metal;
+            document.getElementById('propRoughness').value = rough;
+            updateSelectedMaterial();
+        }
+
+        function duplicateSelected() {
+            if (!selectedPart) return;
+            const src = selectedPart;
+            const clonedGeo = src.mesh.geometry.clone();
+            createCADPartFromGeometry(clonedGeo, {
+                name: src.name + ' (Bản sao)',
+                type: src.type,
+                color: src.color,
+                metalness: src.metalness,
+                roughness: src.roughness,
+                opacity: src.opacity,
+                position: {
+                    x: src.mesh.position.x + 25,
+                    y: src.mesh.position.y,
+                    z: src.mesh.position.z + 25
+                },
+                rotation: {
+                    x: THREE.MathUtils.radToDeg(src.mesh.rotation.x),
+                    y: THREE.MathUtils.radToDeg(src.mesh.rotation.y),
+                    z: THREE.MathUtils.radToDeg(src.mesh.rotation.z)
+                },
+                scale: {
+                    x: src.mesh.scale.x,
+                    y: src.mesh.scale.y,
+                    z: src.mesh.scale.z
+                },
+                sketchData: src.sketchData,
+                extrudeParams: src.extrudeParams
+            });
+            showToast('Đã nhân bản chi tiết');
+        }
+
+        function deleteSelected() {
+            if (!selectedPart) return;
+            const name = selectedPart.name;
+            removePartRecord(selectedPart);
+            selectedPart = cadParts.length > 0 ? cadParts[cadParts.length - 1] : null;
+            selectPart(selectedPart);
+            showToast(`Đã xóa "${name}"`);
+        }
+
+        function removePartRecord(part) {
+            if (selectedPart === part) transformControls.detach();
+            scene.remove(part.mesh);
+            if (part.mesh.geometry) part.mesh.geometry.dispose();
+            if (part.mesh.material) part.mesh.material.dispose();
+            cadParts = cadParts.filter(p => p.id !== part.id);
+        }
+
+        function dropSelectedToFloor() {
+            if (!selectedPart) return;
+            const box = new THREE.Box3().setFromObject(selectedPart.mesh);
+            const deltaY = -box.min.y;
+            selectedPart.mesh.position.y += deltaY;
+            syncInspectorFromSelected();
+            updateDimensionVisuals();
+            showToast('Đã hạ vật thể tiếp xúc mặt sàn (Y = 0)');
+        }
+
+        // ============================================================================
+        // CAD VIEWPORT DISPLAY MODES & CAMERA PRESETS
+        // ============================================================================
+        function setTransformMode(mode) {
+            transformControls.setMode(mode);
+            ['translate', 'rotate', 'scale'].forEach(m => {
+                const btn = document.getElementById('tool-' + m);
+                if (btn) btn.classList.toggle('active', m === mode);
+            });
+        }
+
+        function setViewportTheme(theme) {
+            currentTheme = theme;
+            ['dark', 'studio', 'report'].forEach(t => {
+                const btn = document.getElementById('themeBtn-' + t);
+                if (btn) {
+                    if (t === theme) {
+                        btn.className = 'px-2.5 py-1 rounded-md font-semibold bg-sky-600 text-white transition flex items-center space-x-1';
+                    } else {
+                        btn.className = 'px-2.5 py-1 rounded-md font-medium text-slate-300 hover:text-white transition flex items-center space-x-1';
+                    }
+                }
+            });
+
+            if (theme === 'dark') {
+                scene.background = new THREE.Color(0x181b20);
+                scene.remove(gridHelper);
+                gridHelper = new THREE.GridHelper(300, 30, 0x38bdf8, 0x2d3440);
+                gridHelper.visible = showHelpers;
+                scene.add(gridHelper);
+            } else if (theme === 'studio') {
+                scene.background = new THREE.Color(0xdbe4ee);
+                scene.remove(gridHelper);
+                gridHelper = new THREE.GridHelper(300, 30, 0x0284c7, 0x94a3b8);
+                gridHelper.visible = showHelpers;
+                scene.add(gridHelper);
+            } else if (theme === 'report') {
+                // Crisp Pure White Engineering Paper Background
+                scene.background = new THREE.Color(0xffffff);
+                scene.remove(gridHelper);
+                gridHelper = new THREE.GridHelper(300, 30, 0x94a3b8, 0xe2e8f0);
+                gridHelper.visible = showHelpers;
+                scene.add(gridHelper);
+                if (!showTitleBlock) toggleTitleBlock(true);
+                showToast('Chế độ Báo Cáo: Nền trắng tinh khiết + Khung tên kỹ thuật');
+            }
+        }
+
+        function cycleRenderMode() {
+            const modes = ['shaded_edges', 'technical_line', 'shaded', 'xray', 'wireframe'];
+            const labels = {
+                'shaded_edges': 'Khối + Cạnh',
+                'technical_line': 'Bản Vẽ Trắng',
+                'shaded': 'Khối Mịn',
+                'xray': 'X-Ray (Soi Lỗ)',
+                'wireframe': 'Khung Dây'
+            };
+            const nextIdx = (modes.indexOf(renderMode) + 1) % modes.length;
+            renderMode = modes[nextIdx];
+            document.getElementById('renderModeLabel').textContent = labels[renderMode];
+            cadParts.forEach(p => applyCurrentRenderModeToPart(p));
+            showToast(`Chế độ hiển thị: ${labels[renderMode]}`);
+        }
+
+        function applyCurrentRenderModeToPart(part) {
+            const mat = part.mesh.material;
+            const edges = part.edgeLines;
+
+            if (renderMode === 'shaded_edges') {
+                mat.color.set(part.color);
+                mat.wireframe = false;
+                mat.transparent = part.opacity < 1.0;
+                mat.opacity = part.opacity;
+                mat.metalness = part.metalness;
+                mat.roughness = part.roughness;
+                edges.visible = true;
+                edges.material.color.setHex(selectedPart === part ? 0x0284c7 : 0x0f172a);
+            } else if (renderMode === 'technical_line') {
+                // Clean white technical illustration look
+                mat.color.setHex(0xf8fafc);
+                mat.wireframe = false;
+                mat.transparent = false;
+                mat.opacity = 1.0;
+                mat.metalness = 0.05;
+                mat.roughness = 0.85;
+                edges.visible = true;
+                edges.material.color.setHex(0x0f172a);
+            } else if (renderMode === 'shaded') {
+                mat.color.set(part.color);
+                mat.wireframe = false;
+                mat.transparent = part.opacity < 1.0;
+                mat.opacity = part.opacity;
+                edges.visible = false;
+            } else if (renderMode === 'xray') {
+                mat.color.set(part.color);
+                mat.wireframe = false;
+                mat.transparent = true;
+                mat.opacity = 0.38;
+                edges.visible = true;
+                edges.material.color.setHex(0x38bdf8);
+            } else if (renderMode === 'wireframe') {
+                mat.color.set(part.color);
+                mat.wireframe = true;
+                edges.visible = false;
+            }
+            mat.needsUpdate = true;
+        }
+
+        function setCameraView(viewName) {
+            const dist = 210;
+            const target = new THREE.Vector3(0, 25, 0);
+            orbitControls.target.copy(target);
+
+            const viewLabels = {
+                'iso': 'Isometric 3D',
+                'front': 'Mặt Đứng (Front)',
+                'top': 'Mặt Bằng (Top)',
+                'right': 'Mặt Cạnh (Right)',
+                'back': 'Mặt Sau (Back)'
+            };
+
+            if (viewName === 'iso') activeCamera.position.set(150, 125, 165);
+            if (viewName === 'front') activeCamera.position.set(0, 25, dist);
+            if (viewName === 'back') activeCamera.position.set(0, 25, -dist);
+            if (viewName === 'top') activeCamera.position.set(0, dist + 30, 0.01);
+            if (viewName === 'right') activeCamera.position.set(dist, 25, 0);
+
+            activeCamera.lookAt(target);
+            orbitControls.update();
+
+            const tbView = document.getElementById('tbViewName');
+            if (tbView && viewLabels[viewName]) tbView.textContent = viewLabels[viewName];
+        }
+
+        function toggleCameraProjection() {
+            const pos = activeCamera.position.clone();
+            const target = orbitControls.target.clone();
+
+            if (activeCamera === perspectiveCamera) {
+                activeCamera = orthoCamera;
+                document.getElementById('projToggleBtn').textContent = 'Trực giao (2D/CAD)';
+                showToast('Đã chuyển sang Phép chiếu Trực giao (Orthographic chuẩn bản vẽ)');
+            } else {
+                activeCamera = perspectiveCamera;
+                document.getElementById('projToggleBtn').textContent = 'Phối cảnh (3D)';
+                showToast('Đã chuyển sang Phép chiếu Phối cảnh 3D');
+            }
+
+            activeCamera.position.copy(pos);
+            orbitControls.object = activeCamera;
+            transformControls.camera = activeCamera;
+            orbitControls.target.copy(target);
+            onViewportResize();
+            orbitControls.update();
+        }
+
+        function fitCameraToScene() {
+            const box = new THREE.Box3();
+            cadParts.forEach(p => {
+                if (p.visible) box.expandByObject(p.mesh);
+            });
+            if (box.isEmpty()) return;
+
+            const center = new THREE.Vector3();
+            const size = new THREE.Vector3();
+            box.getCenter(center);
+            box.getSize(size);
+
+            const maxDim = Math.max(size.x, size.y, size.z, 50);
+            const dir = new THREE.Vector3().subVectors(activeCamera.position, orbitControls.target).normalize();
+            orbitControls.target.copy(center);
+            activeCamera.position.copy(center).addScaledVector(dir, maxDim * 2.1);
+            orbitControls.update();
+        }
+
+        function toggleDimensions() {
+            showDimensions = !showDimensions;
+            document.getElementById('dimToggleBtn').classList.toggle('active', showDimensions);
+            updateDimensionVisuals();
+        }
+
+        function toggleTitleBlock(forceState) {
+            showTitleBlock = forceState !== undefined ? forceState : !showTitleBlock;
+            document.getElementById('titleBlockToggleBtn').classList.toggle('active', showTitleBlock);
+            document.getElementById('reportFrameOverlay').classList.toggle('hidden', !showTitleBlock);
+            syncTitleBlock();
+        }
+
+        function syncTitleBlock() {
+            const title = document.getElementById('projectTitleInput').value;
+            const tbTitle = document.getElementById('tbTitle');
+            if (tbTitle && document.activeElement !== tbTitle) {
+                tbTitle.value = title;
+            }
+        }
+
+        function toggleGridHelper() {
+            showHelpers = !showHelpers;
+            gridHelper.visible = showHelpers;
+            axesHelper.visible = showHelpers;
+        }
+
+        function toggleSectionCut() {
+            sectionCutActive = !sectionCutActive;
+            document.getElementById('sectionToggleBtn').classList.toggle('active', sectionCutActive);
+            document.getElementById('sectionSliderPanel').classList.toggle('hidden', !sectionCutActive);
+            renderer.localClippingEnabled = sectionCutActive;
+
+            cadParts.forEach(p => {
+                p.mesh.material.clippingPlanes = sectionCutActive ? [sectionPlane] : [];
+                p.mesh.material.needsUpdate = true;
+                if (p.edgeLines) {
+                    p.edgeLines.material.clippingPlanes = sectionCutActive ? [sectionPlane] : [];
+                }
+            });
+            showToast(sectionCutActive ? 'Đã bật Mặt Cắt Dọc (Section View)' : 'Đã tắt Mặt Cắt');
+        }
+
+        function updateSectionPlane(val) {
+            const offset = parseFloat(val) || 0;
+            sectionPlane.constant = offset;
+            document.getElementById('sectionOffsetVal').textContent = `${offset} mm`;
+        }
+
+        // ============================================================================
+        // 2D INTERACTIVE CAD SKETCHER & LIVE 3D PREVIEW ENGINE
+        // ============================================================================
+        let sketchCanvas, sketchCtx;
+        let sketchTool = 'poly'; // 'poly' | 'rect' | 'circle' | 'slot' | 'regpoly'
+        let contourRole = 'outer'; // 'outer' | 'hole'
+        let sketchContours = []; // Array of { role: 'outer'|'hole', points: [{x, y}, ...] }
+        let activePolyPoints = [];
+        let isDraggingShape = false;
+        let dragStartPt = null;
+        let currentMousePt = { x: 0, y: 0 };
+        let editingPartId = null; // If editing an existing extruded part
+
+        // Mini 3D Preview inside Sketch Modal
+        let previewScene, previewCamera, previewRenderer, previewControls, previewMesh;
+
+        function initSketcherSystem() {
+            sketchCanvas = document.getElementById('sketchCanvas');
+            sketchCtx = sketchCanvas.getContext('2d');
+
+            sketchCanvas.addEventListener('pointerdown', onSketchPointerDown);
+            sketchCanvas.addEventListener('pointermove', onSketchPointerMove);
+            sketchCanvas.addEventListener('pointerup', onSketchPointerUp);
+            sketchCanvas.addEventListener('dblclick', finishActivePolyline);
+
+            // Init Mini 3D Preview Renderer
+            const pCanvas = document.getElementById('preview3DCanvas');
+            previewScene = new THREE.Scene();
+            previewScene.background = new THREE.Color(0x0b0f17);
+
+            previewCamera = new THREE.PerspectiveCamera(40, 320 / 180, 1, 1000);
+            previewCamera.position.set(95, 80, 110);
+
+            previewRenderer = new THREE.WebGLRenderer({ canvas: pCanvas, antialias: true });
+            previewRenderer.setSize(320, 180);
+            previewRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+            previewControls = new THREE.OrbitControls(previewCamera, pCanvas);
+            previewControls.enableDamping = true;
+
+            const amb = new THREE.AmbientLight(0xffffff, 0.7);
+            previewScene.add(amb);
+            const dir = new THREE.DirectionalLight(0xffffff, 0.9);
+            dir.position.set(100, 140, 120);
+            previewScene.add(dir);
+
+            const miniGrid = new THREE.GridHelper(140, 14, 0x38bdf8, 0x1e293b);
+            miniGrid.position.y = -25;
+            previewScene.add(miniGrid);
+        }
+
+        function openSketchModal() {
+            editingPartId = null;
+            document.getElementById('commitSketchBtnText').textContent = 'Tạo Khối 3D Đưa Vào Bản Vẽ';
+            document.getElementById('sketchPartName').value = `Chi Tiết Extrude #${partCounter}`;
+            document.getElementById('sketchModal').classList.remove('hidden');
+
+            // Default to an L-Bracket with hole if empty
+            if (sketchContours.length === 0) {
+                loadSketchTemplate('flange_holes');
+            } else {
+                resizeSketchCanvas();
+                drawSketchCanvas();
+                updateSketchPreview3D();
+            }
+        }
+
+        function openSketchModalForPart(partId) {
+            const part = cadParts.find(p => p.id === partId);
+            if (!part || !part.sketchData) {
+                showToast('Chi tiết này là khối cơ bản, hãy tạo Sketch 2D mới!', 'info');
+                return;
+            }
+            editingPartId = part.id;
+            sketchContours = JSON.parse(JSON.stringify(part.sketchData));
+            activePolyPoints = [];
+
+            const ep = part.extrudeParams || { opType: 'extrude', depth: 30, bevelEnabled: true, bevelSize: 1.2, plane: 'XY' };
+            setSketchOpType(ep.opType || 'extrude');
+            syncSketchDepth(ep.depth || 30);
+            document.getElementById('sketchPlaneSelect').value = ep.plane || 'XY';
+            document.getElementById('sketchBevelCheck').checked = Boolean(ep.bevelEnabled);
+            document.getElementById('sketchBevelSize').value = ep.bevelSize || 1.2;
+            document.getElementById('sketchPartName').value = part.name;
+            document.getElementById('sketchPartColor').value = part.color;
+            document.getElementById('commitSketchBtnText').textContent = 'Cập Nhật Khối 3D Hiện Tại';
+
+            document.getElementById('sketchModal').classList.remove('hidden');
+            resizeSketchCanvas();
+            drawSketchCanvas();
+            updateSketchPreview3D();
+        }
+
+        function editSelectedSketch() {
+            if (selectedPart && selectedPart.sketchData) {
+                openSketchModalForPart(selectedPart.id);
+            } else {
+                openSketchModal();
+            }
+        }
+
+        function closeSketchModal() {
+            document.getElementById('sketchModal').classList.add('hidden');
+            activePolyPoints = [];
+            isDraggingShape = false;
+        }
+
+        function resizeSketchCanvas() {
+            const wrapper = document.getElementById('sketchCanvasWrapper');
+            if (!wrapper) return;
+            sketchCanvas.width = wrapper.clientWidth || 600;
+            sketchCanvas.height = wrapper.clientHeight || 420;
+
+            const pCanvas = document.getElementById('preview3DCanvas');
+            if (pCanvas && pCanvas.parentElement) {
+                const pw = pCanvas.parentElement.clientWidth || 320;
+                const ph = pCanvas.parentElement.clientHeight || 180;
+                previewRenderer.setSize(pw, ph);
+                previewCamera.aspect = pw / ph;
+                previewCamera.updateProjectionMatrix();
+            }
+        }
+
+        // Convert screen pixels on 2D canvas to CAD millimeter coordinates (1mm = 3.2px)
+        const SKETCH_SCALE = 3.2;
+        function screenToSketchMM(clientX, clientY) {
+            const rect = sketchCanvas.getBoundingClientRect();
+            const cx = sketchCanvas.width / 2;
+            const cy = sketchCanvas.height / 2;
+            let x = (clientX - rect.left - cx) / SKETCH_SCALE;
+            let y = (clientY - rect.top - cy) / SKETCH_SCALE;
+
+            if (document.getElementById('snapGridCheck').checked) {
+                const snap = 5;
+                x = Math.round(x / snap) * snap;
+                y = Math.round(y / snap) * snap;
+            } else {
+                x = Math.round(x * 2) / 2;
+                y = Math.round(y * 2) / 2;
+            }
+            return { x, y };
+        }
+
+        function sketchMMToScreen(pt) {
+            return {
+                x: sketchCanvas.width / 2 + pt.x * SKETCH_SCALE,
+                y: sketchCanvas.height / 2 + pt.y * SKETCH_SCALE
+            };
+        }
+
+        function setSketchTool(tool) {
+            finishActivePolyline();
+            sketchTool = tool;
+            ['poly', 'rect', 'circle', 'slot', 'regpoly'].forEach(t => {
+                const btn = document.getElementById('sketchTool-' + t);
+                if (btn) {
+                    btn.className = t === tool
+                        ? 'px-2.5 py-1.5 rounded text-xs font-medium bg-sky-600 text-white flex items-center space-x-1.5 transition'
+                        : 'px-2.5 py-1.5 rounded text-xs font-medium bg-slate-800 text-slate-300 hover:bg-slate-700 flex items-center space-x-1.5 transition';
+                }
+            });
+
+            const hints = {
+                'poly': 'Nhấp chuột đặt từng đỉnh đa giác, nhấp vào điểm đầu tiên (màu vàng) hoặc nhấn Đóng Kín để hoàn tất.',
+                'rect': 'Nhấn giữ và kéo chuột để vẽ Hình Chữ Nhật theo kích thước Rộng × Cao (mm).',
+                'circle': 'Nhấn giữ tâm và kéo chuột ra ngoài để vẽ Hình Tròn theo bán kính R (mm).',
+                'slot': 'Nhấn giữ và kéo chuột để tạo Rãnh Then Cơ Khí (Mechanical Slot).',
+                'regpoly': 'Nhấn giữ tâm và kéo chuột để vẽ Lục Giác Đều 6 cạnh.'
+            };
+            document.getElementById('sketchHintText').textContent = hints[tool] || '';
+        }
+
+        function setContourRole(role) {
+            finishActivePolyline();
+            contourRole = role;
+            const outBtn = document.getElementById('contourMode-outer');
+            const holeBtn = document.getElementById('contourMode-hole');
+            if (role === 'outer') {
+                outBtn.className = 'px-2.5 py-1 rounded text-xs font-semibold bg-sky-600 text-white transition flex items-center space-x-1';
+                holeBtn.className = 'px-2.5 py-1 rounded text-xs font-semibold text-slate-300 hover:text-white transition flex items-center space-x-1';
+            } else {
+                outBtn.className = 'px-2.5 py-1 rounded text-xs font-semibold text-slate-300 hover:text-white transition flex items-center space-x-1';
+                holeBtn.className = 'px-2.5 py-1 rounded text-xs font-semibold bg-rose-600 text-white transition flex items-center space-x-1';
+            }
+        }
+
+        function onSketchPointerDown(e) {
+            const pt = screenToSketchMM(e.clientX, e.clientY);
+            currentMousePt = pt;
+
+            if (sketchTool === 'poly') {
+                // Check if clicking near first point to close loop
+                if (activePolyPoints.length >= 3) {
+                    const first = activePolyPoints[0];
+                    const dist = Math.hypot(pt.x - first.x, pt.y - first.y);
+                    if (dist <= 6) {
+                        finishActivePolyline();
+                        return;
+                    }
+                }
+                activePolyPoints.push(pt);
+                document.getElementById('closePolyBtn').classList.toggle('hidden', activePolyPoints.length < 3);
+                drawSketchCanvas();
+            } else {
+                isDraggingShape = true;
+                dragStartPt = pt;
+            }
+        }
+
+        function onSketchPointerMove(e) {
+            const pt = screenToSketchMM(e.clientX, e.clientY);
+            currentMousePt = pt;
+            document.getElementById('sketchCursorCoord').textContent = `X: ${pt.x} mm, Y: ${-pt.y} mm`;
+            drawSketchCanvas();
+        }
+
+        function onSketchPointerUp(e) {
+            if (!isDraggingShape || !dragStartPt) return;
+            const endPt = screenToSketchMM(e.clientX, e.clientY);
+            isDraggingShape = false;
+
+            const dx = endPt.x - dragStartPt.x;
+            const dy = endPt.y - dragStartPt.y;
+            const dist = Math.hypot(dx, dy);
+
+            if (dist < 2) {
+                dragStartPt = null;
+                drawSketchCanvas();
+                return;
+            }
+
+            let points = [];
+            if (sketchTool === 'rect') {
+                const x1 = Math.min(dragStartPt.x, endPt.x);
+                const x2 = Math.max(dragStartPt.x, endPt.x);
+                const y1 = Math.min(dragStartPt.y, endPt.y);
+                const y2 = Math.max(dragStartPt.y, endPt.y);
+                if (x2 - x1 >= 2 && y2 - y1 >= 2) {
+                    points = [
+                        { x: x1, y: y1 }, { x: x2, y: y1 },
+                        { x: x2, y: y2 }, { x: x1, y: y2 }
+                    ];
+                }
+            } else if (sketchTool === 'circle') {
+                points = makeCirclePoints(dragStartPt.x, dragStartPt.y, Math.round(dist), 40);
+            } else if (sketchTool === 'regpoly') {
+                points = makeCirclePoints(dragStartPt.x, dragStartPt.y, Math.round(dist), 6);
+            } else if (sketchTool === 'slot') {
+                points = makeSlotPoints(dragStartPt.x, dragStartPt.y, endPt.x, endPt.y, 10, 16);
+            }
+
+            if (points.length >= 3) {
+                sketchContours.push({ role: contourRole, points });
+                updateSketchPreview3D();
+            }
+
+            dragStartPt = null;
+            drawSketchCanvas();
+        }
+
+        function finishActivePolyline() {
+            if (activePolyPoints.length >= 3) {
+                sketchContours.push({
+                    role: contourRole,
+                    points: [...activePolyPoints]
+                });
+                updateSketchPreview3D();
+            }
+            activePolyPoints = [];
+            document.getElementById('closePolyBtn').classList.add('hidden');
+            drawSketchCanvas();
+        }
+
+        function undoLastSketchAction() {
+            if (activePolyPoints.length > 0) {
+                activePolyPoints.pop();
+                document.getElementById('closePolyBtn').classList.toggle('hidden', activePolyPoints.length < 3);
+            } else if (sketchContours.length > 0) {
+                sketchContours.pop();
+                updateSketchPreview3D();
+            }
+            drawSketchCanvas();
+        }
+
+        function clearSketchCanvas() {
+            sketchContours = [];
+            activePolyPoints = [];
+            document.getElementById('closePolyBtn').classList.add('hidden');
+            drawSketchCanvas();
+            updateSketchPreview3D();
+        }
+
+        function loadSketchTemplate(presetName) {
+            const preset = getProfilePresetContours(presetName);
+            if (!preset) return;
+            sketchContours = JSON.parse(JSON.stringify(preset.contours));
+            activePolyPoints = [];
+            setSketchOpType(preset.params.opType || 'extrude');
+            syncSketchDepth(preset.params.depth || 30);
+            document.getElementById('sketchPlaneSelect').value = preset.params.plane || 'XY';
+            document.getElementById('sketchPartName').value = preset.name;
+            document.getElementById('sketchPartColor').value = preset.color;
+
+            resizeSketchCanvas();
+            drawSketchCanvas();
+            updateSketchPreview3D();
+        }
+
+        // Render the 2D CAD Grid, Axes, Contours, Holes, and Live Dimension Callouts
+        function drawSketchCanvas() {
+            if (!sketchCtx) return;
+            const w = sketchCanvas.width;
+            const h = sketchCanvas.height;
+            const cx = w / 2;
+            const cy = h / 2;
+
+            sketchCtx.clearRect(0, 0, w, h);
+
+            // 1. Millimeter Grid (5mm minor, 25mm major)
+            const step5 = 5 * SKETCH_SCALE;
+            const step25 = 25 * SKETCH_SCALE;
+
+            sketchCtx.lineWidth = 1;
+            sketchCtx.strokeStyle = 'rgba(148, 163, 184, 0.08)';
+            sketchCtx.beginPath();
+            for (let x = cx % step5; x < w; x += step5) {
+                sketchCtx.moveTo(x, 0); sketchCtx.lineTo(x, h);
+            }
+            for (let y = cy % step5; y < h; y += step5) {
+                sketchCtx.moveTo(0, y); sketchCtx.lineTo(w, y);
+            }
+            sketchCtx.stroke();
+
+            sketchCtx.strokeStyle = 'rgba(148, 163, 184, 0.18)';
+            sketchCtx.beginPath();
+            for (let x = cx % step25; x < w; x += step25) {
+                sketchCtx.moveTo(x, 0); sketchCtx.lineTo(x, h);
+            }
+            for (let y = cy % step25; y < h; y += step25) {
+                sketchCtx.moveTo(0, y); sketchCtx.lineTo(w, y);
+            }
+            sketchCtx.stroke();
+
+            // 2. Origin Axes (X Red, Y Green)
+            sketchCtx.lineWidth = 1.5;
+            sketchCtx.strokeStyle = 'rgba(244, 63, 94, 0.5)';
+            sketchCtx.beginPath();
+            sketchCtx.moveTo(0, cy); sketchCtx.lineTo(w, cy);
+            sketchCtx.stroke();
+
+            sketchCtx.strokeStyle = 'rgba(16, 185, 129, 0.5)';
+            sketchCtx.beginPath();
+            sketchCtx.moveTo(cx, 0); sketchCtx.lineTo(cx, h);
+            sketchCtx.stroke();
+
+            // Origin Marker
+            sketchCtx.fillStyle = '#f59e0b';
+            sketchCtx.beginPath();
+            sketchCtx.arc(cx, cy, 4, 0, Math.PI * 2);
+            sketchCtx.fill();
+
+            // 3. Draw Completed Contours (Outer = Sky Blue Fill, Hole = Rose Cutout)
+            sketchContours.forEach(contour => {
+                if (contour.points.length < 3) return;
+                sketchCtx.beginPath();
+                contour.points.forEach((pt, idx) => {
+                    const s = sketchMMToScreen(pt);
+                    if (idx === 0) sketchCtx.moveTo(s.x, s.y);
+                    else sketchCtx.lineTo(s.x, s.y);
+                });
+                sketchCtx.closePath();
+
+                if (contour.role === 'outer') {
+                    sketchCtx.fillStyle = 'rgba(14, 165, 233, 0.22)';
+                    sketchCtx.strokeStyle = '#38bdf8';
+                    sketchCtx.lineWidth = 2.2;
+                } else {
+                    sketchCtx.fillStyle = 'rgba(244, 63, 94, 0.22)';
+                    sketchCtx.strokeStyle = '#fb7185';
+                    sketchCtx.lineWidth = 2;
+                    sketchCtx.setLineDash([5, 4]);
+                }
+                sketchCtx.fill();
+                sketchCtx.stroke();
+                sketchCtx.setLineDash([]);
+
+                // Draw vertices if polygon has <= 16 vertices
+                if (contour.points.length <= 16) {
+                    contour.points.forEach(pt => {
+                        const s = sketchMMToScreen(pt);
+                        sketchCtx.fillStyle = contour.role === 'outer' ? '#e0f2fe' : '#ffe4e6';
+                        sketchCtx.beginPath();
+                        sketchCtx.arc(s.x, s.y, 3.2, 0, Math.PI * 2);
+                        sketchCtx.fill();
+                    });
+                }
+            });
+
+            // 4. Draw Active Polyline in Progress
+            if (activePolyPoints.length > 0) {
+                sketchCtx.beginPath();
+                activePolyPoints.forEach((pt, idx) => {
+                    const s = sketchMMToScreen(pt);
+                    if (idx === 0) sketchCtx.moveTo(s.x, s.y);
+                    else sketchCtx.lineTo(s.x, s.y);
+                });
+                const curS = sketchMMToScreen(currentMousePt);
+                sketchCtx.lineTo(curS.x, curS.y);
+                sketchCtx.strokeStyle = '#f59e0b';
+                sketchCtx.lineWidth = 2;
+                sketchCtx.stroke();
+
+                // Highlight start vertex in Gold so user knows where to click to close
+                const firstS = sketchMMToScreen(activePolyPoints[0]);
+                sketchCtx.fillStyle = '#facc15';
+                sketchCtx.beginPath();
+                sketchCtx.arc(firstS.x, firstS.y, 6, 0, Math.PI * 2);
+                sketchCtx.fill();
+
+                // Live Segment Length & Angle Label
+                const lastPt = activePolyPoints[activePolyPoints.length - 1];
+                const segLen = Math.hypot(currentMousePt.x - lastPt.x, currentMousePt.y - lastPt.y);
+                const segAngle = Math.atan2(-(currentMousePt.y - lastPt.y), currentMousePt.x - lastPt.x) * (180 / Math.PI);
+                drawCanvasBadge(curS.x + 14, curS.y - 14, `L = ${segLen.toFixed(1)} mm | ∠ ${segAngle.toFixed(0)}°`, '#f59e0b');
+            }
+
+            // 5. Draw Shape Drag Preview (Rect / Circle / Slot / Hex)
+            if (isDraggingShape && dragStartPt) {
+                const s1 = sketchMMToScreen(dragStartPt);
+                const s2 = sketchMMToScreen(currentMousePt);
+                const dx = currentMousePt.x - dragStartPt.x;
+                const dy = currentMousePt.y - dragStartPt.y;
+                const rMM = Math.hypot(dx, dy);
+
+                sketchCtx.strokeStyle = contourRole === 'outer' ? '#38bdf8' : '#fb7185';
+                sketchCtx.fillStyle = contourRole === 'outer' ? 'rgba(56, 189, 248, 0.15)' : 'rgba(251, 113, 133, 0.15)';
+                sketchCtx.lineWidth = 2;
+
+                if (sketchTool === 'rect') {
+                    sketchCtx.fillRect(s1.x, s1.y, s2.x - s1.x, s2.y - s1.y);
+                    sketchCtx.strokeRect(s1.x, s1.y, s2.x - s1.x, s2.y - s1.y);
+                    drawCanvasBadge(s2.x + 12, s2.y + 12, `${Math.abs(dx)} × ${Math.abs(dy)} mm`, '#38bdf8');
+                } else if (sketchTool === 'circle' || sketchTool === 'regpoly') {
+                    sketchCtx.beginPath();
+                    sketchCtx.arc(s1.x, s1.y, rMM * SKETCH_SCALE, 0, Math.PI * 2);
+                    sketchCtx.fill();
+                    sketchCtx.stroke();
+                    drawCanvasBadge(s2.x + 12, s2.y, `R = ${rMM.toFixed(1)} mm (Ø ${(rMM * 2).toFixed(1)})`, '#38bdf8');
+                } else if (sketchTool === 'slot') {
+                    sketchCtx.beginPath();
+                    sketchCtx.moveTo(s1.x, s1.y);
+                    sketchCtx.lineTo(s2.x, s2.y);
+                    sketchCtx.stroke();
+                    drawCanvasBadge(s2.x + 12, s2.y, `Rãnh L = ${rMM.toFixed(1)} mm`, '#38bdf8');
+                }
+            }
+        }
+
+        function drawCanvasBadge(x, y, text, borderColor) {
+            sketchCtx.font = '600 11px "JetBrains Mono", monospace';
+            const metrics = sketchCtx.measureText(text);
+            const padX = 6;
+            const bw = metrics.width + padX * 2;
+            const bh = 20;
+            sketchCtx.fillStyle = 'rgba(15, 23, 42, 0.92)';
+            sketchCtx.strokeStyle = borderColor || '#38bdf8';
+            sketchCtx.lineWidth = 1;
+            sketchCtx.beginPath();
+            sketchCtx.roundRect(x, y - bh / 2, bw, bh, 4);
+            sketchCtx.fill();
+            sketchCtx.stroke();
+            sketchCtx.fillStyle = '#f8fafc';
+            sketchCtx.fillText(text, x + padX, y + 4);
+        }
+
+        function setSketchOpType(op) {
+            const extrudeBtn = document.getElementById('opType-extrude');
+            const revolveBtn = document.getElementById('opType-revolve');
+            const extrudeBox = document.getElementById('sketchExtrudeParams');
+            const revolveBox = document.getElementById('sketchRevolveParams');
+
+            if (op === 'extrude') {
+                extrudeBtn.className = 'py-2 px-3 rounded-lg border border-sky-500 bg-sky-500/20 text-sky-300 font-semibold text-xs flex items-center justify-center space-x-1.5';
+                revolveBtn.className = 'py-2 px-3 rounded-lg border border-slate-700 bg-slate-800 text-slate-300 hover:bg-slate-700 font-semibold text-xs flex items-center justify-center space-x-1.5';
+                extrudeBox.classList.remove('hidden');
+                revolveBox.classList.add('hidden');
+            } else {
+                revolveBtn.className = 'py-2 px-3 rounded-lg border border-amber-500 bg-amber-500/20 text-amber-300 font-semibold text-xs flex items-center justify-center space-x-1.5';
+                extrudeBtn.className = 'py-2 px-3 rounded-lg border border-slate-700 bg-slate-800 text-slate-300 hover:bg-slate-700 font-semibold text-xs flex items-center justify-center space-x-1.5';
+                extrudeBox.classList.add('hidden');
+                revolveBox.classList.remove('hidden');
+            }
+            previewScene.userData.opType = op;
+            updateSketchPreview3D();
+        }
+
+        function syncSketchDepth(val) {
+            const d = Math.max(1, parseFloat(val) || 25);
+            document.getElementById('sketchDepthVal').textContent = `${d} mm`;
+            document.getElementById('sketchDepthSlider').value = d;
+            document.getElementById('sketchDepthInput').value = d;
+            updateSketchPreview3D();
+        }
+
+        function getCurrentSketchExtrudeParams() {
+            const opType = previewScene.userData.opType || 'extrude';
+            const depth = parseFloat(document.getElementById('sketchDepthInput').value) || 30;
+            const plane = document.getElementById('sketchPlaneSelect').value || 'XY';
+            const revolveAngle = parseFloat(document.getElementById('sketchRevolveAngle').value) || 360;
+            const bevelEnabled = document.getElementById('sketchBevelCheck').checked;
+            const bevelSize = parseFloat(document.getElementById('sketchBevelSize').value) || 1.2;
+
+            document.getElementById('sketchRevolveAngleVal').textContent = `${revolveAngle}°`;
+            return { opType, depth, plane, revolveAngle, bevelEnabled, bevelSize };
+        }
+
+        function updateSketchPreview3D() {
+            if (!previewScene) return;
+            if (previewMesh) {
+                previewScene.remove(previewMesh);
+                if (previewMesh.geometry) previewMesh.geometry.dispose();
+            }
+
+            const outerCount = sketchContours.filter(c => c.role === 'outer').length;
+            const holeCount = sketchContours.filter(c => c.role === 'hole').length;
+            document.getElementById('sketchContourStatus').textContent = `${outerCount} Biên dạng, ${holeCount} Lỗ khoét`;
+
+            if (sketchContours.length === 0) return;
+
+            const params = getCurrentSketchExtrudeParams();
+            const geo = buildGeometryFromSketch(sketchContours, params);
+            const color = document.getElementById('sketchPartColor').value || '#38bdf8';
+
+            const mat = new THREE.MeshStandardMaterial({
+                color: new THREE.Color(color),
+                metalness: 0.4,
+                roughness: 0.3,
+                polygonOffset: true,
+                polygonOffsetFactor: 1,
+                polygonOffsetUnits: 1,
+                side: THREE.DoubleSide
+            });
+
+            previewMesh = new THREE.Mesh(geo, mat);
+            const edges = new THREE.LineSegments(
+                new THREE.EdgesGeometry(geo, 24),
+                new THREE.LineBasicMaterial({ color: 0x0f172a })
+            );
+            previewMesh.add(edges);
+            previewScene.add(previewMesh);
+        }
+
+        function commitSketchTo3DScene() {
+            if (activePolyPoints.length >= 3) finishActivePolyline();
+            if (sketchContours.length === 0) {
+                showToast('Vui lòng vẽ ít nhất 1 biên dạng kín trước khi tạo khối 3D!');
+                return;
+            }
+
+            const params = getCurrentSketchExtrudeParams();
+            const partName = document.getElementById('sketchPartName').value || `Chi Tiết Extrude #${partCounter}`;
+            const partColor = document.getElementById('sketchPartColor').value || '#38bdf8';
+            const geo = buildGeometryFromSketch(sketchContours, params);
+
+            if (editingPartId) {
+                const existing = cadParts.find(p => p.id === editingPartId);
+                if (existing) {
+                    existing.name = partName;
+                    existing.color = partColor;
+                    existing.type = params.opType;
+                    existing.sketchData = JSON.parse(JSON.stringify(sketchContours));
+                    existing.extrudeParams = Object.assign({}, params);
+                    existing.mesh.geometry.dispose();
+                    existing.mesh.geometry = geo;
+                    if (existing.edgeLines) {
+                        existing.edgeLines.geometry.dispose();
+                        existing.edgeLines.geometry = new THREE.EdgesGeometry(geo, 24);
+                    }
+                    applyCurrentRenderModeToPart(existing);
+                    selectPart(existing);
+                    closeSketchModal();
+                    showToast(`Đã cập nhật biên dạng 3D cho "${partName}"`);
+                    return;
+                }
+            }
+
+            geo.computeBoundingBox();
+            const heightY = geo.boundingBox.max.y - geo.boundingBox.min.y;
+            createCADPartFromGeometry(geo, {
+                name: partName,
+                type: params.opType,
+                color: partColor,
+                position: { x: 0, y: heightY / 2, z: 0 },
+                sketchData: sketchContours,
+                extrudeParams: params
+            });
+
+            closeSketchModal();
+            showToast(`Đã tạo khối 3D "${partName}" thành công!`);
+        }
+
+        // ============================================================================
+        // REPORT SCREENSHOT COMPOSER (HIGH-RES PNG WITH DIMENSIONS & TITLE BLOCK)
+        // ============================================================================
+        let lastComposedDataURL = '';
+
+        function openScreenshotModal() {
+            document.getElementById('capTitleText').value = document.getElementById('projectTitleInput').value || 'Mô hình 3D Chi tiết Cơ khí';
+            document.getElementById('screenshotModal').classList.remove('hidden');
+            renderReportPreviewImage();
+        }
+
+        function closeScreenshotModal() {
+            document.getElementById('screenshotModal').classList.add('hidden');
+        }
+
+        function renderReportPreviewImage() {
+            const useWhiteBg = document.getElementById('capWhiteBg').checked;
+            const includeDims = document.getElementById('capShowDims').checked;
+            const includeTB = document.getElementById('capShowTitleBlock').checked;
+            const hideGrid = document.getElementById('capHideGrid').checked;
+
+            // Save current scene states
+            const prevBg = scene.background.clone();
+            const prevGridVis = gridHelper.visible;
+            const prevAxesVis = axesHelper.visible;
+            const prevTransformVis = transformControls.visible;
+            const prevDimVis = dimGroup.visible;
+
+            // Configure scene for clean technical capture
+            if (useWhiteBg) scene.background = new THREE.Color(0xffffff);
+            if (hideGrid) {
+                gridHelper.visible = false;
+                axesHelper.visible = false;
+            }
+            transformControls.visible = false;
+            updateDimensionVisuals();
+            dimGroup.visible = includeDims;
+
+            // Render WebGL Scene
+            renderer.render(scene, activeCamera);
+
+            // Create offscreen composite canvas
+            const srcCanvas = renderer.domElement;
+            const outCanvas = document.createElement('canvas');
+            outCanvas.width = srcCanvas.width;
+            outCanvas.height = srcCanvas.height;
+            const ctx = outCanvas.getContext('2d');
+
+            // 1. Draw 3D Rendered Image
+            ctx.drawImage(srcCanvas, 0, 0);
+
+            const scaleFactor = outCanvas.width / srcCanvas.clientWidth;
+
+            // 2. Draw 3D Dimension Labels onto the image if enabled
+            if (includeDims && dimGroup.userData.midX && cadParts.length > 0) {
+                const size = dimGroup.userData.size;
+                const draw3DBadge = (worldPos, text, bgColor) => {
+                    const v = worldPos.clone().project(activeCamera);
+                    if (v.z > 1 || v.z < -1) return;
+                    const x = (v.x * 0.5 + 0.5) * outCanvas.width;
+                    const y = (-v.y * 0.5 + 0.5) * outCanvas.height;
+
+                    ctx.font = `bold ${Math.round(12 * scaleFactor)}px "JetBrains Mono", monospace`;
+                    const tw = ctx.measureText(text).width;
+                    const padX = 8 * scaleFactor;
+                    const bw = tw + padX * 2;
+                    const bh = 22 * scaleFactor;
+
+                    ctx.fillStyle = bgColor;
+                    ctx.beginPath();
+                    ctx.roundRect(x - bw / 2, y - bh / 2, bw, bh, 5 * scaleFactor);
+                    ctx.fill();
+
+                    ctx.fillStyle = '#ffffff';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(text, x, y);
+                };
+
+                draw3DBadge(dimGroup.userData.midX, `Dài X: ${size.x.toFixed(1)} mm`, '#e11d48');
+                draw3DBadge(dimGroup.userData.midY, `Cao Y: ${size.y.toFixed(1)} mm`, '#059669');
+                draw3DBadge(dimGroup.userData.midZ, `Rộng Z: ${size.z.toFixed(1)} mm`, '#0284c7');
+            }
+
+            // 3. Draw Technical Drawing Border & Title Block if enabled
+            if (includeTB) {
+                const margin = Math.round(16 * scaleFactor);
+                const w = outCanvas.width;
+                const h = outCanvas.height;
+
+                // Technical Outer Border
+                ctx.strokeStyle = useWhiteBg ? '#0f172a' : '#94a3b8';
+                ctx.lineWidth = Math.max(2, Math.round(2 * scaleFactor));
+                ctx.strokeRect(margin, margin, w - margin * 2, h - margin * 2);
+
+                // Title Block Box in Bottom Right
+                const tbW = Math.min(w - margin * 4, Math.round(440 * scaleFactor));
+                const tbH = Math.round(86 * scaleFactor);
+                const tbX = w - margin - tbW;
+                const tbY = h - margin - tbH;
+
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.96)';
+                ctx.fillRect(tbX, tbY, tbW, tbH);
+                ctx.strokeStyle = '#0f172a';
+                ctx.lineWidth = Math.max(2, Math.round(2 * scaleFactor));
+                ctx.strokeRect(tbX, tbY, tbW, tbH);
+
+                // Internal Divider Lines
+                const midY = tbY + Math.round(tbH * 0.52);
+                ctx.beginPath();
+                ctx.moveTo(tbX, midY);
+                ctx.lineTo(tbX + tbW, midY);
+                ctx.moveTo(tbX + tbW * 0.65, tbY);
+                ctx.lineTo(tbX + tbW * 0.65, tbY + tbH);
+                ctx.stroke();
+
+                // Title Block Texts
+                ctx.textAlign = 'left';
+                ctx.textBaseline = 'top';
+                const titleStr = document.getElementById('capTitleText').value || 'Mô Hình CAD 3D';
+                const noteStr = document.getElementById('capAuthorText').value || 'Đơn vị: mm';
+                const dimStr = document.getElementById('tbDimensions').textContent || '';
+
+                ctx.fillStyle = '#64748b';
+                ctx.font = `bold ${Math.round(9 * scaleFactor)}px Inter, sans-serif`;
+                ctx.fillText('TÊN MÔ HÌNH / HÌNH VẼ BÁO CÁO:', tbX + 10 * scaleFactor, tbY + 6 * scaleFactor);
+                ctx.fillText('KÍCH THƯỚC BAO:', tbX + tbW * 0.65 + 10 * scaleFactor, tbY + 6 * scaleFactor);
+                ctx.fillText('THÔNG TIN KỸ THUẬT:', tbX + 10 * scaleFactor, midY + 6 * scaleFactor);
+                ctx.fillText('NGÀY XUẤT BẢN VẼ:', tbX + tbW * 0.65 + 10 * scaleFactor, midY + 6 * scaleFactor);
+
+                ctx.fillStyle = '#0f172a';
+                ctx.font = `bold ${Math.round(13 * scaleFactor)}px Inter, sans-serif`;
+                ctx.fillText(titleStr.slice(0, 38), tbX + 10 * scaleFactor, tbY + 21 * scaleFactor);
+
+                ctx.fillStyle = '#0369a1';
+                ctx.font = `bold ${Math.round(11 * scaleFactor)}px "JetBrains Mono", monospace`;
+                ctx.fillText(dimStr, tbX + tbW * 0.65 + 10 * scaleFactor, tbY + 22 * scaleFactor);
+
+                ctx.fillStyle = '#1e293b';
+                ctx.font = `600 ${Math.round(11 * scaleFactor)}px Inter, sans-serif`;
+                ctx.fillText(noteStr.slice(0, 42), tbX + 10 * scaleFactor, midY + 20 * scaleFactor);
+                ctx.fillText(new Date().toLocaleDateString('vi-VN'), tbX + tbW * 0.65 + 10 * scaleFactor, midY + 20 * scaleFactor);
+            }
+
+            // Restore scene states
+            scene.background.copy(prevBg);
+            gridHelper.visible = prevGridVis;
+            axesHelper.visible = prevAxesVis;
+            transformControls.visible = prevTransformVis;
+            dimGroup.visible = prevDimVis;
+            renderer.render(scene, activeCamera);
+
+            lastComposedDataURL = outCanvas.toDataURL('image/png');
+            document.getElementById('reportScreenshotPreview').src = lastComposedDataURL;
+            document.getElementById('screenshotResInfo').textContent = `Độ phân giải ảnh xuất: ${outCanvas.width} × ${outCanvas.height} px (PNG nét cao)`;
+        }
+
+        function downloadCapturedPNG() {
+            if (!lastComposedDataURL) renderReportPreviewImage();
+            const link = document.createElement('a');
+            const safeName = (document.getElementById('capTitleText').value || 'baocao_cad_3d')
+                .toLowerCase()
+                .replace(/[^a-z0-9-_]/gi, '_');
+            link.download = `${safeName}.png`;
+            link.href = lastComposedDataURL;
+            link.click();
+            showToast('Đã tải xuống ảnh PNG chất lượng cao cho báo cáo!');
+        }
+
+        // ============================================================================
+        // EXPORT TO .STL (3D PRINTING / CAD) & SAVE/LOAD PROJECT (.JSON)
+        // ============================================================================
+        function exportSceneSTL() {
+            if (cadParts.length === 0) {
+                showToast('Không có chi tiết 3D nào để xuất!');
+                return;
+            }
+            let stl = 'solid CAD_Studio_3D_Model\n';
+            const vA = new THREE.Vector3();
+            const vB = new THREE.Vector3();
+            const vC = new THREE.Vector3();
+            const cb = new THREE.Vector3();
+            const ab = new THREE.Vector3();
+
+            cadParts.forEach(part => {
+                if (!part.visible) return;
+                part.mesh.updateMatrixWorld(true);
+                const geom = part.mesh.geometry.clone();
+                geom.applyMatrix4(part.mesh.matrixWorld);
+
+                const nonIndexed = geom.index ? geom.toNonIndexed() : geom;
+                const pos = nonIndexed.attributes.position;
+                if (!pos) return;
+
+                for (let i = 0; i < pos.count; i += 3) {
+                    vA.fromBufferAttribute(pos, i);
+                    vB.fromBufferAttribute(pos, i + 1);
+                    vC.fromBufferAttribute(pos, i + 2);
+                    cb.subVectors(vC, vB);
+                    ab.subVectors(vA, vB);
+                    cb.cross(ab).normalize();
+
+                    stl += `facet normal ${cb.x.toFixed(5)} ${cb.y.toFixed(5)} ${cb.z.toFixed(5)}\n`;
+                    stl += `  outer loop\n`;
+                    stl += `    vertex ${vA.x.toFixed(4)} ${vA.y.toFixed(4)} ${vA.z.toFixed(4)}\n`;
+                    stl += `    vertex ${vB.x.toFixed(4)} ${vB.y.toFixed(4)} ${vB.z.toFixed(4)}\n`;
+                    stl += `    vertex ${vC.x.toFixed(4)} ${vC.y.toFixed(4)} ${vC.z.toFixed(4)}\n`;
+                    stl += `  endloop\n`;
+                    stl += `endfacet\n`;
+                }
+            });
+            stl += 'endsolid CAD_Studio_3D_Model\n';
+
+            const blob = new Blob([stl], { type: 'text/plain;charset=utf-8' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'mo_hinh_cad_3d.stl';
+            link.click();
+            showToast('Đã xuất mô hình 3D chuẩn .STL thành công!');
+        }
+
+        function saveProjectJSON() {
+            const data = {
+                projectTitle: document.getElementById('projectTitleInput').value,
+                timestamp: new Date().toISOString(),
+                parts: cadParts.map(p => ({
+                    name: p.name,
+                    type: p.type,
+                    color: p.color,
+                    metalness: p.metalness,
+                    roughness: p.roughness,
+                    opacity: p.opacity,
+                    position: { x: p.mesh.position.x, y: p.mesh.position.y, z: p.mesh.position.z },
+                    rotation: {
+                        x: THREE.MathUtils.radToDeg(p.mesh.rotation.x),
+                        y: THREE.MathUtils.radToDeg(p.mesh.rotation.y),
+                        z: THREE.MathUtils.radToDeg(p.mesh.rotation.z)
+                    },
+                    scale: { x: p.mesh.scale.x, y: p.mesh.scale.y, z: p.mesh.scale.z },
+                    sketchData: p.sketchData,
+                    extrudeParams: p.extrudeParams
+                }))
+            };
+
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'du_an_cad_3d.json';
+            link.click();
+            showToast('Đã lưu file dự án (.JSON)');
+        }
+
+        function loadProjectJSON(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    [...cadParts].forEach(p => removePartRecord(p));
+                    if (data.projectTitle) {
+                        document.getElementById('projectTitleInput').value = data.projectTitle;
+                        syncTitleBlock();
+                    }
+                    (data.parts || []).forEach(item => {
+                        let geo;
+                        if (item.sketchData && item.extrudeParams) {
+                            geo = buildGeometryFromSketch(item.sketchData, item.extrudeParams);
+                        } else {
+                            geo = new THREE.BoxGeometry(40, 30, 40);
+                        }
+                        createCADPartFromGeometry(geo, item);
+                    });
+                    fitCameraToScene();
+                    showToast('Đã tải dự án CAD 3D thành công!');
+                } catch (err) {
+                    showToast('File JSON không hợp lệ!');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        // ============================================================================
+        // VIEWPORT INTERACTION, SHORTCUTS & RENDER LOOP
+        // ============================================================================
+        function setupViewportInteraction() {
+            const canvas = renderer.domElement;
+            let downTime = 0;
+            let downPos = { x: 0, y: 0 };
+
+            canvas.addEventListener('pointerdown', (e) => {
+                downTime = performance.now();
+                downPos = { x: e.clientX, y: e.clientY };
+            });
+
+            canvas.addEventListener('pointerup', (e) => {
+                const elapsed = performance.now() - downTime;
+                const moveDist = Math.hypot(e.clientX - downPos.x, e.clientY - downPos.y);
+                if (elapsed > 250 || moveDist > 5 || transformControls.dragging) return;
+
+                const rect = canvas.getBoundingClientRect();
+                mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+                mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+
+                raycaster.setFromCamera(mouse, activeCamera);
+                const visibleMeshes = cadParts.filter(p => p.visible).map(p => p.mesh);
+                const intersects = raycaster.intersectObjects(visibleMeshes, false);
+
+                if (intersects.length > 0) {
+                    const hitMesh = intersects[0].object;
+                    const foundPart = cadParts.find(p => p.mesh === hitMesh);
+                    if (foundPart) selectPart(foundPart);
+                } else {
+                    selectPart(null);
+                }
+            });
+
+            // Keyboard Shortcuts (W, E, R, F, Delete, Space)
+            window.addEventListener('keydown', (e) => {
+                if (['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName)) return;
+
+                if (!document.getElementById('sketchModal').classList.contains('hidden')) {
+                    if (e.key === 'Enter') finishActivePolyline();
+                    if (e.key === 'Escape') closeSketchModal();
+                    return;
+                }
+
+                const key = e.key.toLowerCase();
+                if (key === 'w') setTransformMode('translate');
+                if (key === 'e') setTransformMode('rotate');
+                if (key === 'r') setTransformMode('scale');
+                if (key === 'f') dropSelectedToFloor();
+                if (key === ' ') {
+                    e.preventDefault();
+                    fitCameraToScene();
+                }
+                if (e.key === 'Delete' || e.key === 'Backspace') {
+                    deleteSelected();
+                }
+            });
+        }
+
+        function onViewportResize() {
+            const container = document.getElementById('viewportContainer');
+            if (!container || !renderer) return;
+            const width = container.clientWidth;
+            const height = container.clientHeight;
+            const aspect = width / height;
+
+            perspectiveCamera.aspect = aspect;
+            perspectiveCamera.updateProjectionMatrix();
+
+            const frustumSize = 220;
+            orthoCamera.left = -frustumSize * aspect / 2;
+            orthoCamera.right = frustumSize * aspect / 2;
+            orthoCamera.top = frustumSize / 2;
+            orthoCamera.bottom = -frustumSize / 2;
+            orthoCamera.updateProjectionMatrix();
+
+            renderer.setSize(width, height);
+
+            if (!document.getElementById('sketchModal').classList.contains('hidden')) {
+                resizeSketchCanvas();
+                drawSketchCanvas();
+            }
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toastNotification');
+            document.getElementById('toastMessage').textContent = msg;
+            toast.classList.remove('opacity-0', 'translate-y-2');
+            clearTimeout(toast.hideTimer);
+            toast.hideTimer = setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-2');
+            }, 2600);
+        }
+
+        function animateCAD() {
+            requestAnimationFrame(animateCAD);
+            orbitControls.update();
+            projectDimensionLabelsToScreen();
+            renderer.render(scene, activeCamera);
+
+            // Render Mini 3D Preview if Sketch Modal is open
+            const sketchModal = document.getElementById('sketchModal');
+            if (sketchModal && !sketchModal.classList.contains('hidden') && previewRenderer) {
+                previewControls.update();
+                if (previewMesh) previewMesh.rotation.y += 0.004;
+                previewRenderer.render(previewScene, previewCamera);
+            }
+        }
+
+        window.onload = function () {
+            initCAD3D();
+        };
+    </script>
+</body>
+</html>

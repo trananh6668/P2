@@ -1,0 +1,2724 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>CHIẾN CƠ DIỆT NHỆN VŨ TRỤ - Space Fighter & Spider Shooter</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Chakra+Petch:wght@400;600;700&display=swap');
+
+        :root {
+            --neon-cyan: #00f3ff;
+            --neon-red: #ff2a5f;
+            --neon-green: #00ff88;
+            --neon-purple: #b829ff;
+            --neon-gold: #ffcc00;
+        }
+
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #050711;
+            font-family: 'Chakra Petch', sans-serif;
+            color: #e2e8f0;
+        }
+
+        .font-orbitron {
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        #game-wrapper {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: radial-gradient(circle at center, #0c1229 0%, #03050c 100%);
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            cursor: crosshair;
+            touch-action: none;
+        }
+
+        .cyber-panel {
+            background: rgba(10, 15, 32, 0.88);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(0, 243, 255, 0.35);
+            box-shadow: 0 0 30px rgba(0, 243, 255, 0.12), inset 0 0 20px rgba(0, 243, 255, 0.05);
+        }
+
+        .cyber-btn {
+            position: relative;
+            overflow: hidden;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-weight: 700;
+        }
+
+        .cyber-btn:hover:not(:disabled) {
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 0 20px currentColor;
+        }
+
+        .cyber-btn:active:not(:disabled) {
+            transform: translateY(1px) scale(0.98);
+        }
+
+        @keyframes pulseGlow {
+            0%, 100% { filter: drop-shadow(0 0 8px rgba(0, 243, 255, 0.7)); }
+            50% { filter: drop-shadow(0 0 18px rgba(0, 243, 255, 1)); }
+        }
+
+        @keyframes warningFlash {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.25; transform: scale(1.04); }
+        }
+
+        .animate-warning {
+            animation: warningFlash 0.6s infinite ease-in-out;
+        }
+
+        .glow-text-cyan {
+            text-shadow: 0 0 12px rgba(0, 243, 255, 0.8);
+        }
+
+        .glow-text-red {
+            text-shadow: 0 0 14px rgba(255, 42, 95, 0.9);
+        }
+
+        /* Custom scrollbar for menus */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.6);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(0, 243, 255, 0.4);
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(0, 243, 255, 0.8);
+        }
+    </style>
+</head>
+<body>
+
+<div id="game-wrapper">
+    <!-- Main 2D Arcade Canvas -->
+    <canvas id="gameCanvas"></canvas>
+
+    <!-- TOP IN-GAME HUD -->
+    <div id="hud-overlay" class="hidden absolute top-0 left-0 w-full p-2 sm:p-4 pointer-events-none flex flex-col gap-2 z-20">
+        <div class="flex flex-wrap justify-between items-start gap-2 w-full max-w-6xl mx-auto">
+            <!-- Left: Player HP, Shield, Weapon Lv & Crystals -->
+            <div class="cyber-panel rounded-xl p-2.5 sm:p-3 flex flex-col gap-1.5 min-w-[230px] sm:min-w-[280px] pointer-events-auto">
+                <div class="flex items-center justify-between text-xs sm:text-sm font-bold">
+                    <span class="text-cyan-300 flex items-center gap-1.5">
+                        <i class="fa-solid fa-jet-fighter text-cyan-400"></i>
+                        <span id="hud-stage-label">MÀN 1-1</span>
+                    </span>
+                    <span class="text-amber-300 flex items-center gap-1">
+                        <i class="fa-solid fa-gem text-amber-400"></i>
+                        <span id="hud-crystals">0</span>
+                    </span>
+                </div>
+
+                <!-- HP Bar -->
+                <div class="w-full bg-slate-900/90 h-4 rounded-full overflow-hidden border border-slate-700 relative">
+                    <div id="hud-hp-bar" class="h-full bg-gradient-to-r from-red-600 via-rose-500 to-emerald-400 transition-all duration-150" style="width: 100%;"></div>
+                    <span id="hud-hp-text" class="absolute inset-0 flex items-center justify-center text-[11px] font-bold text-white drop-shadow">100 / 100 HP</span>
+                </div>
+
+                <!-- Bottom Row: Weapon Level, EMP Bombs, Web Status -->
+                <div class="flex items-center justify-between text-xs pt-0.5">
+                    <div class="flex items-center gap-1.5">
+                        <span class="px-2 py-0.5 rounded bg-cyan-950/90 border border-cyan-500/40 text-cyan-300 font-bold">
+                            ⚡ ĐẠN CẤP <span id="hud-weapon-lv">1</span>/6
+                        </span>
+                        <span id="hud-web-status" class="hidden px-2 py-0.5 rounded bg-purple-900/90 border border-purple-400 text-purple-200 font-bold animate-pulse">
+                            🕸️ DÍNH TƠ!
+                        </span>
+                    </div>
+                    <div class="flex items-center gap-1 text-amber-300 font-bold" title="Bom Từ Trường EMP (Phím E / Shift / Chuột Phải)">
+                        <span>💣 EMP:</span>
+                        <span id="hud-bombs">2</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Center: Wave Progress & Score -->
+            <div class="cyber-panel rounded-xl px-4 py-2 flex flex-col items-center pointer-events-auto">
+                <div class="text-[11px] uppercase tracking-wider text-slate-400 font-semibold" id="hud-stage-title">Trinh Sát Vành Đai</div>
+                <div class="font-orbitron text-lg sm:text-2xl font-black text-white tracking-wider glow-text-cyan" id="hud-score">000000</div>
+                <div class="w-36 sm:w-48 bg-slate-800 h-1.5 rounded-full overflow-hidden mt-1">
+                    <div id="hud-wave-bar" class="bg-cyan-400 h-full transition-all duration-300" style="width: 10%;"></div>
+                </div>
+                <div class="text-[10px] text-cyan-300 mt-0.5 font-semibold" id="hud-wave-text">ĐỢT ĐỊCH 1 / 4</div>
+            </div>
+
+            <!-- Right: Quick Controls (Auto-fire, EMP, Sound, Pause) -->
+            <div class="flex items-center gap-1.5 sm:gap-2 pointer-events-auto">
+                <button id="btn-hud-emp" onclick="game.triggerEMP()" class="cyber-btn px-3 py-2 rounded-xl bg-amber-500/20 border border-amber-400 text-amber-300 text-xs sm:text-sm flex items-center gap-1.5 shadow-lg" title="Kích hoạt Bom EMP (Phím E hoặc Chuột Phải)">
+                    <i class="fa-solid fa-burst"></i>
+                    <span class="hidden sm:inline">BOM EMP (E)</span>
+                </button>
+                <button id="btn-hud-autofire" onclick="game.toggleAutoFire()" class="cyber-btn px-3 py-2 rounded-xl bg-cyan-500/20 border border-cyan-400 text-cyan-300 text-xs sm:text-sm flex items-center gap-1.5" title="Bật/Tắt Tự Động Bắn">
+                    <i class="fa-solid fa-crosshairs"></i>
+                    <span id="autofire-label" class="hidden md:inline">TỰ BẮN: BẬT</span>
+                </button>
+                <button id="btn-hud-mute" onclick="soundFX.toggleMute()" class="cyber-btn w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-slate-800/90 border border-slate-600 text-slate-200 flex items-center justify-center">
+                    <i id="icon-mute" class="fa-solid fa-volume-high"></i>
+                </button>
+                <button onclick="game.togglePause()" class="cyber-btn w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-slate-800/90 border border-slate-600 text-slate-200 flex items-center justify-center" title="Tạm Dừng (P / ESC)">
+                    <i class="fa-solid fa-pause"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- BOSS HEALTH BAR (Appears during Boss Chúa or Mini-Boss) -->
+        <div id="boss-hud" class="hidden w-full max-w-3xl mx-auto mt-1 pointer-events-none transition-all duration-300">
+            <div class="cyber-panel rounded-xl p-2.5 border-red-500/70 bg-red-950/40 shadow-[0_0_25px_rgba(255,42,95,0.3)]">
+                <div class="flex justify-between items-center text-xs sm:text-sm font-bold mb-1">
+                    <span class="text-red-300 font-orbitron flex items-center gap-2">
+                        <i class="fa-solid fa-spider text-red-500 animate-bounce"></i>
+                        <span id="boss-name-label">NHỆN CHÚA HỎA NGỤC</span>
+                    </span>
+                    <span id="boss-phase-badge" class="px-2 py-0.5 rounded bg-red-600 text-white text-[11px] uppercase tracking-wider">PHASE 1</span>
+                </div>
+                <div class="w-full h-4 bg-slate-950 rounded-full overflow-hidden border border-red-500/60 relative">
+                    <!-- 50% Phase 2 Threshold Marker -->
+                    <div class="absolute left-1/2 top-0 bottom-0 w-0.5 bg-yellow-300/80 z-10"></div>
+                    <div id="boss-hp-bar" class="h-full bg-gradient-to-r from-purple-600 via-red-600 to-amber-500 transition-all duration-100" style="width: 100%;"></div>
+                    <span id="boss-hp-text" class="absolute inset-0 flex items-center justify-center text-[11px] font-bold text-white drop-shadow">5000 / 5000</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- BOSS WARNING BANNER -->
+    <div id="boss-warning-banner" class="hidden absolute inset-x-0 top-1/3 -translate-y-1/2 pointer-events-none z-30 flex flex-col items-center justify-center py-6 bg-red-950/80 border-y-2 border-red-500 animate-warning">
+        <div class="text-red-400 font-orbitron text-xs sm:text-sm tracking-[0.35em] uppercase mb-1">⚠️ CẢNH BÁO NGUY HIỂM CẤP ĐỘ VŨ TRỤ ⚠️</div>
+        <div id="warning-boss-title" class="font-orbitron text-2xl sm:text-5xl font-black text-white glow-text-red tracking-wider text-center px-4">NHỆN CHÚA HỎA NGỤC XUẤT HIỆN</div>
+        <div class="text-amber-300 text-xs sm:text-sm mt-1 font-semibold">Hãy chuẩn bị Bom EMP và né lưới tơ không gian!</div>
+    </div>
+
+    <!-- MAIN MENU & CAMPAIGN MAP SCREEN -->
+    <div id="screen-menu" class="absolute inset-0 z-30 flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
+        <div class="cyber-panel rounded-2xl w-full max-w-6xl p-4 sm:p-6 my-auto flex flex-col gap-4 border border-cyan-400/40 max-h-[95vh] overflow-y-auto">
+            <!-- Header Title Bar -->
+            <div class="flex flex-col lg:flex-row justify-between items-center gap-4 border-b border-slate-700/80 pb-4">
+                <div class="text-center lg:text-left">
+                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-400/30 text-cyan-300 text-xs font-bold mb-1.5">
+                        <i class="fa-solid fa-shuttle-space"></i> SIÊU PHẨM ARCADE BẮN MÁY BAY & DIỆT NHỆN VŨ TRỤ
+                    </div>
+                    <h1 class="font-orbitron text-2xl sm:text-4xl font-black tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-sky-200 to-rose-400">
+                        CHIẾN CƠ DIỆT NHỆN VŨ TRỤ
+                    </h1>
+                    <p class="text-xs sm:text-sm text-slate-300 mt-1">
+                        Vượt qua các phi đội máy bay hộ vệ và bầy nhện đột biến qua 3 Thiên Hà để tiêu diệt 3 Boss Chúa!
+                    </p>
+                </div>
+
+                <!-- Right Status & Practice Mode Switch -->
+                <div class="flex flex-wrap items-center justify-center gap-2.5">
+                    <div class="px-3.5 py-2 rounded-xl bg-slate-900/90 border border-amber-400/40 flex items-center gap-2">
+                        <i class="fa-solid fa-gem text-amber-400 text-lg"></i>
+                        <div>
+                            <div class="text-[10px] text-slate-400 uppercase font-bold">Tinh Thể Năng Lượng</div>
+                            <div id="menu-crystals" class="font-orbitron text-base font-black text-amber-300">0</div>
+                        </div>
+                    </div>
+
+                    <button onclick="ui.openHangar()" class="cyber-btn px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 text-slate-950 font-extrabold text-xs sm:text-sm flex items-center gap-2 shadow-lg">
+                        <i class="fa-solid fa-screwdriver-wrench"></i>
+                        <span>XƯỞNG NÂNG CẤP</span>
+                    </button>
+
+                    <button id="btn-practice-toggle" onclick="ui.togglePracticeMode()" class="cyber-btn px-3.5 py-2.5 rounded-xl bg-emerald-500/20 border border-emerald-400 text-emerald-300 text-xs sm:text-sm flex items-center gap-2">
+                        <i id="practice-icon" class="fa-solid fa-unlock-keyhole"></i>
+                        <span id="practice-label">CHẾ ĐỘ LUYỆN TẬP: BẬT</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 3 MAP TABS -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-2.5" id="map-tabs-container">
+                <!-- Populated dynamically by JS -->
+            </div>
+
+            <!-- SUB-STAGES OF SELECTED MAP (1-1 to 1-4) -->
+            <div class="bg-slate-950/60 rounded-xl p-3 sm:p-4 border border-slate-800">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+                    <div>
+                        <h2 id="selected-map-heading" class="font-orbitron text-lg sm:text-xl font-bold text-cyan-300">
+                            MAP 1: VÀNH ĐAI NHỆN ĐỎ
+                        </h2>
+                        <p id="selected-map-desc" class="text-xs text-slate-400">
+                            Khu vực tiền đồn của quân đoàn nhện đỏ và phi đội tiêm kích trinh sát.
+                        </p>
+                    </div>
+                    <div class="text-xs text-amber-300 font-semibold flex items-center gap-1.5">
+                        <i class="fa-solid fa-circle-info"></i>
+                        <span>Chọn bất kỳ màn con hoặc Boss Chúa bên dưới để xuất kích!</span>
+                    </div>
+                </div>
+
+                <div id="stages-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                    <!-- Stage Cards Populated by JS -->
+                </div>
+            </div>
+
+            <!-- Controls & Power-Up Guide Footer -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-3 text-xs bg-slate-900/60 p-3.5 rounded-xl border border-slate-800/90">
+                <div class="flex flex-col gap-1.5">
+                    <div class="font-bold text-cyan-300 uppercase tracking-wider flex items-center gap-1.5">
+                        <i class="fa-solid fa-gamepad"></i> Hướng Dẫn Điều Khiển Linh Hoạt
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-slate-300">
+                        <div>• <strong class="text-white">Di chuyển:</strong> Chuột / Chạm Kéo hoặc <kbd class="px-1.5 py-0.5 bg-slate-800 rounded border border-slate-600">WASD</kbd> / <kbd class="px-1.5 py-0.5 bg-slate-800 rounded border border-slate-600">Mũi Tên</kbd></div>
+                        <div>• <strong class="text-white">Khai hỏa:</strong> Tự động bắn (Hoặc giữ <kbd class="px-1.5 py-0.5 bg-slate-800 rounded border border-slate-600">Space</kbd> / Chuột Trái)</div>
+                        <div>• <strong class="text-amber-300">Bom Từ Trường EMP:</strong> Phím <kbd class="px-1.5 py-0.5 bg-slate-800 rounded border border-slate-600">E</kbd>, <kbd class="px-1.5 py-0.5 bg-slate-800 rounded border border-slate-600">Shift</kbd> hoặc <strong class="text-amber-300">Chuột Phải</strong></div>
+                        <div>• <strong class="text-white">Tạm dừng:</strong> Phím <kbd class="px-1.5 py-0.5 bg-slate-800 rounded border border-slate-600">P</kbd> hoặc <kbd class="px-1.5 py-0.5 bg-slate-800 rounded border border-slate-600">ESC</kbd></div>
+                    </div>
+                </div>
+                <div class="flex flex-col gap-1.5">
+                    <div class="font-bold text-emerald-300 uppercase tracking-wider flex items-center gap-1.5">
+                        <i class="fa-solid fa-bolt"></i> Vật Phẩm Tiếp Tế & Cơ Chế Chiến Đấu
+                    </div>
+                    <div class="flex flex-wrap gap-2 text-slate-300">
+                        <span class="px-2 py-0.5 rounded bg-cyan-950/80 border border-cyan-500/30">⚡ Nâng Cấp Đạn (Lv.1 → Lv.6 Siêu Pháo)</span>
+                        <span class="px-2 py-0.5 rounded bg-emerald-950/80 border border-emerald-500/30">❤️ Hồi Phục Giáp</span>
+                        <span class="px-2 py-0.5 rounded bg-sky-950/80 border border-sky-500/30">🛡️ Khiên Bất Tử</span>
+                        <span class="px-2 py-0.5 rounded bg-amber-950/80 border border-amber-500/30">💣 +1 Bom EMP</span>
+                        <span class="px-2 py-0.5 rounded bg-purple-950/80 border border-purple-500/30">🕸️ Đạn Tơ Nhện làm chậm máy bay</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- HANGAR UPGRADE MODAL (XƯỞNG NÂNG CẤP CHIẾN CƠ) -->
+    <div id="modal-hangar" class="hidden absolute inset-0 z-40 flex items-center justify-center p-3 sm:p-6 bg-slate-950/80 backdrop-blur-md">
+        <div class="cyber-panel rounded-2xl w-full max-w-4xl p-4 sm:p-6 border border-amber-400/50 flex flex-col gap-4 max-h-[92vh] overflow-y-auto">
+            <div class="flex flex-wrap justify-between items-center gap-3 border-b border-slate-700 pb-3">
+                <div>
+                    <h2 class="font-orbitron text-xl sm:text-2xl font-black text-amber-300 flex items-center gap-2">
+                        <i class="fa-solid fa-screwdriver-wrench"></i> XƯỞNG NÂNG CẤP CHIẾN CƠ TỐI TÂN
+                    </h2>
+                    <p class="text-xs text-slate-300">Sử dụng Tinh Thể Năng Lượng thu thập được hoặc nhận gói tiếp tế luyện tập để cường hóa chiến cơ.</p>
+                </div>
+                <div class="flex items-center gap-2">
+                    <div class="px-3 py-1.5 rounded-xl bg-slate-900 border border-amber-400/50 flex items-center gap-2">
+                        <i class="fa-solid fa-gem text-amber-400"></i>
+                        <span id="hangar-crystals" class="font-orbitron font-bold text-amber-300">0</span>
+                    </div>
+                    <button onclick="ui.addPracticeCrystals()" class="cyber-btn px-3 py-1.5 rounded-xl bg-emerald-500/20 border border-emerald-400 text-emerald-300 text-xs font-bold" title="Nhận miễn phí 500 Tinh Thể để thử nghiệm nâng cấp">
+                        +500 💎 (Quà Luyện Tập)
+                    </button>
+                    <button onclick="ui.closeHangar()" class="cyber-btn px-3.5 py-1.5 rounded-xl bg-slate-800 border border-slate-600 text-slate-200 text-xs sm:text-sm">
+                        <i class="fa-solid fa-xmark mr-1"></i> ĐÓNG
+                    </button>
+                </div>
+            </div>
+
+            <div id="hangar-upgrades-list" class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <!-- Populated by JS -->
+            </div>
+
+            <div class="flex justify-between items-center pt-2 border-t border-slate-800 text-xs text-slate-400">
+                <span>Mọi nâng cấp được lưu tự động và áp dụng cho tất cả các màn chơi.</span>
+                <button onclick="ui.resetUpgrades()" class="text-rose-400 hover:underline font-semibold">Hoàn tác nâng cấp & hoàn trả 💎</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PAUSE MODAL -->
+    <div id="modal-pause" class="hidden absolute inset-0 z-40 flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-sm">
+        <div class="cyber-panel rounded-2xl w-full max-w-md p-6 text-center flex flex-col gap-4 border border-cyan-400/50">
+            <h2 class="font-orbitron text-2xl font-black text-cyan-300 tracking-wider">TẠM DỪNG NHIỆM VỤ</h2>
+            <p class="text-sm text-slate-300" id="pause-stage-info">Màn 1-1: Trinh Sát Vành Đai</p>
+            <div class="flex flex-col gap-2.5 mt-2">
+                <button onclick="game.togglePause()" class="cyber-btn w-full py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 text-slate-950 font-black">
+                    <i class="fa-solid fa-play mr-1.5"></i> TIẾP TỤC CHIẾN ĐẤU
+                </button>
+                <button onclick="game.restartStage()" class="cyber-btn w-full py-2.5 rounded-xl bg-slate-800 border border-cyan-400/40 text-cyan-300">
+                    <i class="fa-solid fa-rotate-right mr-1.5"></i> CHƠI LẠI MÀN NÀY
+                </button>
+                <button onclick="game.quitToMap()" class="cyber-btn w-full py-2.5 rounded-xl bg-slate-900 border border-slate-600 text-slate-300">
+                    <i class="fa-solid fa-map-location-dot mr-1.5"></i> VỀ BẢN ĐỒ CHỌN MÀN
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- VICTORY / DEFEAT RESULT MODAL -->
+    <div id="modal-result" class="hidden absolute inset-0 z-40 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
+        <div class="cyber-panel rounded-2xl w-full max-w-lg p-6 text-center flex flex-col gap-4 border border-cyan-400/50">
+            <div id="result-badge" class="mx-auto w-16 h-16 rounded-2xl flex items-center justify-center text-3xl bg-emerald-500/20 border border-emerald-400 text-emerald-300">
+                <i class="fa-solid fa-trophy"></i>
+            </div>
+            <div>
+                <h2 id="result-title" class="font-orbitron text-2xl sm:text-3xl font-black text-emerald-300">CHIẾN THẮNG VANG DỘI!</h2>
+                <p id="result-subtitle" class="text-xs sm:text-sm text-slate-300 mt-1">Bạn đã quét sạch phi đội máy bay và nhện vũ trụ trong khu vực!</p>
+            </div>
+
+            <div class="grid grid-cols-3 gap-2 bg-slate-900/90 p-3.5 rounded-xl border border-slate-800">
+                <div>
+                    <div class="text-[11px] text-slate-400 uppercase">Điểm Số</div>
+                    <div id="result-score" class="font-orbitron text-lg font-black text-white">12500</div>
+                </div>
+                <div>
+                    <div class="text-[11px] text-slate-400 uppercase">Địch Tiêu Diệt</div>
+                    <div id="result-kills" class="font-orbitron text-lg font-black text-cyan-300">42</div>
+                </div>
+                <div>
+                    <div class="text-[11px] text-slate-400 uppercase">Thưởng Tinh Thể</div>
+                    <div id="result-crystals" class="font-orbitron text-lg font-black text-amber-300">+120 💎</div>
+                </div>
+            </div>
+
+            <div class="flex flex-col sm:flex-row gap-2.5 mt-1">
+                <button id="btn-next-stage" onclick="game.playNextStage()" class="cyber-btn flex-1 py-3 rounded-xl bg-gradient-to-r from-emerald-400 to-cyan-500 text-slate-950 font-black text-sm">
+                    <i class="fa-solid fa-forward-step mr-1"></i> MÀN TIẾP THEO
+                </button>
+                <button onclick="game.restartStage()" class="cyber-btn flex-1 py-3 rounded-xl bg-slate-800 border border-cyan-400/50 text-cyan-300 text-sm">
+                    <i class="fa-solid fa-rotate-right mr-1"></i> CHƠI LẠI
+                </button>
+                <button onclick="game.quitToMap()" class="cyber-btn flex-1 py-3 rounded-xl bg-slate-900 border border-slate-600 text-slate-300 text-sm">
+                    <i class="fa-solid fa-map mr-1"></i> BẢN ĐỒ & XƯỞNG
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+class SoundSynthesizer {
+    constructor() {
+        this.ctx = null;
+        this.muted = false;
+    }
+
+    init() {
+        if (!this.ctx) {
+            const AudioCtx = window.AudioContext || window.webkitAudioContext;
+            if (AudioCtx) this.ctx = new AudioCtx();
+        }
+        if (this.ctx && this.ctx.state === 'suspended') {
+            this.ctx.resume();
+        }
+    }
+
+    toggleMute() {
+        this.muted = !this.muted;
+        const icon = document.getElementById('icon-mute');
+        if (icon) {
+            icon.className = this.muted ? 'fa-solid fa-volume-xmark text-rose-400' : 'fa-solid fa-volume-high';
+        }
+    }
+
+    playShoot(level = 1) {
+        if (this.muted) return;
+        this.init();
+        if (!this.ctx) return;
+
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = level >= 4 ? 'sawtooth' : 'triangle';
+        const baseFreq = 620 + level * 65;
+        osc.frequency.setValueAtTime(baseFreq, now);
+        osc.frequency.exponentialRampToValueAtTime(140, now + 0.08);
+
+        gain.gain.setValueAtTime(0.06, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.085);
+    }
+
+    playSpiderHit() {
+        if (this.muted || !this.ctx) return;
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(320, now);
+        osc.frequency.exponentialRampToValueAtTime(90, now + 0.06);
+        gain.gain.setValueAtTime(0.05, now);
+        gain.gain.linearRampToValueAtTime(0.001, now + 0.06);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.065);
+    }
+
+    playExplosion(isBig = false) {
+        if (this.muted) return;
+        this.init();
+        if (!this.ctx) return;
+
+        const now = this.ctx.currentTime;
+        const duration = isBig ? 0.45 : 0.18;
+        const bufferSize = this.ctx.sampleRate * duration;
+        const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+            data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufferSize * 0.35));
+        }
+
+        const noise = this.ctx.createBufferSource();
+        noise.buffer = buffer;
+
+        const filter = this.ctx.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(isBig ? 420 : 750, now);
+        filter.frequency.exponentialRampToValueAtTime(60, now + duration);
+
+        const gain = this.ctx.createGain();
+        gain.gain.setValueAtTime(isBig ? 0.25 : 0.11, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+
+        noise.connect(filter);
+        filter.connect(gain);
+        gain.connect(this.ctx.destination);
+        noise.start(now);
+    }
+
+    playPowerUp() {
+        if (this.muted) return;
+        this.init();
+        if (!this.ctx) return;
+
+        const now = this.ctx.currentTime;
+        const notes = [523.25, 659.25, 783.99, 1046.5];
+        notes.forEach((freq, idx) => {
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(freq, now + idx * 0.055);
+            gain.gain.setValueAtTime(0.08, now + idx * 0.055);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.055 + 0.12);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start(now + idx * 0.055);
+            osc.stop(now + idx * 0.055 + 0.13);
+        });
+    }
+
+    playEMP() {
+        if (this.muted) return;
+        this.init();
+        if (!this.ctx) return;
+
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(150, now);
+        osc.frequency.exponentialRampToValueAtTime(980, now + 0.25);
+        osc.frequency.exponentialRampToValueAtTime(55, now + 0.65);
+
+        gain.gain.setValueAtTime(0.22, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.65);
+
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.66);
+    }
+
+    playBossWarning() {
+        if (this.muted) return;
+        this.init();
+        if (!this.ctx) return;
+
+        const now = this.ctx.currentTime;
+        for (let i = 0; i < 3; i++) {
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'sawtooth';
+            const start = now + i * 0.45;
+            osc.frequency.setValueAtTime(320, start);
+            osc.frequency.linearRampToValueAtTime(640, start + 0.22);
+            osc.frequency.linearRampToValueAtTime(280, start + 0.4);
+
+            gain.gain.setValueAtTime(0.12, start);
+            gain.gain.exponentialRampToValueAtTime(0.001, start + 0.42);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start(start);
+            osc.stop(start + 0.43);
+        }
+    }
+}
+
+const soundFX = new SoundSynthesizer();
+
+const CAMPAIGN_MAPS = [
+    {
+        id: 1,
+        name: "MAP 1: VÀNH ĐAI NHỆN ĐỎ",
+        subtitle: "Crimson Spider Belt",
+        desc: "Vành đai thiên thạch rực lửa bị chiếm đóng bởi phi đội tiêm kích trinh sát và bầy Nhện Chúa Hỏa Ngục.",
+        bgPrimary: "#19060d",
+        bgAccent: "#ff2a5f",
+        starColor: "#ffccd7",
+        stages: [
+            {
+                code: "1-1",
+                title: "Trinh Sát Vành Đai",
+                subtitle: "Tiêm Kích & Nhện Con",
+                isBossStage: false,
+                waves: 4,
+                reward: 70,
+                desc: "Chạm trán phi đội máy bay trinh sát và nhện vũ trụ thả tơ từ không gian.",
+                enemyMix: ["spiderling", "fighter"]
+            },
+            {
+                code: "1-2",
+                title: "Bẫy Tơ Không Gian",
+                subtitle: "Nhện Phóng Tơ & Đột Kích",
+                isBossStage: false,
+                waves: 4,
+                reward: 95,
+                desc: "Cẩn thận đạn tơ dính làm chậm động cơ chiến cơ và máy bay lao cảm tử.",
+                enemyMix: ["spiderling", "web_spider", "interceptor"]
+            },
+            {
+                code: "1-3",
+                title: "Bầy Đàn Cuồng Nộ",
+                subtitle: "Nhện Giáp Phân Tách & Pháo Hạm",
+                isBossStage: false,
+                waves: 5,
+                reward: 130,
+                desc: "Nhện Mẹ Giáp Thép sẽ tách thành 3 nhện con khi nổ! Đợt cuối có Pháo Hạm Chỉ Huy.",
+                enemyMix: ["web_spider", "brood_spider", "fighter", "gunship"]
+            },
+            {
+                code: "1-4",
+                title: "NHỆN CHÚA HỎA NGỤC",
+                subtitle: "BOSS CHÚA MAP 1",
+                isBossStage: true,
+                bossId: 1,
+                bossName: "NHỆN CHÚA HỎA NGỤC (INFERNO BROODMOTHER)",
+                waves: 2,
+                reward: 260,
+                desc: "Siêu Nhện Chúa 8 chân bọc giáp dung nham, triệu hồi đàn nhện con và phun bão cầu lửa xoắn ốc!",
+                enemyMix: ["spiderling", "web_spider", "fighter"]
+            }
+        ]
+    },
+    {
+        id: 2,
+        name: "MAP 2: TINH VÂN ĐỘC DƯỢC",
+        subtitle: "Venom Nebula",
+        desc: "Vùng sương mù axit lục bảo nơi Kén Nhện Đột Biến sinh sôi cùng Nữ Hoàng Nhện Cơ Khí.",
+        bgPrimary: "#041812",
+        bgAccent: "#00ff88",
+        starColor: "#b8ffdc",
+        stages: [
+            {
+                code: "2-1",
+                title: "Sương Mù Axit",
+                subtitle: "Nhện Phun Độc & Tiêm Kích Tàng Hình",
+                isBossStage: false,
+                waves: 4,
+                reward: 150,
+                desc: "Nhện Độc bắn đạn axit 3 hướng kết hợp phi đội tiêm kích lượn sóng.",
+                enemyMix: ["venom_spider", "fighter", "web_spider"]
+            },
+            {
+                code: "2-2",
+                title: "Kén Nhện Đột Biến",
+                subtitle: "Phá Kén Sinh Sản & Pháo Hạm",
+                isBossStage: false,
+                waves: 5,
+                reward: 185,
+                desc: "Tiêu diệt Kén Nhện Đột Biến nhanh trước khi chúng nở ra hàng chục nhện con!",
+                enemyMix: ["egg_sac", "venom_spider", "gunship"]
+            },
+            {
+                code: "2-3",
+                title: "Đội Hộ Vệ Hoàng Gia",
+                subtitle: "Nhện Giáp Độc & Chiến Cơ Laser Kép",
+                isBossStage: false,
+                waves: 5,
+                reward: 220,
+                desc: "Hàng phòng thủ tinh nhuệ bảo vệ sào huyệt của Nữ Hoàng Nhện Cơ Khí.",
+                enemyMix: ["brood_spider", "venom_spider", "interceptor", "gunship"]
+            },
+            {
+                code: "2-4",
+                title: "NỮ HOÀNG NHỆN CƠ KHÍ",
+                subtitle: "BOSS CHÚA MAP 2",
+                isBossStage: true,
+                bossId: 2,
+                bossName: "NỮ HOÀNG NHỆN CƠ KHÍ (CYBER VENOM QUEEN)",
+                waves: 2,
+                reward: 400,
+                desc: "Quái vật nửa sinh học nửa cơ khí trang bị 2 đại pháo Laser quét và bụng phóng kén độc!",
+                enemyMix: ["venom_spider", "egg_sac", "interceptor"]
+            }
+        ]
+    },
+    {
+        id: 3,
+        name: "MAP 3: PHÁO ĐÀI HƯ KHÔNG",
+        subtitle: "Void Arachnid Core",
+        desc: "Trung tâm chỉ huy tối cao của Đế Chế Nhện Vũ Trụ với công nghệ dịch chuyển tức thời.",
+        bgPrimary: "#0e0521",
+        bgAccent: "#b829ff",
+        starColor: "#ebd6ff",
+        stages: [
+            {
+                code: "3-1",
+                title: "Cổng Dịch Chuyển",
+                subtitle: "Nhện Bóng Ma & Oanh Tạc Cơ Hư Không",
+                isBossStage: false,
+                waves: 5,
+                reward: 260,
+                desc: "Nhện Bóng Ma có khả năng dịch chuyển tức thời qua lại trước khi phóng đạn năng lượng tím.",
+                enemyMix: ["phase_spider", "fighter", "web_spider"]
+            },
+            {
+                code: "3-2",
+                title: "Mê Cung Tơ Điện",
+                subtitle: "Trụ Kén Điện Từ & Phi Đội Cảm Tử",
+                isBossStage: false,
+                waves: 5,
+                reward: 310,
+                desc: "Mật độ đạn dày đặc từ Pháo Hạm Hạng Nặng, Kén Đột Biến và Nhện Bóng Ma.",
+                enemyMix: ["phase_spider", "egg_sac", "interceptor", "gunship"]
+            },
+            {
+                code: "3-3",
+                title: "Tử Chiến Trước Ngai Vàng",
+                subtitle: "Tổng Lực Quân Đoàn Tinh Nhuệ",
+                isBossStage: false,
+                waves: 6,
+                reward: 380,
+                desc: "Tất cả các chủng loại máy bay và nhện tinh nhuệ cùng xuất kích bảo vệ Ngai Vàng.",
+                enemyMix: ["phase_spider", "brood_spider", "venom_spider", "gunship", "interceptor"]
+            },
+            {
+                code: "3-4",
+                title: "ĐẾ VƯƠNG NHỆN VŨ TRỤ",
+                subtitle: "BOSS CHÚA CUỐI CÙNG",
+                isBossStage: true,
+                bossId: 3,
+                bossName: "ĐẾ VƯƠNG NHỆN VŨ TRỤ (COSMIC ARACHNID EMPEROR)",
+                waves: 2,
+                reward: 750,
+                desc: "Trùm cuối tối thượng! Sở hữu 8 chân kiếm quang năng, dịch chuyển không gian, mưa đạn thiên hà và Siêu Pháo Hư Không!",
+                enemyMix: ["phase_spider", "brood_spider", "gunship"]
+            }
+        ]
+    }
+];
+
+const UPGRADE_DEFINITIONS = [
+    {
+        key: "damage",
+        name: "Hỏa Lực Pháo Chính",
+        icon: "fa-fire-flame-curved text-rose-400",
+        desc: "Tăng +18% sát thương cho mọi loại đạn, tên lửa và tia laser mỗi cấp.",
+        maxLevel: 6,
+        baseCost: 80,
+        costMult: 1.5
+    },
+    {
+        key: "maxHp",
+        name: "Giáp Hợp Kim Vũ Trụ",
+        icon: "fa-shield-halved text-emerald-400",
+        desc: "Tăng +30 Máu tối đa (HP) và giảm thời gian bị dính tơ nhện.",
+        maxLevel: 6,
+        baseCost: 70,
+        costMult: 1.45
+    },
+    {
+        key: "drones",
+        name: "Drone Chiến Cơ Hộ Vệ",
+        icon: "fa-satellite text-cyan-400",
+        desc: "Triển khai 1-2 Drone bay kèm hai bên cánh, tự động bắn đạn hỗ trợ.",
+        maxLevel: 5,
+        baseCost: 120,
+        costMult: 1.65
+    },
+    {
+        key: "startWeapon",
+        name: "Cấp Đạn Khởi Đầu",
+        icon: "fa-bolt text-amber-400",
+        desc: "Bắt đầu mỗi màn chơi với cấp độ vũ khí cao hơn ngay lập tức.",
+        maxLevel: 4,
+        baseCost: 150,
+        costMult: 1.75
+    },
+    {
+        key: "empBombs",
+        name: "Khoang Chứa Bom EMP",
+        icon: "fa-burst text-purple-400",
+        desc: "Tăng số lượng Bom EMP mang theo mỗi màn và tăng sát thương nổ EMP.",
+        maxLevel: 5,
+        baseCost: 100,
+        costMult: 1.55
+    }
+];
+
+const SAVE_KEY = "COSMIC_SPIDER_SHOOTER_SAVE_V1";
+
+const playerState = {
+    crystals: 200,
+    practiceMode: true, // Default ON so everyone can enjoy & practice any stage right away
+    selectedMapIdx: 0,
+    unlockedStages: { "1-1": true },
+    clearedStages: {},
+    highScores: {},
+    upgrades: {
+        damage: 1,
+        maxHp: 1,
+        drones: 1,
+        startWeapon: 1,
+        empBombs: 1
+    },
+
+    load() {
+        try {
+            const raw = localStorage.getItem(SAVE_KEY);
+            if (raw) {
+                const parsed = JSON.parse(raw);
+                this.crystals = parsed.crystals ?? 200;
+                this.practiceMode = parsed.practiceMode ?? true;
+                this.unlockedStages = parsed.unlockedStages || { "1-1": true };
+                this.clearedStages = parsed.clearedStages || {};
+                this.highScores = parsed.highScores || {};
+                if (parsed.upgrades) {
+                    this.upgrades = { ...this.upgrades, ...parsed.upgrades };
+                }
+            }
+        } catch (e) {
+            console.warn("Offline storage fallback active.");
+        }
+    },
+
+    save() {
+        try {
+            localStorage.setItem(SAVE_KEY, JSON.stringify({
+                crystals: this.crystals,
+                practiceMode: this.practiceMode,
+                unlockedStages: this.unlockedStages,
+                clearedStages: this.clearedStages,
+                highScores: this.highScores,
+                upgrades: this.upgrades
+            }));
+        } catch (e) {
+            // Ignore storage errors in restricted environments
+        }
+    }
+};
+
+playerState.load();
+
+const ui = {
+    init() {
+        this.renderMenu();
+    },
+
+    renderMenu() {
+        document.getElementById('menu-crystals').textContent = playerState.crystals.toLocaleString();
+
+        // Update Practice Mode Button
+        const pBtn = document.getElementById('btn-practice-toggle');
+        const pIcon = document.getElementById('practice-icon');
+        const pLabel = document.getElementById('practice-label');
+        if (playerState.practiceMode) {
+            pBtn.className = "cyber-btn px-3.5 py-2.5 rounded-xl bg-emerald-500/20 border border-emerald-400 text-emerald-300 text-xs sm:text-sm flex items-center gap-2";
+            pIcon.className = "fa-solid fa-unlock-keyhole";
+            pLabel.textContent = "CHẾ ĐỘ LUYỆN TẬP: BẬT (MỞ MỌI MÀN)";
+        } else {
+            pBtn.className = "cyber-btn px-3.5 py-2.5 rounded-xl bg-slate-800 border border-slate-600 text-slate-300 text-xs sm:text-sm flex items-center gap-2";
+            pIcon.className = "fa-solid fa-lock";
+            pLabel.textContent = "CHẾ ĐỘ CHIẾN DỊCH: TIẾN TRÌNH CHUẨN";
+        }
+
+        // Render 3 Map Tabs
+        const tabsEl = document.getElementById('map-tabs-container');
+        tabsEl.innerHTML = CAMPAIGN_MAPS.map((m, idx) => {
+            const isSelected = idx === playerState.selectedMapIdx;
+            const clearedCount = m.stages.filter(s => playerState.clearedStages[s.code]).length;
+            const borderClass = isSelected
+                ? (idx === 0 ? 'border-rose-500 bg-rose-950/40 shadow-[0_0_20px_rgba(255,42,95,0.25)]' : idx === 1 ? 'border-emerald-400 bg-emerald-950/40 shadow-[0_0_20px_rgba(0,255,136,0.25)]' : 'border-purple-400 bg-purple-950/40 shadow-[0_0_20px_rgba(184,41,255,0.25)]')
+                : 'border-slate-700/80 bg-slate-900/60 hover:border-slate-500';
+
+            return `
+                <button onclick="ui.selectMap(${idx})" class="cyber-btn text-left p-3.5 rounded-xl border ${borderClass} flex flex-col justify-between gap-1.5">
+                    <div class="flex items-center justify-between w-full">
+                        <span class="font-orbitron font-black text-sm sm:text-base ${idx === 0 ? 'text-rose-400' : idx === 1 ? 'text-emerald-300' : 'text-purple-300'}">${m.name}</span>
+                        <span class="text-[11px] px-2 py-0.5 rounded-full bg-slate-950/80 border border-slate-700 text-slate-300">${clearedCount}/4 Màn</span>
+                    </div>
+                    <div class="text-xs text-slate-300 font-normal normal-case line-clamp-1">${m.desc}</div>
+                </button>
+            `;
+        }).join('');
+
+        // Render Selected Map Stages
+        const currentMap = CAMPAIGN_MAPS[playerState.selectedMapIdx];
+        document.getElementById('selected-map-heading').textContent = currentMap.name;
+        document.getElementById('selected-map-desc').textContent = currentMap.desc;
+
+        const stagesGrid = document.getElementById('stages-grid');
+        stagesGrid.innerHTML = currentMap.stages.map((st, sIdx) => {
+            const isUnlocked = playerState.practiceMode || !!playerState.unlockedStages[st.code];
+            const isCleared = !!playerState.clearedStages[st.code];
+            const hiScore = playerState.highScores[st.code] || 0;
+
+            const cardStyle = st.isBossStage
+                ? 'border-red-500/70 bg-gradient-to-b from-red-950/50 to-slate-950/90'
+                : 'border-cyan-500/35 bg-slate-900/80';
+
+            return `
+                <div class="rounded-xl p-3.5 border ${cardStyle} flex flex-col justify-between gap-3 relative overflow-hidden ${!isUnlocked ? 'opacity-60' : ''}">
+                    <div>
+                        <div class="flex items-center justify-between gap-1 mb-1.5">
+                            <span class="px-2 py-0.5 rounded text-xs font-orbitron font-black ${st.isBossStage ? 'bg-red-600 text-white' : 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30'}">
+                                ${st.isBossStage ? '👑 BOSS CHÚA ' + st.code : 'MÀN ' + st.code}
+                            </span>
+                            ${isCleared ? '<span class="text-emerald-400 text-xs font-bold"><i class="fa-solid fa-circle-check"></i> Đã Qua</span>' : ''}
+                        </div>
+                        <h3 class="font-orbitron font-bold text-sm sm:text-base ${st.isBossStage ? 'text-red-300' : 'text-white'}">${st.title}</h3>
+                        <div class="text-[11px] font-semibold text-amber-300 mb-1.5">${st.subtitle}</div>
+                        <p class="text-xs text-slate-300 leading-relaxed">${st.desc}</p>
+                    </div>
+
+                    <div class="flex flex-col gap-2 pt-2 border-t border-slate-800/90">
+                        <div class="flex justify-between text-[11px] text-slate-400">
+                            <span>Thưởng: <strong class="text-amber-300">+${st.reward} 💎</strong></span>
+                            <span>Kỷ lục: <strong class="text-cyan-300">${hiScore.toLocaleString()}</strong></span>
+                        </div>
+                        <button
+                            ${!isUnlocked ? 'disabled' : ''}
+                            onclick="game.startStage('${st.code}')"
+                            class="cyber-btn w-full py-2.5 rounded-lg font-extrabold text-xs sm:text-sm flex items-center justify-center gap-1.5 ${
+                                !isUnlocked
+                                    ? 'bg-slate-800 text-slate-500 cursor-not-allowed'
+                                    : st.isBossStage
+                                        ? 'bg-gradient-to-r from-red-600 to-rose-500 text-white shadow-lg shadow-red-600/25'
+                                        : 'bg-gradient-to-r from-cyan-400 to-sky-500 text-slate-950'
+                            }">
+                            <i class="fa-solid ${!isUnlocked ? 'fa-lock' : st.isBossStage ? 'fa-skull-crossbones' : 'fa-jet-fighter-up'}"></i>
+                            <span>${!isUnlocked ? 'CHƯA MỞ KHÓA' : st.isBossStage ? 'KHIÊU CHIẾN BOSS' : 'XUẤT KÍCH NGAY'}</span>
+                        </button>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    },
+
+    selectMap(idx) {
+        playerState.selectedMapIdx = idx;
+        soundFX.playShoot(2);
+        this.renderMenu();
+    },
+
+    togglePracticeMode() {
+        playerState.practiceMode = !playerState.practiceMode;
+        playerState.save();
+        soundFX.playPowerUp();
+        this.renderMenu();
+    },
+
+    openHangar() {
+        soundFX.playShoot(3);
+        document.getElementById('modal-hangar').classList.remove('hidden');
+        this.renderHangar();
+    },
+
+    closeHangar() {
+        document.getElementById('modal-hangar').classList.add('hidden');
+        this.renderMenu();
+    },
+
+    getUpgradeCost(def, currentLv) {
+        return Math.round(def.baseCost * Math.pow(def.costMult, currentLv - 1));
+    },
+
+    renderHangar() {
+        document.getElementById('hangar-crystals').textContent = playerState.crystals.toLocaleString();
+        const listEl = document.getElementById('hangar-upgrades-list');
+
+        listEl.innerHTML = UPGRADE_DEFINITIONS.map(def => {
+            const lv = playerState.upgrades[def.key] || 1;
+            const isMax = lv >= def.maxLevel;
+            const cost = this.getUpgradeCost(def, lv);
+            const canAfford = playerState.crystals >= cost && !isMax;
+
+            let bars = '';
+            for (let i = 1; i <= def.maxLevel; i++) {
+                bars += `<div class="h-2 flex-1 rounded-full ${i <= lv ? 'bg-amber-400 shadow-[0_0_8px_#fbbf24]' : 'bg-slate-800'}"></div>`;
+            }
+
+            return `
+                <div class="p-3.5 rounded-xl bg-slate-900/90 border border-slate-700/80 flex flex-col justify-between gap-3">
+                    <div>
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="font-bold text-sm sm:text-base text-white flex items-center gap-2">
+                                <i class="fa-solid ${def.icon}"></i> ${def.name}
+                            </span>
+                            <span class="text-xs font-orbitron font-bold text-amber-300">CẤP ${lv}/${def.maxLevel}</span>
+                        </div>
+                        <p class="text-xs text-slate-300 mb-2.5">${def.desc}</p>
+                        <div class="flex gap-1.5">${bars}</div>
+                    </div>
+                    <button
+                        ${!canAfford ? 'disabled' : ''}
+                        onclick="ui.buyUpgrade('${def.key}')"
+                        class="cyber-btn w-full py-2 rounded-lg text-xs font-extrabold flex items-center justify-center gap-1.5 ${
+                            isMax
+                                ? 'bg-emerald-950/60 border border-emerald-500/40 text-emerald-300 cursor-default'
+                                : canAfford
+                                    ? 'bg-gradient-to-r from-amber-400 to-orange-500 text-slate-950'
+                                    : 'bg-slate-800 text-slate-500 cursor-not-allowed'
+                        }">
+                        ${isMax ? '<i class="fa-solid fa-check"></i> ĐÃ ĐẠT CẤP TỐI ĐA' : `<i class="fa-solid fa-gem"></i> NÂNG CẤP (${cost} 💎)`}
+                    </button>
+                </div>
+            `;
+        }).join('');
+    },
+
+    buyUpgrade(key) {
+        const def = UPGRADE_DEFINITIONS.find(d => d.key === key);
+        if (!def) return;
+        const lv = playerState.upgrades[key] || 1;
+        if (lv >= def.maxLevel) return;
+        const cost = this.getUpgradeCost(def, lv);
+        if (playerState.crystals >= cost) {
+            playerState.crystals -= cost;
+            playerState.upgrades[key] = lv + 1;
+            playerState.save();
+            soundFX.playPowerUp();
+            this.renderHangar();
+        }
+    },
+
+    addPracticeCrystals() {
+        playerState.crystals += 500;
+        playerState.save();
+        soundFX.playPowerUp();
+        this.renderHangar();
+    },
+
+    resetUpgrades() {
+        let refunded = 0;
+        UPGRADE_DEFINITIONS.forEach(def => {
+            const lv = playerState.upgrades[def.key] || 1;
+            for (let i = 1; i < lv; i++) {
+                refunded += this.getUpgradeCost(def, i);
+            }
+            playerState.upgrades[def.key] = 1;
+        });
+        playerState.crystals += refunded;
+        playerState.save();
+        soundFX.playEMP();
+        this.renderHangar();
+    }
+};
+
+class CosmicSpiderGame {
+    constructor() {
+        this.canvas = document.getElementById('gameCanvas');
+        this.ctx = this.canvas.getContext('2d');
+        this.width = window.innerWidth;
+        this.height = window.innerHeight;
+
+        this.state = 'MENU'; // MENU, PLAYING, PAUSED, OVER
+        this.currentMap = CAMPAIGN_MAPS[0];
+        this.currentStage = CAMPAIGN_MAPS[0].stages[0];
+
+        this.autoFire = true;
+        this.controlMode = 'KEYBOARD'; // Switches automatically between MOUSE and KEYBOARD
+        this.keys = {};
+        this.mouse = { x: this.width / 2, y: this.height * 0.8, down: false };
+
+        this.stars = [];
+        this.nebulaClouds = [];
+        this.particles = [];
+        this.floatingTexts = [];
+        this.empWaves = [];
+
+        this.player = null;
+        this.playerBullets = [];
+        this.enemyBullets = [];
+        this.enemies = [];
+        this.powerUps = [];
+        this.boss = null;
+
+        this.score = 0;
+        this.kills = 0;
+        this.stageCrystals = 0;
+        this.currentWave = 1;
+        this.totalWaves = 4;
+        this.waveTimer = 0;
+        this.waveSpawned = false;
+        this.screenShake = 0;
+        this.frameCount = 0;
+
+        this.initResize();
+        this.initInput();
+        this.initBackground();
+    }
+
+    initResize() {
+        const updateSize = () => {
+            this.width = window.innerWidth;
+            this.height = window.innerHeight;
+            this.canvas.width = this.width;
+            this.canvas.height = this.height;
+            if (this.player) {
+                this.player.x = Math.max(30, Math.min(this.width - 30, this.player.x));
+                this.player.y = Math.max(50, Math.min(this.height - 40, this.player.y));
+            }
+        };
+        window.addEventListener('resize', updateSize);
+        updateSize();
+    }
+
+    initInput() {
+        window.addEventListener('keydown', (e) => {
+            this.keys[e.code] = true;
+            if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'KeyW', 'KeyA', 'KeyS', 'KeyD'].includes(e.code)) {
+                this.controlMode = 'KEYBOARD';
+            }
+            if ((e.code === 'KeyE' || e.code === 'ShiftLeft' || e.code === 'ShiftRight') && this.state === 'PLAYING') {
+                this.triggerEMP();
+            }
+            if ((e.code === 'KeyP' || e.code === 'Escape') && (this.state === 'PLAYING' || this.state === 'PAUSED')) {
+                this.togglePause();
+            }
+        });
+
+        window.addEventListener('keyup', (e) => {
+            this.keys[e.code] = false;
+        });
+
+        this.canvas.addEventListener('mousemove', (e) => {
+            const rect = this.canvas.getBoundingClientRect();
+            this.mouse.x = e.clientX - rect.left;
+            this.mouse.y = e.clientY - rect.top;
+            this.controlMode = 'MOUSE';
+        });
+
+        this.canvas.addEventListener('mousedown', (e) => {
+            soundFX.init();
+            if (e.button === 2 && this.state === 'PLAYING') {
+                this.triggerEMP();
+            } else if (e.button === 0) {
+                this.mouse.down = true;
+                this.controlMode = 'MOUSE';
+            }
+        });
+
+        window.addEventListener('mouseup', () => {
+            this.mouse.down = false;
+        });
+
+        this.canvas.addEventListener('contextmenu', (e) => e.preventDefault());
+
+        // Touch events for mobile/tablet smooth dragging
+        this.canvas.addEventListener('touchstart', (e) => {
+            soundFX.init();
+            if (e.touches.length > 0) {
+                const rect = this.canvas.getBoundingClientRect();
+                this.mouse.x = e.touches[0].clientX - rect.left;
+                this.mouse.y = e.touches[0].clientY - rect.top - 45; // Offset above finger so ship is visible
+                this.mouse.down = true;
+                this.controlMode = 'MOUSE';
+            }
+        }, { passive: true });
+
+        this.canvas.addEventListener('touchmove', (e) => {
+            if (e.touches.length > 0) {
+                const rect = this.canvas.getBoundingClientRect();
+                this.mouse.x = e.touches[0].clientX - rect.left;
+                this.mouse.y = e.touches[0].clientY - rect.top - 45;
+                this.controlMode = 'MOUSE';
+            }
+        }, { passive: true });
+
+        this.canvas.addEventListener('touchend', () => {
+            this.mouse.down = false;
+        });
+    }
+
+    initBackground() {
+        this.stars = [];
+        for (let i = 0; i < 110; i++) {
+            this.stars.push({
+                x: Math.random() * this.width,
+                y: Math.random() * this.height,
+                size: Math.random() * 2.2 + 0.5,
+                speed: Math.random() * 2.5 + 0.4,
+                alpha: Math.random() * 0.7 + 0.3
+            });
+        }
+        this.nebulaClouds = [];
+        for (let i = 0; i < 6; i++) {
+            this.nebulaClouds.push({
+                x: Math.random() * this.width,
+                y: Math.random() * this.height,
+                radius: 160 + Math.random() * 180,
+                speed: 0.25 + Math.random() * 0.35
+            });
+        }
+    }
+
+    findStageByCode(code) {
+        for (let mIdx = 0; mIdx < CAMPAIGN_MAPS.length; mIdx++) {
+            const st = CAMPAIGN_MAPS[mIdx].stages.find(s => s.code === code);
+            if (st) return { map: CAMPAIGN_MAPS[mIdx], stage: st, mapIdx: mIdx };
+        }
+        return { map: CAMPAIGN_MAPS[0], stage: CAMPAIGN_MAPS[0].stages[0], mapIdx: 0 };
+    }
+
+    startStage(stageCode) {
+        soundFX.init();
+        soundFX.playPowerUp();
+
+        const found = this.findStageByCode(stageCode);
+        this.currentMap = found.map;
+        this.currentStage = found.stage;
+        playerState.selectedMapIdx = found.mapIdx;
+
+        // Hide Menus, Show HUD
+        document.getElementById('screen-menu').classList.add('hidden');
+        document.getElementById('modal-pause').classList.add('hidden');
+        document.getElementById('modal-result').classList.add('hidden');
+        document.getElementById('boss-hud').classList.add('hidden');
+        document.getElementById('boss-warning-banner').classList.add('hidden');
+        document.getElementById('hud-overlay').classList.remove('hidden');
+
+        // Configure Player based on Hangar Upgrades
+        const maxHp = 100 + (playerState.upgrades.maxHp - 1) * 30;
+        const dmgMult = 1 + (playerState.upgrades.damage - 1) * 0.18;
+        const startWeaponLv = playerState.upgrades.startWeapon || 1;
+        const startBombs = 1 + (playerState.upgrades.empBombs || 1);
+        const droneLv = playerState.upgrades.drones || 1;
+
+        this.player = {
+            x: this.width / 2,
+            y: this.height - 110,
+            vx: 0,
+            vy: 0,
+            radius: 20,
+            hp: maxHp,
+            maxHp: maxHp,
+            weaponLv: startWeaponLv,
+            bombs: startBombs,
+            dmgMult: dmgMult,
+            droneLv: droneLv,
+            shootTimer: 0,
+            missileTimer: 0,
+            shieldTimer: 120, // Brief spawn protection
+            webSlowTimer: 0,
+            tilt: 0
+        };
+
+        this.mouse.x = this.player.x;
+        this.mouse.y = this.player.y;
+
+        this.playerBullets = [];
+        this.enemyBullets = [];
+        this.enemies = [];
+        this.powerUps = [];
+        this.particles = [];
+        this.floatingTexts = [];
+        this.empWaves = [];
+        this.boss = null;
+
+        this.score = 0;
+        this.kills = 0;
+        this.stageCrystals = 0;
+        this.currentWave = 1;
+        this.totalWaves = this.currentStage.waves;
+        this.waveTimer = 40;
+        this.waveSpawned = false;
+        this.state = 'PLAYING';
+
+        this.updateHUD();
+        this.addFloatingText(this.width / 2, this.height * 0.35, `MÀN ${this.currentStage.code}: ${this.currentStage.title.toUpperCase()}`, '#00f3ff', 22);
+    }
+
+    restartStage() {
+        this.startStage(this.currentStage.code);
+    }
+
+    quitToMap() {
+        this.state = 'MENU';
+        document.getElementById('hud-overlay').classList.add('hidden');
+        document.getElementById('modal-pause').classList.add('hidden');
+        document.getElementById('modal-result').classList.add('hidden');
+        document.getElementById('boss-warning-banner').classList.add('hidden');
+        document.getElementById('screen-menu').classList.remove('hidden');
+        ui.renderMenu();
+    }
+
+    togglePause() {
+        if (this.state === 'PLAYING') {
+            this.state = 'PAUSED';
+            document.getElementById('pause-stage-info').textContent = `Màn ${this.currentStage.code}: ${this.currentStage.title}`;
+            document.getElementById('modal-pause').classList.remove('hidden');
+        } else if (this.state === 'PAUSED') {
+            this.state = 'PLAYING';
+            document.getElementById('modal-pause').classList.add('hidden');
+        }
+    }
+
+    toggleAutoFire() {
+        this.autoFire = !this.autoFire;
+        const label = document.getElementById('autofire-label');
+        if (label) label.textContent = `TỰ BẮN: ${this.autoFire ? 'BẬT' : 'TẮT'}`;
+    }
+
+    triggerEMP() {
+        if (this.state !== 'PLAYING' || !this.player || this.player.bombs <= 0) return;
+        this.player.bombs--;
+        this.player.webSlowTimer = 0; // Cleanses sticky spider webs
+        this.player.shieldTimer = Math.max(this.player.shieldTimer, 120);
+
+        soundFX.playEMP();
+        this.screenShake = 22;
+
+        // Clear all enemy projectiles and convert them into score sparks
+        this.enemyBullets.forEach(b => {
+            this.spawnParticles(b.x, b.y, '#00f3ff', 3);
+        });
+        this.enemyBullets = [];
+
+        const empDamage = (160 + (playerState.upgrades.empBombs - 1) * 45) * this.player.dmgMult;
+        this.empWaves.push({
+            x: this.player.x,
+            y: this.player.y,
+            radius: 20,
+            maxRadius: Math.max(this.width, this.height) * 0.95,
+            alpha: 1
+        });
+
+        // Damage all active enemies
+        this.enemies.forEach(en => {
+            en.hp -= empDamage;
+            this.addFloatingText(en.x, en.y, `-${Math.round(empDamage)} EMP!`, '#ffcc00', 14);
+        });
+
+        // Damage Boss if present
+        if (this.boss) {
+            this.boss.hp -= empDamage * 0.85;
+            this.addFloatingText(this.boss.x, this.boss.y + 40, `-${Math.round(empDamage * 0.85)} SIÊU EMP!`, '#ffcc00', 18);
+        }
+
+        this.updateHUD();
+    }
+
+    firePlayerWeapons() {
+        const p = this.player;
+        const lv = p.weaponLv;
+        const dmg = 14 * p.dmgMult;
+
+        soundFX.playShoot(lv);
+
+        const addBullet = (ox, oy, vx, vy, color = '#00f3ff', radius = 4, bDmg = dmg, type = 'plasma') => {
+            this.playerBullets.push({
+                x: p.x + ox,
+                y: p.y + oy,
+                vx,
+                vy,
+                color,
+                radius,
+                dmg: bDmg,
+                type
+            });
+        };
+
+        // Weapon Levels 1 to 6 progression
+        if (lv === 1) {
+            addBullet(-10, -14, 0, -14, '#00f3ff', 4, dmg);
+            addBullet(10, -14, 0, -14, '#00f3ff', 4, dmg);
+        } else if (lv === 2) {
+            addBullet(0, -18, 0, -15, '#00ff88', 4.5, dmg * 1.1);
+            addBullet(-14, -10, -2.2, -14, '#00f3ff', 4, dmg);
+            addBullet(14, -10, 2.2, -14, '#00f3ff', 4, dmg);
+        } else if (lv === 3) {
+            addBullet(-8, -18, 0, -15.5, '#00ff88', 4.5, dmg * 1.1);
+            addBullet(8, -18, 0, -15.5, '#00ff88', 4.5, dmg * 1.1);
+            addBullet(-18, -8, -3.2, -14, '#00f3ff', 4, dmg);
+            addBullet(18, -8, 3.2, -14, '#00f3ff', 4, dmg);
+        } else if (lv === 4) {
+            addBullet(0, -20, 0, -16, '#ffcc00', 5.5, dmg * 1.25);
+            addBullet(-12, -14, -1.8, -15, '#00ff88', 4.5, dmg * 1.1);
+            addBullet(12, -14, 1.8, -15, '#00ff88', 4.5, dmg * 1.1);
+            addBullet(-22, -6, -4.0, -13.5, '#00f3ff', 4, dmg);
+            addBullet(22, -6, 4.0, -13.5, '#00f3ff', 4, dmg);
+        } else if (lv === 5) {
+            for (let i = -3; i <= 3; i++) {
+                const isCenter = Math.abs(i) <= 1;
+                addBullet(i * 7, -15, i * 1.65, -16, isCenter ? '#ffcc00' : '#00f3ff', isCenter ? 5 : 4, dmg * (isCenter ? 1.25 : 1.05));
+            }
+        } else {
+            // Level 6 OVERDRIVE HYPER BEAM + 7-Way Plasma Spread
+            addBullet(0, -26, 0, -22, '#ff2a5f', 9, dmg * 1.9, 'hyper');
+            for (let i = -3; i <= 3; i++) {
+                if (i === 0) continue;
+                addBullet(i * 8, -12, i * 1.9, -16.5, '#ffcc00', 4.5, dmg * 1.2);
+            }
+        }
+
+        // Wingman Drones firing
+        if (p.droneLv >= 2) {
+            const dDmg = dmg * (0.55 + p.droneLv * 0.12);
+            const leftX = p.x - 42;
+            const rightX = p.x + 42;
+            this.playerBullets.push({ x: leftX, y: p.y - 6, vx: 0, vy: -14, color: '#38bdf8', radius: 3.5, dmg: dDmg, type: 'drone' });
+            if (p.droneLv >= 3) {
+                this.playerBullets.push({ x: rightX, y: p.y - 6, vx: 0, vy: -14, color: '#38bdf8', radius: 3.5, dmg: dDmg, type: 'drone' });
+            }
+        }
+
+        // Homing Micro-Missiles for Weapon Lv >= 3 or Drone Lv >= 4
+        p.missileTimer++;
+        if ((lv >= 3 || p.droneLv >= 4) && p.missileTimer % 3 === 0) {
+            const mDmg = dmg * 1.65;
+            this.playerBullets.push({ x: p.x - 24, y: p.y, vx: -3, vy: -6, color: '#fbbf24', radius: 5, dmg: mDmg, type: 'homing' });
+            this.playerBullets.push({ x: p.x + 24, y: p.y, vx: 3, vy: -6, color: '#fbbf24', radius: 5, dmg: mDmg, type: 'homing' });
+        }
+    }
+
+    spawnWave() {
+        const mix = this.currentStage.enemyMix;
+        const mapScale = this.currentMap.id; // 1, 2, or 3
+        const waveScale = 1 + (this.currentWave - 1) * 0.22 + (mapScale - 1) * 0.45;
+        const count = 6 + this.currentWave * 2;
+
+        for (let i = 0; i < count; i++) {
+            const type = mix[i % mix.length];
+            const x = 70 + ((this.width - 140) * (i + 0.5)) / count + (Math.random() - 0.5) * 35;
+            const y = -50 - (i % 3) * 65;
+            const targetY = 95 + (i % 3) * 65 + Math.random() * 35;
+            this.createEnemy(type, x, y, targetY, waveScale);
+        }
+
+        // On Stage X-3 Final Wave, spawn an Elite Heavy Command Spider/Gunship pair
+        if (!this.currentStage.isBossStage && this.currentWave === this.totalWaves) {
+            this.createEnemy('brood_spider', this.width * 0.35, -90, 130, waveScale * 1.45);
+            this.createEnemy('gunship', this.width * 0.65, -90, 120, waveScale * 1.45);
+        }
+    }
+
+    createEnemy(type, x, y, targetY, scale = 1) {
+        const base = {
+            type,
+            x,
+            y,
+            anchorX: x,
+            targetY,
+            vx: 0,
+            vy: 2.2,
+            radius: 22,
+            hp: 40 * scale,
+            maxHp: 40 * scale,
+            scoreValue: 150,
+            shootTimer: Math.floor(Math.random() * 70) + 35,
+            animPhase: Math.random() * Math.PI * 2,
+            isSpider: true,
+            webTopY: 0,
+            teleportTimer: 120
+        };
+
+        switch (type) {
+            case 'spiderling':
+                base.radius = 17;
+                base.hp = base.maxHp = 32 * scale;
+                base.scoreValue = 120;
+                base.color = '#ff2a5f';
+                break;
+            case 'web_spider':
+                base.radius = 22;
+                base.hp = base.maxHp = 58 * scale;
+                base.scoreValue = 200;
+                base.color = '#e879f9';
+                break;
+            case 'brood_spider':
+                base.radius = 30;
+                base.hp = base.maxHp = 135 * scale;
+                base.scoreValue = 380;
+                base.color = '#f97316';
+                break;
+            case 'venom_spider':
+                base.radius = 23;
+                base.hp = base.maxHp = 75 * scale;
+                base.scoreValue = 250;
+                base.color = '#00ff88';
+                break;
+            case 'egg_sac':
+                base.radius = 28;
+                base.hp = base.maxHp = 120 * scale;
+                base.scoreValue = 320;
+                base.color = '#84cc16';
+                base.shootTimer = 95;
+                break;
+            case 'phase_spider':
+                base.radius = 24;
+                base.hp = base.maxHp = 95 * scale;
+                base.scoreValue = 340;
+                base.color = '#b829ff';
+                break;
+            case 'fighter':
+                base.isSpider = false;
+                base.radius = 20;
+                base.hp = base.maxHp = 48 * scale;
+                base.scoreValue = 180;
+                base.color = '#38bdf8';
+                break;
+            case 'interceptor':
+                base.isSpider = false;
+                base.radius = 19;
+                base.hp = base.maxHp = 52 * scale;
+                base.scoreValue = 220;
+                base.color = '#fb7185';
+                break;
+            case 'gunship':
+                base.isSpider = false;
+                base.radius = 32;
+                base.hp = base.maxHp = 165 * scale;
+                base.scoreValue = 450;
+                base.color = '#facc15';
+                break;
+        }
+
+        this.enemies.push(base);
+    }
+
+    spawnBoss() {
+        const bossId = this.currentStage.bossId || 1;
+        soundFX.playBossWarning();
+
+        const banner = document.getElementById('boss-warning-banner');
+        document.getElementById('warning-boss-title').textContent = this.currentStage.bossName;
+        banner.classList.remove('hidden');
+        setTimeout(() => banner.classList.add('hidden'), 3200);
+
+        const hpTable = { 1: 4200, 2: 6800, 3: 10500 };
+        const maxHp = hpTable[bossId] || 4500;
+
+        this.boss = {
+            id: bossId,
+            name: this.currentStage.bossName,
+            x: this.width / 2,
+            y: -140,
+            targetY: 145,
+            vx: 2.2,
+            radius: 74,
+            hp: maxHp,
+            maxHp: maxHp,
+            phase: 1,
+            timer: 0,
+            attackStep: 0,
+            lungeState: 'NONE', // NONE, WINDUP, LUNGE, RETURN
+            lungeTimer: 0,
+            laserAngle: Math.PI / 2,
+            laserActive: false,
+            animAngle: 0
+        };
+
+        const bossHud = document.getElementById('boss-hud');
+        bossHud.classList.remove('hidden');
+        document.getElementById('boss-name-label').textContent = this.boss.name;
+        this.updateBossHUD();
+    }
+
+    updateBossHUD() {
+        if (!this.boss) {
+            document.getElementById('boss-hud').classList.add('hidden');
+            return;
+        }
+        const pct = Math.max(0, (this.boss.hp / this.boss.maxHp) * 100);
+        document.getElementById('boss-hp-bar').style.width = `${pct}%`;
+        document.getElementById('boss-hp-text').textContent = `${Math.max(0, Math.ceil(this.boss.hp))} / ${this.boss.maxHp}`;
+
+        const badge = document.getElementById('boss-phase-badge');
+        if (this.boss.phase === 2) {
+            badge.textContent = "🔥 CUỒNG NỘ PHASE 2";
+            badge.className = "px-2 py-0.5 rounded bg-amber-500 text-slate-950 font-black text-[11px] uppercase animate-pulse";
+        } else {
+            badge.textContent = "PHASE 1";
+            badge.className = "px-2 py-0.5 rounded bg-red-600 text-white text-[11px] uppercase";
+        }
+    }
+
+    updateBoss() {
+        const b = this.boss;
+        if (!b) return;
+
+        b.timer++;
+        b.animAngle += 0.08;
+
+        // Check Phase 2 transition at 50% HP
+        if (b.phase === 1 && b.hp <= b.maxHp * 0.5) {
+            b.phase = 2;
+            this.screenShake = 25;
+            soundFX.playExplosion(true);
+            this.spawnParticles(b.x, b.y, '#ffcc00', 45);
+            this.addFloatingText(b.x, b.y, "BOSS CHÚA CUỒNG NỘ - PHASE 2!", "#ffcc00", 20);
+            this.updateBossHUD();
+        }
+
+        // Entrance descent
+        if (b.y < b.targetY && b.lungeState === 'NONE') {
+            b.y += 2.5;
+            return;
+        }
+
+        // Lunge Slam state machine
+        if (b.lungeState === 'WINDUP') {
+            b.lungeTimer--;
+            b.y -= 0.8;
+            if (b.lungeTimer <= 0) {
+                b.lungeState = 'LUNGE';
+                soundFX.playExplosion(false);
+            }
+            return;
+        } else if (b.lungeState === 'LUNGE') {
+            b.y += 12;
+            if (b.y >= this.height * 0.68) {
+                b.lungeState = 'RETURN';
+                this.screenShake = 14;
+                // Radial web/fire burst at bottom of lunge
+                const count = b.phase === 2 ? 16 : 10;
+                for (let i = 0; i < count; i++) {
+                    const ang = (Math.PI * 2 * i) / count;
+                    this.enemyBullets.push({
+                        x: b.x,
+                        y: b.y,
+                        vx: Math.cos(ang) * 4.5,
+                        vy: Math.sin(ang) * 4.5,
+                        radius: 6,
+                        color: b.id === 1 ? '#ff2a5f' : b.id === 2 ? '#00ff88' : '#b829ff',
+                        isWeb: i % 3 === 0,
+                        dmg: 16
+                    });
+                }
+            }
+            return;
+        } else if (b.lungeState === 'RETURN') {
+            b.y -= 5;
+            if (b.y <= b.targetY) {
+                b.y = b.targetY;
+                b.lungeState = 'NONE';
+            }
+            return;
+        }
+
+        // Horizontal patrol movement
+        const speedMult = b.phase === 2 ? 1.55 : 1.0;
+        b.x += b.vx * speedMult;
+        if (b.x < 110) { b.x = 110; b.vx = Math.abs(b.vx); }
+        if (b.x > this.width - 110) { b.x = this.width - 110; b.vx = -Math.abs(b.vx); }
+
+        const fireInterval = b.phase === 2 ? 42 : 62;
+
+        if (b.timer % fireInterval === 0) {
+            b.attackStep = (b.attackStep + 1) % 4;
+
+            if (b.attackStep === 0) {
+                // Attack 1: Spiral / Fan Barrage toward player
+                const bullets = b.phase === 2 ? 11 : 7;
+                const baseAngle = Math.atan2(this.player.y - b.y, this.player.x - b.x);
+                for (let i = 0; i < bullets; i++) {
+                    const spread = (i - (bullets - 1) / 2) * 0.16;
+                    const ang = baseAngle + spread;
+                    this.enemyBullets.push({
+                        x: b.x,
+                        y: b.y + 35,
+                        vx: Math.cos(ang) * 5.2,
+                        vy: Math.sin(ang) * 5.2,
+                        radius: 6,
+                        color: b.id === 1 ? '#ff5500' : b.id === 2 ? '#00ff88' : '#d946ef',
+                        isWeb: false,
+                        dmg: 15
+                    });
+                }
+            } else if (b.attackStep === 1) {
+                // Attack 2: Sticky Web Net Fan
+                for (let i = -2; i <= 2; i++) {
+                    this.enemyBullets.push({
+                        x: b.x + i * 22,
+                        y: b.y + 30,
+                        vx: i * 1.4,
+                        vy: 4.5,
+                        radius: 8,
+                        color: '#e2e8f0',
+                        isWeb: true,
+                        dmg: 10
+                    });
+                }
+            } else if (b.attackStep === 2) {
+                // Attack 3: Summon Spider Minions or Escort Planes
+                if (this.enemies.length < 6) {
+                    const summonType = b.id === 1 ? 'spiderling' : b.id === 2 ? 'venom_spider' : 'phase_spider';
+                    this.createEnemy(summonType, b.x - 90, b.y, b.y + 85, b.id * 0.9);
+                    this.createEnemy(summonType, b.x + 90, b.y, b.y + 85, b.id * 0.9);
+                    this.addFloatingText(b.x, b.y - 50, "TRIỆU HỒI NHỆN HỘ VỆ!", "#ff2a5f", 14);
+                }
+            } else if (b.attackStep === 3) {
+                // Attack 4: Boss Special (Lunge Slam or Void Teleport + Nova)
+                if (b.id === 3 && b.phase === 2 && Math.random() < 0.5) {
+                    this.spawnParticles(b.x, b.y, '#b829ff', 25);
+                    b.x = 140 + Math.random() * (this.width - 280);
+                    this.spawnParticles(b.x, b.y, '#00f3ff', 25);
+                }
+                b.lungeState = 'WINDUP';
+                b.lungeTimer = 28;
+                this.addFloatingText(b.x, b.y - 60, "⚠️ CẢNH BÁO BOSS LAO XUỐNG!", "#ffcc00", 15);
+            }
+        }
+
+        // Continuous spiral streams during Phase 2
+        if (b.phase === 2 && b.timer % 12 === 0 && b.lungeState === 'NONE') {
+            const ang = b.timer * 0.23;
+            this.enemyBullets.push({
+                x: b.x + Math.cos(ang) * 30,
+                y: b.y + Math.sin(ang) * 20,
+                vx: Math.cos(ang) * 4.2,
+                vy: Math.abs(Math.sin(ang)) * 3.8 + 1.5,
+                radius: 5,
+                color: '#ffcc00',
+                isWeb: false,
+                dmg: 12
+            });
+        }
+    }
+
+    update() {
+        this.frameCount++;
+
+        // Always animate background starfield & nebula
+        this.stars.forEach(s => {
+            s.y += s.speed * (this.state === 'PLAYING' ? 1.5 : 0.5);
+            if (s.y > this.height) {
+                s.y = -5;
+                s.x = Math.random() * this.width;
+            }
+        });
+        this.nebulaClouds.forEach(c => {
+            c.y += c.speed;
+            if (c.y - c.radius > this.height) {
+                c.y = -c.radius;
+                c.x = Math.random() * this.width;
+            }
+        });
+
+        if (this.state !== 'PLAYING') return;
+
+        if (this.screenShake > 0) this.screenShake *= 0.85;
+        if (this.screenShake < 0.5) this.screenShake = 0;
+
+        const p = this.player;
+        if (p.shieldTimer > 0) p.shieldTimer--;
+        if (p.webSlowTimer > 0) {
+            p.webSlowTimer--;
+            if (p.webSlowTimer === 0) this.updateHUD();
+        }
+
+        // Player Movement (Hybrid Mouse/Touch or WASD/Arrows)
+        const slowFactor = p.webSlowTimer > 0 ? 0.48 : 1.0;
+        const maxSpeed = 8.2 * slowFactor;
+
+        if (this.controlMode === 'MOUSE') {
+            const dx = this.mouse.x - p.x;
+            const dy = this.mouse.y - p.y;
+            p.vx = dx * 0.22 * slowFactor;
+            p.vy = dy * 0.22 * slowFactor;
+            p.x += p.vx;
+            p.y += p.vy;
+            p.tilt = Math.max(-0.4, Math.min(0.4, p.vx * 0.04));
+        } else {
+            let ax = 0, ay = 0;
+            if (this.keys['ArrowLeft'] || this.keys['KeyA']) ax -= 1;
+            if (this.keys['ArrowRight'] || this.keys['KeyD']) ax += 1;
+            if (this.keys['ArrowUp'] || this.keys['KeyW']) ay -= 1;
+            if (this.keys['ArrowDown'] || this.keys['KeyS']) ay += 1;
+            if (ax !== 0 && ay !== 0) {
+                ax *= 0.7071;
+                ay *= 0.7071;
+            }
+            p.vx = ax * maxSpeed;
+            p.vy = ay * maxSpeed;
+            p.x += p.vx;
+            p.y += p.vy;
+            p.tilt = ax * 0.35;
+        }
+
+        p.x = Math.max(26, Math.min(this.width - 26, p.x));
+        p.y = Math.max(65, Math.min(this.height - 32, p.y));
+
+        // Player Shooting
+        p.shootTimer--;
+        const wantsToShoot = this.autoFire || this.keys['Space'] || this.mouse.down;
+        if (wantsToShoot && p.shootTimer <= 0) {
+            this.firePlayerWeapons();
+            p.shootTimer = p.weaponLv >= 5 ? 7 : 9;
+        }
+
+        // Wave & Boss Progression Manager
+        if (!this.waveSpawned) {
+            this.waveTimer--;
+            if (this.waveTimer <= 0) {
+                if (this.currentStage.isBossStage && this.currentWave === this.totalWaves) {
+                    this.spawnBoss();
+                } else {
+                    this.spawnWave();
+                }
+                this.waveSpawned = true;
+                this.updateHUD();
+            }
+        } else {
+            // Check if current wave is cleared
+            if (this.enemies.length === 0 && !this.boss) {
+                if (this.currentWave < this.totalWaves) {
+                    this.currentWave++;
+                    this.waveSpawned = false;
+                    this.waveTimer = 55;
+                    this.addFloatingText(this.width / 2, this.height * 0.4, `ĐỢT ĐỊCH ${this.currentWave} / ${this.totalWaves}`, '#00ff88', 18);
+                    this.updateHUD();
+                } else {
+                    this.finishStage(true);
+                    return;
+                }
+            }
+        }
+
+        // Update Player Bullets
+        for (let i = this.playerBullets.length - 1; i >= 0; i--) {
+            const b = this.playerBullets[i];
+
+            if (b.type === 'homing') {
+                // Find nearest target
+                let target = this.boss;
+                let minDist = target ? Math.hypot(target.x - b.x, target.y - b.y) : Infinity;
+                this.enemies.forEach(en => {
+                    const d = Math.hypot(en.x - b.x, en.y - b.y);
+                    if (d < minDist) {
+                        minDist = d;
+                        target = en;
+                    }
+                });
+                if (target) {
+                    const desiredAngle = Math.atan2(target.y - b.y, target.x - b.x);
+                    b.vx = b.vx * 0.88 + Math.cos(desiredAngle) * 1.9;
+                    b.vy = b.vy * 0.88 + Math.sin(desiredAngle) * 1.9;
+                }
+            }
+
+            b.x += b.vx;
+            b.y += b.vy;
+
+            if (b.y < -40 || b.y > this.height + 40 || b.x < -40 || b.x > this.width + 40) {
+                this.playerBullets.splice(i, 1);
+                continue;
+            }
+
+            // Check collision with Enemies
+            let hit = false;
+            for (let j = this.enemies.length - 1; j >= 0; j--) {
+                const en = this.enemies[j];
+                if (Math.hypot(b.x - en.x, b.y - en.y) < en.radius + b.radius) {
+                    en.hp -= b.dmg;
+                    this.spawnParticles(b.x, b.y, b.color, 3);
+                    hit = true;
+                    if (en.hp <= 0) {
+                        this.killEnemy(en, j);
+                    } else {
+                        soundFX.playSpiderHit();
+                    }
+                    break;
+                }
+            }
+
+            // Check collision with Boss
+            if (!hit && this.boss) {
+                if (Math.hypot(b.x - this.boss.x, b.y - this.boss.y) < this.boss.radius + b.radius) {
+                    this.boss.hp -= b.dmg;
+                    this.spawnParticles(b.x, b.y, '#ff2a5f', 4);
+                    this.updateBossHUD();
+                    hit = true;
+                    if (this.boss.hp <= 0) {
+                        this.killBoss();
+                    }
+                }
+            }
+
+            if (hit) {
+                this.playerBullets.splice(i, 1);
+            }
+        }
+
+        // Update Enemies
+        for (let i = this.enemies.length - 1; i >= 0; i--) {
+            const en = this.enemies[i];
+            en.animPhase += 0.14;
+
+            if (en.y < en.targetY && en.type !== 'interceptor') {
+                en.y += en.vy;
+            } else {
+                if (en.type === 'interceptor') {
+                    // Dive interceptor locks horizontally then dives fast
+                    en.y += 4.2;
+                    en.x += Math.sign(p.x - en.x) * 1.8;
+                    if (en.y > this.height + 50) {
+                        en.y = -40;
+                        en.x = Math.random() * (this.width - 100) + 50;
+                    }
+                } else if (en.type === 'phase_spider') {
+                    en.teleportTimer--;
+                    if (en.teleportTimer <= 0) {
+                        this.spawnParticles(en.x, en.y, '#b829ff', 12);
+                        en.anchorX = 80 + Math.random() * (this.width - 160);
+                        en.x = en.anchorX;
+                        this.spawnParticles(en.x, en.y, '#00f3ff', 12);
+                        en.teleportTimer = 110 + Math.floor(Math.random() * 60);
+                    }
+                    en.x = en.anchorX + Math.sin(en.animPhase * 0.5) * 28;
+                } else {
+                    // Swaying motion on silk web or fighter formation
+                    en.x = en.anchorX + Math.sin(en.animPhase * 0.5) * 35;
+                    en.y = en.targetY + Math.cos(en.animPhase * 0.35) * 12;
+                }
+            }
+
+            // Enemy firing logic
+            en.shootTimer--;
+            if (en.shootTimer <= 0 && en.y > 20) {
+                this.fireEnemyWeapon(en);
+                en.shootTimer = en.type === 'gunship' ? 75 : en.type === 'egg_sac' ? 130 : 95 + Math.floor(Math.random() * 55);
+            }
+
+            // Collision with Player Ship
+            if (Math.hypot(en.x - p.x, en.y - p.y) < en.radius + p.radius - 4) {
+                this.damagePlayer(22);
+                en.hp -= 50;
+                if (en.hp <= 0) this.killEnemy(en, i);
+            }
+        }
+
+        // Update Boss
+        if (this.boss) {
+            this.updateBoss();
+            if (this.boss && Math.hypot(this.boss.x - p.x, this.boss.y - p.y) < this.boss.radius + p.radius - 8) {
+                this.damagePlayer(30);
+            }
+        }
+
+        // Update Enemy Bullets
+        for (let i = this.enemyBullets.length - 1; i >= 0; i--) {
+            const b = this.enemyBullets[i];
+            b.x += b.vx;
+            b.y += b.vy;
+
+            if (b.y > this.height + 40 || b.y < -40 || b.x < -40 || b.x > this.width + 40) {
+                this.enemyBullets.splice(i, 1);
+                continue;
+            }
+
+            if (Math.hypot(b.x - p.x, b.y - p.y) < b.radius + p.radius - 4) {
+                if (b.isWeb) {
+                    const slowDuration = Math.max(70, 170 - (playerState.upgrades.maxHp - 1) * 18);
+                    p.webSlowTimer = slowDuration;
+                    this.addFloatingText(p.x, p.y - 25, "🕸️ DÍNH TƠ NHỆN! CHẬM LẠI!", "#e879f9", 14);
+                }
+                this.damagePlayer(b.dmg || 14);
+                this.enemyBullets.splice(i, 1);
+            }
+        }
+
+        // Update Power-Ups
+        for (let i = this.powerUps.length - 1; i >= 0; i--) {
+            const pu = this.powerUps[i];
+            pu.y += 2.1;
+            // Gentle magnet pull toward player when close
+            const dist = Math.hypot(p.x - pu.x, p.y - pu.y);
+            if (dist < 135) {
+                pu.x += (p.x - pu.x) * 0.09;
+                pu.y += (p.y - pu.y) * 0.09;
+            }
+
+            if (dist < p.radius + 18) {
+                this.collectPowerUp(pu);
+                this.powerUps.splice(i, 1);
+                continue;
+            }
+
+            if (pu.y > this.height + 30) {
+                this.powerUps.splice(i, 1);
+            }
+        }
+
+        // Update EMP Waves, Particles, Floating Texts
+        for (let i = this.empWaves.length - 1; i >= 0; i--) {
+            const w = this.empWaves[i];
+            w.radius += 28;
+            w.alpha = 1 - w.radius / w.maxRadius;
+            if (w.radius >= w.maxRadius) this.empWaves.splice(i, 1);
+        }
+
+        for (let i = this.particles.length - 1; i >= 0; i--) {
+            const pt = this.particles[i];
+            pt.x += pt.vx;
+            pt.y += pt.vy;
+            pt.alpha -= pt.decay;
+            if (pt.alpha <= 0) this.particles.splice(i, 1);
+        }
+
+        for (let i = this.floatingTexts.length - 1; i >= 0; i--) {
+            const ft = this.floatingTexts[i];
+            ft.y -= 1.1;
+            ft.life--;
+            if (ft.life <= 0) this.floatingTexts.splice(i, 1);
+        }
+    }
+
+    fireEnemyWeapon(en) {
+        const p = this.player;
+        const aimAngle = Math.atan2(p.y - en.y, p.x - en.x);
+
+        if (en.type === 'spiderling' || en.type === 'fighter') {
+            this.enemyBullets.push({
+                x: en.x, y: en.y + 14,
+                vx: Math.cos(aimAngle) * 4.2,
+                vy: Math.sin(aimAngle) * 4.2,
+                radius: 5, color: '#ff2a5f', isWeb: false, dmg: 12
+            });
+        } else if (en.type === 'web_spider') {
+            // Fires sticky web ball
+            this.enemyBullets.push({
+                x: en.x, y: en.y + 16,
+                vx: Math.cos(aimAngle) * 4.4,
+                vy: Math.sin(aimAngle) * 4.4,
+                radius: 7.5, color: '#f8fafc', isWeb: true, dmg: 10
+            });
+        } else if (en.type === 'venom_spider') {
+            // 3-Way Acid Globules
+            for (let k = -1; k <= 1; k++) {
+                const ang = aimAngle + k * 0.25;
+                this.enemyBullets.push({
+                    x: en.x, y: en.y + 15,
+                    vx: Math.cos(ang) * 4.5,
+                    vy: Math.sin(ang) * 4.5,
+                    radius: 5.5, color: '#00ff88', isWeb: false, dmg: 14
+                });
+            }
+        } else if (en.type === 'egg_sac') {
+            // Spawns live spiderling if room available
+            if (this.enemies.length < 14) {
+                this.createEnemy('spiderling', en.x, en.y + 15, Math.min(this.height * 0.55, en.y + 90), this.currentMap.id * 0.8);
+                this.spawnParticles(en.x, en.y, '#84cc16', 10);
+            }
+        } else if (en.type === 'gunship' || en.type === 'brood_spider' || en.type === 'phase_spider') {
+            for (let k = -1; k <= 1; k++) {
+                this.enemyBullets.push({
+                    x: en.x + k * 14, y: en.y + 18,
+                    vx: k * 1.1,
+                    vy: 5.0,
+                    radius: 5.5, color: en.color, isWeb: false, dmg: 15
+                });
+            }
+        }
+    }
+
+    killEnemy(en, index) {
+        this.enemies.splice(index, 1);
+        this.kills++;
+        this.score += en.scoreValue;
+        soundFX.playExplosion(en.radius >= 28);
+        this.spawnParticles(en.x, en.y, en.color, 16);
+
+        // Armored Brood Spider splits into 3 mini spiderlings on death!
+        if (en.type === 'brood_spider') {
+            this.addFloatingText(en.x, en.y, "PHÂN TÁCH 3 NHỆN CON!", "#f97316", 13);
+            for (let k = -1; k <= 1; k++) {
+                this.createEnemy('spiderling', en.x + k * 28, en.y, Math.min(this.height * 0.6, en.y + 50), 0.75);
+            }
+        }
+
+        // Drop Power-Ups & Crystals
+        const roll = Math.random();
+        if (roll < 0.34) {
+            const types = ['weapon', 'crystal', 'heal', 'shield', 'bomb'];
+            const weights = [0.34, 0.32, 0.16, 0.10, 0.08];
+            let r = Math.random(), acc = 0, chosen = 'crystal';
+            for (let i = 0; i < types.length; i++) {
+                acc += weights[i];
+                if (r <= acc) { chosen = types[i]; break; }
+            }
+            this.powerUps.push({ x: en.x, y: en.y, type: chosen });
+        }
+
+        this.updateHUD();
+    }
+
+    killBoss() {
+        const b = this.boss;
+        this.boss = null;
+        this.kills++;
+        this.score += 5000 * this.currentMap.id;
+        this.screenShake = 35;
+        soundFX.playExplosion(true);
+
+        for (let i = 0; i < 80; i++) {
+            this.spawnParticles(b.x + (Math.random() - 0.5) * 120, b.y + (Math.random() - 0.5) * 100, i % 2 === 0 ? '#ffcc00' : '#ff2a5f', 3);
+        }
+
+        this.enemyBullets = [];
+        this.enemies = [];
+        this.updateBossHUD();
+        this.addFloatingText(b.x, b.y, "TIÊU DIỆT BOSS CHÚA THÀNH CÔNG!", "#00ff88", 24);
+
+        setTimeout(() => {
+            if (this.state === 'PLAYING') this.finishStage(true);
+        }, 1400);
+    }
+
+    collectPowerUp(pu) {
+        soundFX.playPowerUp();
+        const p = this.player;
+
+        if (pu.type === 'weapon') {
+            if (p.weaponLv < 6) {
+                p.weaponLv++;
+                this.addFloatingText(p.x, p.y - 20, `⚡ NÂNG CẤP ĐẠN CẤP ${p.weaponLv}!`, '#00f3ff', 16);
+            } else {
+                this.score += 350;
+                this.addFloatingText(p.x, p.y - 20, `⚡ SIÊU PHÁO TỐI ĐA (+350 ĐIỂM)`, '#ffcc00', 14);
+            }
+        } else if (pu.type === 'heal') {
+            p.hp = Math.min(p.maxHp, p.hp + 35);
+            p.webSlowTimer = 0;
+            this.addFloatingText(p.x, p.y - 20, `❤️ +35 HP & SẠCH TƠ`, '#00ff88', 15);
+        } else if (pu.type === 'shield') {
+            p.shieldTimer = 300;
+            p.webSlowTimer = 0;
+            this.addFloatingText(p.x, p.y - 20, `🛡️ KHIÊN BẤT TỬ 5 GIÂY!`, '#38bdf8', 15);
+        } else if (pu.type === 'bomb') {
+            p.bombs++;
+            this.addFloatingText(p.x, p.y - 20, `💣 +1 BOM TỪ TRƯỜNG EMP!`, '#fbbf24', 15);
+        } else if (pu.type === 'crystal') {
+            this.stageCrystals += 20;
+            this.addFloatingText(p.x, p.y - 20, `💎 +20 TINH THỂ`, '#fbbf24', 14);
+        }
+
+        this.updateHUD();
+    }
+
+    damagePlayer(amount) {
+        const p = this.player;
+        if (p.shieldTimer > 0) return;
+
+        p.hp -= amount;
+        p.shieldTimer = 45; // Brief invulnerability frames
+        this.screenShake = 12;
+        soundFX.playExplosion(false);
+        this.spawnParticles(p.x, p.y, '#ff2a5f', 14);
+        this.updateHUD();
+
+        if (p.hp <= 0) {
+            p.hp = 0;
+            this.finishStage(false);
+        }
+    }
+
+    finishStage(victory) {
+        this.state = 'OVER';
+        document.getElementById('boss-warning-banner').classList.add('hidden');
+
+        const rewardCrystals = victory ? (this.currentStage.reward + this.stageCrystals) : Math.floor(this.stageCrystals * 0.5);
+        playerState.crystals += rewardCrystals;
+
+        if (victory) {
+            soundFX.playPowerUp();
+            playerState.clearedStages[this.currentStage.code] = true;
+            if (!playerState.highScores[this.currentStage.code] || this.score > playerState.highScores[this.currentStage.code]) {
+                playerState.highScores[this.currentStage.code] = this.score;
+            }
+            // Unlock next stage in campaign
+            const nextCode = this.getNextStageCode();
+            if (nextCode) playerState.unlockedStages[nextCode] = true;
+        } else {
+            soundFX.playExplosion(true);
+        }
+
+        playerState.save();
+
+        const modal = document.getElementById('modal-result');
+        const badge = document.getElementById('result-badge');
+        const title = document.getElementById('result-title');
+        const subtitle = document.getElementById('result-subtitle');
+        const nextBtn = document.getElementById('btn-next-stage');
+
+        if (victory) {
+            badge.className = "mx-auto w-16 h-16 rounded-2xl flex items-center justify-center text-3xl bg-emerald-500/20 border border-emerald-400 text-emerald-300";
+            badge.innerHTML = '<i class="fa-solid fa-trophy"></i>';
+            title.className = "font-orbitron text-2xl sm:text-3xl font-black text-emerald-300";
+            title.textContent = this.currentStage.isBossStage ? "ĐẠI THẮNG BOSS CHÚA!" : "HOÀN THÀNH NHIỆM VỤ!";
+            subtitle.textContent = `Màn ${this.currentStage.code}: ${this.currentStage.title} đã được giải phóng!`;
+            nextBtn.classList.remove('hidden');
+        } else {
+            badge.className = "mx-auto w-16 h-16 rounded-2xl flex items-center justify-center text-3xl bg-rose-500/20 border border-rose-400 text-rose-300";
+            badge.innerHTML = '<i class="fa-solid fa-skull"></i>';
+            title.className = "font-orbitron text-2xl sm:text-3xl font-black text-rose-400";
+            title.textContent = "CHIẾN CƠ BỊ BẮN HẠ!";
+            subtitle.textContent = "Hãy nâng cấp thêm Giáp & Hỏa Lực trong Xưởng Chiến Cơ rồi phục thù!";
+            nextBtn.classList.add('hidden');
+        }
+
+        document.getElementById('result-score').textContent = this.score.toLocaleString();
+        document.getElementById('result-kills').textContent = this.kills;
+        document.getElementById('result-crystals').textContent = `+${rewardCrystals} 💎`;
+        modal.classList.remove('hidden');
+    }
+
+    getNextStageCode() {
+        const allCodes = [];
+        CAMPAIGN_MAPS.forEach(m => m.stages.forEach(s => allCodes.push(s.code)));
+        const idx = allCodes.indexOf(this.currentStage.code);
+        if (idx >= 0 && idx < allCodes.length - 1) return allCodes[idx + 1];
+        return null;
+    }
+
+    playNextStage() {
+        const nextCode = this.getNextStageCode();
+        if (nextCode) {
+            this.startStage(nextCode);
+        } else {
+            this.quitToMap();
+        }
+    }
+
+    updateHUD() {
+        if (!this.player) return;
+        const p = this.player;
+        document.getElementById('hud-stage-label').textContent = `MÀN ${this.currentStage.code}`;
+        document.getElementById('hud-stage-title').textContent = this.currentStage.title;
+        document.getElementById('hud-crystals').textContent = (playerState.crystals + this.stageCrystals).toLocaleString();
+        document.getElementById('hud-score').textContent = String(this.score).padStart(6, '0');
+
+        const hpPct = Math.max(0, (p.hp / p.maxHp) * 100);
+        document.getElementById('hud-hp-bar').style.width = `${hpPct}%`;
+        document.getElementById('hud-hp-text').textContent = `${Math.ceil(p.hp)} / ${p.maxHp} HP`;
+
+        document.getElementById('hud-weapon-lv').textContent = p.weaponLv;
+        document.getElementById('hud-bombs').textContent = p.bombs;
+
+        const webBadge = document.getElementById('hud-web-status');
+        if (p.webSlowTimer > 0) webBadge.classList.remove('hidden');
+        else webBadge.classList.add('hidden');
+
+        const wavePct = Math.min(100, (this.currentWave / this.totalWaves) * 100);
+        document.getElementById('hud-wave-bar').style.width = `${wavePct}%`;
+        document.getElementById('hud-wave-text').textContent =
+            this.currentStage.isBossStage && this.currentWave === this.totalWaves
+                ? '👑 TỬ CHIẾN BOSS CHÚA!'
+                : `ĐỢT ĐỊCH ${this.currentWave} / ${this.totalWaves}`;
+    }
+
+    spawnParticles(x, y, color, count = 10) {
+        for (let i = 0; i < count; i++) {
+            const ang = Math.random() * Math.PI * 2;
+            const spd = Math.random() * 4.5 + 0.8;
+            this.particles.push({
+                x, y,
+                vx: Math.cos(ang) * spd,
+                vy: Math.sin(ang) * spd,
+                size: Math.random() * 3.5 + 1.5,
+                color,
+                alpha: 1,
+                decay: 0.025 + Math.random() * 0.02
+            });
+        }
+    }
+
+    addFloatingText(x, y, text, color = '#ffffff', size = 15) {
+        this.floatingTexts.push({ x, y, text, color, size, life: 55 });
+    }
+
+    draw() {
+        const ctx = this.ctx;
+        ctx.save();
+
+        // Dynamic Map Background
+        const mapTheme = this.currentMap || CAMPAIGN_MAPS[0];
+        const grad = ctx.createRadialGradient(this.width / 2, this.height * 0.3, 50, this.width / 2, this.height / 2, Math.max(this.width, this.height));
+        grad.addColorStop(0, mapTheme.bgPrimary);
+        grad.addColorStop(1, '#03050c');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, this.width, this.height);
+
+        // Screen shake offset
+        if (this.screenShake > 0) {
+            ctx.translate((Math.random() - 0.5) * this.screenShake, (Math.random() - 0.5) * this.screenShake);
+        }
+
+        // Nebula glowing clouds
+        this.nebulaClouds.forEach(c => {
+            const nGrad = ctx.createRadialGradient(c.x, c.y, 10, c.x, c.y, c.radius);
+            nGrad.addColorStop(0, mapTheme.bgAccent + '18');
+            nGrad.addColorStop(1, 'transparent');
+            ctx.fillStyle = nGrad;
+            ctx.beginPath();
+            ctx.arc(c.x, c.y, c.radius, 0, Math.PI * 2);
+            ctx.fill();
+        });
+
+        // Stars
+        this.stars.forEach(s => {
+            ctx.fillStyle = mapTheme.starColor;
+            ctx.globalAlpha = s.alpha;
+            ctx.beginPath();
+            ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
+            ctx.fill();
+        });
+        ctx.globalAlpha = 1;
+
+        if (this.state === 'PLAYING' || this.state === 'PAUSED' || this.state === 'OVER') {
+            // Draw EMP Shockwaves
+            this.empWaves.forEach(w => {
+                ctx.save();
+                ctx.strokeStyle = `rgba(0, 243, 255, ${w.alpha})`;
+                ctx.lineWidth = 6;
+                ctx.beginPath();
+                ctx.arc(w.x, w.y, w.radius, 0, Math.PI * 2);
+                ctx.stroke();
+                ctx.restore();
+            });
+
+            // Draw Power-Ups
+            this.powerUps.forEach(pu => this.drawPowerUp(ctx, pu));
+
+            // Draw Player Bullets
+            this.playerBullets.forEach(b => {
+                ctx.save();
+                ctx.fillStyle = b.color;
+                ctx.shadowColor = b.color;
+                ctx.shadowBlur = 10;
+                ctx.beginPath();
+                if (b.type === 'hyper') {
+                    ctx.roundRect(b.x - 5, b.y - 18, 10, 36, 5);
+                } else {
+                    ctx.arc(b.x, b.y, b.radius, 0, Math.PI * 2);
+                }
+                ctx.fill();
+                ctx.restore();
+            });
+
+            // Draw Enemies (Spiders with silk threads & Enemy Planes)
+            this.enemies.forEach(en => {
+                if (en.isSpider) {
+                    this.drawSpider(ctx, en);
+                } else {
+                    this.drawEnemyPlane(ctx, en);
+                }
+            });
+
+            // Draw Boss Chúa
+            if (this.boss) {
+                this.drawBoss(ctx, this.boss);
+            }
+
+            // Draw Enemy Bullets & Sticky Webs
+            this.enemyBullets.forEach(b => {
+                ctx.save();
+                if (b.isWeb) {
+                    // Draw glowing spider web projectile
+                    ctx.strokeStyle = '#f8fafc';
+                    ctx.lineWidth = 1.5;
+                    ctx.beginPath();
+                    ctx.arc(b.x, b.y, b.radius, 0, Math.PI * 2);
+                    ctx.moveTo(b.x - b.radius, b.y);
+                    ctx.lineTo(b.x + b.radius, b.y);
+                    ctx.moveTo(b.x, b.y - b.radius);
+                    ctx.lineTo(b.x, b.y + b.radius);
+                    ctx.stroke();
+                } else {
+                    ctx.fillStyle = b.color;
+                    ctx.shadowColor = b.color;
+                    ctx.shadowBlur = 8;
+                    ctx.beginPath();
+                    ctx.arc(b.x, b.y, b.radius, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                ctx.restore();
+            });
+
+            // Draw Player Fighter & Drones
+            if (this.player && this.player.hp > 0) {
+                this.drawPlayer(ctx, this.player);
+            }
+
+            // Draw Particles
+            this.particles.forEach(pt => {
+                ctx.save();
+                ctx.globalAlpha = Math.max(0, pt.alpha);
+                ctx.fillStyle = pt.color;
+                ctx.beginPath();
+                ctx.arc(pt.x, pt.y, pt.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            });
+
+            // Draw Floating Combat Texts
+            this.floatingTexts.forEach(ft => {
+                ctx.save();
+                ctx.font = `900 ${ft.size}px 'Chakra Petch', sans-serif`;
+                ctx.fillStyle = ft.color;
+                ctx.textAlign = 'center';
+                ctx.shadowColor = '#000';
+                ctx.shadowBlur = 6;
+                ctx.fillText(ft.text, ft.x, ft.y);
+                ctx.restore();
+            });
+        }
+
+        ctx.restore();
+    }
+
+    drawPlayer(ctx, p) {
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.tilt);
+
+        // Thruster exhaust flame
+        const flameLen = 16 + Math.random() * 12;
+        const fGrad = ctx.createLinearGradient(0, 14, 0, 14 + flameLen);
+        fGrad.addColorStop(0, '#00f3ff');
+        fGrad.addColorStop(1, 'transparent');
+        ctx.fillStyle = fGrad;
+        ctx.beginPath();
+        ctx.moveTo(-7, 15);
+        ctx.lineTo(0, 15 + flameLen);
+        ctx.lineTo(7, 15);
+        ctx.fill();
+
+        // Main Swept Wings
+        ctx.fillStyle = '#0284c7';
+        ctx.strokeStyle = '#38bdf8';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(0, -24);
+        ctx.lineTo(26, 12);
+        ctx.lineTo(10, 16);
+        ctx.lineTo(0, 8);
+        ctx.lineTo(-10, 16);
+        ctx.lineTo(-26, 12);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        // Inner fuselage
+        ctx.fillStyle = '#e0f2fe';
+        ctx.beginPath();
+        ctx.moveTo(0, -28);
+        ctx.lineTo(8, 10);
+        ctx.lineTo(0, 16);
+        ctx.lineTo(-8, 10);
+        ctx.closePath();
+        ctx.fill();
+
+        // Cockpit canopy
+        ctx.fillStyle = '#00f3ff';
+        ctx.beginPath();
+        ctx.ellipse(0, -6, 4, 9, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Sticky Spider Web overlay if slowed
+        if (p.webSlowTimer > 0) {
+            ctx.strokeStyle = 'rgba(248, 250, 252, 0.85)';
+            ctx.lineWidth = 1.5;
+            for (let i = 0; i < 4; i++) {
+                const a = (Math.PI * i) / 4;
+                ctx.beginPath();
+                ctx.moveTo(Math.cos(a) * -24, Math.sin(a) * -24);
+                ctx.lineTo(Math.cos(a) * 24, Math.sin(a) * 24);
+                ctx.stroke();
+            }
+        }
+
+        // Shield Bubble
+        if (p.shieldTimer > 0) {
+            ctx.strokeStyle = `rgba(56, 189, 248, ${0.4 + Math.sin(this.frameCount * 0.25) * 0.3})`;
+            ctx.lineWidth = 2.5;
+            ctx.beginPath();
+            ctx.arc(0, 0, 32, 0, Math.PI * 2);
+            ctx.stroke();
+        }
+
+        ctx.restore();
+
+        // Wingman Drones
+        if (p.droneLv >= 2) {
+            const drawDrone = (dx) => {
+                ctx.save();
+                ctx.translate(p.x + dx, p.y + Math.sin(this.frameCount * 0.1) * 4);
+                ctx.fillStyle = '#38bdf8';
+                ctx.beginPath();
+                ctx.moveTo(0, -10);
+                ctx.lineTo(9, 6);
+                ctx.lineTo(0, 3);
+                ctx.lineTo(-9, 6);
+                ctx.closePath();
+                ctx.fill();
+                ctx.restore();
+            };
+            drawDrone(-42);
+            if (p.droneLv >= 3) drawDrone(42);
+        }
+    }
+
+    drawSpider(ctx, en) {
+        ctx.save();
+
+        // Glowing silk thread from top of screen
+        ctx.strokeStyle = 'rgba(226, 232, 240, 0.28)';
+        ctx.lineWidth = 1.2;
+        ctx.beginPath();
+        ctx.moveTo(en.anchorX, 0);
+        ctx.lineTo(en.x, en.y);
+        ctx.stroke();
+
+        ctx.translate(en.x, en.y);
+
+        if (en.type === 'egg_sac') {
+            // Pulsating Mutant Egg Sac
+            const pulse = 1 + Math.sin(en.animPhase) * 0.08;
+            ctx.scale(pulse, pulse);
+            ctx.fillStyle = '#365314';
+            ctx.strokeStyle = '#84cc16';
+            ctx.lineWidth = 2.5;
+            ctx.beginPath();
+            ctx.ellipse(0, 0, en.radius * 0.85, en.radius, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+
+            ctx.fillStyle = '#bef264';
+            ctx.beginPath();
+            ctx.arc(-6, -5, 5, 0, Math.PI * 2);
+            ctx.arc(7, 4, 6, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+            return;
+        }
+
+        // 8 Articulated Spider Legs
+        ctx.strokeStyle = en.color;
+        ctx.lineWidth = en.radius > 25 ? 3 : 2;
+        for (let side of [-1, 1]) {
+            for (let leg = 0; leg < 4; leg++) {
+                const wiggle = Math.sin(en.animPhase + leg * 0.9) * 0.22;
+                const baseAngle = (leg - 1.5) * 0.38 + wiggle;
+                const kneeX = side * Math.cos(baseAngle) * (en.radius * 0.95);
+                const kneeY = Math.sin(baseAngle) * (en.radius * 0.85);
+                const footX = side * Math.cos(baseAngle + 0.25) * (en.radius * 1.55);
+                const footY = Math.sin(baseAngle + 0.35) * (en.radius * 1.45);
+
+                ctx.beginPath();
+                ctx.moveTo(0, 0);
+                ctx.lineTo(kneeX, kneeY);
+                ctx.lineTo(footX, footY);
+                ctx.stroke();
+            }
+        }
+
+        // Spider Abdomen & Cephalothorax
+        ctx.fillStyle = '#0f172a';
+        ctx.strokeStyle = en.color;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.ellipse(0, -en.radius * 0.35, en.radius * 0.65, en.radius * 0.72, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.arc(0, en.radius * 0.35, en.radius * 0.45, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        // Glowing Arachnid Eyes
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.arc(-5, -en.radius * 0.45, 2.5, 0, Math.PI * 2);
+        ctx.arc(5, -en.radius * 0.45, 2.5, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.restore();
+    }
+
+    drawEnemyPlane(ctx, en) {
+        ctx.save();
+        ctx.translate(en.x, en.y);
+
+        ctx.fillStyle = '#1e293b';
+        ctx.strokeStyle = en.color;
+        ctx.lineWidth = 2;
+
+        ctx.beginPath();
+        ctx.moveTo(0, en.radius);
+        ctx.lineTo(en.radius, -en.radius * 0.6);
+        ctx.lineTo(0, -en.radius * 0.2);
+        ctx.lineTo(-en.radius, -en.radius * 0.6);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.fillStyle = en.color;
+        ctx.beginPath();
+        ctx.arc(0, 2, 4, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.restore();
+    }
+
+    drawBoss(ctx, b) {
+        ctx.save();
+        ctx.translate(b.x, b.y);
+
+        const themeColor = b.id === 1 ? '#ff2a5f' : b.id === 2 ? '#00ff88' : '#b829ff';
+        const coreColor = b.phase === 2 ? '#ffcc00' : themeColor;
+
+        // 8 Giant Multi-Jointed Mechanical Arachnid Legs
+        ctx.strokeStyle = themeColor;
+        ctx.lineWidth = 5;
+        for (let side of [-1, 1]) {
+            for (let i = 0; i < 4; i++) {
+                const swing = Math.sin(b.animAngle + i * 0.8) * 10;
+                const kx = side * (55 + i * 16);
+                const ky = -25 + i * 18 + swing * 0.5;
+                const fx = side * (95 + i * 20);
+                const fy = -5 + i * 28 + swing;
+
+                ctx.beginPath();
+                ctx.moveTo(side * 25, 0);
+                ctx.lineTo(kx, ky);
+                ctx.lineTo(fx, fy);
+                ctx.stroke();
+
+                // Joint energy nodes
+                ctx.fillStyle = coreColor;
+                ctx.beginPath();
+                ctx.arc(kx, ky, 4.5, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        // Boss Main Armored Carapace
+        ctx.fillStyle = '#090d16';
+        ctx.strokeStyle = coreColor;
+        ctx.lineWidth = 3.5;
+        ctx.beginPath();
+        ctx.ellipse(0, -18, 56, 48, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        // Glowing Abdomen Core
+        const cGrad = ctx.createRadialGradient(0, -18, 4, 0, -18, 34);
+        cGrad.addColorStop(0, '#ffffff');
+        cGrad.addColorStop(0.5, coreColor);
+        cGrad.addColorStop(1, 'transparent');
+        ctx.fillStyle = cGrad;
+        ctx.beginPath();
+        ctx.arc(0, -18, 34, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Armored Head & Mandibles
+        ctx.fillStyle = '#1e293b';
+        ctx.beginPath();
+        ctx.arc(0, 26, 32, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        // Cluster of 6 Glowing Boss Eyes
+        ctx.fillStyle = '#ff0040';
+        [-14, -7, 0, 7, 14].forEach((ex, idx) => {
+            ctx.beginPath();
+            ctx.arc(ex, 26 + (idx % 2) * 5, 3.5, 0, Math.PI * 2);
+            ctx.fill();
+        });
+
+        ctx.restore();
+    }
+
+    drawPowerUp(ctx, pu) {
+        ctx.save();
+        ctx.translate(pu.x, pu.y);
+
+        const cfg = {
+            weapon: { color: '#00f3ff', label: '⚡' },
+            heal: { color: '#00ff88', label: '❤️' },
+            shield: { color: '#38bdf8', label: '🛡️' },
+            bomb: { color: '#fbbf24', label: '💣' },
+            crystal: { color: '#e879f9', label: '💎' }
+        }[pu.type] || { color: '#00f3ff', label: '⚡' };
+
+        ctx.fillStyle = '#0f172a';
+        ctx.strokeStyle = cfg.color;
+        ctx.lineWidth = 2.2;
+        ctx.shadowColor = cfg.color;
+        ctx.shadowBlur = 12;
+
+        ctx.beginPath();
+        ctx.arc(0, 0, 15, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.shadowBlur = 0;
+        ctx.font = '14px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(cfg.label, 0, 1);
+
+        ctx.restore();
+    }
+}
+
+let game = null;
+
+window.onload = function () {
+    ui.init();
+    game = new CosmicSpiderGame();
+
+    function gameLoop() {
+        game.update();
+        game.draw();
+        requestAnimationFrame(gameLoop);
+    }
+
+    gameLoop();
+};
+</script>
+</body>
+</html>

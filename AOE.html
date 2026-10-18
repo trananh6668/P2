@@ -1,0 +1,2567 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Đế Chế AoE Definitive - 1v1 AI Offline</title>
+    <style>
+        :root {
+            --gold-bright: #ffe380;
+            --gold-main: #c89b3c;
+            --gold-dark: #785a28;
+            --marble-bg: #181410;
+            --marble-panel: #241d16;
+            --stone-dark: #110d0a;
+            --text-cream: #f5ebd6;
+            --text-muted: #b8a68e;
+        }
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+            margin: 0;
+            padding: 0;
+        }
+        body, html {
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            background: #0c0907;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: var(--text-cream);
+        }
+        /* Top Resource & Utility Bar */
+        #top-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 50px;
+            background: linear-gradient(180deg, #2e241b 0%, #1a140f 60%, #120e0a 100%);
+            border-bottom: 2.5px solid var(--gold-main);
+            box-shadow: 0 5px 18px rgba(0,0,0,0.85), inset 0 1px 0 rgba(255,230,150,0.3);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 10px;
+            z-index: 30;
+        }
+        .res-group {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .res-pill {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: linear-gradient(180deg, #130f0c 0%, #211a14 100%);
+            border: 1px solid var(--gold-dark);
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.85), 0 1px 0 rgba(255,227,128,0.15);
+            border-radius: 6px;
+            padding: 4px 9px;
+            min-width: 98px;
+        }
+        .res-icon {
+            width: 20px;
+            height: 20px;
+            flex-shrink: 0;
+            filter: drop-shadow(0 1px 2px rgba(0,0,0,0.8));
+        }
+        .res-val {
+            font-weight: 800;
+            font-size: 14px;
+            color: #fff8e7;
+            text-shadow: 0 1px 2px #000;
+        }
+        .vill-badge {
+            margin-left: auto;
+            font-size: 10px;
+            font-weight: 700;
+            background: rgba(200, 155, 60, 0.2);
+            color: var(--gold-bright);
+            border: 1px solid rgba(200, 155, 60, 0.45);
+            border-radius: 4px;
+            padding: 0 4px;
+        }
+        #center-medallion {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: linear-gradient(180deg, #473318 0%, #24180a 100%);
+            border: 2px solid var(--gold-main);
+            border-radius: 20px;
+            padding: 4px 16px;
+            box-shadow: 0 3px 12px rgba(0,0,0,0.8), inset 0 1px 1px rgba(255,255,255,0.25);
+        }
+        #age-title {
+            font-family: 'Georgia', serif;
+            font-weight: 900;
+            font-size: 13px;
+            color: var(--gold-bright);
+            text-shadow: 0 2px 3px #000;
+            letter-spacing: 0.6px;
+        }
+        #match-clock {
+            font-family: monospace;
+            font-size: 12px;
+            font-weight: 700;
+            color: #e2d5c1;
+            border-left: 1px solid rgba(200,155,60,0.45);
+            padding-left: 8px;
+        }
+        .top-tools {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .hud-btn {
+            background: linear-gradient(180deg, #433527 0%, #261e16 55%, #19130e 100%);
+            color: var(--text-cream);
+            border: 1px solid var(--gold-main);
+            box-shadow: inset 0 1px 0 rgba(255,230,160,0.3), 0 2px 4px rgba(0,0,0,0.65);
+            border-radius: 6px;
+            padding: 5px 9px;
+            font-size: 11.5px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.14s ease;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .hud-btn:hover {
+            background: linear-gradient(180deg, #594634 0%, #362a1e 100%);
+            border-color: var(--gold-bright);
+            transform: translateY(-1px);
+        }
+        .hud-btn.gold-cta {
+            background: linear-gradient(180deg, #b58318 0%, #7d5607 60%, #523703 100%);
+            border-color: #fde047;
+            color: #fffbeb;
+        }
+        #bottom-deck {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 180px;
+            background: linear-gradient(180deg, #2a2119 0%, #1b1510 50%, #110d0a 100%);
+            border-top: 3px solid var(--gold-main);
+            box-shadow: 0 -6px 22px rgba(0,0,0,0.85), inset 0 2px 0 rgba(255,227,128,0.28);
+            display: grid;
+            grid-template-columns: 350px 1fr 240px;
+            gap: 10px;
+            padding: 8px 12px;
+            z-index: 30;
+        }
+        .deck-card {
+            background: linear-gradient(180deg, #17120e 0%, #0f0c09 100%);
+            border: 2px solid var(--gold-dark);
+            border-radius: 8px;
+            padding: 7px 10px;
+            position: relative;
+            box-shadow: inset 0 0 14px rgba(0,0,0,0.9);
+            overflow: hidden;
+        }
+        .deck-header {
+            font-size: 10px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: var(--gold-main);
+            border-bottom: 1px solid rgba(200,155,60,0.24);
+            padding-bottom: 3px;
+            margin-bottom: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        #cmd-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 5px;
+        }
+        .cmd-slot {
+            height: 60px;
+            background: linear-gradient(180deg, #3a2e22 0%, #221b14 65%, #17120d 100%);
+            border: 1.5px solid #8a6b38;
+            border-radius: 6px;
+            color: var(--text-cream);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2px;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.12s ease;
+        }
+        .cmd-slot:hover:not(:disabled) {
+            border-color: var(--gold-bright);
+            background: linear-gradient(180deg, #524130 0%, #32271d 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 3px 8px rgba(200,155,60,0.35);
+        }
+        .cmd-slot:disabled {
+            opacity: 0.35;
+            filter: grayscale(0.85);
+            cursor: not-allowed;
+        }
+        .cmd-slot .hk {
+            position: absolute;
+            top: 2px;
+            left: 3px;
+            font-size: 9px;
+            font-weight: 900;
+            color: var(--gold-bright);
+            background: rgba(0,0,0,0.8);
+            border: 1px solid rgba(200,155,60,0.45);
+            padding: 0 3px;
+            border-radius: 3px;
+        }
+        .cmd-slot .icon-box {
+            width: 26px;
+            height: 26px;
+            margin-top: 2px;
+        }
+        .cmd-slot .lbl {
+            font-size: 10px;
+            font-weight: 700;
+            margin-top: 1px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 100%;
+        }
+        .cmd-slot .cst {
+            font-size: 9px;
+            font-weight: 700;
+            color: #fbbf24;
+        }
+        #inspector-wrap {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            height: calc(100% - 22px);
+        }
+        #portrait-frame {
+            width: 82px;
+            height: 112px;
+            background: radial-gradient(circle at 50% 35%, #3d3022 0%, #16110c 100%);
+            border: 2px solid var(--gold-main);
+            border-radius: 8px;
+            padding: 7px 6px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            flex-shrink: 0;
+        }
+        #portrait-icon {
+            width: 54px;
+            height: 54px;
+        }
+        .hp-track {
+            width: 100%;
+            height: 13px;
+            background: #0d0a08;
+            border: 1px solid #6e5941;
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+        }
+        #hp-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #16a34a, #4ade80);
+            width: 100%;
+            transition: width 0.15s;
+        }
+        #hp-txt {
+            position: absolute;
+            inset: 0;
+            font-size: 9px;
+            font-weight: 800;
+            color: #fff;
+            text-shadow: 0 1px 2px #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        #info-col {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 5px;
+            min-width: 0;
+        }
+        #sel-name {
+            font-family: 'Georgia', serif;
+            font-size: 17px;
+            font-weight: 900;
+            color: var(--gold-bright);
+            text-shadow: 0 2px 4px #000;
+        }
+        #sel-desc {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+        .stat-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        .stat-chip {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(200,155,60,0.32);
+            border-radius: 5px;
+            padding: 2px 8px;
+            font-size: 11px;
+            font-weight: 700;
+            color: #efe4ce;
+        }
+        #queue-box {
+            margin-top: 2px;
+            background: rgba(0,0,0,0.55);
+            border: 1px solid var(--gold-dark);
+            border-radius: 6px;
+            padding: 4px 8px;
+            display: none;
+        }
+        .queue-track {
+            width: 100%;
+            height: 8px;
+            background: #14110d;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 3px;
+            border: 1px solid #524230;
+        }
+        #queue-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #ca8a04, #fde047);
+        }
+        #minimap-canvas {
+            width: 216px;
+            height: 136px;
+            border: 2px solid var(--gold-main);
+            border-radius: 6px;
+            background: #0c170b;
+            cursor: crosshair;
+            display: block;
+            margin: 0 auto;
+        }
+        #tooltip-box {
+            position: fixed;
+            bottom: 188px;
+            left: 14px;
+            width: 310px;
+            background: linear-gradient(180deg, rgba(40, 32, 23, 0.97) 0%, rgba(20, 15, 11, 0.98) 100%);
+            border: 2px solid var(--gold-main);
+            border-radius: 8px;
+            padding: 9px 12px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.9);
+            z-index: 45;
+            pointer-events: none;
+            display: none;
+        }
+        #tt-head {
+            font-family: 'Georgia', serif;
+            font-size: 14px;
+            font-weight: 900;
+            color: var(--gold-bright);
+        }
+        #tt-cost {
+            font-size: 11px;
+            font-weight: 700;
+            color: #fbbf24;
+            margin: 2px 0 4px 0;
+        }
+        #tt-body {
+            font-size: 11.5px;
+            color: #e4d8c5;
+            line-height: 1.4;
+        }
+        #toast-area {
+            position: fixed;
+            top: 60px;
+            left: 14px;
+            z-index: 25;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            pointer-events: none;
+            max-width: 390px;
+        }
+        .toast-item {
+            background: linear-gradient(90deg, rgba(24, 18, 13, 0.94) 0%, rgba(38, 30, 21, 0.88) 100%);
+            border-left: 4px solid var(--gold-main);
+            border-top: 1px solid var(--gold-dark);
+            border-right: 1px solid var(--gold-dark);
+            border-bottom: 1px solid var(--gold-dark);
+            padding: 7px 12px;
+            border-radius: 6px;
+            font-size: 12.5px;
+            font-weight: 600;
+            color: #fff;
+            box-shadow: 0 5px 14px rgba(0,0,0,0.75);
+        }
+        .modal-backdrop {
+            position: fixed;
+            inset: 0;
+            background: radial-gradient(circle at 50% 30%, rgba(38, 28, 15, 0.84) 0%, rgba(8, 6, 4, 0.94) 100%);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 60;
+            padding: 16px;
+        }
+        .modal-window {
+            width: 100%;
+            max-width: 720px;
+            background: linear-gradient(180deg, #2d2319 0%, #18130d 65%, #100c08 100%);
+            border: 3px solid var(--gold-main);
+            border-radius: 14px;
+            padding: 22px 26px;
+            box-shadow: 0 24px 60px rgba(0,0,0,0.95);
+            color: var(--text-cream);
+        }
+        .modal-title {
+            font-family: 'Georgia', serif;
+            font-size: 28px;
+            font-weight: 900;
+            text-align: center;
+            color: var(--gold-bright);
+            text-shadow: 0 3px 8px #000;
+            margin-bottom: 4px;
+        }
+        .modal-sub {
+            text-align: center;
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-bottom: 16px;
+        }
+        .diff-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        .diff-option {
+            background: rgba(15, 12, 9, 0.85);
+            border: 2px solid #5c4935;
+            border-radius: 10px;
+            padding: 12px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            text-align: center;
+        }
+        .diff-option:hover {
+            border-color: var(--gold-main);
+            transform: translateY(-2px);
+        }
+        .diff-option.active {
+            border-color: var(--gold-bright);
+            background: linear-gradient(180deg, rgba(200, 155, 60, 0.25) 0%, rgba(92, 68, 18, 0.28) 100%);
+            box-shadow: 0 0 15px rgba(200,155,60,0.3);
+        }
+        .diff-option h3 {
+            font-family: 'Georgia', serif;
+            font-size: 16px;
+            color: var(--gold-bright);
+            margin-bottom: 6px;
+        }
+        .diff-option p {
+            font-size: 11.5px;
+            color: #d6c7b2;
+            line-height: 1.4;
+        }
+        .help-panel {
+            background: rgba(0,0,0,0.45);
+            border: 1px solid #544332;
+            border-radius: 8px;
+            padding: 10px 14px;
+            font-size: 12px;
+            line-height: 1.6;
+            margin-bottom: 16px;
+            color: #e6dac8;
+        }
+        .help-panel b {
+            color: var(--gold-bright);
+        }
+        .btn-start-match {
+            width: 100%;
+            padding: 13px;
+            font-family: 'Georgia', serif;
+            font-size: 18px;
+            font-weight: 900;
+            background: linear-gradient(180deg, #df9f26 0%, #9b680b 55%, #694404 100%);
+            color: #fff;
+            border: 2px solid var(--gold-bright);
+            border-radius: 10px;
+            cursor: pointer;
+            text-shadow: 0 2px 4px #000;
+            box-shadow: 0 6px 18px rgba(200,155,60,0.4);
+        }
+        .btn-start-match:hover {
+            filter: brightness(1.1);
+        }
+    </style>
+</head>
+<body>
+
+<div id="top-bar">
+    <div class="res-group">
+        <div class="res-pill" title="Gỗ (Wood) - Khai thác từ Rừng cây">
+            <svg class="res-icon" viewBox="0 0 32 32">
+                <rect x="5" y="14" width="22" height="9" rx="4" fill="#854d21" stroke="#3b200c" stroke-width="1.5"/>
+                <circle cx="9" cy="18.5" r="3.5" fill="#deb887"/>
+                <rect x="8" y="8" width="18" height="8" rx="3.5" fill="#9c5d2b" stroke="#3b200c" stroke-width="1.5"/>
+                <circle cx="11.5" cy="12" r="2.8" fill="#f5deb3"/>
+            </svg>
+            <span class="res-val" id="res-wood">200</span>
+            <span class="vill-badge" id="v-wood">👷0</span>
+        </div>
+        <div class="res-pill" title="Thực (Food) - Khai thác từ Quả, Hươu, Voi, Ruộng BF">
+            <svg class="res-icon" viewBox="0 0 32 32">
+                <path d="M7 22 C4 15, 12 7, 21 9 C26 10, 27 17, 21 22 C16 26, 10 25, 7 22 Z" fill="#dc2626" stroke="#7f1d1d" stroke-width="1.5"/>
+                <path d="M21 10 L28 6 M20 12 L29 9" stroke="#fef3c7" stroke-width="2.5" stroke-linecap="round"/>
+            </svg>
+            <span class="res-val" id="res-food">200</span>
+            <span class="vill-badge" id="v-food">👷0</span>
+        </div>
+        <div class="res-pill" title="Vàng (Gold) - Khai thác từ Mỏ vàng">
+            <svg class="res-icon" viewBox="0 0 32 32">
+                <polygon points="4,24 9,15 23,15 28,24" fill="#eab308" stroke="#713f12" stroke-width="1.5"/>
+                <polygon points="9,15 13,8 21,8 25,15" fill="#facc15" stroke="#854d0e" stroke-width="1.5"/>
+            </svg>
+            <span class="res-val" id="res-gold">100</span>
+            <span class="vill-badge" id="v-gold">👷0</span>
+        </div>
+        <div class="res-pill" title="Đá (Stone) - Khai thác từ Mỏ đá">
+            <svg class="res-icon" viewBox="0 0 32 32">
+                <polygon points="5,24 8,12 18,9 27,16 25,24" fill="#9ca3af" stroke="#374151" stroke-width="1.5"/>
+                <polygon points="8,12 18,9 21,16 11,18" fill="#d1d5db"/>
+            </svg>
+            <span class="res-val" id="res-stone">100</span>
+            <span class="vill-badge" id="v-stone">👷0</span>
+        </div>
+        <div class="res-pill" title="Dân số / Giới hạn Nhà BE (+4 Pop mỗi nhà BE)">
+            <svg class="res-icon" viewBox="0 0 32 32">
+                <polygon points="4,16 16,6 28,16" fill="#d97706" stroke="#78350f" stroke-width="1.5"/>
+                <rect x="8" y="16" width="16" height="11" fill="#e7e5e4" stroke="#44403c" stroke-width="1.5"/>
+            </svg>
+            <span class="res-val" id="res-pop">3 / 4</span>
+        </div>
+    </div>
+
+    <div id="center-medallion">
+        <span id="age-title">ĐỜI 1: ĐỒ ĐÁ</span>
+        <span id="match-clock">00:00</span>
+    </div>
+
+    <div class="top-tools">
+        <button class="hud-btn" onclick="selectIdleVillager()" title="Tìm Dân Nhàn Rỗi (Phím .)">
+            👷 Dân Rỗi: <span id="idle-num">0</span>
+        </button>
+        <button class="hud-btn" id="btn-fog" onclick="toggleFog()" title="Bật/Tắt Sương Mù">🌫️ Sương Mù</button>
+        <button class="hud-btn" id="btn-sfx" onclick="toggleSound()" title="Bật/Tắt Âm Thanh">🔊 Âm Thanh</button>
+        <button class="hud-btn" onclick="openStartModal()" title="Chọn Độ Khó / Chơi Ván Mới">⚙️ Ván Mới</button>
+
+    </div>
+</div>
+
+<div id="toast-area"></div>
+
+<div id="tooltip-box">
+    <div id="tt-head">Tên Lệnh</div>
+    <div id="tt-cost">Chi phí</div>
+    <div id="tt-body">Mô tả</div>
+</div>
+
+<canvas id="game-canvas"></canvas>
+
+<div id="bottom-deck">
+    <!-- Left Panel: Command Grid -->
+    <div class="deck-card">
+        <div class="deck-header">
+            <span id="cmd-header-txt">BẢNG LỆNH & XÂY DỰNG</span>
+            <span style="color:#a89882;font-size:9px;">Chuột phải: Di chuyển / Tác chiến</span>
+        </div>
+        <div id="cmd-grid"></div>
+    </div>
+
+    <!-- Center Panel: Unit/Building Inspector -->
+    <div class="deck-card">
+        <div class="deck-header">
+            <span>THÔNG TIN ĐƠN VỊ & CÔNG TRÌNH</span>
+            <span id="score-txt" style="color:#fde047;">AI (Trung bình) | Điểm Bạn: 0 - Máy: 0</span>
+        </div>
+        <div id="inspector-wrap">
+            <div id="portrait-frame">
+                <div id="portrait-icon"></div>
+                <div class="hp-track" id="hp-bar-wrap" style="display:none;">
+                    <div id="hp-fill"></div>
+                    <div id="hp-txt">100/100</div>
+                </div>
+            </div>
+            <div id="info-col">
+                <div id="sel-name">Chưa chọn đơn vị</div>
+                <div id="sel-desc">Quét chuột trái để chọn Dân hoặc Quân. Nhấn phím H để về Nhà Chính (BN).</div>
+                <div class="stat-row" id="sel-stats"></div>
+                <div id="queue-box">
+                    <div style="display:flex;justify-content:space-between;font-size:11px;font-weight:700;color:#fde047;">
+                        <span id="queue-lbl">Đang xử lý...</span>
+                        <span id="queue-pct">0%</span>
+                    </div>
+                    <div class="queue-track">
+                        <div id="queue-fill"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Panel: Minimap -->
+    <div class="deck-card">
+        <div class="deck-header">
+            <span>BẢN ĐỒ CHIẾN THUẬT</span>
+            <span id="zoom-txt" style="color:#93c5fd;">100%</span>
+        </div>
+        <canvas id="minimap-canvas" width="216" height="136"></canvas>
+    </div>
+</div>
+
+<div class="modal-backdrop" id="start-modal">
+    <div class="modal-window">
+        <div class="modal-title">🏛️ ĐẾ CHẾ AoE: DEFINITIVE EDITION 🏛️</div>
+        <div class="modal-sub">Chiến Thuật Thời Gian Thực Kinh Điển • Đấu 1 vs 1 Với Máy (AI) • Chạy Offline 100%</div>
+
+        <div style="font-size:12px;font-weight:800;color:var(--gold-main);text-transform:uppercase;margin-bottom:8px;">
+            ⚔️ Chọn Mức Độ Khó Của Máy (AI 1 vs 1):
+        </div>
+        <div class="diff-row">
+            <div class="diff-option" id="diff-easy" onclick="setDifficulty('easy')">
+                <h3>🌱 DỄ (Easy)</h3>
+                <p>AI khai thác chậm, ít quân, lên đời muộn. Thích hợp để luyện tập xây nhà, câu voi và ép đời.</p>
+            </div>
+            <div class="diff-option active" id="diff-normal" onclick="setDifficulty('normal')">
+                <h3>🛡️ TRUNG BÌNH (Normal)</h3>
+                <p>AI phát triển cân bằng, đóng nhà BB/BA/BL, lên Đời 3 và điều quân (Chùy, Cung R, Ngựa Chém) công định kỳ.</p>
+            </div>
+            <div class="diff-option" id="diff-hard" onclick="setDifficulty('hard')">
+                <h3>🔥 KHÓ (Hard)</h3>
+                <p>AI khai thác nhanh, ép Đời 3-4 sớm, xây Chòi Canh (BT) thủ nhà và liên tục điều đạo quân lớn tấn công bạn.</p>
+            </div>
+        </div>
+
+        <div class="help-panel">
+            <div><b>🖱️ Điều khiển:</b> Quét Chuột Trái chọn quân • Chuột Phải để di chuyển / khai thác / xây nhà / tấn công • <b>Lăn Chuột</b> phóng to/thu nhỏ.</div>
+            <div><b>⌨️ Phím tắt chuẩn AoE 1:</b> <b>H</b> (Chọn Nhà Chính BN) • <b>C</b> (Xin Dân) • <b>U</b> (Lên Đời) • Chọn Dân nhấn <b>B</b> rồi nhấn: <b>E</b> (Nhà Dân BE +4 Pop), <b>S</b> (Kho BS), <b>F</b> (Ruộng BF), <b>B</b> (Nhà Quân Bộ BB), <b>A</b> (Nhà Cung BA), <b>L</b> (Nhà Ngựa BL), <b>T</b> (Chòi Canh BT).</div>
+            <div><b>⚔️ Chiến đấu:</b> Phím <b>A</b> + Click trái (Di chuyển Tấn công / Attack-Move) • Phím <b>S</b> (Dừng lại) • Phím <b>.</b> (Tìm Dân Rỗi).</div>
+        </div>
+
+        <button class="btn-start-match" onclick="startMatch()">🎺 BẮT ĐẦU TRẬN ĐẤU</button>
+    </div>
+</div>
+
+<div class="modal-backdrop" id="end-modal" style="display:none;">
+    <div class="modal-window" style="max-width:540px;text-align:center;">
+        <div class="modal-title" id="end-title">🏆 CHIẾN THẮNG! 🏆</div>
+        <div class="modal-sub" id="end-desc">Bạn đã đánh bại hoàn toàn Đế Chế đối phương!</div>
+        <div class="help-panel" id="end-stats" style="text-align:left;"></div>
+        <button class="btn-start-match" onclick="openStartModal()">🔄 CHƠI VÁN MỚI / ĐỔI ĐỘ KHÓ</button>
+    </div>
+</div>
+
+<script>
+const ICONS = {
+    villager: `<svg viewBox="0 0 40 40" width="100%" height="100%"><circle cx="20" cy="12" r="6" fill="#fde68a" stroke="#451a03" stroke-width="1.5"/><path d="M11 34 C11 21, 29 21, 29 34 Z" fill="#3b82f6" stroke="#1e3a8a" stroke-width="1.5"/><path d="M27 10 L33 16 M31 11 L24 28" stroke="#a16207" stroke-width="2.5" stroke-linecap="round"/></svg>`,
+    clubman: `<svg viewBox="0 0 40 40" width="100%" height="100%"><circle cx="18" cy="13" r="6" fill="#fde68a" stroke="#451a03" stroke-width="1.5"/><path d="M9 34 C9 22, 27 22, 27 34 Z" fill="#2563eb" stroke="#1e3a8a" stroke-width="1.5"/><path d="M26 26 L33 9" stroke="#78350f" stroke-width="4" stroke-linecap="round"/><circle cx="33" cy="10" r="4" fill="#57534e"/></svg>`,
+    slinger: `<svg viewBox="0 0 40 40" width="100%" height="100%"><circle cx="19" cy="13" r="6" fill="#fde68a"/><path d="M10 34 C10 22, 28 22, 28 34 Z" fill="#3b82f6"/><circle cx="32" cy="14" r="4" fill="#9ca3af" stroke="#374151" stroke-width="1.5"/></svg>`,
+    swordsman: `<svg viewBox="0 0 40 40" width="100%" height="100%"><circle cx="19" cy="13" r="5.5" fill="#fde68a"/><path d="M10 34 C10 22, 28 22, 28 34 Z" fill="#1d4ed8" stroke="#eff6ff" stroke-width="1.5"/><path d="M28 26 L35 8" stroke="#e2e8f0" stroke-width="3" stroke-linecap="round"/><ellipse cx="12" cy="25" rx="5" ry="7" fill="#dc2626" stroke="#fde047" stroke-width="1.5"/></svg>`,
+    bowman: `<svg viewBox="0 0 40 40" width="100%" height="100%"><circle cx="17" cy="13" r="5.5" fill="#fde68a"/><path d="M9 34 C9 22, 25 22, 25 34 Z" fill="#2563eb"/><path d="M25 8 Q35 20 25 32" fill="none" stroke="#eab308" stroke-width="2.5"/><line x1="18" y1="20" x2="34" y2="20" stroke="#fef08a" stroke-width="2"/></svg>`,
+    chariot: `<svg viewBox="0 0 40 40" width="100%" height="100%"><ellipse cx="22" cy="24" rx="11" ry="6" fill="#92400e"/><circle cx="13" cy="29" r="5.5" fill="none" stroke="#facc15" stroke-width="2.2"/><circle cx="18" cy="13" r="5" fill="#fde68a"/><path d="M26 8 Q35 18 26 28" fill="none" stroke="#fde047" stroke-width="2.2"/></svg>`,
+    scout: `<svg viewBox="0 0 40 40" width="100%" height="100%"><ellipse cx="20" cy="25" rx="11" ry="6" fill="#9a3412"/><path d="M27 22 L33 13 L36 16 L30 25 Z" fill="#9a3412"/><circle cx="18" cy="13" r="4.5" fill="#fde68a"/></svg>`,
+    cavalry: `<svg viewBox="0 0 40 40" width="100%" height="100%"><ellipse cx="20" cy="25" rx="12" ry="6.5" fill="#f8fafc" stroke="#475569" stroke-width="1.2"/><path d="M28 22 L34 12 L37 15 L31 25 Z" fill="#f8fafc"/><circle cx="18" cy="12" r="4.8" fill="#fde68a"/><line x1="22" y1="20" x2="34" y2="7" stroke="#fde047" stroke-width="3"/></svg>`,
+    BN: `<svg viewBox="0 0 40 40" width="100%" height="100%"><polygon points="4,18 20,6 36,18" fill="#2563eb" stroke="#fde047" stroke-width="1.5"/><rect x="7" y="18" width="26" height="16" fill="#d6d3d1" stroke="#44403c" stroke-width="1.5"/><rect x="16" y="23" width="8" height="11" fill="#451a03"/></svg>`,
+    BE: `<svg viewBox="0 0 40 40" width="100%" height="100%"><polygon points="6,20 20,9 34,20" fill="#d97706" stroke="#78350f" stroke-width="1.5"/><rect x="9" y="20" width="22" height="14" fill="#a8a29e" stroke="#44403c" stroke-width="1.5"/></svg>`,
+    BS: `<svg viewBox="0 0 40 40" width="100%" height="100%"><rect x="6" y="18" width="28" height="15" fill="#785c3c" stroke="#292524" stroke-width="1.5"/><polygon points="5,18 20,10 35,18" fill="#3b82f6"/><circle cx="15" cy="26" r="4" fill="#facc15"/><circle cx="24" cy="26" r="4" fill="#9ca3af"/></svg>`,
+    BF: `<svg viewBox="0 0 40 40" width="100%" height="100%"><rect x="5" y="10" width="30" height="22" rx="3" fill="#5c4022" stroke="#fde047" stroke-width="1.2"/><line x1="9" y1="16" x2="31" y2="16" stroke="#84cc16" stroke-width="3"/><line x1="9" y1="24" x2="31" y2="24" stroke="#eab308" stroke-width="3"/></svg>`,
+    BB: `<svg viewBox="0 0 40 40" width="100%" height="100%"><rect x="7" y="17" width="26" height="16" fill="#9ca3af" stroke="#374151" stroke-width="1.5"/><polygon points="5,17 20,7 35,17" fill="#dc2626"/><line x1="13" y1="29" x2="27" y2="15" stroke="#fef08a" stroke-width="2.5"/><line x1="27" y1="29" x2="13" y2="15" stroke="#fef08a" stroke-width="2.5"/></svg>`,
+    BA: `<svg viewBox="0 0 40 40" width="100%" height="100%"><rect x="7" y="18" width="26" height="15" fill="#a8a29e" stroke="#44403c" stroke-width="1.5"/><polygon points="5,18 20,8 35,18" fill="#2563eb"/><circle cx="20" cy="25" r="5" fill="#ef4444" stroke="#fff" stroke-width="1.5"/></svg>`,
+    BL: `<svg viewBox="0 0 40 40" width="100%" height="100%"><rect x="6" y="17" width="28" height="16" fill="#78350f" stroke="#451a03" stroke-width="1.5"/><polygon points="4,17 20,8 36,17" fill="#b45309" stroke="#fde047" stroke-width="1.2"/></svg>`,
+    BT: `<svg viewBox="0 0 40 40" width="100%" height="100%"><rect x="13" y="11" width="14" height="24" fill="#d6d3d1" stroke="#44403c" stroke-width="1.5"/><rect x="11" y="7" width="18" height="5" fill="#2563eb" stroke="#fde047" stroke-width="1.2"/></svg>`,
+    ageup: `<svg viewBox="0 0 40 40" width="100%" height="100%"><polygon points="20,5 32,21 24,21 24,34 16,34 16,21 8,21" fill="#fde047" stroke="#a16207" stroke-width="1.8"/></svg>`,
+    atkmove: `<svg viewBox="0 0 40 40" width="100%" height="100%"><line x1="8" y1="32" x2="32" y2="8" stroke="#ef4444" stroke-width="4" stroke-linecap="round"/><polygon points="32,8 22,8 32,18" fill="#fde047"/></svg>`,
+    stop: `<svg viewBox="0 0 40 40" width="100%" height="100%"><rect x="10" y="10" width="20" height="20" rx="3" fill="#ef4444" stroke="#fca5a5" stroke-width="2"/></svg>`
+};
+
+const SFX = {
+    ctx: null,
+    enabled: true,
+    init() {
+        if (!this.ctx) {
+            const AC = window.AudioContext || window.webkitAudioContext;
+            if (AC) this.ctx = new AC();
+        }
+        if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume();
+    },
+    play(type) {
+        if (!this.enabled) return;
+        try {
+            this.init();
+            if (!this.ctx) return;
+            const now = this.ctx.currentTime;
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            if (type === 'select') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(350, now);
+                osc.frequency.exponentialRampToValueAtTime(520, now + 0.07);
+                gain.gain.setValueAtTime(0.06, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+                osc.start(now); osc.stop(now + 0.08);
+            } else if (type === 'move') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(260, now);
+                osc.frequency.exponentialRampToValueAtTime(190, now + 0.07);
+                gain.gain.setValueAtTime(0.05, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+                osc.start(now); osc.stop(now + 0.08);
+            } else if (type === 'hit') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(160, now);
+                osc.frequency.exponentialRampToValueAtTime(50, now + 0.08);
+                gain.gain.setValueAtTime(0.07, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.09);
+                osc.start(now); osc.stop(now + 0.09);
+            } else if (type === 'arrow') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(700, now);
+                osc.frequency.exponentialRampToValueAtTime(240, now + 0.08);
+                gain.gain.setValueAtTime(0.04, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.09);
+                osc.start(now); osc.stop(now + 0.09);
+            } else if (type === 'train') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(440, now);
+                osc.frequency.setValueAtTime(587, now + 0.09);
+                gain.gain.setValueAtTime(0.08, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.24);
+                osc.start(now); osc.stop(now + 0.24);
+            } else if (type === 'ageup') {
+                [261.6, 329.6, 392.0, 523.2].forEach((f, idx) => {
+                    const o = this.ctx.createOscillator();
+                    const g = this.ctx.createGain();
+                    o.type = 'sawtooth';
+                    o.connect(g); g.connect(this.ctx.destination);
+                    o.frequency.setValueAtTime(f, now + idx * 0.1);
+                    g.gain.setValueAtTime(0.08, now + idx * 0.1);
+                    g.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.1 + 0.4);
+                    o.start(now + idx * 0.1); o.stop(now + idx * 0.1 + 0.4);
+                });
+            }
+        } catch (e) {}
+    }
+};
+
+const WORLD_W = 3000;
+const WORLD_H = 3000;
+const FOG_SIZE = 60;
+const FOG_COLS = Math.ceil(WORLD_W / FOG_SIZE);
+const FOG_ROWS = Math.ceil(WORLD_H / FOG_SIZE);
+
+const AGES = {
+    1: { name: 'ĐỜI 1: ĐỒ ĐÁ', full: 'ĐỜI 1: THỜI KỲ ĐỒ ĐÁ', nextCost: { food: 500, gold: 0 }, time: 20, hpMult: 1.0, atkBonus: 0, armorBonus: 0 },
+    2: { name: 'ĐỜI 2: CÔNG CỤ', full: 'ĐỜI 2: THỜI KỲ CÔNG CỤ', nextCost: { food: 800, gold: 200 }, time: 26, hpMult: 1.15, atkBonus: 1, armorBonus: 1 },
+    3: { name: 'ĐỜI 3: ĐỒ ĐỒNG', full: 'ĐỜI 3: THỜI KỲ ĐỒ ĐỒNG', nextCost: { food: 1000, gold: 800 }, time: 32, hpMult: 1.32, atkBonus: 3, armorBonus: 2 },
+    4: { name: 'ĐỜI 4: ĐỒ SẮT', full: 'ĐỜI 4: THỜI KỲ ĐỒ SẮT', nextCost: null, time: 0, hpMult: 1.55, atkBonus: 5, armorBonus: 3 }
+};
+
+const BUILDINGS = {
+    BN: { id: 'BN', name: 'Nhà Chính (BN)', hk: 'N', cost: { wood: 200 }, hp: 650, radius: 42, buildTime: 24, minAge: 1, pop: 4, dropOff: ['food', 'wood', 'gold', 'stone'], vision: 340, desc: 'Trung tâm Đế Chế. Xin Nông Dân (C), Lên Đời (U) và là nơi nộp mọi loại tài nguyên.' },
+    BE: { id: 'BE', name: 'Nhà Dân (BE)', hk: 'E', cost: { wood: 30 }, hp: 160, radius: 24, buildTime: 9, minAge: 1, pop: 4, dropOff: [], vision: 200, desc: 'Tăng giới hạn dân số thêm +4 Pop (Tối đa 200 Pop).' },
+    BS: { id: 'BS', name: 'Kho Chứa (BS)', hk: 'S', cost: { wood: 100 }, hp: 260, radius: 29, buildTime: 13, minAge: 1, pop: 0, dropOff: ['food', 'wood', 'gold', 'stone'], vision: 220, desc: 'Nơi nộp Gỗ, Thực săn bắn, Vàng và Đá. Nên xây sát rừng hoặc mỏ khoáng sản.' },
+    BF: { id: 'BF', name: 'Ruộng Lúa (BF)', hk: 'F', cost: { wood: 75 }, hp: 120, radius: 28, buildTime: 8, minAge: 1, pop: 0, dropOff: [], vision: 160, isFarm: true, foodAmount: 400, desc: 'Cung cấp 400 Lương Thực ổn định lâu dài cho Nông Dân thu hoạch.' },
+    BB: { id: 'BB', name: 'Nhà Quân Bộ (BB)', hk: 'B', cost: { wood: 125 }, hp: 360, radius: 34, buildTime: 15, minAge: 1, pop: 0, dropOff: [], vision: 240, desc: 'Huấn luyện bộ binh: Chùy Lông (Đời 1), Quẩy Đá (Đời 1), Kiếm Dài (Đời 3).' },
+    BA: { id: 'BA', name: 'Nhà Cung (BA)', hk: 'A', cost: { wood: 150 }, hp: 360, radius: 34, buildTime: 16, minAge: 2, pop: 0, dropOff: [], vision: 250, desc: 'Huấn luyện quân bắn xa: Cung T (Đời 2) và Cung R - Chariot Archer (Đời 3).' },
+    BL: { id: 'BL', name: 'Nhà Ngựa (BL)', hk: 'L', cost: { wood: 150 }, hp: 380, radius: 34, buildTime: 16, minAge: 2, pop: 0, dropOff: [], vision: 250, desc: 'Huấn luyện kỵ binh: Ngựa Dò (Đời 2) và Ngựa Chém (Đời 3).' },
+    BT: { id: 'BT', name: 'Chòi Canh (BT)', hk: 'T', cost: { stone: 125 }, hp: 300, radius: 22, buildTime: 18, minAge: 2, pop: 0, dropOff: [], vision: 360, range: 240, atk: 12, reload: 1.25, desc: 'Tháp phòng thủ tự động bắn tên vào quân địch trong tầm ngắm.' }
+};
+
+const UNITS = {
+    villager: { id: 'villager', name: 'Nông Dân', hk: 'C', cost: { food: 50 }, hp: 45, atk: 4, armor: 0, range: 18, speed: 80, reload: 1.1, radius: 11, trainTime: 7, minAge: 1, vision: 230, canGather: true, desc: 'Khai thác Gỗ, Thực, Vàng, Đá và xây dựng/sửa chữa công trình.' },
+    clubman: { id: 'clubman', name: 'Chùy Lông', hk: 'Q', cost: { food: 50 }, hp: 70, atk: 9, armor: 1, range: 20, speed: 86, reload: 1.0, radius: 12, trainTime: 8, minAge: 1, vision: 240, desc: 'Bộ binh cận chiến Đời 1, giá rẻ, thích hợp công sớm hoặc bảo vệ dân.' },
+    slinger: { id: 'slinger', name: 'Quẩy Đá', hk: 'W', cost: { food: 40, stone: 10 }, hp: 52, atk: 8, armor: 0, range: 140, speed: 84, reload: 1.2, radius: 11, trainTime: 9, minAge: 1, vision: 260, proj: 'stone', desc: 'Quân ném đá tầm xa ngay từ Đời 1, khắc chế tốt quân bộ và cung.' },
+    swordsman: { id: 'swordsman', name: 'Kiếm Dài (Legion)', hk: 'E', cost: { food: 65, gold: 25 }, hp: 135, atk: 15, armor: 3, range: 21, speed: 88, reload: 0.95, radius: 13, trainTime: 10, minAge: 3, vision: 260, desc: 'Bộ binh hạng nặng Đời 3, giáp dày, chém quân và phá nhà cực nhanh.' },
+    bowman: { id: 'bowman', name: 'Cung T (Bowman)', hk: 'Q', cost: { food: 40, wood: 20 }, hp: 55, atk: 8, armor: 0, range: 170, speed: 84, reload: 1.15, radius: 11, trainTime: 9, minAge: 2, vision: 280, proj: 'arrow', desc: 'Cung thủ Đời 2, hỗ trợ bắn yểm trợ từ xa hiệu quả.' },
+    chariot: { id: 'chariot', name: 'Cung R (Chariot)', hk: 'W', cost: { wood: 70, food: 40 }, hp: 102, atk: 13, armor: 1, range: 205, speed: 115, reload: 1.0, radius: 15, trainTime: 11, minAge: 3, vision: 320, proj: 'arrow', desc: 'Cung R Đời 3 huyền thoại: Chỉ tốn Gỗ + Thực, cơ động và tầm bắn xa.' },
+    scout: { id: 'scout', name: 'Ngựa Dò (Scout)', hk: 'Q', cost: { food: 100 }, hp: 105, atk: 10, armor: 1, range: 22, speed: 132, reload: 1.05, radius: 14, trainTime: 10, minAge: 2, vision: 360, desc: 'Kỵ binh trinh sát chạy rất nhanh, chuyên săn dân lẻ của địch.' },
+    cavalry: { id: 'cavalry', name: 'Ngựa Chém (Cavalry)', hk: 'W', cost: { food: 70, gold: 80 }, hp: 165, atk: 18, armor: 2, range: 24, speed: 122, reload: 1.0, radius: 15, trainTime: 12, minAge: 3, vision: 300, desc: 'Kỵ binh hạng nặng Đời 3, sức công phá và tốc độ càn quét cực mạnh.' }
+};
+
+const canvas = document.getElementById('game-canvas');
+const ctx = canvas.getContext('2d');
+const miniCanvas = document.getElementById('minimap-canvas');
+const miniCtx = miniCanvas.getContext('2d');
+
+let game = {
+    running: false,
+    difficulty: 'normal',
+    time: 0,
+    fogEnabled: true,
+    buildMenu: false,
+    placingType: null,
+    attackMove: false,
+    nextId: 1,
+    idleIndex: 0,
+    lastAlert: 0,
+    aiTimer: 0,
+    aiWaveTimer: 0
+};
+
+let camera = {
+    x: 100,
+    y: 100,
+    w: window.innerWidth,
+    h: window.innerHeight - 230,
+    zoom: 1.0
+};
+
+let mouse = {
+    sx: 0, sy: 0,
+    wx: 0, wy: 0,
+    dragging: false,
+    startX: 0, startY: 0,
+    miniDrag: false
+};
+
+let keys = {};
+let players = {};
+let units = [];
+let buildings = [];
+let resources = [];
+let projectiles = [];
+let particles = [];
+let floatTexts = [];
+let cmdRings = [];
+let selectedIds = [];
+let fogGrid = [];
+let groundTufts = [];
+
+function resizeGame() {
+    camera.w = window.innerWidth;
+    camera.h = window.innerHeight - 50 - 180;
+    canvas.width = camera.w;
+    canvas.height = camera.h;
+    canvas.style.marginTop = '50px';
+}
+window.addEventListener('resize', resizeGame);
+resizeGame();
+
+function screenToWorld(sx, sy) {
+    return { x: camera.x + sx / camera.zoom, y: camera.y + sy / camera.zoom };
+}
+
+function centerCamera(wx, wy) {
+    const vw = camera.w / camera.zoom;
+    const vh = camera.h / camera.zoom;
+    camera.x = Math.max(0, Math.min(WORLD_W - vw, wx - vw / 2));
+    camera.y = Math.max(0, Math.min(WORLD_H - vh, wy - vh / 2));
+}
+
+function toast(msg, borderColor = '#c89b3c') {
+    const area = document.getElementById('toast-area');
+    const el = document.createElement('div');
+    el.className = 'toast-item';
+    el.style.borderLeftColor = borderColor;
+    el.innerHTML = msg;
+    area.appendChild(el);
+    setTimeout(() => { if (el.parentNode) el.parentNode.removeChild(el); }, 4200);
+}
+
+function showTip(head, cost, body) {
+    const box = document.getElementById('tooltip-box');
+    document.getElementById('tt-head').textContent = head;
+    document.getElementById('tt-cost').textContent = cost || '';
+    document.getElementById('tt-body').textContent = body || '';
+    box.style.display = 'block';
+}
+function hideTip() {
+    document.getElementById('tooltip-box').style.display = 'none';
+}
+
+function setDifficulty(diff) {
+    game.difficulty = diff;
+    ['easy', 'normal', 'hard'].forEach(d => {
+        document.getElementById('diff-' + d).classList.toggle('active', d === diff);
+    });
+    SFX.play('select');
+}
+
+function openStartModal() {
+    document.getElementById('end-modal').style.display = 'none';
+    document.getElementById('start-modal').style.display = 'flex';
+}
+
+function toggleFog() {
+    game.fogEnabled = !game.fogEnabled;
+    document.getElementById('btn-fog').innerHTML = game.fogEnabled ? '🌫️ Sương Mù' : '☀️ Sáng Bản Đồ';
+}
+
+function toggleSound() {
+    SFX.enabled = !SFX.enabled;
+    document.getElementById('btn-sfx').innerHTML = SFX.enabled ? '🔊 Âm Thanh' : '🔇 Tắt Tiếng';
+}
+
+function selectIdleVillager() {
+    const idles = units.filter(u => u.team === 1 && u.type === 'villager' && u.state === 'idle' && u.hp > 0);
+    if (idles.length === 0) {
+        toast('👍 Tất cả Nông Dân đều đang làm việc!', '#22c55e');
+        return;
+    }
+    game.idleIndex = (game.idleIndex + 1) % idles.length;
+    const v = idles[game.idleIndex];
+    selectedIds = [v.id];
+    centerCamera(v.x, v.y);
+    SFX.play('select');
+    refreshHUD();
+}
+
+function createPlayerState(team, isAI) {
+    const bonus = (isAI && game.difficulty === 'hard') ? 120 : 0;
+    return {
+        team,
+        isAI,
+        age: 1,
+        agingUp: false,
+        ageProgress: 0,
+        ageTotal: 0,
+        wood: 200 + bonus,
+        food: 200 + bonus,
+        gold: 100 + bonus,
+        stone: 100 + bonus,
+        pop: 0,
+        maxPop: 4,
+        stats: { trained: 0, killed: 0, built: 0 }
+    };
+}
+
+function spawnCluster(type, cx, cy, count, spread, amount) {
+    for (let i = 0; i < count; i++) {
+        const a = Math.random() * Math.PI * 2;
+        const d = Math.random() * spread;
+        const rx = Math.max(80, Math.min(WORLD_W - 80, cx + Math.cos(a) * d));
+        const ry = Math.max(80, Math.min(WORLD_H - 80, cy + Math.sin(a) * d));
+        resources.push({
+            id: game.nextId++,
+            type,
+            x: rx,
+            y: ry,
+            amount,
+            maxAmount: amount,
+            radius: type === 'elephant' ? 20 : 15,
+            vx: 0,
+            vy: 0,
+            wander: Math.random() * 4
+        });
+    }
+}
+
+function startMatch() {
+    SFX.init();
+    SFX.play('ageup');
+    document.getElementById('start-modal').style.display = 'none';
+    document.getElementById('end-modal').style.display = 'none';
+
+    units = [];
+    buildings = [];
+    resources = [];
+    projectiles = [];
+    particles = [];
+    floatTexts = [];
+    cmdRings = [];
+    groundTufts = [];
+    selectedIds = [];
+
+    game.nextId = 1;
+    game.time = 0;
+    game.buildMenu = false;
+    game.placingType = null;
+    game.attackMove = false;
+    game.aiTimer = 0;
+    game.aiWaveTimer = 0;
+    game.running = true;
+
+    players = {
+        1: createPlayerState(1, false),
+        2: createPlayerState(2, true)
+    };
+
+    fogGrid = new Array(FOG_COLS * FOG_ROWS).fill(0);
+
+    for (let i = 0; i < 500; i++) {
+        groundTufts.push({
+            x: 40 + Math.random() * (WORLD_W - 80),
+            y: 40 + Math.random() * (WORLD_H - 80),
+            flower: Math.random() < 0.25,
+            color: Math.random() < 0.5 ? '#fde047' : '#f472b6'
+        });
+    }
+
+    const p1 = { x: 480, y: 480 };
+    const p2 = { x: WORLD_W - 480, y: WORLD_H - 480 };
+
+    spawnBuilding(1, 'BN', p1.x, p1.y, true);
+    spawnBuilding(2, 'BN', p2.x, p2.y, true);
+
+    for (let i = 0; i < 3; i++) {
+        const ang = (i * Math.PI * 2) / 3;
+        spawnUnit(1, 'villager', p1.x + Math.cos(ang) * 75, p1.y + 65 + Math.sin(ang) * 40);
+        spawnUnit(2, 'villager', p2.x + Math.cos(ang) * 75, p2.y - 65 + Math.sin(ang) * 40);
+    }
+
+    [p1, p2].forEach((b, idx) => {
+        const dir = idx === 0 ? 1 : -1;
+        spawnCluster('berry', b.x + 170 * dir, b.y - 40 * dir, 6, 35, 150);
+        spawnCluster('tree', b.x - 190 * dir, b.y + 110 * dir, 18, 65, 125);
+        spawnCluster('tree', b.x + 60 * dir, b.y - 210 * dir, 18, 65, 125);
+        spawnCluster('gold', b.x + 250 * dir, b.y + 180 * dir, 5, 32, 300);
+        spawnCluster('stone', b.x - 120 * dir, b.y + 260 * dir, 4, 28, 250);
+        spawnCluster('deer', b.x + 310 * dir, b.y - 160 * dir, 5, 50, 140);
+        spawnCluster('elephant', b.x - 35 * dir, b.y + 350 * dir, 2, 40, 350);
+    });
+
+    for (let i = 0; i < 16; i++) {
+        const rx = 300 + Math.random() * (WORLD_W - 600);
+        const ry = 300 + Math.random() * (WORLD_H - 600);
+        if (Math.hypot(rx - p1.x, ry - p1.y) > 430 && Math.hypot(rx - p2.x, ry - p2.y) > 430) {
+            spawnCluster('tree', rx, ry, 14, 70, 125);
+        }
+    }
+    for (let i = 0; i < 6; i++) {
+        const rx = 500 + Math.random() * (WORLD_W - 1000);
+        const ry = 500 + Math.random() * (WORLD_H - 1000);
+        if (Math.hypot(rx - p1.x, ry - p1.y) > 430 && Math.hypot(rx - p2.x, ry - p2.y) > 430) {
+            spawnCluster(i % 2 === 0 ? 'gold' : 'stone', rx, ry, 5, 35, 300);
+        }
+    }
+
+    camera.zoom = 1.0;
+    centerCamera(p1.x, p1.y);
+    recalcPop();
+    refreshHUD();
+    toast('🎺 Trận đấu bắt đầu! Hãy xin thêm Dân (C) và khai thác Thực, Gỗ để Lên Đời.', '#22c55e');
+}
+
+function spawnBuilding(team, type, x, y, completed = false) {
+    const spec = BUILDINGS[type];
+    const mult = AGES[players[team].age].hpMult;
+    const maxHp = Math.round(spec.hp * mult);
+    const b = {
+        id: game.nextId++,
+        isBuilding: true,
+        team,
+        type,
+        x, y,
+        radius: spec.radius,
+        hp: completed ? maxHp : Math.round(maxHp * 0.12),
+        maxHp,
+        completed,
+        buildProgress: completed ? spec.buildTime : 0,
+        buildTime: spec.buildTime,
+        queue: [],
+        reloadTimer: 0,
+        foodLeft: spec.isFarm ? spec.foodAmount : 0
+    };
+    buildings.push(b);
+    if (completed) {
+        players[team].stats.built++;
+        recalcPop();
+    }
+    return b;
+}
+
+function spawnUnit(team, type, x, y) {
+    const spec = UNITS[type];
+    const ageSpec = AGES[players[team].age];
+    const maxHp = Math.round(spec.hp * ageSpec.hpMult);
+    const u = {
+        id: game.nextId++,
+        isUnit: true,
+        team,
+        type,
+        x, y,
+        radius: spec.radius,
+        hp: maxHp,
+        maxHp,
+        state: 'idle',
+        tx: x, ty: y,
+        target: null,
+        attackMove: false,
+        gatherType: null,
+        carryType: null,
+        carry: 0,
+        maxCarry: 10,
+        reloadTimer: 0,
+        gatherTimer: 0,
+        anim: Math.random() * 10,
+        facing: 1
+    };
+    units.push(u);
+    players[team].stats.trained++;
+    recalcPop();
+    return u;
+}
+
+function recalcPop() {
+    [1, 2].forEach(t => {
+        players[t].pop = units.filter(u => u.team === t && u.hp > 0).length;
+        let mp = 0;
+        buildings.forEach(b => {
+            if (b.team === t && b.completed && b.hp > 0) mp += BUILDINGS[b.type].pop || 0;
+        });
+        players[t].maxPop = Math.min(200, mp);
+    });
+}
+
+function canAfford(team, cost) {
+    const p = players[team];
+    if (cost.wood && p.wood < cost.wood) return false;
+    if (cost.food && p.food < cost.food) return false;
+    if (cost.gold && p.gold < cost.gold) return false;
+    if (cost.stone && p.stone < cost.stone) return false;
+    return true;
+}
+
+function payCost(team, cost) {
+    const p = players[team];
+    if (cost.wood) p.wood -= cost.wood;
+    if (cost.food) p.food -= cost.food;
+    if (cost.gold) p.gold -= cost.gold;
+    if (cost.stone) p.stone -= cost.stone;
+}
+
+function trainUnit(b, unitType) {
+    const spec = UNITS[unitType];
+    const p = players[b.team];
+    if (!b.completed) return false;
+    if (p.age < spec.minAge) {
+        if (b.team === 1) toast(`⚠️ Cần lên Đời ${spec.minAge} để xin ${spec.name}!`, '#ef4444');
+        return false;
+    }
+    if (p.pop >= p.maxPop) {
+        if (b.team === 1) toast('🏠 Đã đầy Dân số (Pop)! Hãy lấy Dân xây thêm Nhà Dân (BE).', '#f97316');
+        return false;
+    }
+    if (b.queue.length >= 6) return false;
+    if (!canAfford(b.team, spec.cost)) {
+        if (b.team === 1) toast('⚠️ Không đủ tài nguyên!', '#ef4444');
+        return false;
+    }
+    payCost(b.team, spec.cost);
+    b.queue.push({ type: unitType, progress: 0, total: spec.trainTime });
+    if (b.team === 1) {
+        SFX.play('select');
+        refreshHUD();
+    }
+    return true;
+}
+
+function triggerAgeUp(team) {
+    const p = players[team];
+    if (p.age >= 4 || p.agingUp) return false;
+    const spec = AGES[p.age];
+    if (!canAfford(team, spec.nextCost)) {
+        if (team === 1) toast(`⚠️ Cần ${spec.nextCost.food} Thực ${spec.nextCost.gold ? '+ ' + spec.nextCost.gold + ' Vàng' : ''} để Lên Đời ${p.age + 1}!`, '#ef4444');
+        return false;
+    }
+    payCost(team, spec.nextCost);
+    p.agingUp = true;
+    p.ageProgress = 0;
+    p.ageTotal = spec.time;
+    if (team === 1) {
+        toast(`⏳ Đang nghiên cứu lên <b>${AGES[p.age + 1].full}</b>...`, '#38bdf8');
+        SFX.play('select');
+        refreshHUD();
+    }
+    return true;
+}
+
+function finishAgeUp(team) {
+    const p = players[team];
+    p.agingUp = false;
+    p.age++;
+    const mult = AGES[p.age].hpMult;
+    units.filter(u => u.team === team).forEach(u => {
+        const newMax = Math.round(UNITS[u.type].hp * mult);
+        u.hp += Math.max(0, newMax - u.maxHp);
+        u.maxHp = newMax;
+    });
+    buildings.filter(b => b.team === team).forEach(b => {
+        const newMax = Math.round(BUILDINGS[b.type].hp * mult);
+        b.hp += Math.max(0, newMax - b.maxHp);
+        b.maxHp = newMax;
+    });
+    SFX.play('ageup');
+    if (team === 1) {
+        document.getElementById('age-title').textContent = AGES[p.age].name;
+        toast(`🎺 Đế Chế của bạn đã bước sang <b>${AGES[p.age].full}</b>!`, '#22c55e');
+        refreshHUD();
+    } else {
+        toast(`⚠️ Máy (AI) vừa lên <b>${AGES[p.age].full}</b>!`, '#f97316');
+    }
+}
+
+function findNearestDrop(team, x, y, resType) {
+    let best = null, bestD = Infinity;
+    buildings.forEach(b => {
+        if (b.team === team && b.completed && b.hp > 0 && BUILDINGS[b.type].dropOff.includes(resType)) {
+            const d = Math.hypot(b.x - x, b.y - y);
+            if (d < bestD) { bestD = d; best = b; }
+        }
+    });
+    return best;
+}
+
+function findNearestRes(x, y, resType, maxD = 450) {
+    let best = null, bestD = maxD;
+    resources.forEach(r => {
+        if (r.amount <= 0) return;
+        const mapped = r.type === 'tree' ? 'wood' : (r.type === 'berry' || r.type === 'deer' || r.type === 'elephant') ? 'food' : r.type;
+        if (mapped === resType || r.type === resType) {
+            const d = Math.hypot(r.x - x, r.y - y);
+            if (d < bestD) { bestD = d; best = r; }
+        }
+    });
+    return best;
+}
+
+function findNearestEnemy(team, x, y, maxRange) {
+    let best = null, bestD = maxRange;
+    units.forEach(u => {
+        if (u.team !== team && u.hp > 0) {
+            const d = Math.hypot(u.x - x, u.y - y);
+            if (d <= bestD) { bestD = d; best = u; }
+        }
+    });
+    if (best) return best;
+    buildings.forEach(b => {
+        if (b.team !== team && b.hp > 0) {
+            const d = Math.hypot(b.x - x, b.y - y) - b.radius;
+            if (d <= bestD) { bestD = d; best = b; }
+        }
+    });
+    return best;
+}
+
+function stepTowards(u, tx, ty, speed, dt) {
+    const dx = tx - u.x;
+    const dy = ty - u.y;
+    const dist = Math.hypot(dx, dy);
+    if (dist > 2) {
+        if (Math.abs(dx) > 1) u.facing = dx >= 0 ? 1 : -1;
+        const step = Math.min(dist, speed * dt);
+        u.x += (dx / dist) * step;
+        u.y += (dy / dist) * step;
+        u.anim += dt * 10;
+    }
+    return dist;
+}
+
+function updateSimulation(dt) {
+    // Age Up research
+    [1, 2].forEach(team => {
+        const p = players[team];
+        if (p.agingUp) {
+            const hasBN = buildings.some(b => b.team === team && b.type === 'BN' && b.completed && b.hp > 0);
+            if (!hasBN) p.agingUp = false;
+            else {
+                p.ageProgress += dt;
+                if (p.ageProgress >= p.ageTotal) finishAgeUp(team);
+            }
+        }
+    });
+
+    // Buildings update
+    buildings.forEach(b => {
+        if (b.hp <= 0 || !b.completed) return;
+        if (b.queue.length > 0 && players[b.team].pop < players[b.team].maxPop) {
+            const q = b.queue[0];
+            q.progress += dt;
+            if (q.progress >= q.total) {
+                b.queue.shift();
+                const ang = (Math.random() - 0.5) * 1.4;
+                spawnUnit(b.team, q.type, b.x + Math.sin(ang) * (b.radius + 22), b.y + Math.cos(ang) * (b.radius + 22));
+                if (b.team === 1) { SFX.play('train'); refreshHUD(); }
+            }
+        }
+        const spec = BUILDINGS[b.type];
+        if (spec.range) {
+            b.reloadTimer = Math.max(0, b.reloadTimer - dt);
+            if (b.reloadTimer <= 0) {
+                const target = findNearestEnemy(b.team, b.x, b.y, spec.range);
+                if (target) {
+                    b.reloadTimer = spec.reload;
+                    const bonus = AGES[players[b.team].age].atkBonus;
+                    spawnProjectile(b.team, b.x, b.y - 30, target, spec.atk + bonus, 'arrow');
+                    SFX.play('arrow');
+                }
+            }
+        }
+    });
+
+    // Wildlife wander
+    resources.forEach(r => {
+        if (r.type === 'deer' || r.type === 'elephant') {
+            r.wander -= dt;
+            if (r.wander <= 0) {
+                r.wander = 3 + Math.random() * 4;
+                if (Math.random() < 0.55) {
+                    const a = Math.random() * Math.PI * 2;
+                    r.vx = Math.cos(a) * 16;
+                    r.vy = Math.sin(a) * 16;
+                } else { r.vx = 0; r.vy = 0; }
+            }
+            r.x = Math.max(80, Math.min(WORLD_W - 80, r.x + r.vx * dt));
+            r.y = Math.max(80, Math.min(WORLD_H - 80, r.y + r.vy * dt));
+        }
+    });
+
+    // Units state machine
+    units.forEach(u => {
+        if (u.hp <= 0) return;
+        const spec = UNITS[u.type];
+        const ageBonus = AGES[players[u.team].age];
+        u.reloadTimer = Math.max(0, u.reloadTimer - dt);
+
+        if (u.state === 'idle') {
+            const enemy = findNearestEnemy(u.team, u.x, u.y, u.type === 'villager' ? 55 : spec.vision * 0.85);
+            if (enemy) { u.state = 'attack'; u.target = enemy; }
+        } else if (u.state === 'move') {
+            if (u.attackMove) {
+                const enemy = findNearestEnemy(u.team, u.x, u.y, spec.vision * 0.9);
+                if (enemy) { u.state = 'attack'; u.target = enemy; return; }
+            }
+            if (stepTowards(u, u.tx, u.ty, spec.speed, dt) <= 5) {
+                u.state = 'idle';
+                u.attackMove = false;
+            }
+        } else if (u.state === 'build') {
+            const b = u.target;
+            if (!b || b.hp <= 0) { u.state = 'idle'; return; }
+            const d = Math.hypot(b.x - u.x, b.y - u.y) - b.radius - u.radius;
+            if (d > 14) {
+                stepTowards(u, b.x, b.y, spec.speed, dt);
+            } else {
+                u.anim += dt * 12;
+                if (!b.completed) {
+                    b.buildProgress += dt;
+                    b.hp = Math.min(b.maxHp, b.hp + (b.maxHp * 0.88 / b.buildTime) * dt);
+                    if (b.buildProgress >= b.buildTime) {
+                        b.completed = true;
+                        b.hp = b.maxHp;
+                        players[b.team].stats.built++;
+                        recalcPop();
+                        if (b.team === 1) { SFX.play('train'); refreshHUD(); }
+                        if (b.type === 'BF') {
+                            u.state = 'gather'; u.target = b; u.gatherType = 'food';
+                        } else {
+                            u.state = 'idle';
+                        }
+                    }
+                } else if (b.hp < b.maxHp) {
+                    b.hp = Math.min(b.maxHp, b.hp + 20 * dt);
+                    if (b.hp >= b.maxHp) u.state = b.type === 'BF' ? 'gather' : 'idle';
+                } else {
+                    u.state = b.type === 'BF' ? 'gather' : 'idle';
+                }
+            }
+        } else if (u.state === 'gather') {
+            const t = u.target;
+            if (!t || (t.isBuilding && (t.hp <= 0 || t.foodLeft <= 0)) || (!t.isBuilding && t.amount <= 0)) {
+                if (u.carry > 0) u.state = 'return';
+                else {
+                    const nextR = findNearestRes(u.x, u.y, u.gatherType || 'wood', 380);
+                    if (nextR) u.target = nextR;
+                    else u.state = 'idle';
+                }
+                return;
+            }
+            const d = Math.hypot(t.x - u.x, t.y - u.y) - t.radius - u.radius;
+            if (d > 14) {
+                stepTowards(u, t.x, t.y, spec.speed, dt);
+            } else {
+                u.anim += dt * 10;
+                u.gatherTimer += dt;
+                const interval = (u.team === 2 && game.difficulty === 'hard') ? 0.55 : (u.team === 2 && game.difficulty === 'easy') ? 1.05 : 0.72;
+                if (u.gatherTimer >= interval) {
+                    u.gatherTimer = 0;
+                    let rType = 'food';
+                    if (t.isBuilding && t.type === 'BF') {
+                        rType = 'food';
+                        t.foodLeft = Math.max(0, t.foodLeft - 2);
+                    } else {
+                        rType = t.type === 'tree' ? 'wood' : (t.type === 'berry' || t.type === 'deer' || t.type === 'elephant') ? 'food' : t.type;
+                        t.amount = Math.max(0, t.amount - 2);
+                    }
+                    u.gatherType = rType;
+                    if (u.carryType !== rType) { u.carryType = rType; u.carry = 0; }
+                    u.carry += 2;
+                    if (u.carry >= u.maxCarry) u.state = 'return';
+                }
+            }
+        } else if (u.state === 'return') {
+            const drop = findNearestDrop(u.team, u.x, u.y, u.carryType || 'food');
+            if (!drop) { u.state = 'idle'; return; }
+            const d = Math.hypot(drop.x - u.x, drop.y - u.y) - drop.radius - u.radius;
+            if (d > 14) {
+                stepTowards(u, drop.x, drop.y, spec.speed, dt);
+            } else {
+                if (u.carry > 0 && u.carryType) {
+                    players[u.team][u.carryType] += u.carry;
+                    if (u.team === 1) {
+                        const names = { wood: 'Gỗ', food: 'Thực', gold: 'Vàng', stone: 'Đá' };
+                        floatTexts.push({ x: drop.x, y: drop.y - 25, text: `+${u.carry} ${names[u.carryType]}`, color: '#fde047', life: 1.1 });
+                    }
+                    u.carry = 0;
+                }
+                if (u.target && ((u.target.isBuilding && u.target.foodLeft > 0) || (!u.target.isBuilding && u.target.amount > 0))) {
+                    u.state = 'gather';
+                } else {
+                    const nextR = findNearestRes(u.x, u.y, u.gatherType || 'wood', 420);
+                    if (nextR) { u.target = nextR; u.state = 'gather'; }
+                    else u.state = 'idle';
+                }
+            }
+        } else if (u.state === 'attack') {
+            const t = u.target;
+            if (!t || t.hp <= 0) {
+                const nextE = findNearestEnemy(u.team, u.x, u.y, spec.vision);
+                if (nextE) u.target = nextE;
+                else u.state = 'idle';
+                return;
+            }
+            const d = Math.hypot(t.x - u.x, t.y - u.y) - t.radius - u.radius;
+            if (d > spec.range) {
+                stepTowards(u, t.x, t.y, spec.speed, dt);
+            } else {
+                u.facing = t.x >= u.x ? 1 : -1;
+                if (u.reloadTimer <= 0) {
+                    u.reloadTimer = spec.reload;
+                    const atk = spec.atk + ageBonus.atkBonus;
+                    if (spec.proj) {
+                        spawnProjectile(u.team, u.x, u.y - 10, t, atk, spec.proj);
+                        SFX.play('arrow');
+                    } else {
+                        applyDamage(u.team, t, atk);
+                        spawnParticles(t.x, t.y, '#ef4444', 4);
+                        SFX.play('hit');
+                    }
+                }
+            }
+        }
+    });
+
+    // Unit separation
+    for (let i = 0; i < units.length; i++) {
+        const a = units[i];
+        if (a.hp <= 0) continue;
+        for (let j = i + 1; j < units.length; j++) {
+            const b = units[j];
+            if (b.hp <= 0) continue;
+            const dx = b.x - a.x, dy = b.y - a.y;
+            const dist = Math.hypot(dx, dy);
+            const minD = a.radius + b.radius;
+            if (dist > 0 && dist < minD) {
+                const push = (minD - dist) * 0.35;
+                a.x -= (dx / dist) * push; a.y -= (dy / dist) * push;
+                b.x += (dx / dist) * push; b.y += (dy / dist) * push;
+            }
+        }
+        a.x = Math.max(25, Math.min(WORLD_W - 25, a.x));
+        a.y = Math.max(25, Math.min(WORLD_H - 25, a.y));
+    }
+
+    // Projectiles
+    for (let i = projectiles.length - 1; i >= 0; i--) {
+        const pr = projectiles[i];
+        if (pr.target && pr.target.hp > 0) {
+            pr.tx = pr.target.x;
+            pr.ty = pr.target.y;
+        }
+        const dx = pr.tx - pr.x, dy = pr.ty - pr.y;
+        const dist = Math.hypot(dx, dy);
+        if (dist <= 14) {
+            if (pr.target && pr.target.hp > 0) {
+                applyDamage(pr.team, pr.target, pr.dmg);
+                spawnParticles(pr.tx, pr.ty, '#f97316', 3);
+            }
+            projectiles.splice(i, 1);
+        } else {
+            pr.x += (dx / dist) * pr.speed * dt;
+            pr.y += (dy / dist) * pr.speed * dt;
+        }
+    }
+
+    // Particles & Floating Texts
+    for (let i = particles.length - 1; i >= 0; i--) {
+        const pt = particles[i];
+        pt.x += pt.vx * dt; pt.y += pt.vy * dt;
+        pt.life -= dt;
+        if (pt.life <= 0) particles.splice(i, 1);
+    }
+    for (let i = floatTexts.length - 1; i >= 0; i--) {
+        floatTexts[i].y -= 22 * dt;
+        floatTexts[i].life -= dt;
+        if (floatTexts[i].life <= 0) floatTexts.splice(i, 1);
+    }
+    for (let i = cmdRings.length - 1; i >= 0; i--) {
+        cmdRings[i].life -= dt;
+        if (cmdRings[i].life <= 0) cmdRings.splice(i, 1);
+    }
+
+    // Cleanup dead entities
+    resources = resources.filter(r => r.amount > 0);
+    const hadDead = units.some(u => u.hp <= 0) || buildings.some(b => b.hp <= 0);
+    if (hadDead) {
+        units = units.filter(u => u.hp > 0);
+        buildings = buildings.filter(b => b.hp > 0);
+        selectedIds = selectedIds.filter(id => units.some(u => u.id === id) || buildings.some(b => b.id === id));
+        recalcPop();
+        checkEndMatch();
+        refreshHUD();
+    }
+}
+
+function applyDamage(attackerTeam, target, rawDmg) {
+    if (!target || target.hp <= 0) return;
+    const armor = (target.isUnit ? UNITS[target.type].armor : 0) + AGES[players[target.team].age].armorBonus;
+    const dmg = Math.max(1, rawDmg - armor);
+    target.hp -= dmg;
+
+    if (target.team === 1 && game.time - game.lastAlert > 8) {
+        game.lastAlert = game.time;
+        toast('⚔️ Quân đội hoặc căn cứ của bạn đang bị tấn công!', '#ef4444');
+    }
+    if (target.isUnit && target.hp > 0 && (target.state === 'idle' || target.state === 'gather')) {
+        const enemy = findNearestEnemy(target.team, target.x, target.y, 230);
+        if (enemy) { target.state = 'attack'; target.target = enemy; }
+    }
+    if (target.hp <= 0) {
+        players[attackerTeam].stats.killed++;
+        spawnParticles(target.x, target.y, '#fb923c', target.isBuilding ? 16 : 8);
+    }
+}
+
+function spawnProjectile(team, x, y, target, dmg, type) {
+    projectiles.push({
+        team, x, y,
+        target,
+        tx: target.x, ty: target.y,
+        dmg, type,
+        speed: type === 'arrow' ? 380 : 300
+    });
+}
+
+function spawnParticles(x, y, color, count) {
+    for (let i = 0; i < count; i++) {
+        const a = Math.random() * Math.PI * 2;
+        const s = 20 + Math.random() * 55;
+        particles.push({
+            x, y,
+            vx: Math.cos(a) * s,
+            vy: Math.sin(a) * s,
+            color,
+            life: 0.35 + Math.random() * 0.3
+        });
+    }
+}
+
+function updateAI(dt) {
+    game.aiTimer += dt;
+    game.aiWaveTimer += dt;
+    const tickRate = game.difficulty === 'hard' ? 1.4 : game.difficulty === 'normal' ? 2.4 : 4.0;
+    if (game.aiTimer < tickRate) return;
+    game.aiTimer = 0;
+
+    const ai = players[2];
+    const aiBN = buildings.find(b => b.team === 2 && b.type === 'BN');
+    if (!aiBN) return;
+
+    const aiVills = units.filter(u => u.team === 2 && u.type === 'villager');
+    const maxVills = game.difficulty === 'hard' ? 18 : game.difficulty === 'normal' ? 13 : 8;
+
+    // 1. Assign idle AI villagers
+    aiVills.forEach((v, idx) => {
+        if (v.state === 'idle') {
+            const wantType = idx % 3 === 0 ? 'wood' : (idx % 4 === 0 && ai.age >= 2) ? 'gold' : 'food';
+            const res = findNearestRes(aiBN.x, aiBN.y, wantType, 950) || findNearestRes(aiBN.x, aiBN.y, 'wood', 1200);
+            if (res) {
+                v.state = 'gather';
+                v.target = res;
+                v.gatherType = wantType;
+            }
+        }
+    });
+
+    // 2. Build BE house if pop near cap
+    const hasUnbuilt = buildings.find(b => b.team === 2 && !b.completed);
+    if (hasUnbuilt) {
+        const builder = aiVills.find(v => v.state !== 'build');
+        if (builder) { builder.state = 'build'; builder.target = hasUnbuilt; }
+    } else if (ai.pop + 2 >= ai.maxPop && ai.maxPop < 60 && canAfford(2, BUILDINGS.BE.cost)) {
+        payCost(2, BUILDINGS.BE.cost);
+        const ang = Math.random() * Math.PI * 2;
+        const nb = spawnBuilding(2, 'BE', aiBN.x + Math.cos(ang) * 165, aiBN.y + Math.sin(ang) * 165, false);
+        if (aiVills[0]) { aiVills[0].state = 'build'; aiVills[0].target = nb; }
+    }
+
+    // 3. Train villagers
+    if (aiVills.length < maxVills && aiBN.queue.length === 0) {
+        trainUnit(aiBN, 'villager');
+    }
+
+    // 4. Advance Ages
+    if (!ai.agingUp) {
+        if (ai.age === 1 && aiVills.length >= 6 && canAfford(2, AGES[1].nextCost)) triggerAgeUp(2);
+        else if (ai.age === 2 && game.difficulty !== 'easy' && canAfford(2, AGES[2].nextCost)) triggerAgeUp(2);
+        else if (ai.age === 3 && game.difficulty === 'hard' && canAfford(2, AGES[3].nextCost)) triggerAgeUp(2);
+    }
+
+    // 5. Build military buildings BB, BA, BL, BT
+    const countB = (t) => buildings.filter(b => b.team === 2 && b.type === t).length;
+    if (countB('BB') === 0 && canAfford(2, BUILDINGS.BB.cost)) {
+        payCost(2, BUILDINGS.BB.cost);
+        const nb = spawnBuilding(2, 'BB', aiBN.x - 150, aiBN.y - 80, false);
+        if (aiVills[0]) { aiVills[0].state = 'build'; aiVills[0].target = nb; }
+    } else if (ai.age >= 2 && countB('BA') === 0 && canAfford(2, BUILDINGS.BA.cost)) {
+        payCost(2, BUILDINGS.BA.cost);
+        const nb = spawnBuilding(2, 'BA', aiBN.x - 70, aiBN.y - 165, false);
+        if (aiVills[0]) { aiVills[0].state = 'build'; aiVills[0].target = nb; }
+    } else if (ai.age >= 2 && countB('BL') === 0 && game.difficulty !== 'easy' && canAfford(2, BUILDINGS.BL.cost)) {
+        payCost(2, BUILDINGS.BL.cost);
+        const nb = spawnBuilding(2, 'BL', aiBN.x - 175, aiBN.y - 175, false);
+        if (aiVills[0]) { aiVills[0].state = 'build'; aiVills[0].target = nb; }
+    } else if (ai.age >= 2 && game.difficulty === 'hard' && countB('BT') < 2 && canAfford(2, BUILDINGS.BT.cost)) {
+        payCost(2, BUILDINGS.BT.cost);
+        const nb = spawnBuilding(2, 'BT', aiBN.x - 125, aiBN.y - 125, false);
+        if (aiVills[0]) { aiVills[0].state = 'build'; aiVills[0].target = nb; }
+    }
+
+    // 6. Train military units
+    buildings.filter(b => b.team === 2 && b.completed && b.queue.length < 2).forEach(b => {
+        if (b.type === 'BB') {
+            trainUnit(b, ai.age >= 3 ? 'swordsman' : (Math.random() < 0.5 ? 'clubman' : 'slinger'));
+        } else if (b.type === 'BA') {
+            trainUnit(b, ai.age >= 3 ? 'chariot' : 'bowman');
+        } else if (b.type === 'BL') {
+            trainUnit(b, ai.age >= 3 ? 'cavalry' : 'scout');
+        }
+    });
+
+    // 7. Launch attack waves
+    const waveInterval = game.difficulty === 'hard' ? 42 : game.difficulty === 'normal' ? 62 : 95;
+    const minArmy = game.difficulty === 'hard' ? 6 : game.difficulty === 'normal' ? 4 : 3;
+    const army = units.filter(u => u.team === 2 && u.type !== 'villager');
+
+    if (game.aiWaveTimer >= waveInterval && army.length >= minArmy) {
+        game.aiWaveTimer = 0;
+        const p1Target = buildings.find(b => b.team === 1) || units.find(u => u.team === 1);
+        if (p1Target) {
+            army.forEach(u => {
+                u.state = 'move';
+                u.tx = p1Target.x + (Math.random() - 0.5) * 60;
+                u.ty = p1Target.y + (Math.random() - 0.5) * 60;
+                u.attackMove = true;
+            });
+        }
+    }
+}
+
+function updateFogOfWar() {
+    for (let i = 0; i < fogGrid.length; i++) {
+        if (fogGrid[i] === 2) fogGrid[i] = 1;
+    }
+    const reveal = (wx, wy, rad) => {
+        const cx = Math.floor(wx / FOG_SIZE);
+        const cy = Math.floor(wy / FOG_SIZE);
+        const rCells = Math.ceil(rad / FOG_SIZE);
+        for (let y = Math.max(0, cy - rCells); y <= Math.min(FOG_ROWS - 1, cy + rCells); y++) {
+            for (let x = Math.max(0, cx - rCells); x <= Math.min(FOG_COLS - 1, cx + rCells); x++) {
+                if (Math.hypot((x + 0.5) * FOG_SIZE - wx, (y + 0.5) * FOG_SIZE - wy) <= rad) {
+                    fogGrid[y * FOG_COLS + x] = 2;
+                }
+            }
+        }
+    };
+    units.forEach(u => { if (u.team === 1) reveal(u.x, u.y, UNITS[u.type].vision); });
+    buildings.forEach(b => { if (b.team === 1) reveal(b.x, b.y, BUILDINGS[b.type].vision); });
+}
+
+function isVisible(wx, wy) {
+    if (!game.fogEnabled) return true;
+    const cx = Math.max(0, Math.min(FOG_COLS - 1, Math.floor(wx / FOG_SIZE)));
+    const cy = Math.max(0, Math.min(FOG_ROWS - 1, Math.floor(wy / FOG_SIZE)));
+    return fogGrid[cy * FOG_COLS + cx] === 2;
+}
+
+function checkEndMatch() {
+    if (!game.running) return;
+    const p1Alive = units.some(u => u.team === 1) || buildings.some(b => b.team === 1);
+    const p2Alive = units.some(u => u.team === 2) || buildings.some(b => b.team === 2);
+    if (!p1Alive || !p2Alive) {
+        game.running = false;
+        const win = p1Alive;
+        document.getElementById('end-title').textContent = win ? '🏆 CHIẾN THẮNG HUY HOÀNG! 🏆' : '💀 THẤT BẠI! 💀';
+        document.getElementById('end-desc').textContent = win
+            ? 'Bạn đã san phẳng hoàn toàn căn cứ và quân đội của Máy (AI)!'
+            : 'Đế chế của bạn đã thất thủ trước đợt tấn công của AI. Hãy phục thù nhé!';
+        document.getElementById('end-stats').innerHTML = `
+            <div>⏱️ <b>Thời gian trận đấu:</b> ${document.getElementById('match-clock').textContent}</div>
+            <div>⚔️ <b>Đơn vị bạn đã huấn luyện:</b> ${players[1].stats.trained} | <b>Hạ gục:</b> ${players[1].stats.killed}</div>
+            <div>🏛️ <b>Công trình bạn đã xây:</b> ${players[1].stats.built} | <b>Đời đạt được:</b> Đời ${players[1].age}</div>
+        `;
+        document.getElementById('end-modal').style.display = 'flex';
+        SFX.play('ageup');
+    }
+}
+
+function renderGame() {
+    ctx.fillStyle = '#2d4c1e';
+    ctx.fillRect(0, 0, camera.w, camera.h);
+
+    ctx.save();
+    ctx.scale(camera.zoom, camera.zoom);
+    ctx.translate(-camera.x, -camera.y);
+
+    // Subtle terrain grid & grass tufts
+    ctx.strokeStyle = 'rgba(0,0,0,0.08)';
+    ctx.lineWidth = 1;
+    const vw = camera.w / camera.zoom;
+    const vh = camera.h / camera.zoom;
+    const gx0 = Math.floor(camera.x / 120) * 120;
+    const gy0 = Math.floor(camera.y / 120) * 120;
+    for (let x = gx0; x < camera.x + vw; x += 120) {
+        ctx.beginPath(); ctx.moveTo(x, camera.y); ctx.lineTo(x, camera.y + vh); ctx.stroke();
+    }
+    for (let y = gy0; y < camera.y + vh; y += 120) {
+        ctx.beginPath(); ctx.moveTo(camera.x, y); ctx.lineTo(camera.x + vw, y); ctx.stroke();
+    }
+
+    groundTufts.forEach(t => {
+        if (t.x < camera.x - 20 || t.x > camera.x + vw + 20 || t.y < camera.y - 20 || t.y > camera.y + vh + 20) return;
+        ctx.fillStyle = '#3f662b';
+        ctx.fillRect(t.x, t.y, 3, 5);
+        if (t.flower) {
+            ctx.fillStyle = t.color;
+            ctx.fillRect(t.x - 1, t.y - 2, 3, 3);
+        }
+    });
+
+    // Resources
+    resources.forEach(r => {
+        if (r.x < camera.x - 50 || r.x > camera.x + vw + 50 || r.y < camera.y - 50 || r.y > camera.y + vh + 50) return;
+        const cx = Math.floor(r.x / FOG_SIZE), cy = Math.floor(r.y / FOG_SIZE);
+        if (game.fogEnabled && fogGrid[cy * FOG_COLS + cx] === 0) return;
+
+        ctx.save();
+        ctx.translate(r.x, r.y);
+        if (r.type === 'tree') {
+            ctx.fillStyle = 'rgba(0,0,0,0.3)';
+            ctx.beginPath(); ctx.ellipse(4, 10, 14, 7, 0, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = '#5c3a21';
+            ctx.fillRect(-4, -2, 8, 14);
+            ctx.fillStyle = '#15803d';
+            ctx.beginPath(); ctx.arc(0, -10, 15, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = '#22c55e';
+            ctx.beginPath(); ctx.arc(-4, -14, 10, 0, Math.PI * 2); ctx.fill();
+        } else if (r.type === 'berry') {
+            ctx.fillStyle = '#166534';
+            ctx.beginPath(); ctx.arc(0, 0, 13, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = '#ef4444';
+            [[-5, -4], [4, -5], [0, 3], [-4, 5], [5, 3]].forEach(([bx, by]) => {
+                ctx.beginPath(); ctx.arc(bx, by, 3, 0, Math.PI * 2); ctx.fill();
+            });
+        } else if (r.type === 'gold' || r.type === 'stone') {
+            ctx.fillStyle = r.type === 'gold' ? '#eab308' : '#9ca3af';
+            ctx.beginPath();
+            ctx.moveTo(-14, 8); ctx.lineTo(-8, -10); ctx.lineTo(6, -12); ctx.lineTo(15, 4); ctx.lineTo(8, 12);
+            ctx.closePath(); ctx.fill();
+            ctx.strokeStyle = r.type === 'gold' ? '#fef08a' : '#e5e7eb';
+            ctx.lineWidth = 2; ctx.stroke();
+        } else if (r.type === 'deer') {
+            ctx.fillStyle = '#d97706';
+            ctx.beginPath(); ctx.ellipse(0, 0, 11, 7, 0, 0, Math.PI * 2); ctx.fill();
+            ctx.fillRect(6, -10, 4, 9);
+        } else if (r.type === 'elephant') {
+            ctx.fillStyle = '#6b7280';
+            ctx.beginPath(); ctx.ellipse(0, 0, 19, 14, 0, 0, Math.PI * 2); ctx.fill();
+            ctx.strokeStyle = '#fef3c7'; ctx.lineWidth = 2.5;
+            ctx.beginPath(); ctx.moveTo(15, 2); ctx.lineTo(23, -3); ctx.stroke();
+        }
+        ctx.restore();
+    });
+
+    // Buildings
+    buildings.forEach(b => {
+        if (b.team === 2 && !isVisible(b.x, b.y)) return;
+        const isSel = selectedIds.includes(b.id);
+        const teamColor = b.team === 1 ? '#2563eb' : '#dc2626';
+        const r = b.radius;
+
+        ctx.save();
+        ctx.translate(b.x, b.y);
+
+        if (isSel) {
+            ctx.strokeStyle = '#4ade80';
+            ctx.lineWidth = 2.5;
+            ctx.beginPath(); ctx.arc(0, 0, r + 6, 0, Math.PI * 2); ctx.stroke();
+        }
+
+        if (b.type === 'BF') {
+            ctx.fillStyle = '#5c4022';
+            ctx.fillRect(-r, -r, r * 2, r * 2);
+            ctx.fillStyle = '#65a30d';
+            for (let i = -r + 5; i < r - 4; i += 8) ctx.fillRect(-r + 4, i, r * 2 - 8, 4);
+        } else {
+            ctx.fillStyle = 'rgba(0,0,0,0.38)';
+            ctx.fillRect(-r + 5, -r + 8, r * 2, r * 2);
+            ctx.fillStyle = b.completed ? '#d6d3d1' : '#785c3c';
+            ctx.fillRect(-r, -r, r * 2, r * 2);
+            ctx.strokeStyle = '#292524'; ctx.lineWidth = 2;
+            ctx.strokeRect(-r, -r, r * 2, r * 2);
+
+            // Roof with team color
+            ctx.fillStyle = teamColor;
+            ctx.beginPath();
+            ctx.moveTo(-r - 3, -r + 10);
+            ctx.lineTo(0, -r - 12);
+            ctx.lineTo(r + 3, -r + 10);
+            ctx.closePath();
+            ctx.fill();
+            ctx.strokeStyle = '#fde047'; ctx.lineWidth = 1.2; ctx.stroke();
+
+            ctx.fillStyle = '#fff';
+            ctx.font = 'bold 11px Segoe UI';
+            ctx.textAlign = 'center';
+            ctx.fillText(b.type, 0, 6);
+        }
+
+        // Health bar
+        if (isSel || b.hp < b.maxHp) {
+            const bw = r * 1.8;
+            ctx.fillStyle = '#000';
+            ctx.fillRect(-bw / 2, -r - 20, bw, 6);
+            ctx.fillStyle = b.team === 1 ? '#22c55e' : '#ef4444';
+            ctx.fillRect(-bw / 2 + 1, -r - 19, (bw - 2) * (b.hp / b.maxHp), 4);
+        }
+        ctx.restore();
+    });
+
+    // Units
+    units.forEach(u => {
+        if (u.team === 2 && !isVisible(u.x, u.y)) return;
+        const isSel = selectedIds.includes(u.id);
+        const teamColor = u.team === 1 ? '#3b82f6' : '#ef4444';
+
+        ctx.save();
+        ctx.translate(u.x, u.y);
+
+        if (isSel) {
+            ctx.strokeStyle = '#4ade80';
+            ctx.lineWidth = 2;
+            ctx.beginPath(); ctx.ellipse(0, 4, u.radius + 4, u.radius * 0.75, 0, 0, Math.PI * 2); ctx.stroke();
+        }
+
+        // Shadow
+        ctx.fillStyle = 'rgba(0,0,0,0.35)';
+        ctx.beginPath(); ctx.ellipse(0, 6, u.radius * 0.85, u.radius * 0.45, 0, 0, Math.PI * 2); ctx.fill();
+
+        // Mount for cavalry/chariot
+        if (u.type === 'scout' || u.type === 'cavalry' || u.type === 'chariot') {
+            ctx.fillStyle = u.type === 'cavalry' ? '#e2e8f0' : '#9a3412';
+            ctx.beginPath(); ctx.ellipse(0, 2, 12, 7, 0, 0, Math.PI * 2); ctx.fill();
+        }
+
+        // Body & Head
+        ctx.fillStyle = teamColor;
+        ctx.beginPath(); ctx.arc(0, -2, u.radius * 0.72, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = '#fff'; ctx.lineWidth = 1; ctx.stroke();
+
+        ctx.fillStyle = '#fde68a';
+        ctx.beginPath(); ctx.arc(0, -9, 5, 0, Math.PI * 2); ctx.fill();
+
+        // Carry bundle
+        if (u.carry > 0) {
+            ctx.fillStyle = u.carryType === 'wood' ? '#854d21' : u.carryType === 'gold' ? '#facc15' : '#ef4444';
+            ctx.beginPath(); ctx.arc(-6 * u.facing, -2, 4, 0, Math.PI * 2); ctx.fill();
+        }
+
+        // HP bar
+        if (isSel || u.hp < u.maxHp) {
+            ctx.fillStyle = '#000';
+            ctx.fillRect(-13, -22, 26, 4);
+            ctx.fillStyle = u.team === 1 ? '#22c55e' : '#ef4444';
+            ctx.fillRect(-12, -21, 24 * (u.hp / u.maxHp), 2);
+        }
+        ctx.restore();
+    });
+
+    // Projectiles
+    projectiles.forEach(pr => {
+        ctx.save();
+        ctx.translate(pr.x, pr.y);
+        if (pr.type === 'arrow') {
+            const ang = Math.atan2(pr.ty - pr.y, pr.tx - pr.x);
+            ctx.rotate(ang);
+            ctx.strokeStyle = '#fef08a';
+            ctx.lineWidth = 2;
+            ctx.beginPath(); ctx.moveTo(-8, 0); ctx.lineTo(8, 0); ctx.stroke();
+        } else {
+            ctx.fillStyle = '#d1d5db';
+            ctx.beginPath(); ctx.arc(0, 0, 3.5, 0, Math.PI * 2); ctx.fill();
+        }
+        ctx.restore();
+    });
+
+    // Particles
+    particles.forEach(pt => {
+        ctx.fillStyle = pt.color;
+        ctx.fillRect(pt.x - 2, pt.y - 2, 4, 4);
+    });
+
+    // Command rings
+    cmdRings.forEach(cr => {
+        ctx.strokeStyle = cr.color;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(cr.x, cr.y, (0.5 - cr.life) * 45, 0, Math.PI * 2);
+        ctx.stroke();
+    });
+
+    // Floating resource texts
+    floatTexts.forEach(ft => {
+        ctx.font = 'bold 12px Segoe UI';
+        ctx.fillStyle = ft.color;
+        ctx.textAlign = 'center';
+        ctx.fillText(ft.text, ft.x, ft.y);
+    });
+
+    // Building placement preview ghost
+    if (game.placingType) {
+        const spec = BUILDINGS[game.placingType];
+        const ok = canPlaceBuilding(mouse.wx, mouse.wy, spec.radius);
+        ctx.save();
+        ctx.translate(mouse.wx, mouse.wy);
+        ctx.fillStyle = ok ? 'rgba(34, 197, 94, 0.35)' : 'rgba(239, 68, 68, 0.4)';
+        ctx.strokeStyle = ok ? '#4ade80' : '#f87171';
+        ctx.lineWidth = 2;
+        ctx.fillRect(-spec.radius, -spec.radius, spec.radius * 2, spec.radius * 2);
+        ctx.strokeRect(-spec.radius, -spec.radius, spec.radius * 2, spec.radius * 2);
+        ctx.restore();
+    }
+
+    // Fog of War overlay
+    if (game.fogEnabled) {
+        const c0 = Math.max(0, Math.floor(camera.x / FOG_SIZE));
+        const r0 = Math.max(0, Math.floor(camera.y / FOG_SIZE));
+        const c1 = Math.min(FOG_COLS - 1, Math.ceil((camera.x + vw) / FOG_SIZE));
+        const r1 = Math.min(FOG_ROWS - 1, Math.ceil((camera.y + vh) / FOG_SIZE));
+        for (let r = r0; r <= r1; r++) {
+            for (let c = c0; c <= c1; c++) {
+                const st = fogGrid[r * FOG_COLS + c];
+                if (st === 0) {
+                    ctx.fillStyle = '#070906';
+                    ctx.fillRect(c * FOG_SIZE, r * FOG_SIZE, FOG_SIZE + 1, FOG_SIZE + 1);
+                } else if (st === 1) {
+                    ctx.fillStyle = 'rgba(7, 9, 6, 0.52)';
+                    ctx.fillRect(c * FOG_SIZE, r * FOG_SIZE, FOG_SIZE + 1, FOG_SIZE + 1);
+                }
+            }
+        }
+    }
+
+    ctx.restore();
+
+    // Drag selection box in screen space
+    if (mouse.dragging) {
+        const x = Math.min(mouse.startX, mouse.sx);
+        const y = Math.min(mouse.startY, mouse.sy);
+        const w = Math.abs(mouse.sx - mouse.startX);
+        const h = Math.abs(mouse.sy - mouse.startY);
+        ctx.fillStyle = 'rgba(56, 189, 248, 0.16)';
+        ctx.strokeStyle = '#38bdf8';
+        ctx.lineWidth = 1.5;
+        ctx.fillRect(x, y, w, h);
+        ctx.strokeRect(x, y, w, h);
+    }
+
+    renderMinimap();
+}
+
+function renderMinimap() {
+    const mw = miniCanvas.width;
+    const mh = miniCanvas.height;
+    const sx = mw / WORLD_W;
+    const sy = mh / WORLD_H;
+
+    miniCtx.fillStyle = '#152612';
+    miniCtx.fillRect(0, 0, mw, mh);
+
+    resources.forEach(r => {
+        const cx = Math.floor(r.x / FOG_SIZE), cy = Math.floor(r.y / FOG_SIZE);
+        if (game.fogEnabled && fogGrid[cy * FOG_COLS + cx] === 0) return;
+        miniCtx.fillStyle = r.type === 'tree' ? '#16a34a' : r.type === 'gold' ? '#facc15' : '#9ca3af';
+        miniCtx.fillRect(r.x * sx - 1, r.y * sy - 1, 2.5, 2.5);
+    });
+
+    buildings.forEach(b => {
+        if (b.team === 2 && !isVisible(b.x, b.y)) return;
+        miniCtx.fillStyle = b.team === 1 ? '#3b82f6' : '#ef4444';
+        miniCtx.fillRect(b.x * sx - 3, b.y * sy - 3, 6, 6);
+    });
+
+    units.forEach(u => {
+        if (u.team === 2 && !isVisible(u.x, u.y)) return;
+        miniCtx.fillStyle = u.team === 1 ? '#93c5fd' : '#fca5a5';
+        miniCtx.fillRect(u.x * sx - 1.5, u.y * sy - 1.5, 3, 3);
+    });
+
+    miniCtx.strokeStyle = '#ffffff';
+    miniCtx.lineWidth = 1.2;
+    miniCtx.strokeRect(
+        camera.x * sx,
+        camera.y * sy,
+        (camera.w / camera.zoom) * sx,
+        (camera.h / camera.zoom) * sy
+    );
+}
+
+function formatCost(cost) {
+    const parts = [];
+    if (cost.food) parts.push(`${cost.food} Thực`);
+    if (cost.wood) parts.push(`${cost.wood} Gỗ`);
+    if (cost.gold) parts.push(`${cost.gold} Vàng`);
+    if (cost.stone) parts.push(`${cost.stone} Đá`);
+    return parts.join(', ');
+}
+
+function updateTopResources() {
+    const p = players[1];
+    if (!p) return;
+    document.getElementById('res-wood').textContent = Math.floor(p.wood);
+    document.getElementById('res-food').textContent = Math.floor(p.food);
+    document.getElementById('res-gold').textContent = Math.floor(p.gold);
+    document.getElementById('res-stone').textContent = Math.floor(p.stone);
+    document.getElementById('res-pop').textContent = `${p.pop} / ${p.maxPop}`;
+
+    const myVills = units.filter(u => u.team === 1 && u.type === 'villager');
+    let cw = 0, cf = 0, cg = 0, cs = 0, idle = 0;
+    myVills.forEach(v => {
+        if (v.state === 'idle') idle++;
+        else if (v.state === 'gather' || v.state === 'return') {
+            if (v.gatherType === 'wood') cw++;
+            else if (v.gatherType === 'food') cf++;
+            else if (v.gatherType === 'gold') cg++;
+            else if (v.gatherType === 'stone') cs++;
+        }
+    });
+    document.getElementById('v-wood').textContent = `👷${cw}`;
+    document.getElementById('v-food').textContent = `👷${cf}`;
+    document.getElementById('v-gold').textContent = `👷${cg}`;
+    document.getElementById('v-stone').textContent = `👷${cs}`;
+    document.getElementById('idle-num').textContent = idle;
+
+    const mins = String(Math.floor(game.time / 60)).padStart(2, '0');
+    const secs = String(Math.floor(game.time % 60)).padStart(2, '0');
+    document.getElementById('match-clock').textContent = `${mins}:${secs}`;
+
+    const s1 = p.stats.killed * 20 + p.stats.built * 30 + p.age * 100 + p.pop * 10;
+    const p2 = players[2];
+    const s2 = p2.stats.killed * 20 + p2.stats.built * 30 + p2.age * 100 + p2.pop * 10;
+    const diffNames = { easy: 'Dễ', normal: 'Trung bình', hard: 'Khó' };
+    document.getElementById('score-txt').textContent = `AI (${diffNames[game.difficulty]}) | Điểm Bạn: ${s1} - Máy: ${s2}`;
+}
+
+function refreshHUD() {
+    const grid = document.getElementById('cmd-grid');
+    grid.innerHTML = '';
+    hideTip();
+
+    const selUnits = units.filter(u => selectedIds.includes(u.id));
+    const selBlds = buildings.filter(b => selectedIds.includes(b.id));
+    const p = players[1];
+
+    const addSlot = (hk, iconSvg, label, costMini, fullTitle, fullCost, desc, disabled, onClick) => {
+        const btn = document.createElement('button');
+        btn.className = 'cmd-slot';
+        btn.disabled = disabled;
+        btn.innerHTML = `
+            <span class="hk">${hk}</span>
+            <div class="icon-box">${iconSvg}</div>
+            <div class="lbl">${label}</div>
+            <div class="cst">${costMini}</div>
+        `;
+        btn.addEventListener('mouseenter', () => showTip(fullTitle, fullCost, desc));
+        btn.addEventListener('mouseleave', hideTip);
+        btn.addEventListener('click', onClick);
+        grid.appendChild(btn);
+    };
+
+    if (selUnits.length > 0) {
+        const first = selUnits[0];
+        document.getElementById('portrait-icon').innerHTML = ICONS[first.type] || ICONS.villager;
+        document.getElementById('hp-bar-wrap').style.display = 'block';
+        document.getElementById('hp-fill').style.width = `${Math.max(0, (first.hp / first.maxHp) * 100)}%`;
+        document.getElementById('hp-txt').textContent = `${Math.ceil(first.hp)}/${first.maxHp}`;
+
+        document.getElementById('sel-name').textContent = selUnits.length > 1
+            ? `${UNITS[first.type].name} (Đang chọn ${selUnits.length} quân)`
+            : UNITS[first.type].name;
+        document.getElementById('sel-desc').textContent = UNITS[first.type].desc;
+
+        const spec = UNITS[first.type];
+        const bonus = AGES[p.age];
+        document.getElementById('sel-stats').innerHTML = `
+            <span class="stat-chip">⚔️ Công: ${spec.atk + bonus.atkBonus}</span>
+            <span class="stat-chip">🛡️ Giáp: ${spec.armor + bonus.armorBonus}</span>
+            <span class="stat-chip">🎯 Tầm xa: ${spec.range}</span>
+        `;
+        document.getElementById('queue-box').style.display = 'none';
+
+        const hasVillager = selUnits.some(u => u.type === 'villager');
+        if (hasVillager) {
+            ['BE', 'BS', 'BF', 'BB', 'BA', 'BL', 'BT', 'BN'].forEach(bKey => {
+                const bSpec = BUILDINGS[bKey];
+                const locked = p.age < bSpec.minAge;
+                const cMini = bSpec.cost.wood ? `${bSpec.cost.wood} Gỗ` : `${bSpec.cost.stone} Đá`;
+                addSlot(
+                    `B+${bSpec.hk}`,
+                    ICONS[bKey],
+                    bSpec.name.split(' ')[0] + ' ' + bKey,
+                    locked ? `Đời ${bSpec.minAge}` : cMini,
+                    bSpec.name,
+                    `Chi phí: ${formatCost(bSpec.cost)} | Yêu cầu: Đời ${bSpec.minAge}`,
+                    bSpec.desc,
+                    locked,
+                    () => {
+                        game.placingType = bKey;
+                        SFX.play('select');
+                    }
+                );
+            });
+        }
+        addSlot('A', ICONS.atkmove, 'Tấn Công', 'Lệnh', 'Di Chuyển Tấn Công (Phím A)', '', 'Nhấn A rồi click chuột trái để quân vừa đi vừa tự động đánh mục tiêu trên đường.', false, () => {
+            game.attackMove = true;
+            toast('⚔️ Chế độ Tấn Công (Attack-Move): Click trái lên bản đồ để điều quân!', '#facc15');
+        });
+        addSlot('S', ICONS.stop, 'Dừng Lại', 'Lệnh', 'Dừng Mọi Hành Động (Phím S)', '', 'Cho các đơn vị đang chọn đứng yên tại chỗ.', false, () => {
+            selUnits.forEach(u => { u.state = 'idle'; u.attackMove = false; });
+            SFX.play('select');
+        });
+    } else if (selBlds.length > 0) {
+        const b = selBlds[0];
+        const spec = BUILDINGS[b.type];
+        document.getElementById('portrait-icon').innerHTML = ICONS[b.type] || ICONS.BN;
+        document.getElementById('hp-bar-wrap').style.display = 'block';
+        document.getElementById('hp-fill').style.width = `${Math.max(0, (b.hp / b.maxHp) * 100)}%`;
+        document.getElementById('hp-txt').textContent = `${Math.ceil(b.hp)}/${b.maxHp}`;
+        document.getElementById('sel-name').textContent = spec.name;
+        document.getElementById('sel-desc').textContent = spec.desc;
+        document.getElementById('sel-stats').innerHTML = b.type === 'BF'
+            ? `<span class="stat-chip">🌾 Thực còn lại: ${Math.ceil(b.foodLeft)}</span>`
+            : `<span class="stat-chip">🏠 Dân số: +${spec.pop || 0}</span>`;
+
+        if (b.type === 'BN') {
+            addSlot('C', ICONS.villager, 'Xin Dân', '50 Thực', 'Huấn Luyện Nông Dân (Phím C)', 'Chi phí: 50 Thực', UNITS.villager.desc, !b.completed, () => trainUnit(b, 'villager'));
+            if (p.age < 4) {
+                const nextAge = AGES[p.age];
+                const cStr = nextAge.nextCost.gold ? `${nextAge.nextCost.food}T/${nextAge.nextCost.gold}V` : `${nextAge.nextCost.food} Thực`;
+                addSlot('U', ICONS.ageup, `Lên Đời ${p.age + 1}`, cStr, `Nghiên cứu ${AGES[p.age + 1].full} (Phím U)`, `Chi phí: ${formatCost(nextAge.nextCost)}`, 'Mở khóa công trình mới, quân chủng mới và cộng thêm Máu/Giáp/Sát thương toàn quân.', p.agingUp || !b.completed, () => triggerAgeUp(1));
+            }
+        } else if (b.type === 'BB') {
+            ['clubman', 'slinger', 'swordsman'].forEach(uKey => {
+                const uSpec = UNITS[uKey];
+                const locked = p.age < uSpec.minAge;
+                addSlot(uSpec.hk, ICONS[uKey], uSpec.name.split(' ')[0], locked ? `Đời ${uSpec.minAge}` : `${uSpec.cost.food} Thực`, uSpec.name, `Chi phí: ${formatCost(uSpec.cost)}`, uSpec.desc, locked || !b.completed, () => trainUnit(b, uKey));
+            });
+        } else if (b.type === 'BA') {
+            ['bowman', 'chariot'].forEach(uKey => {
+                const uSpec = UNITS[uKey];
+                const locked = p.age < uSpec.minAge;
+                addSlot(uSpec.hk, ICONS[uKey], uSpec.name.split(' ')[0], locked ? `Đời ${uSpec.minAge}` : formatCost(uSpec.cost), uSpec.name, `Chi phí: ${formatCost(uSpec.cost)}`, uSpec.desc, locked || !b.completed, () => trainUnit(b, uKey));
+            });
+        } else if (b.type === 'BL') {
+            ['scout', 'cavalry'].forEach(uKey => {
+                const uSpec = UNITS[uKey];
+                const locked = p.age < uSpec.minAge;
+                addSlot(uSpec.hk, ICONS[uKey], uSpec.name.split(' ')[0], locked ? `Đời ${uSpec.minAge}` : `${uSpec.cost.food} Thực`, uSpec.name, `Chi phí: ${formatCost(uSpec.cost)}`, uSpec.desc, locked || !b.completed, () => trainUnit(b, uKey));
+            });
+        }
+    } else {
+        document.getElementById('portrait-icon').innerHTML = ICONS.BN;
+        document.getElementById('hp-bar-wrap').style.display = 'none';
+        document.getElementById('sel-name').textContent = 'Chưa chọn đơn vị';
+        document.getElementById('sel-desc').textContent = 'Quét chuột trái chọn Nông Dân hoặc nhấn phím H để chọn Nhà Chính (BN).';
+        document.getElementById('sel-stats').innerHTML = '';
+        document.getElementById('queue-box').style.display = 'none';
+    }
+}
+
+function updateInspectorProgress() {
+    const selBlds = buildings.filter(b => selectedIds.includes(b.id));
+    const qBox = document.getElementById('queue-box');
+    if (selBlds.length === 0) {
+        qBox.style.display = 'none';
+        return;
+    }
+    const b = selBlds[0];
+    const p = players[1];
+    if (!b.completed) {
+        qBox.style.display = 'block';
+        const pct = Math.min(100, Math.round((b.buildProgress / b.buildTime) * 100));
+        document.getElementById('queue-lbl').textContent = '🔨 Đang xây dựng công trình...';
+        document.getElementById('queue-pct').textContent = `${pct}%`;
+        document.getElementById('queue-fill').style.width = `${pct}%`;
+    } else if (b.type === 'BN' && p.agingUp) {
+        qBox.style.display = 'block';
+        const pct = Math.min(100, Math.round((p.ageProgress / p.ageTotal) * 100));
+        document.getElementById('queue-lbl').textContent = `⏳ Đang Lên Đời ${p.age + 1}...`;
+        document.getElementById('queue-pct').textContent = `${pct}%`;
+        document.getElementById('queue-fill').style.width = `${pct}%`;
+    } else if (b.queue.length > 0) {
+        qBox.style.display = 'block';
+        const item = b.queue[0];
+        const pct = Math.min(100, Math.round((item.progress / item.total) * 100));
+        document.getElementById('queue-lbl').textContent = `⚔️ Huấn luyện ${UNITS[item.type].name} (${b.queue.length})`;
+        document.getElementById('queue-pct').textContent = `${pct}%`;
+        document.getElementById('queue-fill').style.width = `${pct}%`;
+    } else {
+        qBox.style.display = 'none';
+    }
+}
+
+function canPlaceBuilding(wx, wy, rad) {
+    if (wx < rad + 30 || wx > WORLD_W - rad - 30 || wy < rad + 30 || wy > WORLD_H - rad - 30) return false;
+    for (const b of buildings) {
+        if (Math.hypot(b.x - wx, b.y - wy) < b.radius + rad + 10) return false;
+    }
+    for (const r of resources) {
+        if (Math.hypot(r.x - wx, r.y - wy) < r.radius + rad + 6) return false;
+    }
+    return true;
+}
+
+canvas.addEventListener('mousedown', e => {
+    SFX.init();
+    const rect = canvas.getBoundingClientRect();
+    mouse.sx = e.clientX - rect.left;
+    mouse.sy = e.clientY - rect.top;
+    const wPos = screenToWorld(mouse.sx, mouse.sy);
+    mouse.wx = wPos.x;
+    mouse.wy = wPos.y;
+
+    if (e.button === 0) {
+        if (game.placingType) {
+            const spec = BUILDINGS[game.placingType];
+            if (!canAfford(1, spec.cost)) {
+                toast('⚠️ Không đủ tài nguyên để xây ' + spec.name, '#ef4444');
+                return;
+            }
+            if (!canPlaceBuilding(mouse.wx, mouse.wy, spec.radius)) {
+                toast('⚠️ Vị trí vướng công trình hoặc mỏ tài nguyên!', '#f97316');
+                return;
+            }
+            payCost(1, spec.cost);
+            const nb = spawnBuilding(1, game.placingType, mouse.wx, mouse.wy, false);
+            units.filter(u => selectedIds.includes(u.id) && u.type === 'villager').forEach(v => {
+                v.state = 'build';
+                v.target = nb;
+            });
+            game.placingType = null;
+            SFX.play('move');
+            refreshHUD();
+            return;
+        }
+        if (game.attackMove) {
+            issueMoveOrder(mouse.wx, mouse.wy, true);
+            game.attackMove = false;
+            return;
+        }
+        mouse.dragging = true;
+        mouse.startX = mouse.sx;
+        mouse.startY = mouse.sy;
+    } else if (e.button === 2) {
+        if (game.placingType || game.attackMove) {
+            game.placingType = null;
+            game.attackMove = false;
+            return;
+        }
+        handleRightClickOrder(mouse.wx, mouse.wy);
+    }
+});
+
+window.addEventListener('mousemove', e => {
+    const rect = canvas.getBoundingClientRect();
+    mouse.sx = e.clientX - rect.left;
+    mouse.sy = e.clientY - rect.top;
+    const wPos = screenToWorld(mouse.sx, mouse.sy);
+    mouse.wx = wPos.x;
+    mouse.wy = wPos.y;
+});
+
+window.addEventListener('mouseup', e => {
+    if (e.button === 0 && mouse.dragging) {
+        mouse.dragging = false;
+        const dist = Math.hypot(mouse.sx - mouse.startX, mouse.sy - mouse.startY);
+        if (dist < 8) {
+            const clickU = units.find(u => u.team === 1 && Math.hypot(u.x - mouse.wx, u.y - mouse.wy) <= u.radius + 8);
+            if (clickU) {
+                selectedIds = [clickU.id];
+                SFX.play('select');
+            } else {
+                const clickB = buildings.find(b => b.team === 1 && Math.hypot(b.x - mouse.wx, b.y - mouse.wy) <= b.radius + 6);
+                selectedIds = clickB ? [clickB.id] : [];
+                if (clickB) SFX.play('select');
+            }
+        } else {
+            const w0 = screenToWorld(Math.min(mouse.startX, mouse.sx), Math.min(mouse.startY, mouse.sy));
+            const w1 = screenToWorld(Math.max(mouse.startX, mouse.sx), Math.max(mouse.startY, mouse.sy));
+            const boxUnits = units.filter(u => u.team === 1 && u.x >= w0.x && u.x <= w1.x && u.y >= w0.y && u.y <= w1.y);
+            if (boxUnits.length > 0) {
+                selectedIds = boxUnits.map(u => u.id);
+                SFX.play('select');
+            }
+        }
+        refreshHUD();
+    }
+    mouse.miniDrag = false;
+});
+
+canvas.addEventListener('contextmenu', e => e.preventDefault());
+
+canvas.addEventListener('wheel', e => {
+    e.preventDefault();
+    const oldZ = camera.zoom;
+    camera.zoom = Math.max(0.65, Math.min(1.45, camera.zoom + (e.deltaY < 0 ? 0.1 : -0.1)));
+    if (camera.zoom !== oldZ) {
+        document.getElementById('zoom-txt').textContent = `${Math.round(camera.zoom * 100)}%`;
+    }
+}, { passive: false });
+
+function issueMoveOrder(wx, wy, isAtkMove) {
+    const sel = units.filter(u => selectedIds.includes(u.id));
+    if (sel.length === 0) return;
+    const cols = Math.ceil(Math.sqrt(sel.length));
+    sel.forEach((u, idx) => {
+        const ox = ((idx % cols) - (cols - 1) / 2) * 28;
+        const oy = (Math.floor(idx / cols) - (cols - 1) / 2) * 28;
+        u.state = 'move';
+        u.tx = wx + ox;
+        u.ty = wy + oy;
+        u.attackMove = isAtkMove;
+    });
+    cmdRings.push({ x: wx, y: wy, color: isAtkMove ? '#ef4444' : '#4ade80', life: 0.45 });
+    SFX.play('move');
+}
+
+function handleRightClickOrder(wx, wy) {
+    const sel = units.filter(u => selectedIds.includes(u.id));
+    if (sel.length === 0) return;
+
+    // 1. Check enemy target
+    const enemy = units.find(u => u.team === 2 && Math.hypot(u.x - wx, u.y - wy) <= u.radius + 12)
+               || buildings.find(b => b.team === 2 && Math.hypot(b.x - wx, b.y - wy) <= b.radius + 10);
+    if (enemy) {
+        sel.forEach(u => { u.state = 'attack'; u.target = enemy; });
+        cmdRings.push({ x: enemy.x, y: enemy.y, color: '#ef4444', life: 0.45 });
+        SFX.play('move');
+        return;
+    }
+
+    // 2. Check friendly building (build / repair / farm)
+    const ownB = buildings.find(b => b.team === 1 && Math.hypot(b.x - wx, b.y - wy) <= b.radius + 10);
+    if (ownB) {
+        const vills = sel.filter(u => u.type === 'villager');
+        if (vills.length > 0) {
+            vills.forEach(v => {
+                if (!ownB.completed || ownB.hp < ownB.maxHp) {
+                    v.state = 'build'; v.target = ownB;
+                } else if (ownB.type === 'BF') {
+                    v.state = 'gather'; v.target = ownB; v.gatherType = 'food';
+                }
+            });
+            cmdRings.push({ x: ownB.x, y: ownB.y, color: '#facc15', life: 0.45 });
+            SFX.play('move');
+            return;
+        }
+    }
+
+    // 3. Check resource node
+    const res = resources.find(r => Math.hypot(r.x - wx, r.y - wy) <= r.radius + 12);
+    if (res) {
+        const vills = sel.filter(u => u.type === 'villager');
+        if (vills.length > 0) {
+            const gType = res.type === 'tree' ? 'wood' : (res.type === 'berry' || res.type === 'deer' || res.type === 'elephant') ? 'food' : res.type;
+            vills.forEach(v => {
+                v.state = 'gather';
+                v.target = res;
+                v.gatherType = gType;
+            });
+            cmdRings.push({ x: res.x, y: res.y, color: '#38bdf8', life: 0.45 });
+            SFX.play('move');
+            return;
+        }
+    }
+
+    // 4. Default move
+    issueMoveOrder(wx, wy, false);
+}
+
+// Minimap navigation
+function panFromMinimap(e) {
+    const rect = miniCanvas.getBoundingClientRect();
+    const mx = e.clientX - rect.left;
+    const my = e.clientY - rect.top;
+    centerCamera((mx / miniCanvas.width) * WORLD_W, (my / miniCanvas.height) * WORLD_H);
+}
+miniCanvas.addEventListener('mousedown', e => { mouse.miniDrag = true; panFromMinimap(e); });
+miniCanvas.addEventListener('mousemove', e => { if (mouse.miniDrag) panFromMinimap(e); });
+
+// Keyboard hotkeys
+window.addEventListener('keydown', e => {
+    const k = e.key.toLowerCase();
+    keys[k] = true;
+
+    if (k === 'escape') {
+        game.placingType = null;
+        game.attackMove = false;
+        game.buildMenu = false;
+        return;
+    }
+    if (k === 'h') {
+        const bn = buildings.find(b => b.team === 1 && b.type === 'BN');
+        if (bn) {
+            selectedIds = [bn.id];
+            centerCamera(bn.x, bn.y);
+            SFX.play('select');
+            refreshHUD();
+        }
+        return;
+    }
+    if (k === '.') {
+        selectIdleVillager();
+        return;
+    }
+
+    const selUnits = units.filter(u => selectedIds.includes(u.id));
+    const selBlds = buildings.filter(b => selectedIds.includes(b.id));
+
+    if (selUnits.some(u => u.type === 'villager')) {
+        if (k === 'b' && !game.buildMenu) {
+            game.buildMenu = true;
+            toast('🔨 Chế độ Xây Dựng: Nhấn E (BE), S (BS), F (BF), B (BB), A (BA), L (BL), T (BT)', '#fde047');
+            return;
+        }
+        if (game.buildMenu) {
+            const mapKey = { e: 'BE', s: 'BS', f: 'BF', b: 'BB', a: 'BA', l: 'BL', t: 'BT', n: 'BN' };
+            if (mapKey[k]) {
+                const bType = mapKey[k];
+                if (players[1].age >= BUILDINGS[bType].minAge) {
+                    game.placingType = bType;
+                    game.buildMenu = false;
+                    SFX.play('select');
+                } else {
+                    toast(`⚠️ Cần lên Đời ${BUILDINGS[bType].minAge} để xây ${BUILDINGS[bType].name}!`, '#ef4444');
+                }
+                return;
+            }
+        }
+    }
+
+    if (selUnits.length > 0) {
+        if (k === 'a') { game.attackMove = true; return; }
+        if (k === 's') { selUnits.forEach(u => { u.state = 'idle'; u.attackMove = false; }); return; }
+    }
+
+    if (selBlds.length > 0) {
+        const b = selBlds[0];
+        if (b.type === 'BN' && k === 'c') trainUnit(b, 'villager');
+        else if (b.type === 'BN' && k === 'u') triggerAgeUp(1);
+        else if (b.type === 'BB') {
+            if (k === 'q') trainUnit(b, 'clubman');
+            if (k === 'w') trainUnit(b, 'slinger');
+            if (k === 'e') trainUnit(b, 'swordsman');
+        } else if (b.type === 'BA') {
+            if (k === 'q') trainUnit(b, 'bowman');
+            if (k === 'w') trainUnit(b, 'chariot');
+        } else if (b.type === 'BL') {
+            if (k === 'q') trainUnit(b, 'scout');
+            if (k === 'w') trainUnit(b, 'cavalry');
+        }
+    }
+});
+
+window.addEventListener('keyup', e => {
+    keys[e.key.toLowerCase()] = false;
+});
+
+function downloadOfflineGame() {
+    const htmlContent = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+    const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'aoe1_offline.html';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast('💾 Đã tải xuống file aoe1_offline.html thành công!', '#22c55e');
+}
+
+let lastFrame = performance.now();
+function mainLoop(now) {
+    const dt = Math.min(0.08, (now - lastFrame) / 1000);
+    lastFrame = now;
+
+    // Camera pan via WASD or Arrow keys
+    const camSpeed = (520 / camera.zoom) * dt;
+    if (keys['w'] || keys['arrowup']) camera.y -= camSpeed;
+    if (keys['s'] || keys['arrowdown']) camera.y += camSpeed;
+    if (keys['a'] || keys['arrowleft']) camera.x -= camSpeed;
+    if (keys['d'] || keys['arrowright']) camera.x += camSpeed;
+
+    const vw = camera.w / camera.zoom;
+    const vh = camera.h / camera.zoom;
+    camera.x = Math.max(0, Math.min(WORLD_W - vw, camera.x));
+    camera.y = Math.max(0, Math.min(WORLD_H - vh, camera.y));
+
+    if (game.running) {
+        game.time += dt;
+        updateSimulation(dt);
+        updateAI(dt);
+        updateFogOfWar();
+        updateTopResources();
+        updateInspectorProgress();
+    }
+
+    renderGame();
+    requestAnimationFrame(mainLoop);
+}
+
+window.onload = function () {
+    startMatch();
+    document.getElementById('start-modal').style.display = 'flex';
+    requestAnimationFrame(mainLoop);
+};
+</script>
+</body>
+</html>

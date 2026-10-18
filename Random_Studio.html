@@ -1,0 +1,1553 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Random Studio</title>
+    <style>
+        :root {
+            --bg-dark: #0f172a;
+            --bg-card: #1e293b;
+            --bg-card-hover: #334155;
+            --primary: #6366f1;
+            --primary-hover: #4f46e5;
+            --accent: #f59e0b;
+            --success: #10b981;
+            --danger: #ef4444;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border: #334155;
+            --radius: 16px;
+            --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background: radial-gradient(circle at top right, #1e1b4b, var(--bg-dark) 60%);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        /* Confetti Canvas */
+        #confetti-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 9999;
+        }
+
+        /* Header */
+        header {
+            background: rgba(30, 41, 59, 0.85);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+            padding: 14px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .brand-logo {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, var(--primary), #ec4899);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+        }
+
+        .brand h1 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            background: linear-gradient(90deg, #fff, #cbd5e1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .brand span {
+            font-size: 0.75rem;
+            color: var(--accent);
+            background: rgba(245, 158, 11, 0.15);
+            padding: 2px 8px;
+            border-radius: 99px;
+            font-weight: 600;
+            margin-left: 6px;
+        }
+
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-icon {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 8px 14px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+        }
+
+        .btn-icon:hover {
+            background: var(--bg-card-hover);
+            border-color: var(--primary);
+        }
+
+        /* Navigation Tabs */
+        .nav-tabs {
+            display: flex;
+            gap: 8px;
+            padding: 16px 24px 0;
+            max-width: 1280px;
+            margin: 0 auto;
+            width: 100%;
+            overflow-x: auto;
+            scrollbar-width: none;
+        }
+
+        .nav-tab {
+            background: rgba(30, 41, 59, 0.6);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            padding: 12px 20px;
+            border-radius: 12px 12px 0 0;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+            transition: all 0.2s;
+        }
+
+        .nav-tab:hover {
+            color: var(--text-main);
+            background: var(--bg-card);
+        }
+
+        .nav-tab.active {
+            background: var(--bg-card);
+            color: var(--text-main);
+            border-bottom-color: var(--bg-card);
+            border-top: 3px solid var(--primary);
+        }
+
+        /* Main Container */
+        main {
+            max-width: 1280px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 0 24px 40px;
+            flex: 1;
+        }
+
+        .tab-panel {
+            display: none;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 0 var(--radius) var(--radius) var(--radius);
+            padding: 28px;
+            box-shadow: var(--shadow);
+            animation: fadeIn 0.25s ease;
+        }
+
+        .tab-panel.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1.2fr 1fr;
+            gap: 28px;
+            align-items: start;
+        }
+
+        @media (max-width: 900px) {
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+            .tab-panel {
+                border-radius: var(--radius);
+                padding: 18px;
+            }
+        }
+
+        /* Common UI Elements */
+        .section-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card-sub {
+            background: rgba(15, 23, 42, 0.55);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 20px;
+        }
+
+        label {
+            display: block;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+            font-weight: 500;
+        }
+
+        input[type="number"], input[type="text"], textarea, select {
+            width: 100%;
+            background: var(--bg-dark);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 10px 14px;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            outline: none;
+            transition: border 0.2s;
+        }
+
+        input:focus, textarea:focus, select:focus {
+            border-color: var(--primary);
+        }
+
+        .btn {
+            background: linear-gradient(135deg, var(--primary), var(--primary-hover));
+            color: #fff;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: transform 0.15s, box-shadow 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.35);
+        }
+
+        .btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.5);
+        }
+
+        .btn:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-accent {
+            background: linear-gradient(135deg, var(--accent), #d97706);
+            box-shadow: 0 4px 15px rgba(245, 158, 11, 0.35);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, var(--success), #059669);
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.35);
+        }
+
+        .btn-sm {
+            padding: 8px 14px;
+            font-size: 0.85rem;
+            border-radius: 8px;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            box-shadow: none;
+        }
+
+        .btn-outline:hover:not(:disabled) {
+            background: var(--bg-card-hover);
+            box-shadow: none;
+        }
+
+        /* 1. ROULETTE WHEEL */
+        .wheel-wrapper {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .wheel-container {
+            position: relative;
+            width: 380px;
+            height: 380px;
+            max-width: 85vw;
+            max-height: 85vw;
+        }
+
+        #wheel-canvas {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            box-shadow: 0 0 0 8px #334155, 0 0 30px rgba(0,0,0,0.6);
+        }
+
+        .wheel-pointer {
+            position: absolute;
+            top: 50%;
+            right: -18px;
+            transform: translateY(-50%);
+            width: 0;
+            height: 0;
+            border-top: 18px solid transparent;
+            border-bottom: 18px solid transparent;
+            border-right: 34px solid #ef4444;
+            filter: drop-shadow(-3px 2px 4px rgba(0,0,0,0.5));
+            z-index: 10;
+        }
+
+        .wheel-center-btn {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 68px;
+            height: 68px;
+            border-radius: 50%;
+            background: radial-gradient(circle, #ffffff, #e2e8f0);
+            color: #0f172a;
+            font-weight: 800;
+            font-size: 0.9rem;
+            border: 4px solid #1e293b;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            z-index: 10;
+            transition: transform 0.15s;
+        }
+
+        .wheel-center-btn:hover {
+            transform: translate(-50%, -50%) scale(1.06);
+        }
+
+        .winner-banner {
+            margin-top: 20px;
+            padding: 14px 24px;
+            border-radius: 12px;
+            background: linear-gradient(90deg, rgba(99,102,241,0.2), rgba(236,72,153,0.2));
+            border: 1px solid rgba(236,72,153,0.4);
+            text-align: center;
+            width: 100%;
+            min-height: 64px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .winner-banner .label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .winner-banner .value {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: #f472b6;
+            margin-top: 2px;
+        }
+
+        /* 2. DICE ROLLER */
+        .dice-arena {
+            min-height: 240px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            background: radial-gradient(circle, #1e293b 0%, #0f172a 100%);
+            border-radius: 16px;
+            border: 2px dashed var(--border);
+        }
+
+        .die {
+            width: 84px;
+            height: 84px;
+            background: linear-gradient(145deg, #ffffff, #e2e8f0);
+            border-radius: 18px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.45), inset 0 -4px 6px rgba(0,0,0,0.15);
+            display: grid;
+            grid-template-areas:
+                "a . c"
+                "e g f"
+                "d . b";
+            padding: 12px;
+            transition: transform 0.3s;
+        }
+
+        .die.rolling {
+            animation: shakeDie 0.45s infinite;
+        }
+
+        @keyframes shakeDie {
+            0% { transform: rotate(0deg) translate(0, 0) scale(1); }
+            25% { transform: rotate(18deg) translate(6px, -8px) scale(1.05); }
+            50% { transform: rotate(-15deg) translate(-6px, 6px) scale(0.95); }
+            75% { transform: rotate(12deg) translate(4px, 4px) scale(1.03); }
+            100% { transform: rotate(0deg) translate(0, 0) scale(1); }
+        }
+
+        .pip {
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            background: #1e293b;
+            align-self: center;
+            justify-self: center;
+            box-shadow: inset 0 2px 3px rgba(0,0,0,0.4);
+        }
+
+        .die[data-val="1"] .pip, .die[data-val="4"] .pip {
+            background: #ef4444;
+        }
+        .die[data-val="1"] .pip {
+            width: 22px;
+            height: 22px;
+        }
+
+        .stats-bar {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 12px;
+            margin-top: 18px;
+        }
+
+        .stat-box {
+            background: var(--bg-dark);
+            border: 1px solid var(--border);
+            padding: 14px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .stat-box .num {
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: var(--accent);
+        }
+
+        .stat-box .lbl {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        /* 3. LOTTERY & LOTO */
+        .lottery-balls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 14px;
+            justify-content: center;
+            align-items: center;
+            min-height: 120px;
+            padding: 20px;
+            background: var(--bg-dark);
+            border-radius: 14px;
+            border: 1px solid var(--border);
+        }
+
+        .ball {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, #fbbf24, #d97706);
+            color: #0f172a;
+            font-weight: 900;
+            font-size: 1.4rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 6px 16px rgba(245, 158, 11, 0.4), inset 0 -4px 8px rgba(0,0,0,0.25);
+            animation: popIn 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .ball.matched {
+            background: radial-gradient(circle at 30% 30%, #34d399, #059669);
+            color: #fff;
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.7);
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .loto-grid {
+            display: grid;
+            grid-template-columns: repeat(10, 1fr);
+            gap: 6px;
+            margin-top: 16px;
+        }
+
+        .loto-cell {
+            aspect-ratio: 1;
+            border-radius: 8px;
+            background: var(--bg-dark);
+            border: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            transition: all 0.2s;
+        }
+
+        .loto-cell.called {
+            background: linear-gradient(135deg, var(--primary), #ec4899);
+            color: #fff;
+            border-color: transparent;
+            transform: scale(1.05);
+            box-shadow: 0 2px 8px rgba(99, 102, 241, 0.4);
+        }
+
+        /* 4. RANDOM NUMBER GENERATOR */
+        .rng-result-area {
+            min-height: 200px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg-dark);
+            border-radius: 14px;
+            padding: 24px;
+            border: 1px solid var(--border);
+        }
+
+        .rng-badge {
+            font-size: 2rem;
+            font-weight: 800;
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #1e293b, #334155);
+            border: 2px solid var(--primary);
+            border-radius: 14px;
+            color: #fff;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            animation: popIn 0.25s ease;
+        }
+
+        .rng-badge.single-huge {
+            font-size: 4.5rem;
+            padding: 20px 48px;
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        /* 5. COIN & TEAM PICKER */
+        .coin-container {
+            perspective: 1000px;
+            width: 150px;
+            height: 150px;
+            margin: 20px auto;
+        }
+
+        .coin {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, #fde047, #ca8a04);
+            border: 6px solid #fef08a;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            font-size: 1.5rem;
+            color: #422006;
+            transition: transform 0.6s cubic-bezier(0.4, 2.2, 0.6, 1);
+            user-select: none;
+        }
+
+        .coin.tails {
+            background: radial-gradient(circle at 30% 30%, #e2e8f0, #64748b);
+            border-color: #f1f5f9;
+            color: #0f172a;
+        }
+
+        .team-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 14px;
+            margin-top: 16px;
+        }
+
+        .team-box {
+            background: var(--bg-dark);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 14px;
+        }
+
+        .team-box h4 {
+            color: var(--accent);
+            margin-bottom: 8px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 6px;
+        }
+
+        .team-box ul {
+            list-style: none;
+            font-size: 0.9rem;
+            line-height: 1.7;
+        }
+
+        .history-list {
+            max-height: 180px;
+            overflow-y: auto;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-top: 10px;
+        }
+
+        .history-item {
+            background: var(--bg-dark);
+            padding: 8px 12px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            border-left: 3px solid var(--primary);
+        }
+
+        .preset-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 12px;
+        }
+
+        .chip {
+            background: var(--bg-dark);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            padding: 5px 10px;
+            border-radius: 99px;
+            font-size: 0.78rem;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .chip:hover {
+            border-color: var(--primary);
+            color: #fff;
+        }
+
+        footer {
+            text-align: center;
+            padding: 18px;
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            border-top: 1px solid var(--border);
+        }
+    </style>
+</head>
+<body>
+
+<canvas id="confetti-canvas"></canvas>
+
+<header>
+    <div class="brand">
+        <div class="brand-logo">🎲</div>
+        <div>
+            <h1>Random Studio</h1>
+        </div>
+    </div>
+    <div class="header-controls">
+        <button class="btn-icon" id="sound-toggle" onclick="toggleSound()">
+            🔊 Âm thanh: Bật
+        </button>
+        <button class="btn-icon" onclick="clearAllHistory()">
+            🗑️ Xóa lịch sử
+        </button>
+    </div>
+</header>
+
+<nav class="nav-tabs">
+    <button class="nav-tab active" onclick="switchTab('wheel', this)">🎡 Vòng Quay (Roulette)</button>
+    <button class="nav-tab" onclick="switchTab('dice', this)">🎲 Đổ Xúc Xắc</button>
+    <button class="nav-tab" onclick="switchTab('lottery', this)">🎱 Xổ Số & Lô Tô</button>
+    <button class="nav-tab" onclick="switchTab('rng', this)">🔢 Random Số</button>
+    <button class="nav-tab" onclick="switchTab('group', this)">👥 Bốc Thăm & Chia Đội</button>
+    <button class="nav-tab" onclick="switchTab('coin', this)">🪙 Tung Đồng Xu</button>
+</nav>
+
+<main>
+    <!-- TAB 1: ROULETTE WHEEL -->
+    <section id="tab-wheel" class="tab-panel active">
+        <div class="grid-2">
+            <div class="wheel-wrapper card-sub">
+                <div class="wheel-container">
+                    <canvas id="wheel-canvas" width="500" height="500"></canvas>
+                    <div class="wheel-pointer"></div>
+                    <button class="wheel-center-btn" id="spin-btn" onclick="spinWheel()">QUAY</button>
+                </div>
+
+                <div class="winner-banner">
+                    <div class="label">Kết quả vòng quay</div>
+                    <div class="value" id="wheel-winner">Nhấn QUAY để bắt đầu!</div>
+                </div>
+            </div>
+
+            <div class="card-sub">
+                <div class="section-title">⚙️ Danh Sách Ô Trên Vòng Quay</div>
+                <div class="preset-chips">
+                    <span class="chip" onclick="loadWheelPreset('food')">🍜 Ăn gì hôm nay?</span>
+                    <span class="chip" onclick="loadWheelPreset('roulette')">🎰 Roulette Casino (0-12)</span>
+                    <span class="chip" onclick="loadWheelPreset('party')">🍻 Hình phạt vui</span>
+                    <span class="chip" onclick="loadWheelPreset('prize')">🎁 Bốc thăm trúng thưởng</span>
+                </div>
+                <label for="wheel-items">Mỗi lựa chọn nằm trên 1 dòng:</label>
+                <textarea id="wheel-items" rows="9" oninput="updateWheelFromInput()">Phở bò
+Bún chả
+Cơm tấm
+Bánh mì
+Lẩu Thái
+Gà rán
+Pizza
+Trà sữa</textarea>
+
+                <div style="display:flex; gap:10px; margin-top:12px; flex-wrap:wrap; align-items:center;">
+                    <label style="display:flex; align-items:center; gap:6px; margin:0; cursor:pointer; color:var(--text-main);">
+                        <input type="checkbox" id="remove-winner-chk"> Tự động xóa mục đã trúng sau khi quay
+                    </label>
+                </div>
+
+                <div style="display:flex; gap:10px; margin-top:14px;">
+                    <button class="btn btn-sm btn-outline" onclick="shuffleWheelItems()">🔀 Xáo trộn</button>
+                    <button class="btn btn-sm btn-outline" onclick="sortWheelItems()">🔤 Sắp xếp A-Z</button>
+                </div>
+
+                <div style="margin-top:20px;">
+                    <label>Lịch sử quay gần đây:</label>
+                    <div class="history-list" id="wheel-history"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- TAB 2: DICE ROLLER -->
+    <section id="tab-dice" class="tab-panel">
+        <div class="grid-2">
+            <div class="card-sub">
+                <div class="section-title">🎲 Bàn Lắc Xúc Xắc</div>
+                <div class="dice-arena" id="dice-arena"></div>
+
+                <div class="stats-bar">
+                    <div class="stat-box">
+                        <div class="num" id="dice-sum">0</div>
+                        <div class="lbl">Tổng Điểm</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="num" id="dice-parity">-</div>
+                        <div class="lbl">Chẵn / Lẻ</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="num" id="dice-taixiu">-</div>
+                        <div class="lbl">Tài / Xỉu (3 viên)</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-sub">
+                <div class="section-title">⚙️ Tùy Chỉnh Xúc Xắc</div>
+                <label for="dice-count">Số lượng xúc xắc (1 - 6 viên):</label>
+                <select id="dice-count" onchange="rollDice()">
+                    <option value="1">1 Viên xúc xắc</option>
+                    <option value="2">2 Viên xúc xắc (Cờ tỷ phú)</option>
+                    <option value="3" selected>3 Viên xúc xắc (Tài Xỉu truyền thống)</option>
+                    <option value="4">4 Viên xúc xắc</option>
+                    <option value="5">5 Viên xúc xắc (Yahtzee)</option>
+                    <option value="6">6 Viên xúc xắc</option>
+                </select>
+
+                <button class="btn btn-accent" style="width:100%; margin-top:18px; padding:16px;" onclick="rollDice()">
+                    🎲 LẮC XÚC XẮC NGAY
+                </button>
+
+                <div style="margin-top:22px;">
+                    <label>Lịch sử đổ xúc xắc:</label>
+                    <div class="history-list" id="dice-history"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- TAB 3: LOTTERY & LOTO -->
+    <section id="tab-lottery" class="tab-panel">
+        <div class="grid-2">
+            <div class="card-sub">
+                <div class="section-title">🎱 Máy Quay Xổ Số Mega / Vietlott</div>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:14px;">
+                    <div>
+                        <label>Chế độ quay:</label>
+                        <select id="lotto-mode" onchange="resetLottery()">
+                            <option value="45">Mega 6/45 (6 số từ 01-45)</option>
+                            <option value="55">Power 6/55 (6 số từ 01-55)</option>
+                            <option value="99">Lô 2 số Ngẫu Nhiên (00-99)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label>Vé của bạn (cách nhau dấu cách):</label>
+                        <div style="display:flex; gap:6px;">
+                            <input type="text" id="user-ticket" placeholder="VD: 05 12 23 31 40 44">
+                            <button class="btn btn-sm btn-outline" onclick="quickPickTicket()" title="Chọn nhanh">⚡</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="lottery-balls" id="lottery-balls">
+                    <span style="color:var(--text-muted)">Nhấn "Quay Thưởng" để mở bóng số</span>
+                </div>
+
+                <div id="ticket-match-info" style="text-align:center; margin-top:12px; font-weight:700; color:var(--success); min-height:24px;"></div>
+
+                <button class="btn" style="width:100%; margin-top:14px;" id="btn-draw-lotto" onclick="drawLottery()">
+                    🎱 QUAY THƯỞNG BỘ SỐ MỚI
+                </button>
+            </div>
+
+            <div class="card-sub">
+                <div class="section-title">📢 Gọi Số Lô Tô Hội Chợ (1 - 90)</div>
+                <div style="display:flex; align-items:center; justify-content:space-between; gap:14px; background:var(--bg-dark); padding:14px 18px; border-radius:12px; border:1px solid var(--border);">
+                    <div>
+                        <div style="font-size:0.8rem; color:var(--text-muted);">Số vừa gọi:</div>
+                        <div id="loto-current-num" style="font-size:2.6rem; font-weight:900; color:var(--accent);">--</div>
+                    </div>
+                    <div style="text-align:right;">
+                        <div style="font-size:0.8rem; color:var(--text-muted);">Đã gọi: <strong id="loto-count">0</strong>/90</div>
+                        <div style="display:flex; gap:8px; margin-top:8px;">
+                            <button class="btn btn-sm btn-success" onclick="callNextLoto()">Gọi số tiếp</button>
+                            <button class="btn btn-sm btn-outline" onclick="resetLoto()">Chơi lại</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="loto-grid" id="loto-board"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- TAB 4: RANDOM NUMBER GENERATOR -->
+    <section id="tab-rng" class="tab-panel">
+        <div class="grid-2">
+            <div class="card-sub">
+                <div class="section-title">🔢 Kết Quả Số Ngẫu Nhiên</div>
+                <div class="rng-result-area" id="rng-output">
+                    <div class="rng-badge single-huge">?</div>
+                </div>
+                <div style="margin-top:16px;">
+                    <label>Lịch sử tạo số:</label>
+                    <div class="history-list" id="rng-history"></div>
+                </div>
+            </div>
+
+            <div class="card-sub">
+                <div class="section-title">⚙️ Cấu Hình Khoảng Số</div>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+                    <div>
+                        <label for="rng-min">Số nhỏ nhất (Min):</label>
+                        <input type="number" id="rng-min" value="1">
+                    </div>
+                    <div>
+                        <label for="rng-max">Số lớn nhất (Max):</label>
+                        <input type="number" id="rng-max" value="100">
+                    </div>
+                </div>
+
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-top:12px;">
+                    <div>
+                        <label for="rng-qty">Số lượng kết quả cần lấy:</label>
+                        <input type="number" id="rng-qty" value="1" min="1" max="100">
+                    </div>
+                    <div>
+                        <label for="rng-sort">Sắp xếp kết quả:</label>
+                        <select id="rng-sort">
+                            <option value="none">Giữ nguyên thứ tự rút</option>
+                            <option value="asc">Tăng dần (Nhỏ -> Lớn)</option>
+                            <option value="desc">Giảm dần (Lớn -> Nhỏ)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <label style="display:flex; align-items:center; gap:8px; margin-top:14px; cursor:pointer; color:var(--text-main);">
+                    <input type="checkbox" id="rng-unique" checked> Không cho phép trùng số (Unique)
+                </label>
+
+                <button class="btn" style="width:100%; margin-top:20px; padding:15px;" onclick="generateRandomNumbers()">
+                    ⚡ TẠO SỐ NGẪU NHIÊN
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- TAB 5: GROUP & PICKER -->
+    <section id="tab-group" class="tab-panel">
+        <div class="grid-2">
+            <div class="card-sub">
+                <div class="section-title">👥 Danh Sách Thành Viên / Phần Thưởng</div>
+                <label>Nhập danh sách (mỗi người 1 dòng):</label>
+                <textarea id="group-input" rows="10">Nguyễn Văn An
+Trần Thị Bình
+Lê Hoàng Cường
+Phạm Minh Dũng
+Hoàng Thu Hà
+Vũ Quốc Khánh
+Đặng Ngọc Lan
+Bùi Tuấn Minh
+Đỗ Phương Nga
+Ngô Gia Phúc</textarea>
+
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-top:14px;">
+                    <div>
+                        <label>Số người muốn bốc / Số đội muốn chia:</label>
+                        <input type="number" id="group-num" value="2" min="1" max="50">
+                    </div>
+                    <div style="display:flex; align-items:flex-end; gap:8px;">
+                        <button class="btn btn-accent" style="flex:1;" onclick="pickRandomMembers()">🎯 Bốc Thăm</button>
+                        <button class="btn btn-success" style="flex:1;" onclick="splitIntoTeams()">🛡️ Chia Đội</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-sub">
+                <div class="section-title">🏆 Kết Quả Bốc Thăm / Chia Đội</div>
+                <div id="group-result-area" style="min-height:260px;">
+                    <p style="color:var(--text-muted); text-align:center; padding-top:80px;">
+                        Chọn "Bốc Thăm" hoặc "Chia Đội" để xem kết quả ngẫu nhiên công bằng.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- TAB 6: COIN FLIP -->
+    <section id="tab-coin" class="tab-panel">
+        <div class="card-sub" style="max-width:600px; margin:0 auto; text-align:center;">
+            <div class="section-title" style="justify-content:center;">🪙 Tung Đồng Xu Ngửa / Sấp</div>
+            <div class="coin-container">
+                <div class="coin" id="coin-el">NGỬA</div>
+            </div>
+
+            <div id="coin-status" style="font-size:1.3rem; font-weight:700; margin:16px 0; color:var(--accent);">
+                Nhấn nút bên dưới để tung đồng xu!
+            </div>
+
+            <button class="btn" style="padding:14px 36px;" onclick="flipCoin()">
+                🪙 TUNG ĐỒNG XU
+            </button>
+
+            <div class="stats-bar" style="margin-top:24px;">
+                <div class="stat-box">
+                    <div class="num" id="coin-heads">0</div>
+                    <div class="lbl">Mặt Ngửa (Heads)</div>
+                </div>
+                <div class="stat-box">
+                    <div class="num" id="coin-tails">0</div>
+                    <div class="lbl">Mặt Sấp (Tails)</div>
+                </div>
+                <div class="stat-box">
+                    <div class="num" id="coin-total">0</div>
+                    <div class="lbl">Tổng Lần Tung</div>
+                </div>
+            </div>
+        </div>
+    </section>
+</main>
+
+<footer>
+    Random Studio • Chạy hoàn toàn Offline 100% trên trình duyệt • Sử dụng thuật toán ngẫu nhiên công bằng
+</footer>
+
+<script>
+    /* ======================== WEB AUDIO SOUND ENGINE (100% OFFLINE) ======================== */
+    let soundEnabled = true;
+    let audioCtx = null;
+
+    function getAudioCtx() {
+        if (!audioCtx) {
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            if (AudioContext) audioCtx = new AudioContext();
+        }
+        if (audioCtx && audioCtx.state === 'suspended') {
+            audioCtx.resume();
+        }
+        return audioCtx;
+    }
+
+    function playTone(freq = 440, type = 'sine', duration = 0.08, vol = 0.15) {
+        if (!soundEnabled) return;
+        const ctx = getAudioCtx();
+        if (!ctx) return;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, ctx.currentTime);
+        gain.gain.setValueAtTime(vol, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + duration);
+    }
+
+    function playWinSound() {
+        if (!soundEnabled) return;
+        const notes = [523.25, 659.25, 783.99, 1046.50];
+        notes.forEach((n, idx) => {
+            setTimeout(() => playTone(n, 'triangle', 0.22, 0.2), idx * 90);
+        });
+    }
+
+    function toggleSound() {
+        soundEnabled = !soundEnabled;
+        document.getElementById('sound-toggle').innerHTML = soundEnabled ? '🔊 Âm thanh: Bật' : '🔇 Âm thanh: Tắt';
+    }
+
+    /* ======================== CONFETTI EFFECT ======================== */
+    const confettiCanvas = document.getElementById('confetti-canvas');
+    const cCtx = confettiCanvas.getContext('2d');
+    let confettiPieces = [];
+
+    function resizeConfetti() {
+        confettiCanvas.width = window.innerWidth;
+        confettiCanvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeConfetti);
+    resizeConfetti();
+
+    function launchConfetti() {
+        const colors = ['#6366f1', '#ec4899', '#f59e0b', '#10b981', '#38bdf8', '#f43f5e'];
+        for (let i = 0; i < 80; i++) {
+            confettiPieces.push({
+                x: window.innerWidth / 2,
+                y: window.innerHeight / 2,
+                vx: (Math.random() - 0.5) * 18,
+                vy: (Math.random() - 0.8) * 18 - 4,
+                size: Math.random() * 8 + 5,
+                color: colors[Math.floor(Math.random() * colors.length)],
+                rot: Math.random() * 360,
+                vRot: (Math.random() - 0.5) * 12,
+                life: 100
+            });
+        }
+        requestAnimationFrame(updateConfetti);
+    }
+
+    function updateConfetti() {
+        cCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+        confettiPieces.forEach(p => {
+            p.x += p.vx;
+            p.y += p.vy;
+            p.vy += 0.45; // gravity
+            p.rot += p.vRot;
+            p.life -= 1;
+            cCtx.save();
+            cCtx.translate(p.x, p.y);
+            cCtx.rotate((p.rot * Math.PI) / 180);
+            cCtx.fillStyle = p.color;
+            cCtx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+            cCtx.restore();
+        });
+        confettiPieces = confettiPieces.filter(p => p.life > 0);
+        if (confettiPieces.length > 0) {
+            requestAnimationFrame(updateConfetti);
+        } else {
+            cCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+        }
+    }
+
+    /* ======================== TAB NAVIGATION ======================== */
+    function switchTab(tabId, btn) {
+        document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.nav-tab').forEach(b => b.classList.remove('active'));
+        document.getElementById('tab-' + tabId).classList.add('active');
+        btn.classList.add('active');
+        playTone(600, 'sine', 0.05, 0.08);
+    }
+
+    function addHistoryItem(containerId, leftText, rightText) {
+        const container = document.getElementById(containerId);
+        const div = document.createElement('div');
+        div.className = 'history-item';
+        const time = new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        div.innerHTML = `<span><strong>${leftText}</strong></span><span>${rightText || time}</span>`;
+        container.prepend(div);
+    }
+
+    function clearAllHistory() {
+        ['wheel-history', 'dice-history', 'rng-history'].forEach(id => {
+            document.getElementById(id).innerHTML = '';
+        });
+    }
+
+    /* ======================== 1. ROULETTE WHEEL ======================== */
+    const wheelCanvas = document.getElementById('wheel-canvas');
+    const wCtx = wheelCanvas.getContext('2d');
+    const wheelColors = ['#6366f1', '#ec4899', '#f59e0b', '#10b981', '#06b6d4', '#8b5cf6', '#ef4444', '#14b8a6'];
+    let wheelItems = [];
+    let currentAngle = 0;
+    let isSpinning = false;
+
+    function getWheelList() {
+        const raw = document.getElementById('wheel-items').value.split('\n').map(s => s.trim()).filter(Boolean);
+        return raw.length > 0 ? raw : ['Mục 1', 'Mục 2'];
+    }
+
+    function drawWheel() {
+        wheelItems = getWheelList();
+        const n = wheelItems.length;
+        const arc = (2 * Math.PI) / n;
+        const radius = wheelCanvas.width / 2;
+
+        wCtx.clearRect(0, 0, wheelCanvas.width, wheelCanvas.height);
+
+        for (let i = 0; i < n; i++) {
+            const angle = currentAngle + i * arc;
+            wCtx.beginPath();
+            wCtx.fillStyle = wheelColors[i % wheelColors.length];
+            wCtx.moveTo(radius, radius);
+            wCtx.arc(radius, radius, radius - 6, angle, angle + arc);
+            wCtx.lineTo(radius, radius);
+            wCtx.fill();
+
+            wCtx.strokeStyle = '#0f172a';
+            wCtx.lineWidth = 2;
+            wCtx.stroke();
+
+            // Draw text
+            wCtx.save();
+            wCtx.translate(radius, radius);
+            wCtx.rotate(angle + arc / 2);
+            wCtx.textAlign = 'right';
+            wCtx.fillStyle = '#ffffff';
+            wCtx.font = 'bold 18px sans-serif';
+            const label = wheelItems[i].length > 18 ? wheelItems[i].slice(0, 16) + '…' : wheelItems[i];
+            wCtx.fillText(label, radius - 26, 6);
+            wCtx.restore();
+        }
+    }
+
+    function updateWheelFromInput() {
+        if (!isSpinning) drawWheel();
+    }
+
+    function spinWheel() {
+        if (isSpinning) return;
+        wheelItems = getWheelList();
+        if (wheelItems.length < 2) {
+            alert('Vui lòng nhập ít nhất 2 lựa chọn để quay!');
+            return;
+        }
+        isSpinning = true;
+        document.getElementById('spin-btn').disabled = true;
+        document.getElementById('wheel-winner').textContent = 'Đang quay...';
+
+        const spinDuration = 4200;
+        const startAngle = currentAngle;
+        const extraSpins = (Math.random() * 5 + 6) * 2 * Math.PI;
+        const targetAngle = startAngle + extraSpins;
+        const startTime = performance.now();
+        let lastTickIndex = -1;
+
+        function animateSpin(now) {
+            const elapsed = now - startTime;
+            const progress = Math.min(elapsed / spinDuration, 1);
+            // Ease out cubic
+            const easeOut = 1 - Math.pow(1 - progress, 3.5);
+            currentAngle = startAngle + (targetAngle - startAngle) * easeOut;
+            drawWheel();
+
+            const n = wheelItems.length;
+            const arc = (2 * Math.PI) / n;
+            const normalized = ((2 * Math.PI - (currentAngle % (2 * Math.PI))) + 2 * Math.PI) % (2 * Math.PI);
+            const currentIdx = Math.floor(normalized / arc) % n;
+
+            if (currentIdx !== lastTickIndex && progress < 0.98) {
+                playTone(500 + (currentIdx % 5) * 40, 'triangle', 0.03, 0.1);
+                lastTickIndex = currentIdx;
+            }
+
+            if (progress < 1) {
+                requestAnimationFrame(animateSpin);
+            } else {
+                isSpinning = false;
+                document.getElementById('spin-btn').disabled = false;
+                const winner = wheelItems[currentIdx];
+                document.getElementById('wheel-winner').textContent = '🎉 ' + winner;
+                playWinSound();
+                launchConfetti();
+                addHistoryItem('wheel-history', winner);
+
+                if (document.getElementById('remove-winner-chk').checked && wheelItems.length > 2) {
+                    setTimeout(() => {
+                        wheelItems.splice(currentIdx, 1);
+                        document.getElementById('wheel-items').value = wheelItems.join('\n');
+                        drawWheel();
+                    }, 1200);
+                }
+            }
+        }
+        requestAnimationFrame(animateSpin);
+    }
+
+    function loadWheelPreset(type) {
+        const presets = {
+            food: ['Phở bò', 'Bún chả', 'Cơm tấm sườn', 'Bánh mì chảo', 'Lẩu Thái', 'Mì cay', 'Gà rán', 'Bún đậu mắm tôm'],
+            roulette: ['0 - Xanh', '1 - Đỏ', '2 - Đen', '3 - Đỏ', '4 - Đen', '5 - Đỏ', '6 - Đen', '7 - Đỏ', '8 - Đen', '9 - Đỏ', '10 - Đen', '11 - Đen', '12 - Đỏ'],
+            party: ['Uống 100%', 'Uống 50%', 'Bên trái uống', 'Bên phải uống', 'Được miễn 1 lượt', 'Kể 1 bí mật', 'Hát 1 bài', 'Chỉ định 1 người uống'],
+            prize: ['Giải Đặc Biệt', 'Giải Nhất', 'Giải Nhì', 'Giải Ba', 'Voucher 100K', 'Chúc bạn may mắn', 'Thêm 1 lượt quay']
+        };
+        document.getElementById('wheel-items').value = (presets[type] || presets.food).join('\n');
+        drawWheel();
+    }
+
+    function shuffleWheelItems() {
+        const list = getWheelList().sort(() => Math.random() - 0.5);
+        document.getElementById('wheel-items').value = list.join('\n');
+        drawWheel();
+    }
+
+    function sortWheelItems() {
+        const list = getWheelList().sort((a, b) => a.localeCompare(b, 'vi'));
+        document.getElementById('wheel-items').value = list.join('\n');
+        drawWheel();
+    }
+
+    /* ======================== 2. DICE ROLLER ======================== */
+    const pipPositions = {
+        1: ['g'],
+        2: ['a', 'b'],
+        3: ['a', 'g', 'b'],
+        4: ['a', 'c', 'd', 'b'],
+        5: ['a', 'c', 'g', 'd', 'b'],
+        6: ['a', 'c', 'e', 'f', 'd', 'b']
+    };
+
+    function createDieHTML(val, rolling = false) {
+        const pips = (pipPositions[val] || []).map(pos => `<span class="pip" style="grid-area:${pos}"></span>`).join('');
+        return `<div class="die ${rolling ? 'rolling' : ''}" data-val="${val}">${pips}</div>`;
+    }
+
+    function rollDice() {
+        const count = parseInt(document.getElementById('dice-count').value, 10) || 3;
+        const arena = document.getElementById('dice-arena');
+
+        // Rolling animation state
+        let tempHTML = '';
+        for (let i = 0; i < count; i++) {
+            tempHTML += createDieHTML(Math.floor(Math.random() * 6) + 1, true);
+        }
+        arena.innerHTML = tempHTML;
+        playTone(320, 'square', 0.08, 0.1);
+
+        setTimeout(() => {
+            const results = [];
+            let finalHTML = '';
+            for (let i = 0; i < count; i++) {
+                const v = Math.floor(Math.random() * 6) + 1;
+                results.push(v);
+                finalHTML += createDieHTML(v, false);
+            }
+            arena.innerHTML = finalHTML;
+
+            const sum = results.reduce((a, b) => a + b, 0);
+            const parity = sum % 2 === 0 ? 'CHẴN' : 'LẺ';
+            document.getElementById('dice-sum').textContent = sum;
+            document.getElementById('dice-parity').textContent = parity;
+
+            let taixiu = '-';
+            if (count === 3) {
+                if (results[0] === results[1] && results[1] === results[2]) {
+                    taixiu = 'BÃO (' + results[0] + ')';
+                    launchConfetti();
+                } else if (sum >= 11 && sum <= 17) {
+                    taixiu = 'TÀI';
+                } else {
+                    taixiu = 'XỈU';
+                }
+            }
+            document.getElementById('dice-taixiu').textContent = taixiu;
+            playTone(660, 'triangle', 0.12, 0.18);
+            addHistoryItem('dice-history', `[${results.join(', ')}] = ${sum}`, `${parity}${taixiu !== '-' ? ' • ' + taixiu : ''}`);
+        }, 420);
+    }
+
+    /* ======================== 3. LOTTERY & LOTO ======================== */
+    function quickPickTicket() {
+        const max = parseInt(document.getElementById('lotto-mode').value, 10);
+        const count = max === 99 ? 2 : 6;
+        const pool = [];
+        while (pool.length < count) {
+            const n = max === 99 ? Math.floor(Math.random() * 100) : Math.floor(Math.random() * max) + 1;
+            if (!pool.includes(n)) pool.push(n);
+        }
+        pool.sort((a, b) => a - b);
+        document.getElementById('user-ticket').value = pool.map(n => String(n).padStart(2, '0')).join(' ');
+    }
+
+    function resetLottery() {
+        document.getElementById('lottery-balls').innerHTML = '<span style="color:var(--text-muted)">Nhấn "Quay Thưởng" để mở bóng số</span>';
+        document.getElementById('ticket-match-info').textContent = '';
+    }
+
+    function drawLottery() {
+        const max = parseInt(document.getElementById('lotto-mode').value, 10);
+        const count = max === 99 ? 5 : 6;
+        const drawn = [];
+        while (drawn.length < count) {
+            const n = max === 99 ? Math.floor(Math.random() * 100) : Math.floor(Math.random() * max) + 1;
+            if (!drawn.includes(n)) drawn.push(n);
+        }
+        if (max !== 99) drawn.sort((a, b) => a - b);
+
+        const userNums = document.getElementById('user-ticket').value
+            .trim()
+            .split(/\s+/)
+            .filter(Boolean)
+            .map(x => parseInt(x, 10));
+
+        const container = document.getElementById('lottery-balls');
+        container.innerHTML = '';
+        document.getElementById('ticket-match-info').textContent = '';
+
+        let matchedCount = 0;
+        drawn.forEach((num, idx) => {
+            setTimeout(() => {
+                const isMatch = userNums.includes(num);
+                if (isMatch) matchedCount++;
+                const ball = document.createElement('div');
+                ball.className = 'ball' + (isMatch ? ' matched' : '');
+                ball.textContent = String(num).padStart(2, '0');
+                container.appendChild(ball);
+                playTone(440 + idx * 70, 'sine', 0.12, 0.16);
+
+                if (idx === drawn.length - 1) {
+                    if (userNums.length > 0 && !isNaN(userNums[0])) {
+                        document.getElementById('ticket-match-info').textContent =
+                            matchedCount > 0 ? `🎉 Chúc mừng! Vé của bạn trùng ${matchedCount} số!` : 'Vé của bạn chưa trùng số nào, thử lại nhé!';
+                        if (matchedCount >= 2) launchConfetti();
+                    }
+                }
+            }, idx * 240);
+        });
+    }
+
+    // Loto 1-90
+    let lotoPool = [];
+    function initLotoBoard() {
+        lotoPool = Array.from({ length: 90 }, (_, i) => i + 1);
+        const board = document.getElementById('loto-board');
+        board.innerHTML = '';
+        for (let i = 1; i <= 90; i++) {
+            const cell = document.createElement('div');
+            cell.className = 'loto-cell';
+            cell.id = 'loto-cell-' + i;
+            cell.textContent = i;
+            board.appendChild(cell);
+        }
+        document.getElementById('loto-current-num').textContent = '--';
+        document.getElementById('loto-count').textContent = '0';
+    }
+
+    function callNextLoto() {
+        if (lotoPool.length === 0) {
+            alert('Đã gọi hết 90 số!');
+            return;
+        }
+        const randIdx = Math.floor(Math.random() * lotoPool.length);
+        const num = lotoPool.splice(randIdx, 1)[0];
+        document.getElementById('loto-current-num').textContent = num;
+        document.getElementById('loto-count').textContent = 90 - lotoPool.length;
+        document.getElementById('loto-cell-' + num).classList.add('called');
+        playTone(720, 'triangle', 0.15, 0.2);
+    }
+
+    function resetLoto() {
+        initLotoBoard();
+    }
+
+    /* ======================== 4. RANDOM NUMBER GENERATOR ======================== */
+    function generateRandomNumbers() {
+        const min = parseInt(document.getElementById('rng-min').value, 10);
+        const max = parseInt(document.getElementById('rng-max').value, 10);
+        const qty = parseInt(document.getElementById('rng-qty').value, 10) || 1;
+        const unique = document.getElementById('rng-unique').checked;
+        const sortMode = document.getElementById('rng-sort').value;
+
+        if (isNaN(min) || isNaN(max) || min > max) {
+            alert('Khoảng số không hợp lệ (Min phải nhỏ hơn hoặc bằng Max)!');
+            return;
+        }
+
+        const rangeSize = max - min + 1;
+        if (unique && qty > rangeSize) {
+            alert(`Khoảng từ ${min} đến ${max} chỉ có ${rangeSize} số không trùng nhau!`);
+            return;
+        }
+
+        const results = [];
+        while (results.length < qty) {
+            const r = Math.floor(Math.random() * rangeSize) + min;
+            if (!unique || !results.includes(r)) {
+                results.push(r);
+            }
+        }
+
+        if (sortMode === 'asc') results.sort((a, b) => a - b);
+        if (sortMode === 'desc') results.sort((a, b) => b - a);
+
+        const out = document.getElementById('rng-output');
+        out.innerHTML = results.map(n =>
+            `<div class="rng-badge ${qty === 1 ? 'single-huge' : ''}">${n}</div>`
+        ).join('');
+
+        playWinSound();
+        addHistoryItem('rng-history', results.join(', '), `[${min} → ${max}]`);
+    }
+
+    /* ======================== 5. GROUP & PICKER ======================== */
+    function getGroupMembers() {
+        return document.getElementById('group-input').value.split('\n').map(s => s.trim()).filter(Boolean);
+    }
+
+    function pickRandomMembers() {
+        const members = getGroupMembers();
+        const k = parseInt(document.getElementById('group-num').value, 10) || 1;
+        if (members.length === 0) return;
+        const shuffled = [...members].sort(() => Math.random() - 0.5);
+        const winners = shuffled.slice(0, Math.min(k, members.length));
+
+        const area = document.getElementById('group-result-area');
+        area.innerHTML = `
+            <div style="text-align:center; padding:18px;">
+                <div style="color:var(--text-muted); margin-bottom:12px;">🎉 Danh sách ${winners.length} người được chọn ngẫu nhiên:</div>
+                <div style="display:flex; flex-wrap:wrap; gap:12px; justify-content:center;">
+                    ${winners.map((w, i) => `<div class="rng-badge" style="font-size:1.25rem;">#${i + 1} ${w}</div>`).join('')}
+                </div>
+            </div>
+        `;
+        playWinSound();
+        launchConfetti();
+    }
+
+    function splitIntoTeams() {
+        const members = getGroupMembers();
+        const numTeams = Math.max(1, parseInt(document.getElementById('group-num').value, 10) || 2);
+        const shuffled = [...members].sort(() => Math.random() - 0.5);
+        const teams = Array.from({ length: numTeams }, () => []);
+
+        shuffled.forEach((member, idx) => {
+            teams[idx % numTeams].push(member);
+        });
+
+        const area = document.getElementById('group-result-area');
+        area.innerHTML = `<div class="team-grid">` +
+            teams.map((t, idx) => `
+                <div class="team-box">
+                    <h4>🛡️ Đội ${idx + 1} (${t.length} người)</h4>
+                    <ul>${t.map((m, i) => `<li>${i + 1}. ${m}</li>`).join('')}</ul>
+                </div>
+            `).join('') + `</div>`;
+        playWinSound();
+    }
+
+    /* ======================== 6. COIN FLIP ======================== */
+    let headsCount = 0;
+    let tailsCount = 0;
+    let coinFlipLock = false;
+
+    function flipCoin() {
+        if (coinFlipLock) return;
+        coinFlipLock = true;
+        const coinEl = document.getElementById('coin-el');
+        const statusEl = document.getElementById('coin-status');
+
+        coinEl.style.transform = 'rotateY(1080deg) scale(1.15)';
+        statusEl.textContent = 'Đang tung đồng xu...';
+        playTone(800, 'sine', 0.1, 0.15);
+
+        setTimeout(() => {
+            const isHeads = Math.random() < 0.5;
+            coinEl.style.transform = 'rotateY(0deg) scale(1)';
+            if (isHeads) {
+                headsCount++;
+                coinEl.textContent = 'NGỬA';
+                coinEl.classList.remove('tails');
+                statusEl.textContent = '✨ Kết quả: MẶT NGỬA (Heads)!';
+            } else {
+                tailsCount++;
+                coinEl.textContent = 'SẤP';
+                coinEl.classList.add('tails');
+                statusEl.textContent = '✨ Kết quả: MẶT SẤP (Tails)!';
+            }
+            document.getElementById('coin-heads').textContent = headsCount;
+            document.getElementById('coin-tails').textContent = tailsCount;
+            document.getElementById('coin-total').textContent = headsCount + tailsCount;
+            playTone(isHeads ? 880 : 520, 'triangle', 0.18, 0.2);
+            coinFlipLock = false;
+        }, 600);
+    }
+
+    /* ======================== INITIALIZE ON LOAD ======================== */
+    window.addEventListener('DOMContentLoaded', () => {
+        drawWheel();
+        rollDice();
+        initLotoBoard();
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,2376 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CYBERTYPE 10</title>
+    <style>
+        :root {
+            --bg-deep: #060814;
+            --bg-panel: rgba(13, 18, 38, 0.88);
+            --bg-panel-solid: #0f162e;
+            --border-glow: rgba(0, 240, 255, 0.28);
+            --text-main: #ecf8ff;
+            --text-muted: #8499b8;
+            --neon-cyan: #00f0ff;
+            --neon-pink: #ff2a85;
+            --neon-green: #00f59b;
+            --neon-amber: #ffbe0b;
+            --neon-purple: #b537f2;
+            --neon-red: #ff3355;
+
+            /* 10-Finger Color Coding System */
+            --f-l-pinky: #ff2a85;
+            --f-l-ring: #ff7b00;
+            --f-l-middle: #ffd000;
+            --f-l-index: #00f59b;
+            --f-thumb: #00f0ff;
+            --f-r-index: #00a8ff;
+            --f-r-middle: #a855f7;
+            --f-r-ring: #ec4899;
+            --f-r-pinky: #ff4d6d;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        body {
+            background-color: var(--bg-deep);
+            background-image: 
+                radial-gradient(circle at 15% 15%, rgba(0, 240, 255, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 85% 80%, rgba(255, 42, 133, 0.08) 0%, transparent 40%);
+            color: var(--text-main);
+            font-family: 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        .app-header {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 10px 18px;
+            background: rgba(8, 12, 28, 0.95);
+            border-bottom: 1px solid var(--border-glow);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+            z-index: 20;
+        }
+
+        .brand-box {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .brand-logo {
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, var(--neon-cyan), var(--neon-purple));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            font-size: 18px;
+            color: #050814;
+            box-shadow: 0 0 15px rgba(0, 240, 255, 0.5);
+        }
+
+        .brand-title h1 {
+            font-size: 1.15rem;
+            font-weight: 800;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            background: linear-gradient(90deg, #fff, var(--neon-cyan));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .brand-title p {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+        }
+
+        .toolbar-group {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .cyber-select, .cyber-btn {
+            background: rgba(16, 24, 52, 0.9);
+            color: var(--text-main);
+            border: 1px solid rgba(0, 240, 255, 0.35);
+            padding: 7px 12px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.18s ease;
+            outline: none;
+        }
+
+        .cyber-select:hover, .cyber-btn:hover {
+            border-color: var(--neon-cyan);
+            box-shadow: 0 0 12px rgba(0, 240, 255, 0.25);
+        }
+
+        .cyber-btn.primary {
+            background: linear-gradient(135deg, #00c6ff, #0072ff);
+            border-color: #00f0ff;
+            color: #fff;
+            font-weight: 700;
+            box-shadow: 0 0 14px rgba(0, 198, 255, 0.4);
+        }
+
+        .cyber-btn.primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 0 20px rgba(0, 240, 255, 0.7);
+        }
+
+        .cyber-btn.danger {
+            background: rgba(255, 42, 133, 0.16);
+            border-color: var(--neon-pink);
+            color: #ff85b3;
+        }
+
+        .cyber-btn.danger:hover {
+            background: rgba(255, 42, 133, 0.3);
+            color: #fff;
+        }
+
+        .hud-bar {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+            padding: 8px 18px;
+            background: rgba(10, 15, 34, 0.8);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+        }
+
+        .hud-card {
+            background: rgba(17, 25, 54, 0.75);
+            border: 1px solid rgba(0, 240, 255, 0.18);
+            border-radius: 8px;
+            padding: 6px 10px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hud-label {
+            font-size: 0.66rem;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            color: var(--text-muted);
+            margin-bottom: 2px;
+        }
+
+        .hud-value {
+            font-size: 1.1rem;
+            font-weight: 800;
+            font-variant-numeric: tabular-nums;
+            color: #fff;
+        }
+
+        .hud-value.cyan { color: var(--neon-cyan); }
+        .hud-value.green { color: var(--neon-green); }
+        .hud-value.amber { color: var(--neon-amber); }
+        .hud-value.pink { color: var(--neon-pink); }
+
+        .main-workspace {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 8px 18px 12px;
+            gap: 10px;
+            max-width: 1440px;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        .canvas-stage {
+            position: relative;
+            width: 100%;
+            height: 330px;
+            min-height: 250px;
+            background: #050711;
+            border: 1px solid rgba(0, 240, 255, 0.32);
+            border-radius: 14px;
+            overflow: hidden;
+            box-shadow: inset 0 0 40px rgba(0, 240, 255, 0.08), 0 8px 28px rgba(0, 0, 0, 0.6);
+        }
+
+        canvas#gameCanvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        .stage-top-overlay {
+            position: absolute;
+            top: 10px;
+            left: 12px;
+            right: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            pointer-events: none;
+            z-index: 5;
+        }
+
+        .finger-coach-pill {
+            pointer-events: auto;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(8, 13, 31, 0.9);
+            border: 1px solid rgba(0, 240, 255, 0.45);
+            padding: 6px 14px;
+            border-radius: 999px;
+            font-size: 0.84rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+        }
+
+        .finger-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--neon-cyan);
+            box-shadow: 0 0 10px currentColor;
+        }
+
+        .emp-bar-wrap {
+            pointer-events: auto;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(8, 13, 31, 0.9);
+            border: 1px solid rgba(181, 55, 242, 0.45);
+            padding: 5px 12px;
+            border-radius: 999px;
+            font-size: 0.78rem;
+            cursor: pointer;
+            transition: transform 0.15s ease;
+        }
+
+        .emp-bar-wrap:hover {
+            transform: scale(1.03);
+        }
+
+        .emp-progress {
+            width: 90px;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.12);
+            border-radius: 99px;
+            overflow: hidden;
+        }
+
+        .emp-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--neon-cyan), var(--neon-purple));
+            transition: width 0.2s ease;
+        }
+
+        .emp-ready {
+            animation: pulseGlow 1s infinite alternate;
+        }
+
+        @keyframes pulseGlow {
+            from { box-shadow: 0 0 6px var(--neon-cyan); }
+            to { box-shadow: 0 0 20px var(--neon-pink); border-color: var(--neon-pink); }
+        }
+
+        .keyboard-deck {
+            background: var(--bg-panel);
+            border: 1px solid rgba(0, 240, 255, 0.24);
+            border-radius: 14px;
+            padding: 12px 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.45);
+        }
+
+        .keyboard-header {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+            padding-bottom: 8px;
+        }
+
+        .finger-legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .legend-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.72rem;
+            padding: 3px 8px;
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            transition: all 0.15s ease;
+        }
+
+        .legend-item.active-finger {
+            background: rgba(255, 255, 255, 0.16);
+            transform: translateY(-2px);
+            box-shadow: 0 0 12px currentColor;
+            font-weight: 700;
+        }
+
+        .legend-swatch {
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+        }
+
+        .kb-rows {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            width: 100%;
+            max-width: 980px;
+            margin: 0 auto;
+        }
+
+        .kb-row {
+            display: flex;
+            justify-content: center;
+            gap: 6px;
+            width: 100%;
+        }
+
+        .keycap {
+            position: relative;
+            height: 44px;
+            flex: 1;
+            min-width: 32px;
+            background: rgba(18, 27, 56, 0.92);
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            border-bottom: 3px solid rgba(0, 0, 0, 0.65);
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.88rem;
+            font-weight: 700;
+            color: var(--text-main);
+            cursor: pointer;
+            transition: transform 0.06s ease, box-shadow 0.12s ease, background 0.12s ease;
+        }
+
+        .keycap::after {
+            content: '';
+            position: absolute;
+            bottom: 3px;
+            width: 60%;
+            height: 2px;
+            border-radius: 2px;
+            background: var(--finger-color, var(--neon-cyan));
+            opacity: 0.7;
+        }
+
+        .keycap.home-bump::before {
+            content: '';
+            position: absolute;
+            bottom: 7px;
+            width: 12px;
+            height: 2px;
+            background: #fff;
+            border-radius: 2px;
+            box-shadow: 0 0 5px #fff;
+        }
+
+        .keycap.w-15 { flex: 1.5; }
+        .keycap.w-18 { flex: 1.8; }
+        .keycap.w-22 { flex: 2.2; }
+        .keycap.w-space { flex: 6.2; }
+
+        /* Highlighting the target key the user needs to press next */
+        .keycap.target-next {
+            background: rgba(0, 240, 255, 0.22);
+            border-color: var(--finger-color, var(--neon-cyan));
+            box-shadow: 0 0 18px var(--finger-color, var(--neon-cyan)), inset 0 0 10px var(--finger-color, var(--neon-cyan));
+            transform: translateY(-2px);
+            z-index: 2;
+            animation: keyTargetPulse 0.65s infinite alternate;
+        }
+
+        @keyframes keyTargetPulse {
+            from { filter: brightness(1); }
+            to { filter: brightness(1.35); }
+        }
+
+        .keycap.pressed-ok {
+            transform: translateY(2px);
+            background: rgba(0, 245, 155, 0.35) !important;
+            border-color: var(--neon-green) !important;
+            box-shadow: 0 0 18px var(--neon-green) !important;
+        }
+
+        .keycap.pressed-err {
+            transform: translateY(2px);
+            background: rgba(255, 51, 85, 0.45) !important;
+            border-color: var(--neon-red) !important;
+            box-shadow: 0 0 20px var(--neon-red) !important;
+        }
+
+        .overlay-modal {
+            position: absolute;
+            inset: 0;
+            background: rgba(5, 8, 20, 0.86);
+            backdrop-filter: blur(6px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            z-index: 15;
+            transition: opacity 0.22s ease;
+        }
+
+        .overlay-modal.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .modal-box {
+            background: linear-gradient(160deg, rgba(16, 24, 54, 0.96), rgba(9, 13, 30, 0.98));
+            border: 1px solid rgba(0, 240, 255, 0.4);
+            border-radius: 16px;
+            max-width: 720px;
+            width: 100%;
+            padding: 20px 24px;
+            box-shadow: 0 15px 45px rgba(0, 0, 0, 0.75), 0 0 30px rgba(0, 240, 255, 0.15);
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .mode-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+
+        .mode-card {
+            background: rgba(20, 30, 66, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 10px;
+            padding: 12px;
+            cursor: pointer;
+            transition: all 0.18s ease;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .mode-card:hover, .mode-card.selected {
+            border-color: var(--neon-cyan);
+            background: rgba(0, 240, 255, 0.12);
+            box-shadow: 0 0 16px rgba(0, 240, 255, 0.22);
+        }
+
+        .mode-card h3 {
+            font-size: 0.92rem;
+            color: var(--neon-cyan);
+        }
+
+        .mode-card p {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            line-height: 1.35;
+        }
+
+        .stats-summary-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+
+        .stat-box {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 10px;
+            text-align: center;
+        }
+
+        .stat-box .big {
+            font-size: 1.35rem;
+            font-weight: 800;
+            color: var(--neon-cyan);
+        }
+
+        .stat-box .lbl {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        @media (max-width: 900px) {
+            .hud-bar {
+                grid-template-columns: repeat(4, 1fr);
+            }
+            .mode-grid {
+                grid-template-columns: 1fr;
+            }
+            .stats-summary-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .keycap {
+                height: 36px;
+                font-size: 0.75rem;
+                min-width: 22px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <header class="app-header">
+        <div class="brand-box">
+            <div class="brand-logo">10</div>
+            <div class="brand-title">
+                <h1>CYBERTYPE 10</h1>
+                <p>Luyện Gõ Phím 10 Ngón &amp; Phản Xạ Cực Hạn (100% Offline)</p>
+            </div>
+        </div>
+
+        <div class="toolbar-group">
+            <select id="modeSelect" class="cyber-select" title="Chọn Chế Độ Chơi">
+                <option value="arcade">🚀 Chiến Dịch Không Gian (Space Arcade)</option>
+                <option value="reflex">⚡ Phản Xạ Cực Hạn (Whack-a-Key ms)</option>
+                <option value="drill">🎯 Luyện Hàng Phím 10 Ngón (Row Drill)</option>
+            </select>
+
+            <select id="genSelect" class="cyber-select" title="Bộ Ren Ký Tự Offline">
+                <option value="combos">🧬 Ren Tổ Hợp Luyện Ngón (Khuyên dùng)</option>
+                <option value="vn_words">🇻🇳 Từ Vựng Tiếng Việt (Không dấu)</option>
+                <option value="tech_words">💻 Từ Vựng Code &amp; Công Nghệ</option>
+                <option value="home_row">🏠 Chỉ Hàng Cơ Sở (A S D F J K L ;)</option>
+                <option value="top_row">⬆️ Chỉ Hàng Phím Trên (Q W E R T Y U I O P)</option>
+                <option value="bottom_row">⬇️ Chỉ Hàng Phím Dưới (Z X C V B N M , . /)</option>
+                <option value="all_chars">🎲 Ký Tự Ngẫu Nhiên Toàn Bàn Phím</option>
+            </select>
+
+            <select id="speedSelect" class="cyber-select" title="Tốc Độ & Độ Khó">
+                <option value="easy">🌱 Tốc độ: Khởi Động</option>
+                <option value="normal" selected>🔥 Tốc độ: Tiêu Chuẩn</option>
+                <option value="hard">⚡ Tốc độ: Cao Thủ</option>
+                <option value="insane">👑 Tốc độ: Thần Thánh</option>
+            </select>
+
+            <select id="soundSelect" class="cyber-select" title="Âm Thanh Switch Cơ">
+                <option value="blue">🔊 Switch: Blue Clicky</option>
+                <option value="red">🔉 Switch: Red Linear Thock</option>
+                <option value="laser">🛸 Switch: Sci-Fi Laser</option>
+                <option value="mute">🔇 Tắt Âm Thanh</option>
+            </select>
+
+            <button id="btnStartPause" class="cyber-btn primary">▶ Bắt Đầu</button>
+            <button id="btnReset" class="cyber-btn danger">↺ Chơi Lại</button>
+        </div>
+    </header>
+
+    <section class="hud-bar">
+        <div class="hud-card">
+            <span class="hud-label">Điểm Số (Score)</span>
+            <span class="hud-value cyan" id="hudScore">0</span>
+        </div>
+        <div class="hud-card">
+            <span class="hud-label">Chuỗi Combo</span>
+            <span class="hud-value amber" id="hudCombo">x1 (0)</span>
+        </div>
+        <div class="hud-card">
+            <span class="hud-label">Tốc Độ (WPM / CPM)</span>
+            <span class="hud-value green" id="hudWpm">0 WPM</span>
+        </div>
+        <div class="hud-card">
+            <span class="hud-label">Độ Chính Xác</span>
+            <span class="hud-value cyan" id="hudAcc">100%</span>
+        </div>
+        <div class="hud-card">
+            <span class="hud-label">Phản Xạ TB (ms)</span>
+            <span class="hud-value amber" id="hudReaction">-- ms</span>
+        </div>
+        <div class="hud-card">
+            <span class="hud-label">Khiên Bảo Vệ</span>
+            <span class="hud-value pink" id="hudShield">🛡️ 5 / 5</span>
+        </div>
+        <div class="hud-card">
+            <span class="hud-label">Kỷ Lục Offline</span>
+            <span class="hud-value green" id="hudHigh">0</span>
+        </div>
+    </section>
+
+    <main class="main-workspace">
+        <div class="canvas-stage" id="canvasContainer">
+            <!-- Top Floating Coaching & EMP Ultimate Bar -->
+            <div class="stage-top-overlay">
+                <div class="finger-coach-pill" id="fingerCoachPill">
+                    <span class="finger-dot" id="coachDot"></span>
+                    <span id="coachText">Sẵn sàng: Đặt 2 ngón trỏ lên phím có gờ nổi <b>F</b> và <b>J</b></span>
+                </div>
+
+                <div class="emp-bar-wrap" id="empBtnWrap" title="Nhấn phím CÁCH (Space) hoặc Click khi đầy 100% để kích hoạt Sóng Từ Trường EMP diệt toàn bộ mục tiêu!">
+                    <span>⚡ EMP (Phím Cách):</span>
+                    <div class="emp-progress">
+                        <div class="emp-fill" id="empFill"></div>
+                    </div>
+                    <strong id="empPct">0%</strong>
+                </div>
+            </div>
+
+            <canvas id="gameCanvas"></canvas>
+
+            <!-- Start / Mode Briefing / Game Over Modal -->
+            <div class="overlay-modal" id="overlayModal">
+                <div class="modal-box">
+                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                        <h2 id="modalTitle" style="font-size:1.35rem; color:var(--neon-cyan);">⚡ HỆ THỐNG LUYỆN GÕ PHÍM 10 NGÓN PHẢN XẠ</h2>
+                        <span id="modalBadge" style="font-size:0.75rem; background:rgba(0,240,255,0.15); border:1px solid var(--neon-cyan); padding:4px 10px; border-radius:99px; color:var(--neon-cyan);">OFFLINE ENGINE READY</span>
+                    </div>
+
+                    <p id="modalDesc" style="font-size:0.86rem; color:var(--text-muted); line-height:1.45;">
+                        Đặt 8 ngón tay lên <b>Hàng Cơ Sở (A S D F — J K L ;)</b>, hai ngón cái đặt nhẹ lên <b>Phím Cách (Space)</b>. 
+                        Bàn phím ảo bên dưới sẽ <b>phát sáng màu ngón tay tương ứng</b> cho từng ký tự cần gõ!
+                    </p>
+
+                    <!-- Mode quick-select cards -->
+                    <div class="mode-grid" id="modalModeGrid">
+                        <div class="mode-card selected" data-mode="arcade">
+                            <h3>🚀 1. Chiến Dịch Không Gian</h3>
+                            <p>Bắn hạ thiên thạch mang ký tự &amp; từ vựng bằng tia Laser. Tích năng lượng dùng <b>Phím Cách (EMP)</b> quét sạch màn hình.</p>
+                        </div>
+                        <div class="mode-card" data-mode="reflex">
+                            <h3>⚡ 2. Phản Xạ Cực Hạn (ms)</h3>
+                            <p>Đấu trường Whack-a-Key! Các phím xuất hiện bất ngờ với vòng đếm ngược. Đo tốc độ phản xạ thần kinh bằng mili-giây.</p>
+                        </div>
+                        <div class="mode-card" data-mode="drill">
+                            <h3>🎯 3. Luyện 10 Ngón (Tâm Giữa)</h3>
+                            <p>Khóa tâm ngắm <b>Chính Giữa Màn Hình (Dead-Center)</b>. Băng chuyền trượt mượt đối xứng Trái-Phải cùng 2 pháo Laser hội tụ.</p>
+                        </div>
+                    </div>
+
+                    <!-- Post-game stats panel (shown after finishing/gameover) -->
+                    <div class="stats-summary-grid" id="postStatsGrid" style="display:none;">
+                        <div class="stat-box">
+                            <div class="big" id="resScore">0</div>
+                            <div class="lbl">Tổng Điểm</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="big" id="resWpm">0 WPM</div>
+                            <div class="lbl">Tốc Độ Gõ</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="big" id="resAcc">100%</div>
+                            <div class="lbl">Độ Chính Xác</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="big" id="resReact">-- ms</div>
+                            <div class="lbl">Phản Xạ Trung Bình</div>
+                        </div>
+                    </div>
+
+                    <div id="weakKeysBox" style="display:none; font-size:0.8rem; color:#ffbe0b; background:rgba(255,190,11,0.08); border:1px solid rgba(255,190,11,0.3); padding:8px 12px; border-radius:8px;">
+                    </div>
+
+                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-top:4px;">
+                        <span style="font-size:0.76rem; color:var(--text-muted);">💡 Mẹo: Nhấn <b>Enter</b> để bắt đầu nhanh • Nhấn <b>ESC</b> để tạm dừng</span>
+                        <button id="btnModalStart" class="cyber-btn primary" style="padding:10px 22px; font-size:0.95rem;">🚀 BẮT ĐẦU NGAY (ENTER)</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <section class="keyboard-deck">
+            <div class="keyboard-header">
+                <div class="finger-legend" id="fingerLegend">
+                    <span class="legend-item" data-f="LP"><span class="legend-swatch" style="background:var(--f-l-pinky)"></span>Út Trái</span>
+                    <span class="legend-item" data-f="LR"><span class="legend-swatch" style="background:var(--f-l-ring)"></span>Áp Út Trái</span>
+                    <span class="legend-item" data-f="LM"><span class="legend-swatch" style="background:var(--f-l-middle)"></span>Giữa Trái</span>
+                    <span class="legend-item" data-f="LI"><span class="legend-swatch" style="background:var(--f-l-index)"></span>Trỏ Trái (F)</span>
+                    <span class="legend-item" data-f="TH"><span class="legend-swatch" style="background:var(--f-thumb)"></span>2 Ngón Cái (Space)</span>
+                    <span class="legend-item" data-f="RI"><span class="legend-swatch" style="background:var(--f-r-index)"></span>Trỏ Phải (J)</span>
+                    <span class="legend-item" data-f="RM"><span class="legend-swatch" style="background:var(--f-r-middle)"></span>Giữa Phải</span>
+                    <span class="legend-item" data-f="RR"><span class="legend-swatch" style="background:var(--f-r-ring)"></span>Áp Út Phải</span>
+                    <span class="legend-item" data-f="RP"><span class="legend-swatch" style="background:var(--f-r-pinky)"></span>Út Phải</span>
+                </div>
+                <div style="font-size:0.75rem; color:var(--text-muted);">
+                    Bàn phím hỗ trợ cả <b>Gõ Phím Vật Lý</b> lẫn <b>Chạm/Click Trực Tiếp</b>
+                </div>
+            </div>
+
+            <div class="kb-rows" id="keyboardContainer">
+                <!-- Dynamically populated by JavaScript for clean 10-finger mapping -->
+            </div>
+        </section>
+    </main>
+
+    <script>
+        const FINGER_INFO = {
+            LP: { name: 'Ngón Út Trái', color: '#ff2a85' },
+            LR: { name: 'Ngón Áp Út Trái', color: '#ff7b00' },
+            LM: { name: 'Ngón Giữa Trái', color: '#ffd000' },
+            LI: { name: 'Ngón Trỏ Trái', color: '#00f59b' },
+            TH: { name: 'Ngón Cái (Phím Cách)', color: '#00f0ff' },
+            RI: { name: 'Ngón Trỏ Phải', color: '#00a8ff' },
+            RM: { name: 'Ngón Giữa Phải', color: '#a855f7' },
+            RR: { name: 'Ngón Áp Út Phải', color: '#ec4899' },
+            RP: { name: 'Ngón Út Phải', color: '#ff4d6d' }
+        };
+
+        const KEYBOARD_LAYOUT = [
+            [
+                { k: '`', label: '`', f: 'LP' },
+                { k: '1', label: '1', f: 'LP' },
+                { k: '2', label: '2', f: 'LR' },
+                { k: '3', label: '3', f: 'LM' },
+                { k: '4', label: '4', f: 'LI' },
+                { k: '5', label: '5', f: 'LI' },
+                { k: '6', label: '6', f: 'RI' },
+                { k: '7', label: '7', f: 'RI' },
+                { k: '8', label: '8', f: 'RM' },
+                { k: '9', label: '9', f: 'RR' },
+                { k: '0', label: '0', f: 'RP' },
+                { k: '-', label: '-', f: 'RP' },
+                { k: '=', label: '=', f: 'RP' },
+                { k: 'backspace', label: '⌫', f: 'RP', w: 'w-18' }
+            ],
+            [
+                { k: 'tab', label: 'Tab', f: 'LP', w: 'w-15' },
+                { k: 'q', label: 'Q', f: 'LP' },
+                { k: 'w', label: 'W', f: 'LR' },
+                { k: 'e', label: 'E', f: 'LM' },
+                { k: 'r', label: 'R', f: 'LI' },
+                { k: 't', label: 'T', f: 'LI' },
+                { k: 'y', label: 'Y', f: 'RI' },
+                { k: 'u', label: 'U', f: 'RI' },
+                { k: 'i', label: 'I', f: 'RM' },
+                { k: 'o', label: 'O', f: 'RR' },
+                { k: 'p', label: 'P', f: 'RP' },
+                { k: '[', label: '[', f: 'RP' },
+                { k: ']', label: ']', f: 'RP' },
+                { k: '\\', label: '\\', f: 'RP', w: 'w-15' }
+            ],
+            [
+                { k: 'capslock', label: 'Caps', f: 'LP', w: 'w-18' },
+                { k: 'a', label: 'A', f: 'LP' },
+                { k: 's', label: 'S', f: 'LR' },
+                { k: 'd', label: 'D', f: 'LM' },
+                { k: 'f', label: 'F', f: 'LI', bump: true },
+                { k: 'g', label: 'G', f: 'LI' },
+                { k: 'h', label: 'H', f: 'RI' },
+                { k: 'j', label: 'J', f: 'RI', bump: true },
+                { k: 'k', label: 'K', f: 'RM' },
+                { k: 'l', label: 'L', f: 'RR' },
+                { k: ';', label: ';', f: 'RP' },
+                { k: "'", label: "'", f: 'RP' },
+                { k: 'enter', label: 'Enter ↵', f: 'RP', w: 'w-22' }
+            ],
+            [
+                { k: 'shift', label: 'Shift ⇧', f: 'LP', w: 'w-22' },
+                { k: 'z', label: 'Z', f: 'LP' },
+                { k: 'x', label: 'X', f: 'LR' },
+                { k: 'c', label: 'C', f: 'LM' },
+                { k: 'v', label: 'V', f: 'LI' },
+                { k: 'b', label: 'B', f: 'LI' },
+                { k: 'n', label: 'N', f: 'RI' },
+                { k: 'm', label: 'M', f: 'RI' },
+                { k: ',', label: ',', f: 'RM' },
+                { k: '.', label: '.', f: 'RR' },
+                { k: '/', label: '/', f: 'RP' },
+                { k: 'shift_r', label: 'Shift ⇧', f: 'RP', w: 'w-22' }
+            ],
+            [
+                { k: ' ', label: 'PHÍM CÁCH (SPACE) — KÍCH HOẠT SÓNG EMP KHI ĐẦY 100%', f: 'TH', w: 'w-space' }
+            ]
+        ];
+
+        const OFFLINE_BANKS = {
+            home_row: 'asdfghjkl;'.split(''),
+            top_row: 'qwertyuiop'.split(''),
+            bottom_row: 'zxcvbnm,./'.split(''),
+            all_chars: 'abcdefghijklmnopqrstuvwxyz0123456789;,.'.split(''),
+            vn_words: [
+                'viet', 'nam', 'cong', 'nghe', 'sang', 'tao', 'phan', 'xa', 'tinh', 'hoa',
+                'ban', 'phim', 'muoi', 'ngon', 'toc', 'do', 'anh', 'sang', 'khong', 'gian',
+                'chien', 'thang', 'vuot', 'qua', 'gioi', 'han', 'thanh', 'cong', ' đam', 'me',
+                'lap', 'trinh', 'may', 'tinh', 'tuong', 'lai', 'ky', 'nguyen', 'so', 'hoa',
+                'nhanh', 'chinh', 'xac', 'tuyet', 'voi', 'nang', 'luong', 'kim', 'cuong',
+                'thien', 'ha', 've', 'tinh', 'ten', 'lua', 'trung', 'tam', 'chi', 'huy'
+            ].map(w => w.trim()),
+            tech_words: [
+                'html', 'canvas', 'script', 'style', 'const', 'async', 'await', 'return',
+                'object', 'array', 'vector', 'matrix', 'shader', 'buffer', 'socket', 'kernel',
+                'system', 'cyber', 'photon', 'laser', 'plasma', 'shield', 'engine', 'deploy',
+                'docker', 'python', 'rust', 'golang', 'nodejs', 'react', 'pixel', 'binary',
+                'crypto', 'neural', 'quantum', 'orbit', 'radar', 'sensor', 'module', 'syntax'
+            ]
+        };
+
+        const KEY_TO_FINGER = {};
+        KEYBOARD_LAYOUT.forEach(row => {
+            row.forEach(item => {
+                KEY_TO_FINGER[item.k] = item.f;
+            });
+        });
+
+        function generateOfflineToken(genType, mode, waveLevel) {
+            // In Reflex mode, always return a single character from the selected pool
+            if (mode === 'reflex') {
+                let pool = OFFLINE_BANKS.all_chars;
+                if (genType === 'home_row') pool = OFFLINE_BANKS.home_row;
+                else if (genType === 'top_row') pool = OFFLINE_BANKS.top_row;
+                else if (genType === 'bottom_row') pool = OFFLINE_BANKS.bottom_row;
+                else pool = 'abcdefghijklmnopqrstuvwxyz;./'.split('');
+                return pool[Math.floor(Math.random() * pool.length)];
+            }
+
+            if (genType === 'home_row' || genType === 'top_row' || genType === 'bottom_row' || genType === 'all_chars') {
+                const pool = OFFLINE_BANKS[genType];
+                const len = mode === 'drill' ? 4 : (Math.random() < 0.45 ? 1 : Math.min(4, 2 + Math.floor(waveLevel / 3)));
+                let out = '';
+                for (let i = 0; i < len; i++) {
+                    out += pool[Math.floor(Math.random() * pool.length)];
+                }
+                return out;
+            }
+
+            if (genType === 'vn_words') {
+                const list = OFFLINE_BANKS.vn_words;
+                return list[Math.floor(Math.random() * list.length)];
+            }
+
+            if (genType === 'tech_words') {
+                const list = OFFLINE_BANKS.tech_words;
+                return list[Math.floor(Math.random() * list.length)];
+            }
+
+            // Default: 'combos' -> Procedural 10-finger alternating muscle-memory generator
+            const leftHome = ['a', 's', 'd', 'f', 'g'];
+            const rightHome = ['h', 'j', 'k', 'l', ';'];
+            const leftTop = ['q', 'w', 'e', 'r', 't'];
+            const rightTop = ['y', 'u', 'i', 'o', 'p'];
+            const leftBot = ['z', 'x', 'c', 'v', 'b'];
+            const rightBot = ['n', 'm', ',', '.', '/'];
+
+            const leftPool = [...leftHome, ...leftHome, ...leftTop, ...leftBot];
+            const rightPool = [...rightHome, ...rightHome, ...rightTop, ...rightBot];
+
+            const length = mode === 'drill'
+                ? 4
+                : Math.min(6, 2 + Math.floor(Math.random() * (1 + Math.ceil(waveLevel / 2))));
+            let combo = '';
+            let useLeft = Math.random() < 0.5;
+            for (let i = 0; i < length; i++) {
+                const pool = useLeft ? leftPool : rightPool;
+                combo += pool[Math.floor(Math.random() * pool.length)];
+                useLeft = !useLeft; // Alternate hands for ergonomic 10-finger reflex training
+            }
+            return combo;
+        }
+
+        class CyberSoundEngine {
+            constructor() {
+                this.ctx = null;
+                this.profile = 'blue';
+            }
+
+            init() {
+                if (!this.ctx) {
+                    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                    if (AudioCtx) {
+                        this.ctx = new AudioCtx();
+                    }
+                }
+                if (this.ctx && this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
+            }
+
+            playKeySwitch() {
+                if (this.profile === 'mute') return;
+                this.init();
+                if (!this.ctx) return;
+
+                const now = this.ctx.currentTime;
+
+                if (this.profile === 'blue') {
+                    // Crisp tactile click + bottom out
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(1900, now);
+                    osc.frequency.exponentialRampToValueAtTime(420, now + 0.035);
+                    gain.gain.setValueAtTime(0.22, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(now);
+                    osc.stop(now + 0.042);
+                } else if (this.profile === 'red') {
+                    // Deep linear thock
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(320, now);
+                    osc.frequency.exponentialRampToValueAtTime(95, now + 0.055);
+                    gain.gain.setValueAtTime(0.28, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(now);
+                    osc.stop(now + 0.062);
+                } else if (this.profile === 'laser') {
+                    // Sci-fi laser pew
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(980, now);
+                    osc.frequency.exponentialRampToValueAtTime(180, now + 0.08);
+                    gain.gain.setValueAtTime(0.14, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.085);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(now);
+                    osc.stop(now + 0.09);
+                }
+            }
+
+            playDestroy() {
+                if (this.profile === 'mute') return;
+                this.init();
+                if (!this.ctx) return;
+
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(520, now);
+                osc.frequency.exponentialRampToValueAtTime(880, now + 0.09);
+                gain.gain.setValueAtTime(0.18, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.11);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.12);
+            }
+
+            playError() {
+                if (this.profile === 'mute') return;
+                this.init();
+                if (!this.ctx) return;
+
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(150, now);
+                osc.frequency.linearRampToValueAtTime(110, now + 0.14);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.16);
+            }
+
+            playEmpBlast() {
+                if (this.profile === 'mute') return;
+                this.init();
+                if (!this.ctx) return;
+
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(480, now);
+                osc.frequency.exponentialRampToValueAtTime(55, now + 0.55);
+                gain.gain.setValueAtTime(0.35, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.58);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.6);
+            }
+        }
+
+        const soundEngine = new CyberSoundEngine();
+
+        const kbContainer = document.getElementById('keyboardContainer');
+        const keyDomMap = {};
+
+        function buildKeyboardUI() {
+            kbContainer.innerHTML = '';
+            KEYBOARD_LAYOUT.forEach(row => {
+                const rowEl = document.createElement('div');
+                rowEl.className = 'kb-row';
+                row.forEach(keyObj => {
+                    const btn = document.createElement('div');
+                    btn.className = 'keycap';
+                    if (keyObj.w) btn.classList.add(keyObj.w);
+                    if (keyObj.bump) btn.classList.add('home-bump');
+
+                    const fingerMeta = FINGER_INFO[keyObj.f];
+                    btn.style.setProperty('--finger-color', fingerMeta.color);
+                    btn.textContent = keyObj.label;
+                    btn.dataset.key = keyObj.k;
+
+                    // Support mouse click / touch tap directly on virtual keyboard
+                    btn.addEventListener('pointerdown', (e) => {
+                        e.preventDefault();
+                        handleVirtualOrPhysicalKey(keyObj.k);
+                    });
+
+                    rowEl.appendChild(btn);
+                    keyDomMap[keyObj.k] = btn;
+                });
+                kbContainer.appendChild(rowEl);
+            });
+        }
+
+        buildKeyboardUI();
+
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        const state = {
+            running: false,
+            paused: false,
+            mode: 'arcade',       // 'arcade' | 'reflex' | 'drill'
+            genType: 'combos',    // offline generator mode
+            speedDifficulty: 'normal',
+            score: 0,
+            highScore: parseInt(localStorage.getItem('cybertype10_high') || '0', 10),
+            combo: 0,
+            maxCombo: 0,
+            multiplier: 1,
+            shields: 5,
+            maxShields: 5,
+            empCharge: 0,         // 0 to 100
+            wave: 1,
+            startTime: 0,
+            correctHits: 0,
+            totalKeystrokes: 0,
+            reactionSamples: [],
+            missedKeysMap: {},
+            targets: [],
+            lockedTargetId: null,
+            // Mode 3 Center Flow Drill state
+            drillQueue: [],
+            drillHistory: [],     // Recently typed characters gliding out to the left of centerX
+            drillPrevWord: '',    // Previous completed word for symmetrical left teleprompter slot
+            drillScrollOffset: 0, // Smooth lerp offset (1 -> 0) so keys glide into centerX
+            drillCorePulse: 0,    // Visual pulse on the center holo-core when hit
+            drillAngle: 0,        // Rotating cyberpunk reticle angle at centerX
+            lasers: [],
+            particles: [],
+            floatingTexts: [],
+            shockwaves: [],
+            stars: [],
+            spawnTimer: 0,
+            lastFrameTime: performance.now()
+        };
+
+        document.getElementById('hudHigh').textContent = state.highScore.toLocaleString('vi-VN');
+
+        function resizeCanvas() {
+            const rect = document.getElementById('canvasContainer').getBoundingClientRect();
+            canvas.width = rect.width;
+            canvas.height = rect.height;
+            initStarfield();
+        }
+
+        function initStarfield() {
+            state.stars = [];
+            for (let i = 0; i < 65; i++) {
+                state.stars.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    size: Math.random() * 2 + 0.6,
+                    speed: Math.random() * 35 + 12,
+                    alpha: Math.random() * 0.65 + 0.2
+                });
+            }
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        function updateTargetKeyHighlight() {
+            // Clear existing highlights
+            Object.values(keyDomMap).forEach(el => el.classList.remove('target-next'));
+            document.querySelectorAll('.legend-item').forEach(el => el.classList.remove('active-finger'));
+
+            const nextChar = getNextExpectedChar();
+            const coachDot = document.getElementById('coachDot');
+            const coachText = document.getElementById('coachText');
+
+            if (!nextChar) {
+                coachDot.style.background = '#00f0ff';
+                coachText.innerHTML = 'Sẵn sàng đón mục tiêu tiếp theo... Đặt tay chuẩn trên <b>F</b> và <b>J</b>';
+                return;
+            }
+
+            const keyEl = keyDomMap[nextChar];
+            const fingerCode = KEY_TO_FINGER[nextChar] || 'LI';
+            const fingerMeta = FINGER_INFO[fingerCode];
+
+            if (keyEl) {
+                keyEl.classList.add('target-next');
+            }
+
+            const legendEl = document.querySelector(`.legend-item[data-f="${fingerCode}"]`);
+            if (legendEl) {
+                legendEl.classList.add('active-finger');
+                legendEl.style.color = fingerMeta.color;
+            }
+
+            coachDot.style.background = fingerMeta.color;
+            coachDot.style.boxShadow = `0 0 12px ${fingerMeta.color}`;
+            const displayKey = nextChar === ' ' ? 'PHÍM CÁCH' : nextChar.toUpperCase();
+            coachText.innerHTML = `Gõ phím <b style="color:${fingerMeta.color};font-size:1rem;">[ ${displayKey} ]</b> bằng <b style="color:${fingerMeta.color}">${fingerMeta.name}</b>`;
+        }
+
+        function getNextExpectedChar() {
+            if (!state.running || state.paused) return null;
+
+            if (state.mode === 'drill') {
+                if (state.drillQueue.length > 0) {
+                    const front = state.drillQueue[0];
+                    return front.text[front.typedIndex] || null;
+                }
+                return null;
+            }
+
+            if (state.targets.length === 0) return null;
+
+            // If a target is locked in Arcade mode, return its next char
+            if (state.lockedTargetId !== null) {
+                const locked = state.targets.find(t => t.id === state.lockedTargetId);
+                if (locked) {
+                    return locked.text[locked.typedIndex];
+                }
+            }
+
+            // Otherwise highlight the closest/oldest target's first untyped character
+            const sorted = [...state.targets].sort((a, b) => b.y - a.y);
+            const topTarget = sorted[0];
+            return topTarget ? topTarget.text[topTarget.typedIndex] : null;
+        }
+
+        let targetIdCounter = 1;
+
+        function getDifficultyParams() {
+            const map = {
+                easy:   { fallSpeed: 38, spawnInterval: 2.1, reflexDuration: 2600 },
+                normal: { fallSpeed: 56, spawnInterval: 1.55, reflexDuration: 1900 },
+                hard:   { fallSpeed: 82, spawnInterval: 1.15, reflexDuration: 1350 },
+                insane: { fallSpeed: 112, spawnInterval: 0.85, reflexDuration: 950 }
+            };
+            return map[state.speedDifficulty] || map.normal;
+        }
+
+        function spawnTarget() {
+            const diff = getDifficultyParams();
+            const text = generateOfflineToken(state.genType, state.mode, state.wave);
+            const firstChar = text[0];
+            const fCode = KEY_TO_FINGER[firstChar] || 'LI';
+            const color = FINGER_INFO[fCode].color;
+
+            if (state.mode === 'arcade') {
+                const margin = 75;
+                const x = margin + Math.random() * Math.max(100, canvas.width - margin * 2);
+                const speedBoost = 1 + (state.wave - 1) * 0.08;
+                state.targets.push({
+                    id: targetIdCounter++,
+                    text: text,
+                    typedIndex: 0,
+                    x: x,
+                    y: -25,
+                    vx: (canvas.width / 2 - x) * 0.04,
+                    vy: (diff.fallSpeed + Math.random() * 18) * speedBoost,
+                    color: color,
+                    spawnAt: performance.now(),
+                    radius: Math.max(24, text.length * 9 + 14)
+                });
+            } else if (state.mode === 'reflex') {
+                // Whack-a-key single character with shrinking ring
+                const marginX = 90;
+                const marginY = 75;
+                const x = marginX + Math.random() * Math.max(80, canvas.width - marginX * 2);
+                const y = marginY + Math.random() * Math.max(60, canvas.height - marginY * 2);
+                state.targets.push({
+                    id: targetIdCounter++,
+                    text: text[0],
+                    typedIndex: 0,
+                    x: x,
+                    y: y,
+                    color: color,
+                    spawnAt: performance.now(),
+                    maxDuration: diff.reflexDuration,
+                    radius: 32
+                });
+            }
+            updateTargetKeyHighlight();
+        }
+
+        function refillDrillQueue() {
+            while (state.drillQueue.length < 10) {
+                const token = generateOfflineToken(state.genType, 'drill', state.wave);
+                const firstChar = token[0];
+                const fCode = KEY_TO_FINGER[firstChar] || 'LI';
+                state.drillQueue.push({
+                    id: targetIdCounter++,
+                    text: token,
+                    typedIndex: 0,
+                    color: FINGER_INFO[fCode].color,
+                    spawnAt: 0
+                });
+            }
+            if (state.drillQueue.length > 0 && state.drillQueue[0].spawnAt === 0) {
+                state.drillQueue[0].spawnAt = performance.now();
+            }
+            updateTargetKeyHighlight();
+        }
+
+        function createExplosion(x, y, color, count = 18) {
+            for (let i = 0; i < count; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const speed = Math.random() * 180 + 40;
+                state.particles.push({
+                    x: x,
+                    y: y,
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed,
+                    size: Math.random() * 3.5 + 1.5,
+                    color: color,
+                    life: 1.0,
+                    decay: Math.random() * 1.6 + 1.2
+                });
+            }
+        }
+
+        function createFloatingText(x, y, text, color) {
+            state.floatingTexts.push({
+                x: x,
+                y: y,
+                text: text,
+                color: color,
+                life: 1.0
+            });
+        }
+
+        function triggerEmpUltimate() {
+            if (!state.running || state.paused || state.empCharge < 100) return;
+
+            state.empCharge = 0;
+            soundEngine.playEmpBlast();
+
+            const centerX = canvas.width / 2;
+            const originY = state.mode === 'drill' ? (canvas.height / 2 + 8) : (canvas.height - 30);
+
+            // Add expanding shockwave ring from center
+            state.shockwaves.push({
+                x: centerX,
+                y: originY,
+                radius: 14,
+                maxRadius: Math.max(canvas.width, canvas.height) * 1.2,
+                alpha: 1.0,
+                color: '#00f0ff'
+            });
+
+            if (state.mode === 'drill') {
+                // In Center Drill mode, EMP auto-completes the active word with twin lasers into the center core
+                if (state.drillQueue.length > 0) {
+                    const front = state.drillQueue[0];
+                    createExplosion(centerX, originY, '#00f0ff', 28);
+                    state.score += 120 * state.multiplier;
+                    state.drillPrevWord = front.text;
+                    state.drillQueue.shift();
+                    state.drillScrollOffset = 1.0;
+                    state.drillCorePulse = 1.0;
+                    refillDrillQueue();
+                }
+                createFloatingText(centerX, canvas.height / 2 - 45, `⚡ SÓNG EMP TRUNG TÂM +${120 * state.multiplier}!`, '#00f0ff');
+            } else {
+                // Destroy all active targets on screen
+                let cleared = 0;
+                state.targets.forEach(t => {
+                    createExplosion(t.x, t.y, '#00f0ff', 22);
+                    state.score += 50 * state.multiplier;
+                    cleared++;
+                });
+                state.targets = [];
+                state.lockedTargetId = null;
+                createFloatingText(centerX, canvas.height / 2, `⚡ SÓNG EMP DIỆT ${cleared} MỤC TIÊU!`, '#00f0ff');
+            }
+
+            updateHUD();
+            updateTargetKeyHighlight();
+        }
+
+        function flashKeyFeedback(keyChar, isCorrect) {
+            const keyEl = keyDomMap[keyChar];
+            if (!keyEl) return;
+            const cls = isCorrect ? 'pressed-ok' : 'pressed-err';
+            keyEl.classList.remove('pressed-ok', 'pressed-err');
+            void keyEl.offsetWidth;
+            keyEl.classList.add(cls);
+            setTimeout(() => keyEl.classList.remove(cls), 160);
+        }
+
+        function handleVirtualOrPhysicalKey(rawKey) {
+            const key = rawKey.toLowerCase();
+
+            // Spacebar activates EMP if 100% charged
+            if (key === ' ' && state.running && !state.paused && state.empCharge >= 100) {
+                triggerEmpUltimate();
+                flashKeyFeedback(' ', true);
+                return;
+            }
+
+            if (!state.running || state.paused) return;
+
+            // Ignore modifier keys
+            if (['shift', 'shift_r', 'capslock', 'tab', 'control', 'alt', 'meta', 'backspace', 'enter'].includes(key)) {
+                return;
+            }
+
+            state.totalKeystrokes++;
+            const now = performance.now();
+
+            // MODE 3: CENTER FLOW DRILL (DEAD-CENTER HUD)
+            if (state.mode === 'drill') {
+                if (state.drillQueue.length === 0) refillDrillQueue();
+                const currentItem = state.drillQueue[0];
+                const expectedChar = currentItem.text[currentItem.typedIndex];
+                const centerX = canvas.width / 2;
+                const coreY = canvas.height / 2 + 8;
+
+                if (key === expectedChar) {
+                    soundEngine.playKeySwitch();
+                    flashKeyFeedback(key, true);
+                    state.correctHits++;
+                    state.combo++;
+                    if (state.combo > state.maxCombo) state.maxCombo = state.combo;
+                    state.multiplier = Math.min(10, 1 + Math.floor(state.combo / 10));
+
+                    const fCode = KEY_TO_FINGER[expectedChar] || 'LI';
+                    const charColor = FINGER_INFO[fCode].color;
+
+                    const reactMs = Math.round(now - (currentItem.spawnAt || now));
+                    if (reactMs > 20 && reactMs < 4000) {
+                        state.reactionSamples.push(reactMs);
+                    }
+
+                    const gained = 15 * state.multiplier;
+                    state.score += gained;
+                    state.empCharge = Math.min(100, state.empCharge + 5);
+
+                    // Push completed character to left-side history for symmetrical conveyor fade-out
+                    state.drillHistory.unshift({
+                        char: expectedChar,
+                        color: charColor,
+                        alpha: 1.0
+                    });
+                    if (state.drillHistory.length > 6) {
+                        state.drillHistory.pop();
+                    }
+
+                    // Trigger smooth lerp conveyor offset & core pulse at exact Dead-Center
+                    state.drillScrollOffset = 1.0;
+                    state.drillCorePulse = 1.0;
+
+                    // Twin symmetrical bottom laser turrets firing into Dead-Center (centerX, coreY)
+                    state.lasers.push(
+                        {
+                            x1: centerX - 155,
+                            y1: canvas.height - 18,
+                            x2: centerX,
+                            y2: coreY,
+                            color: charColor,
+                            life: 1.0
+                        },
+                        {
+                            x1: centerX + 155,
+                            y1: canvas.height - 18,
+                            x2: centerX,
+                            y2: coreY,
+                            color: charColor,
+                            life: 1.0
+                        }
+                    );
+
+                    // Concentric mini shockwave ring & 360-degree particles right at Dead-Center
+                    state.shockwaves.push({
+                        x: centerX,
+                        y: coreY,
+                        radius: 26,
+                        maxRadius: 95,
+                        alpha: 0.75,
+                        color: charColor
+                    });
+                    createExplosion(centerX, coreY, charColor, 14);
+
+                    currentItem.typedIndex++;
+                    if (currentItem.typedIndex >= currentItem.text.length) {
+                        // Completed full word/combo in the center teleprompter!
+                        soundEngine.playDestroy();
+                        state.drillPrevWord = currentItem.text;
+                        const tag = reactMs < 240 ? 'PERFECT' : (reactMs < 420 ? 'GREAT' : 'GOOD');
+                        createFloatingText(
+                            centerX,
+                            coreY - 48,
+                            `${tag}! +${gained} (${reactMs}ms)`,
+                            charColor
+                        );
+                        state.drillQueue.shift();
+                        refillDrillQueue();
+                        if (state.drillQueue[0]) {
+                            state.drillQueue[0].spawnAt = performance.now();
+                        }
+                    } else {
+                        // Next character inside the current word
+                        const nextCh = currentItem.text[currentItem.typedIndex];
+                        const nextF = KEY_TO_FINGER[nextCh] || 'LI';
+                        currentItem.color = FINGER_INFO[nextF].color;
+                        currentItem.spawnAt = performance.now();
+                        createFloatingText(
+                            centerX,
+                            coreY - 42,
+                            `+${gained} • ${reactMs}ms`,
+                            charColor
+                        );
+                    }
+                } else {
+                    registerMistake(key, expectedChar);
+                    state.drillCorePulse = -1.0; // Red error shake/flash at center
+                }
+                updateHUD();
+                updateTargetKeyHighlight();
+                return;
+            }
+
+            // MODE 1 & 2: ARCADE & REFLEX
+            let target = null;
+
+            if (state.lockedTargetId !== null) {
+                target = state.targets.find(t => t.id === state.lockedTargetId);
+                if (!target) state.lockedTargetId = null;
+            }
+
+            if (!target) {
+                // Find matching target prioritized by lowest Y (closest in Arcade) or oldest spawn (in Reflex)
+                const candidates = state.targets.filter(t => t.text[t.typedIndex] === key);
+                if (candidates.length > 0) {
+                    candidates.sort((a, b) => (state.mode === 'arcade') ? (b.y - a.y) : (a.spawnAt - b.spawnAt));
+                    target = candidates[0];
+                    if (state.mode === 'arcade' && target.text.length > 1) {
+                        state.lockedTargetId = target.id;
+                    }
+                }
+            }
+
+            if (target && target.text[target.typedIndex] === key) {
+                soundEngine.playKeySwitch();
+                flashKeyFeedback(key, true);
+                state.correctHits++;
+                state.combo++;
+                if (state.combo > state.maxCombo) state.maxCombo = state.combo;
+                state.multiplier = Math.min(10, 1 + Math.floor(state.combo / 10));
+
+                // Fire neon laser from defender turret to target
+                state.lasers.push({
+                    x1: canvas.width / 2,
+                    y1: canvas.height - 26,
+                    x2: target.x,
+                    y2: target.y,
+                    color: target.color,
+                    life: 1.0
+                });
+
+                target.typedIndex++;
+                createExplosion(target.x, target.y, target.color, 8);
+
+                if (target.typedIndex >= target.text.length) {
+                    // Target completely destroyed!
+                    soundEngine.playDestroy();
+                    const reactMs = Math.round(now - target.spawnAt);
+                    if (reactMs > 20 && reactMs < 8000) {
+                        state.reactionSamples.push(reactMs);
+                    }
+
+                    let bonus = 25 * target.text.length * state.multiplier;
+                    let ratingTxt = `+${bonus}`;
+                    if (state.mode === 'reflex') {
+                        const tag = reactMs < 240 ? 'SIÊU PHẢN XẠ' : (reactMs < 420 ? 'TUYỆT VỜI' : 'CHÍNH XÁC');
+                        ratingTxt = `${tag} • ${reactMs}ms`;
+                    }
+
+                    state.score += bonus;
+                    state.empCharge = Math.min(100, state.empCharge + 8);
+                    createExplosion(target.x, target.y, target.color, 22);
+                    createFloatingText(target.x, target.y - 12, ratingTxt, target.color);
+
+                    state.targets = state.targets.filter(t => t.id !== target.id);
+                    if (state.lockedTargetId === target.id) {
+                        state.lockedTargetId = null;
+                    }
+
+                    // Advance wave every 1500 points
+                    state.wave = 1 + Math.floor(state.score / 1500);
+
+                    // In reflex mode, immediately spawn another target to keep high tempo
+                    if (state.mode === 'reflex' && state.targets.length === 0) {
+                        spawnTarget();
+                    }
+                }
+            } else {
+                const expected = getNextExpectedChar();
+                registerMistake(key, expected);
+            }
+
+            updateHUD();
+            updateTargetKeyHighlight();
+        }
+
+        function registerMistake(pressedKey, expectedKey) {
+            soundEngine.playError();
+            flashKeyFeedback(pressedKey, false);
+            state.combo = 0;
+            state.multiplier = 1;
+            if (expectedKey) {
+                state.missedKeysMap[expectedKey] = (state.missedKeysMap[expectedKey] || 0) + 1;
+            }
+            createFloatingText(canvas.width / 2, canvas.height - 65, `SAI PHÍM [ ${pressedKey.toUpperCase()} ]`, '#ff3355');
+        }
+
+        function updateHUD() {
+            document.getElementById('hudScore').textContent = state.score.toLocaleString('vi-VN');
+            document.getElementById('hudCombo').textContent = `x${state.multiplier} (${state.combo})`;
+
+            const elapsedMinutes = Math.max(0.05, (performance.now() - state.startTime) / 60000);
+            const cpm = Math.round(state.correctHits / elapsedMinutes);
+            const wpm = Math.round((state.correctHits / 5) / elapsedMinutes);
+            document.getElementById('hudWpm').textContent = `${wpm} WPM (${cpm} CPM)`;
+
+            const acc = state.totalKeystrokes > 0
+                ? Math.round((state.correctHits / state.totalKeystrokes) * 100)
+                : 100;
+            document.getElementById('hudAcc').textContent = `${acc}%`;
+
+            if (state.reactionSamples.length > 0) {
+                const avgMs = Math.round(state.reactionSamples.reduce((a, b) => a + b, 0) / state.reactionSamples.length);
+                document.getElementById('hudReaction').textContent = `${avgMs} ms`;
+            } else {
+                document.getElementById('hudReaction').textContent = `-- ms`;
+            }
+
+            document.getElementById('hudShield').textContent = state.mode === 'drill'
+                ? '♾️ VÔ HẠN'
+                : `🛡️ ${state.shields} / ${state.maxShields}`;
+
+            if (state.score > state.highScore) {
+                state.highScore = state.score;
+                localStorage.setItem('cybertype10_high', String(state.highScore));
+                document.getElementById('hudHigh').textContent = state.highScore.toLocaleString('vi-VN');
+            }
+
+            // EMP Bar
+            const empFill = document.getElementById('empFill');
+            const empPct = document.getElementById('empPct');
+            const empWrap = document.getElementById('empBtnWrap');
+            empFill.style.width = `${state.empCharge}%`;
+            empPct.textContent = `${Math.floor(state.empCharge)}%`;
+            if (state.empCharge >= 100) {
+                empWrap.classList.add('emp-ready');
+            } else {
+                empWrap.classList.remove('emp-ready');
+            }
+        }
+
+        function updateGame(dt) {
+            // Animate background stars
+            state.stars.forEach(s => {
+                s.y += s.speed * dt;
+                if (s.y > canvas.height) {
+                    s.y = 0;
+                    s.x = Math.random() * canvas.width;
+                }
+            });
+
+            // Animate particles
+            for (let i = state.particles.length - 1; i >= 0; i--) {
+                const p = state.particles[i];
+                p.x += p.vx * dt;
+                p.y += p.vy * dt;
+                p.life -= p.decay * dt;
+                if (p.life <= 0) state.particles.splice(i, 1);
+            }
+
+            // Animate laser beams
+            for (let i = state.lasers.length - 1; i >= 0; i--) {
+                state.lasers[i].life -= dt * 5.5;
+                if (state.lasers[i].life <= 0) state.lasers.splice(i, 1);
+            }
+
+            // Animate floating texts
+            for (let i = state.floatingTexts.length - 1; i >= 0; i--) {
+                const ft = state.floatingTexts[i];
+                ft.y -= 38 * dt;
+                ft.life -= dt * 1.15;
+                if (ft.life <= 0) state.floatingTexts.splice(i, 1);
+            }
+
+            // Animate EMP & Center shockwaves
+            for (let i = state.shockwaves.length - 1; i >= 0; i--) {
+                const sw = state.shockwaves[i];
+                const speed = sw.maxRadius && sw.maxRadius < 150 ? 260 : 950;
+                sw.radius += speed * dt;
+                sw.alpha -= dt * (sw.maxRadius && sw.maxRadius < 150 ? 2.4 : 1.1);
+                if (sw.alpha <= 0 || (sw.maxRadius && sw.radius >= sw.maxRadius)) {
+                    state.shockwaves.splice(i, 1);
+                }
+            }
+
+            // Smooth interpolation for Mode 3 Center Flow Drill
+            state.drillAngle += dt * 0.85;
+            state.drillScrollOffset += (0 - state.drillScrollOffset) * Math.min(1, dt * 18);
+            if (Math.abs(state.drillScrollOffset) < 0.005) state.drillScrollOffset = 0;
+
+            if (state.drillCorePulse > 0) {
+                state.drillCorePulse = Math.max(0, state.drillCorePulse - dt * 4.5);
+            } else if (state.drillCorePulse < 0) {
+                state.drillCorePulse = Math.min(0, state.drillCorePulse + dt * 4.5);
+            }
+
+            if (!state.running || state.paused) return;
+
+            const diff = getDifficultyParams();
+
+            if (state.mode === 'arcade') {
+                state.spawnTimer += dt;
+                const currentInterval = Math.max(0.48, diff.spawnInterval - (state.wave - 1) * 0.08);
+                if (state.spawnTimer >= currentInterval) {
+                    state.spawnTimer = 0;
+                    spawnTarget();
+                }
+
+                for (let i = state.targets.length - 1; i >= 0; i--) {
+                    const t = state.targets[i];
+                    t.x += t.vx * dt;
+                    t.y += t.vy * dt;
+
+                    // Check collision with bottom shield perimeter
+                    if (t.y >= canvas.height - 34) {
+                        soundEngine.playError();
+                        createExplosion(t.x, canvas.height - 30, '#ff3355', 20);
+                        if (state.lockedTargetId === t.id) state.lockedTargetId = null;
+                        state.targets.splice(i, 1);
+                        state.shields--;
+                        state.combo = 0;
+                        state.multiplier = 1;
+                        updateHUD();
+                        updateTargetKeyHighlight();
+
+                        if (state.shields <= 0) {
+                            endGameSession();
+                            return;
+                        }
+                    }
+                }
+            } else if (state.mode === 'reflex') {
+                state.spawnTimer += dt;
+                if (state.targets.length === 0 || state.spawnTimer >= diff.spawnInterval * 0.75) {
+                    state.spawnTimer = 0;
+                    if (state.targets.length < 3) {
+                        spawnTarget();
+                    }
+                }
+
+                const now = performance.now();
+                for (let i = state.targets.length - 1; i >= 0; i--) {
+                    const t = state.targets[i];
+                    const elapsed = now - t.spawnAt;
+                    if (elapsed >= t.maxDuration) {
+                        soundEngine.playError();
+                        createFloatingText(t.x, t.y, `QUÁ TRỄ!`, '#ff3355');
+                        state.missedKeysMap[t.text[0]] = (state.missedKeysMap[t.text[0]] || 0) + 1;
+                        state.targets.splice(i, 1);
+                        state.shields--;
+                        state.combo = 0;
+                        state.multiplier = 1;
+                        updateHUD();
+                        updateTargetKeyHighlight();
+
+                        if (state.shields <= 0) {
+                            endGameSession();
+                            return;
+                        }
+                    }
+                }
+            }
+        }
+
+        function renderCanvas() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // 1. Draw perspective cyber grid at bottom
+            ctx.save();
+            ctx.strokeStyle = 'rgba(0, 240, 255, 0.08)';
+            ctx.lineWidth = 1;
+            const horizon = canvas.height * 0.58;
+            for (let y = horizon; y < canvas.height; y += 26) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(canvas.width, y);
+                ctx.stroke();
+            }
+            for (let x = 0; x <= canvas.width; x += 80) {
+                ctx.beginPath();
+                ctx.moveTo(canvas.width / 2 + (x - canvas.width / 2) * 0.35, horizon);
+                ctx.lineTo(x, canvas.height);
+                ctx.stroke();
+            }
+            ctx.restore();
+
+            // 2. Draw stars
+            state.stars.forEach(s => {
+                ctx.fillStyle = `rgba(200, 240, 255, ${s.alpha})`;
+                ctx.beginPath();
+                ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
+                ctx.fill();
+            });
+
+            // 3. Draw EMP & Center shockwaves
+            state.shockwaves.forEach(sw => {
+                ctx.save();
+                ctx.strokeStyle = sw.color || '#00f0ff';
+                ctx.globalAlpha = Math.max(0, sw.alpha);
+                ctx.lineWidth = sw.maxRadius && sw.maxRadius < 150 ? 3 : 5;
+                ctx.beginPath();
+                ctx.arc(sw.x, sw.y, sw.radius, 0, Math.PI * 2);
+                ctx.stroke();
+                ctx.restore();
+            });
+
+            // 4. Draw Laser Beams
+            state.lasers.forEach(l => {
+                ctx.save();
+                ctx.strokeStyle = l.color;
+                ctx.shadowColor = l.color;
+                ctx.shadowBlur = 15;
+                ctx.lineWidth = 3.5 * l.life;
+                ctx.beginPath();
+                ctx.moveTo(l.x1, l.y1);
+                ctx.lineTo(l.x2, l.y2);
+                ctx.stroke();
+                ctx.restore();
+            });
+
+            // 5. Render Mode-Specific Targets
+            if (state.mode === 'drill') {
+                renderDrillConveyor();
+            } else {
+                renderArcadeAndReflexTargets();
+            }
+
+            // 6. Draw Defender Turret at bottom center (for Arcade/Reflex)
+            if (state.mode !== 'drill') {
+                const tx = canvas.width / 2;
+                const ty = canvas.height - 20;
+                ctx.save();
+                ctx.fillStyle = '#00f0ff';
+                ctx.shadowColor = '#00f0ff';
+                ctx.shadowBlur = 16;
+                ctx.beginPath();
+                ctx.arc(tx, ty, 15, Math.PI, 0);
+                ctx.fill();
+
+                ctx.strokeStyle = 'rgba(0, 240, 255, 0.35)';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(0, canvas.height - 22);
+                ctx.lineTo(canvas.width, canvas.height - 22);
+                ctx.stroke();
+                ctx.restore();
+            }
+
+            // 7. Draw Particles
+            state.particles.forEach(p => {
+                ctx.save();
+                ctx.fillStyle = p.color;
+                ctx.globalAlpha = Math.max(0, p.life);
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            });
+
+            // 8. Draw Floating Texts
+            state.floatingTexts.forEach(ft => {
+                ctx.save();
+                ctx.font = 'bold 14px "Segoe UI", sans-serif';
+                ctx.fillStyle = ft.color;
+                ctx.globalAlpha = Math.max(0, ft.life);
+                ctx.textAlign = 'center';
+                ctx.fillText(ft.text, ft.x, ft.y);
+                ctx.restore();
+            });
+        }
+
+        function renderArcadeAndReflexTargets() {
+            const now = performance.now();
+
+            state.targets.forEach(t => {
+                const isLocked = state.lockedTargetId === t.id;
+                ctx.save();
+
+                if (state.mode === 'reflex') {
+                    // Shrinking countdown ring
+                    const ratio = Math.max(0, 1 - (now - t.spawnAt) / t.maxDuration);
+                    ctx.beginPath();
+                    ctx.arc(t.x, t.y, t.radius + 12 * ratio, 0, Math.PI * 2);
+                    ctx.strokeStyle = t.color;
+                    ctx.lineWidth = 3;
+                    ctx.stroke();
+
+                    ctx.beginPath();
+                    ctx.arc(t.x, t.y, t.radius, 0, Math.PI * 2);
+                    ctx.fillStyle = 'rgba(12, 19, 44, 0.92)';
+                    ctx.fill();
+                    ctx.lineWidth = 2.5;
+                    ctx.strokeStyle = t.color;
+                    ctx.stroke();
+
+                    ctx.font = '900 24px "Segoe UI", monospace';
+                    ctx.fillStyle = '#ffffff';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(t.text.toUpperCase(), t.x, t.y);
+                } else {
+                    // Space Arcade pill / drone node
+                    const typedStr = t.text.slice(0, t.typedIndex);
+                    const remainStr = t.text.slice(t.typedIndex);
+
+                    ctx.font = 'bold 18px "Segoe UI", monospace';
+                    const textWidth = ctx.measureText(t.text).width;
+                    const boxW = Math.max(54, textWidth + 28);
+                    const boxH = 36;
+
+                    ctx.fillStyle = isLocked ? 'rgba(25, 12, 48, 0.95)' : 'rgba(10, 17, 38, 0.92)';
+                    ctx.strokeStyle = isLocked ? '#ffbe0b' : t.color;
+                    ctx.lineWidth = isLocked ? 2.5 : 1.8;
+                    ctx.shadowColor = isLocked ? '#ffbe0b' : t.color;
+                    ctx.shadowBlur = isLocked ? 16 : 8;
+
+                    ctx.beginPath();
+                    ctx.roundRect(t.x - boxW / 2, t.y - boxH / 2, boxW, boxH, 10);
+                    ctx.fill();
+                    ctx.stroke();
+
+                    // Draw typed vs untyped characters
+                    ctx.shadowBlur = 0;
+                    ctx.textBaseline = 'middle';
+                    const startX = t.x - textWidth / 2;
+                    ctx.fillStyle = '#00f59b';
+                    ctx.fillText(typedStr, startX, t.y);
+
+                    const typedW = ctx.measureText(typedStr).width;
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillText(remainStr, startX + typedW, t.y);
+                }
+
+                ctx.restore();
+            });
+        }
+
+        function renderDrillConveyor() {
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const teleprompterY = centerY - 88;
+            const coreY = centerY + 8;
+            const badgeY = centerY + 92;
+            const spacing = 74;
+
+            const activeWordObj = state.drillQueue[0] || { text: 'READY', typedIndex: 0, color: '#00f0ff' };
+            const nextWordObj = state.drillQueue[1] || { text: '...', typedIndex: 0, color: '#8499b8' };
+            const activeChar = activeWordObj.text[activeWordObj.typedIndex] || 'f';
+            const activeFingerCode = KEY_TO_FINGER[activeChar] || 'LI';
+            const activeFingerMeta = FINGER_INFO[activeFingerCode] || FINGER_INFO.LI;
+
+            // Flatten upcoming characters across drillQueue so the right side of the conveyor is always full
+            const upcomingChars = [];
+            state.drillQueue.forEach((wordItem, wIdx) => {
+                const startIdx = wIdx === 0 ? wordItem.typedIndex : 0;
+                for (let c = startIdx; c < wordItem.text.length; c++) {
+                    const ch = wordItem.text[c];
+                    const fCode = KEY_TO_FINGER[ch] || 'LI';
+                    upcomingChars.push({
+                        char: ch,
+                        color: FINGER_INFO[fCode].color,
+                        isWordStart: c === 0 && wIdx > 0
+                    });
+                }
+            });
+
+            // 0. Draw Twin Symmetrical Laser Turrets at bottom (centerX - 155 and centerX + 155)
+            [-155, 155].forEach(offsetX => {
+                const tx = centerX + offsetX;
+                const ty = canvas.height - 14;
+                ctx.save();
+                ctx.strokeStyle = 'rgba(0, 240, 255, 0.35)';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(tx, ty);
+                ctx.lineTo(centerX + offsetX * 0.25, coreY + 34);
+                ctx.stroke();
+
+                ctx.fillStyle = activeFingerMeta.color;
+                ctx.shadowColor = activeFingerMeta.color;
+                ctx.shadowBlur = 14;
+                ctx.beginPath();
+                ctx.arc(tx, ty, 11, Math.PI, 0);
+                ctx.fill();
+                ctx.restore();
+            });
+
+            // Subtle vertical alignment spine at exact centerX so the player's eye locks effortlessly
+            ctx.save();
+            ctx.strokeStyle = 'rgba(0, 240, 255, 0.14)';
+            ctx.setLineDash([4, 6]);
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.moveTo(centerX, 42);
+            ctx.lineTo(centerX, canvas.height - 12);
+            ctx.stroke();
+            ctx.restore();
+
+            // =========================================================================
+            // LAYER 1 (TOP): SYMMETRICAL CENTER WORD TELEPROMPTER (centerX, centerY - 88)
+            // =========================================================================
+            ctx.save();
+            // Left dimmed box: Previous completed word
+            const sideBoxW = 148;
+            const sideBoxH = 34;
+            const mainBoxW = 240;
+            const mainBoxH = 44;
+
+            // Left slot ("TỪ VỪA XONG")
+            const leftSlotX = centerX - mainBoxW / 2 - 16 - sideBoxW / 2;
+            ctx.fillStyle = 'rgba(10, 16, 36, 0.72)';
+            ctx.strokeStyle = 'rgba(0, 245, 155, 0.25)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.roundRect(leftSlotX - sideBoxW / 2, teleprompterY - sideBoxH / 2, sideBoxW, sideBoxH, 8);
+            ctx.fill();
+            ctx.stroke();
+
+            ctx.font = '600 13px "Segoe UI", monospace';
+            ctx.fillStyle = 'rgba(0, 245, 155, 0.65)';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(
+                state.drillPrevWord ? `✓ ${state.drillPrevWord.toUpperCase()}` : '✓ SẴN SÀNG',
+                leftSlotX,
+                teleprompterY
+            );
+
+            // Right slot ("TỪ TIẾP THEO")
+            const rightSlotX = centerX + mainBoxW / 2 + 16 + sideBoxW / 2;
+            ctx.fillStyle = 'rgba(10, 16, 36, 0.72)';
+            ctx.strokeStyle = 'rgba(0, 240, 255, 0.25)';
+            ctx.beginPath();
+            ctx.roundRect(rightSlotX - sideBoxW / 2, teleprompterY - sideBoxH / 2, sideBoxW, sideBoxH, 8);
+            ctx.fill();
+            ctx.stroke();
+
+            ctx.fillStyle = 'rgba(236, 248, 255, 0.65)';
+            ctx.fillText(
+                `TIẾP: ${nextWordObj.text.toUpperCase()} →`,
+                rightSlotX,
+                teleprompterY
+            );
+
+            // Center Active Word Teleprompter Box (Dead-Center at centerX)
+            ctx.fillStyle = 'rgba(14, 22, 52, 0.95)';
+            ctx.strokeStyle = activeFingerMeta.color;
+            ctx.lineWidth = 2;
+            ctx.shadowColor = activeFingerMeta.color;
+            ctx.shadowBlur = 14;
+            ctx.beginPath();
+            ctx.roundRect(centerX - mainBoxW / 2, teleprompterY - mainBoxH / 2, mainBoxW, mainBoxH, 11);
+            ctx.fill();
+            ctx.stroke();
+            ctx.shadowBlur = 0;
+
+            // Render each character of the active word dead-center with per-letter states
+            const wordChars = activeWordObj.text.toUpperCase().split('');
+            ctx.font = '900 20px "Segoe UI", monospace';
+            const charStep = 22;
+            const totalWordW = (wordChars.length - 1) * charStep;
+            const wordStartX = centerX - totalWordW / 2;
+
+            wordChars.forEach((ch, idx) => {
+                const cx = wordStartX + idx * charStep;
+                if (idx < activeWordObj.typedIndex) {
+                    // Already typed letter: glowing emerald
+                    ctx.fillStyle = '#00f59b';
+                    ctx.font = '800 19px "Segoe UI", monospace';
+                    ctx.fillText(ch, cx, teleprompterY);
+                } else if (idx === activeWordObj.typedIndex) {
+                    // Currently active letter: enlarged + neon underline
+                    ctx.fillStyle = activeFingerMeta.color;
+                    ctx.font = '900 23px "Segoe UI", monospace';
+                    ctx.fillText(ch, cx, teleprompterY - 1);
+
+                    ctx.fillStyle = activeFingerMeta.color;
+                    ctx.fillRect(cx - 8, teleprompterY + 13, 16, 3);
+                } else {
+                    // Remaining untyped letters: crisp white
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+                    ctx.font = '700 19px "Segoe UI", monospace';
+                    ctx.fillText(ch, cx, teleprompterY);
+                }
+            });
+            ctx.restore();
+
+            // =========================================================================
+            // LAYER 2 (MIDDLE): SYMMETRICAL SMOOTH LERP CONVEYOR & HOLO-CORE (centerX, coreY)
+            // =========================================================================
+            // 2A. Draw Left-Side History Keys (already typed, gliding out to the left & fading)
+            const maxSideSlots = 4;
+            for (let i = 0; i < Math.min(maxSideSlots, state.drillHistory.length); i++) {
+                const hist = state.drillHistory[i];
+                // Smoothly interpolates from centerX to left slots as drillScrollOffset goes 1 -> 0
+                const slotDistance = (i + 1) - state.drillScrollOffset;
+                const x = centerX - slotDistance * spacing;
+                const fade = Math.max(0.08, 0.55 - i * 0.13);
+
+                ctx.save();
+                ctx.globalAlpha = fade;
+                ctx.fillStyle = 'rgba(10, 26, 38, 0.8)';
+                ctx.strokeStyle = '#00f59b';
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                ctx.roundRect(x - 24, coreY - 24, 48, 48, 10);
+                ctx.fill();
+                ctx.stroke();
+
+                ctx.font = 'bold 18px "Segoe UI", monospace';
+                ctx.fillStyle = '#00f59b';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(hist.char.toUpperCase(), x, coreY);
+                ctx.restore();
+            }
+
+            // 2B. Draw Right-Side Upcoming Keys (gliding smoothly from right toward centerX)
+            for (let i = Math.min(maxSideSlots, upcomingChars.length - 1); i >= 1; i--) {
+                const item = upcomingChars[i];
+                const slotDistance = i + state.drillScrollOffset;
+                const x = centerX + slotDistance * spacing;
+                const fade = Math.max(0.15, 0.85 - (i - 1) * 0.18);
+
+                ctx.save();
+                ctx.globalAlpha = fade;
+                ctx.fillStyle = 'rgba(15, 23, 50, 0.9)';
+                ctx.strokeStyle = item.color;
+                ctx.lineWidth = 1.8;
+                ctx.beginPath();
+                ctx.roundRect(x - 26, coreY - 26, 52, 52, 11);
+                ctx.fill();
+                ctx.stroke();
+
+                ctx.font = 'bold 20px "Segoe UI", monospace';
+                ctx.fillStyle = '#e2e8f0';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(item.char.toUpperCase(), x, coreY);
+                ctx.restore();
+            }
+
+            // 2C. Draw Rotating Cyberpunk Reticle & Dead-Center Hologram Keycap at (centerX, coreY)
+            ctx.save();
+            const pulseBoost = state.drillCorePulse > 0 ? state.drillCorePulse * 8 : 0;
+            const errShakeX = state.drillCorePulse < 0 ? Math.sin(performance.now() * 0.06) * 7 : 0;
+            const ringColor = state.drillCorePulse < 0 ? '#ff3355' : activeFingerMeta.color;
+
+            // Outer rotating cyber ring
+            ctx.translate(centerX + errShakeX, coreY);
+            ctx.save();
+            ctx.rotate(state.drillAngle);
+            ctx.strokeStyle = ringColor;
+            ctx.globalAlpha = 0.55;
+            ctx.lineWidth = 2.2;
+            ctx.setLineDash([18, 10]);
+            ctx.beginPath();
+            ctx.arc(0, 0, 48 + pulseBoost * 0.5, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.restore();
+
+            // Inner counter-rotating reticle brackets
+            ctx.save();
+            ctx.rotate(-state.drillAngle * 1.3);
+            ctx.strokeStyle = '#00f0ff';
+            ctx.globalAlpha = 0.4;
+            ctx.lineWidth = 1.5;
+            ctx.setLineDash([10, 18]);
+            ctx.beginPath();
+            ctx.arc(0, 0, 41, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.restore();
+
+            // Center Holo-Core Keycap (Locked at Dead-Center 0,0)
+            const coreSize = 68 + pulseBoost;
+            ctx.fillStyle = state.drillCorePulse < 0
+                ? 'rgba(255, 51, 85, 0.32)'
+                : 'rgba(12, 22, 54, 0.96)';
+            ctx.strokeStyle = ringColor;
+            ctx.lineWidth = 3.2;
+            ctx.shadowColor = ringColor;
+            ctx.shadowBlur = 22 + pulseBoost;
+
+            ctx.beginPath();
+            ctx.roundRect(-coreSize / 2, -coreSize / 2, coreSize, coreSize, 15);
+            ctx.fill();
+            ctx.stroke();
+
+            // Keycap character inside Dead-Center
+            ctx.shadowBlur = 10;
+            ctx.font = '900 34px "Segoe UI", monospace';
+            ctx.fillStyle = '#ffffff';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(activeChar.toUpperCase(), 0, 1);
+            ctx.restore();
+
+            // =========================================================================
+            // LAYER 3 (BOTTOM): ERGONOMIC FINGER BADGE RIGHT UNDER CENTER (centerX, badgeY)
+            // =========================================================================
+            ctx.save();
+            const badgeText = `${activeFingerMeta.name.toUpperCase()}  •  PHÍM [ ${activeChar.toUpperCase()} ]`;
+            ctx.font = 'bold 12.5px "Segoe UI", sans-serif';
+            const badgeW = Math.max(230, ctx.measureText(badgeText).width + 36);
+            const badgeH = 28;
+
+            ctx.fillStyle = 'rgba(8, 13, 31, 0.92)';
+            ctx.strokeStyle = activeFingerMeta.color;
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.roundRect(centerX - badgeW / 2, badgeY - badgeH / 2, badgeW, badgeH, 999);
+            ctx.fill();
+            ctx.stroke();
+
+            // Colored finger dot inside badge
+            ctx.fillStyle = activeFingerMeta.color;
+            ctx.beginPath();
+            ctx.arc(centerX - badgeW / 2 + 16, badgeY, 5, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = '#ecf8ff';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(badgeText, centerX + 6, badgeY);
+            ctx.restore();
+        }
+
+        function startGameSession() {
+            soundEngine.init();
+            state.mode = document.getElementById('modeSelect').value;
+            state.genType = document.getElementById('genSelect').value;
+            state.speedDifficulty = document.getElementById('speedSelect').value;
+            soundEngine.profile = document.getElementById('soundSelect').value;
+
+            state.running = true;
+            state.paused = false;
+            state.score = 0;
+            state.combo = 0;
+            state.maxCombo = 0;
+            state.multiplier = 1;
+            state.shields = 5;
+            state.empCharge = 0;
+            state.wave = 1;
+            state.startTime = performance.now();
+            state.correctHits = 0;
+            state.totalKeystrokes = 0;
+            state.reactionSamples = [];
+            state.missedKeysMap = {};
+            state.targets = [];
+            state.lockedTargetId = null;
+            state.drillQueue = [];
+            state.drillHistory = [];
+            state.drillPrevWord = '';
+            state.drillScrollOffset = 0;
+            state.drillCorePulse = 0;
+            state.spawnTimer = 0;
+
+            document.getElementById('overlayModal').classList.add('hidden');
+            document.getElementById('btnStartPause').textContent = '⏸ Tạm Dừng';
+
+            if (state.mode === 'drill') {
+                refillDrillQueue();
+            } else {
+                spawnTarget();
+            }
+
+            updateHUD();
+            updateTargetKeyHighlight();
+        }
+
+        function endGameSession() {
+            state.running = false;
+            state.paused = false;
+            document.getElementById('btnStartPause').textContent = '▶ Bắt Đầu';
+
+            const elapsedMinutes = Math.max(0.05, (performance.now() - state.startTime) / 60000);
+            const wpm = Math.round((state.correctHits / 5) / elapsedMinutes);
+            const acc = state.totalKeystrokes > 0
+                ? Math.round((state.correctHits / state.totalKeystrokes) * 100)
+                : 100;
+            const avgMs = state.reactionSamples.length > 0
+                ? Math.round(state.reactionSamples.reduce((a, b) => a + b, 0) / state.reactionSamples.length)
+                : 0;
+
+            document.getElementById('modalTitle').textContent = '🏁 BÁO CÁO KẾT QUẢ HUẤN LUYỆN 10 NGÓN';
+            document.getElementById('modalBadge').textContent = `CHUỖI COMBO TỐI ĐA: ${state.maxCombo}`;
+            document.getElementById('postStatsGrid').style.display = 'grid';
+
+            document.getElementById('resScore').textContent = state.score.toLocaleString('vi-VN');
+            document.getElementById('resWpm').textContent = `${wpm} WPM`;
+            document.getElementById('resAcc').textContent = `${acc}%`;
+            document.getElementById('resReact').textContent = avgMs > 0 ? `${avgMs} ms` : '-- ms';
+
+            // Identify top missed keys to coach the user
+            const weakEntries = Object.entries(state.missedKeysMap).sort((a, b) => b[1] - a[1]).slice(0, 4);
+            const weakBox = document.getElementById('weakKeysBox');
+            if (weakEntries.length > 0) {
+                const formatted = weakEntries.map(([k, count]) => {
+                    const fCode = KEY_TO_FINGER[k] || 'LI';
+                    return `<b>Phím [${k.toUpperCase()}]</b> (${FINGER_INFO[fCode].name}: ${count} lỗi)`;
+                }).join(' • ');
+                weakBox.style.display = 'block';
+                weakBox.innerHTML = `🎯 <b>Gợi ý luyện tập thêm:</b> ${formatted}`;
+            } else {
+                weakBox.style.display = 'block';
+                weakBox.innerHTML = `✨ <b>Hoàn hảo!</b> Bạn không mắc lỗi gõ sai phím nào trong lượt vừa rồi!`;
+            }
+
+            document.getElementById('btnModalStart').textContent = '🔄 CHƠI LẠI NGAY (ENTER)';
+            document.getElementById('overlayModal').classList.remove('hidden');
+            updateTargetKeyHighlight();
+        }
+
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && state.running) {
+                e.preventDefault();
+                togglePause();
+                return;
+            }
+
+            if (e.key === 'Enter' && !state.running) {
+                e.preventDefault();
+                startGameSession();
+                return;
+            }
+
+            if (!state.running || state.paused) return;
+
+            // Prevent browser scrolling on Spacebar or `/` quick find
+            if (e.key === ' ' || e.key === '/' || e.key === "'") {
+                e.preventDefault();
+            }
+
+            handleVirtualOrPhysicalKey(e.key);
+        });
+
+        function togglePause() {
+            if (!state.running) {
+                startGameSession();
+                return;
+            }
+            state.paused = !state.paused;
+            document.getElementById('btnStartPause').textContent = state.paused ? '▶ Tiếp Tục' : '⏸ Tạm Dừng';
+            updateTargetKeyHighlight();
+        }
+
+        document.getElementById('btnStartPause').addEventListener('click', togglePause);
+        document.getElementById('btnReset').addEventListener('click', startGameSession);
+        document.getElementById('btnModalStart').addEventListener('click', startGameSession);
+        document.getElementById('empBtnWrap').addEventListener('click', triggerEmpUltimate);
+
+        document.getElementById('soundSelect').addEventListener('change', (e) => {
+            soundEngine.profile = e.target.value;
+            soundEngine.playKeySwitch();
+        });
+
+        document.getElementById('modeSelect').addEventListener('change', (e) => {
+            syncModeCards(e.target.value);
+            if (state.running) startGameSession();
+        });
+
+        document.getElementById('genSelect').addEventListener('change', () => {
+            if (state.running) startGameSession();
+        });
+
+        document.getElementById('speedSelect').addEventListener('change', () => {
+            if (state.running) startGameSession();
+        });
+
+        function syncModeCards(modeVal) {
+            document.querySelectorAll('.mode-card').forEach(card => {
+                card.classList.toggle('selected', card.dataset.mode === modeVal);
+            });
+        }
+
+        document.querySelectorAll('.mode-card').forEach(card => {
+            card.addEventListener('click', () => {
+                const chosen = card.dataset.mode;
+                document.getElementById('modeSelect').value = chosen;
+                syncModeCards(chosen);
+            });
+        });
+
+        function gameLoop(now) {
+            const dt = Math.min(0.1, (now - state.lastFrameTime) / 1000);
+            state.lastFrameTime = now;
+
+            updateGame(dt);
+            renderCanvas();
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        window.onload = function () {
+            resizeCanvas();
+            requestAnimationFrame(gameLoop);
+        };
+    </script>
+</body>
+</html>
