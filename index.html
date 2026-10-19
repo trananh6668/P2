@@ -5,16 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Bảng Điều Hướng Tính Năng</title>
   
-  <!-- BẮT ĐẦU: Code Google Analytics (Theo dõi truy cập tổng thể) -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-E30LC79Y4W"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-T8G11PLRK0"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
 
-    gtag('config', 'G-E30LC79Y4W');
-  </script>
-  <!-- KẾT THÚC: Code Google Analytics -->
+  gtag('config', 'G-T8G11PLRK0');
+</script>
 
   <style>
     body {
@@ -68,13 +67,13 @@
 
   <h1>Bảng Điều Hướng Tính Năng</h1>
 
-  <!-- Lưới hiển thị 15 tính năng, mở tab mới khi click -->
+  <!-- Lưới hiển thị các tính năng -->
   <div class="grid-container">
     <a href="tinh-nang-1.html" target="_blank" class="feature-card" onclick="trackFeatureClick('Quiz 600 TOEIC', 'tinh-nang-1.html')">Quiz 600 TOEIC</a>
     <a href="tinh-nang-2.html" target="_blank" class="feature-card" onclick="trackFeatureClick('Quiz 900 IELTS', 'tinh-nang-2.html')">Quiz 900 IELTS</a>
     <a href="tinh-nang-3.html" target="_blank" class="feature-card" onclick="trackFeatureClick('Quiz 3000 DAILY', 'tinh-nang-3.html')">Quiz 3000 DAILY</a>
     <a href="tinh-nang-4.html" target="_blank" class="feature-card" onclick="trackFeatureClick('Quiz 600 Ôn thi lái xe', 'tinh-nang-4.html')">Quiz 600 Ôn thi lái xe</a>
-    <a href="Bai_Dan_Gian.html" target="_blank" class="feature-card" onclick="trackFeatureClick('Bài Dân Gian Việt', 'Bai_Dan_Gian.html')">Bài Dân Gian Việt</a>
+    <a href="Bai_Dan_Gian.html" target="_blank" class="feature-card" onclick="trackFeatureClick('Đánh Bài Dân Gian', 'Bai_Dan_Gian.html')">Đánh Bài Dân Gian</a>
     <a href="Chess_Offline.html" target="_blank" class="feature-card" onclick="trackFeatureClick('Cờ Dân Gian Việt', 'Chess_Offline.html')">Cờ Dân Gian Việt</a>
     <a href="Tarrot Huyen Bi.html" target="_blank" class="feature-card" onclick="trackFeatureClick('Tarrot Huyền Bí', 'Tarrot Huyen Bi.html')">Tarrot Huyền Bí</a>
     <a href="Macau Royal Vip.html" target="_blank" class="feature-card" onclick="trackFeatureClick('Macau Royal Vip', 'Macau Royal Vip.html')">Macau Royal Vip</a>
@@ -85,19 +84,17 @@
     <a href="Boom Offline.html" target="_blank" class="feature-card" onclick="trackFeatureClick('Boom Offline', 'Boom Offline.html')">Boom Offline</a>
     <a href="AOE.html" target="_blank" class="feature-card" onclick="trackFeatureClick('Đế Chế', 'AOE.html')">Đế Chế</a>
     <a href="Ban nhen.html" target="_blank" class="feature-card" onclick="trackFeatureClick('Bắn Nhện', 'Ban nhen.html')">Bắn Nhện</a>
-	<a href="CAD 3D.html" target="_blank" class="feature-card" onclick="trackFeatureClick('CAD 3D', 'CAD 3D.html')">CAD 3D</a>
+    <a href="CAD 3D.html" target="_blank" class="feature-card" onclick="trackFeatureClick('CAD 3D', 'CAD 3D.html')">CAD 3D</a>
   </div>
 
   <script>
     function trackFeatureClick(featureName, fileName) {
-      // BẮT ĐẦU: Gửi sự kiện click lên Google Analytics trước khi mở tab mới
-      if (typeof gtag !== 'undefined') {
-        gtag('event', 'select_feature', {
-          'feature_name': featureName,    // Tên của tính năng được bấm
-          'file_html': fileName           // Tên file HTML liên kết
+      if (typeof window.gtag !== 'undefined') {
+        window.gtag('event', 'select_feature', {
+          'feature_name': featureName,
+          'file_html': fileName
         });
       }
-      // KẾT THÚC: Gửi sự kiện
     }
   </script>
 
