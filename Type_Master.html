@@ -1,0 +1,1098 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TypeMaster Pro | Tiếng Việt (Offline Version)</title>
+    <style>
+        /* --- CÀI ĐẶT MÀU SẮC & BIẾN CƠ BẢN --- */
+        :root {
+            --bg-body: #0f172a;      /* slate-900 */
+            --bg-panel: #1e293b;     /* slate-800 */
+            --bg-panel-dark: #151e2e; 
+            --bg-input: #0f172a;     /* slate-900 */
+            --border-color: #334155; /* slate-700 */
+            
+            --text-main: #f8fafc;    /* slate-50 */
+            --text-muted: #94a3b8;   /* slate-400 */
+            --text-dark: #64748b;    /* slate-500 */
+            
+            --primary: #3b82f6;      /* blue-500 */
+            --primary-hover: #2563eb;/* blue-600 */
+            --success: #4ade80;      /* green-400 */
+            --danger: #f87171;       /* red-400 */
+            --warning: #fb923c;      /* orange-400 */
+            --composing: #eab308;    /* yellow-500 */
+            
+            --font-sans: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+        }
+
+        /* --- RESET & GLOBAL --- */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: var(--font-sans);
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+        .mono { font-family: var(--font-mono); }
+        button { cursor: pointer; border: none; font-family: inherit; }
+        
+        /* --- BỐ CỤC CHÍNH --- */
+        .container {
+            width: 100%;
+            max-width: 1024px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* HEADER */
+        .header { text-align: center; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+        .header h1 { font-size: 2.35rem; font-weight: 700; color: var(--primary); letter-spacing: -1px; }
+        .header span { font-size: 1.5rem; font-weight: 300; color: var(--text-muted); }
+        .shortcut-hint { font-size: 0.8rem; color: var(--text-dark); }
+        .shortcut-hint kbd {
+            background-color: var(--bg-panel); border: 1px solid var(--border-color);
+            padding: 2px 6px; border-radius: 4px; color: var(--text-muted); font-family: var(--font-mono);
+        }
+
+        /* MAIN BOX */
+        .main-box {
+            width: 100%;
+            height: 460px;
+            background-color: var(--bg-panel);
+            border-radius: 16px;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+            border: 1px solid var(--border-color);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* QUẢN LÝ CÁC MÀN HÌNH */
+        .screen {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            display: flex;
+            flex-direction: column;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 0;
+            transition: opacity 0.25s ease;
+        }
+        .screen.active {
+            opacity: 1;
+            pointer-events: auto;
+            z-index: 20;
+        }
+
+        /* --- SCREEN 1: SETUP --- */
+        #screen-setup { padding: 28px 32px; background-color: var(--bg-panel); }
+        #screen-setup h2 { text-align: center; font-size: 1.25rem; margin-bottom: 16px; color: #e2e8f0; }
+        
+        .mode-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+        .mode-btn {
+            padding: 14px; border-radius: 12px; border: 2px solid var(--border-color);
+            background-color: var(--bg-panel-dark); text-align: center; transition: all 0.2s;
+        }
+        .mode-btn:hover { border-color: #64748b; }
+        .mode-btn.active { border-color: var(--primary); background-color: rgba(59, 130, 246, 0.1); }
+        .mode-btn .title { font-weight: 700; margin-bottom: 4px; color: #cbd5e1; }
+        .mode-btn.active .title { color: #60a5fa; }
+        .mode-btn .desc { font-size: 0.75rem; color: var(--text-muted); }
+
+        .time-selector {
+            display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 16px;
+        }
+        .time-selector span { font-size: 0.875rem; color: var(--text-muted); font-weight: 600; }
+        .time-chip {
+            padding: 6px 14px; border-radius: 8px; background-color: var(--bg-panel-dark);
+            border: 1px solid var(--border-color); color: var(--text-muted); font-size: 0.85rem; font-weight: 600; transition: all 0.2s;
+        }
+        .time-chip:hover { border-color: #64748b; color: var(--text-main); }
+        .time-chip.active { background-color: var(--primary); border-color: var(--primary); color: white; }
+
+        .input-group { flex: 1; display: flex; flex-direction: column; }
+        .input-group label { font-size: 0.875rem; font-weight: 600; color: var(--text-muted); margin-bottom: 8px; }
+        .setup-textarea {
+            flex: 1; width: 100%; background-color: var(--bg-input); border: 1px solid var(--border-color);
+            border-radius: 12px; padding: 14px; color: #cbd5e1; resize: none; font-size: 0.875rem;
+            transition: all 0.2s;
+        }
+        .setup-textarea:focus { outline: none; border-color: var(--primary); }
+        .setup-textarea:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .start-btn-wrapper { margin-top: 18px; text-align: center; }
+        .btn-primary {
+            background-color: var(--primary-hover); color: white; padding: 12px 48px;
+            border-radius: 12px; font-weight: 700; font-size: 1.05rem; transition: background 0.2s;
+        }
+        .btn-primary:hover { background-color: var(--primary); }
+
+        /* --- SCREEN 2: TYPING --- */
+        #screen-typing { background-color: var(--bg-panel); z-index: 10; }
+        .stats-bar {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 14px 24px; border-bottom: 1px solid var(--border-color); background-color: rgba(30, 41, 59, 0.5);
+        }
+        .stats-info { display: flex; gap: 24px; font-size: 0.85rem; font-weight: 600; color: var(--text-muted); align-items: center; }
+        .stats-info span { font-size: 1.15rem; margin-left: 4px; }
+        .live-time { color: #60a5fa; }
+        .live-wpm { color: var(--success); }
+        .live-acc { color: var(--warning); }
+        .live-chars { color: #e2e8f0; }
+        .waiting-badge {
+            font-size: 0.75rem !important; background: rgba(59, 130, 246, 0.15);
+            color: #93c5fd; padding: 3px 8px; border-radius: 6px; font-weight: 500;
+        }
+        
+        .typing-actions { display: flex; gap: 10px; }
+        .btn-action {
+            background-color: rgba(148, 163, 184, 0.15); color: var(--text-muted);
+            padding: 6px 14px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; transition: all 0.2s;
+        }
+        .btn-action:hover { background-color: rgba(148, 163, 184, 0.3); color: white; }
+        .btn-end {
+            background-color: rgba(239, 68, 68, 0.2); color: var(--danger);
+            padding: 6px 16px; border-radius: 8px; font-size: 0.85rem; font-weight: 700; transition: all 0.2s;
+        }
+        .btn-end:hover { background-color: var(--danger); color: white; }
+
+        .typing-area { position: relative; flex: 1; overflow: hidden; }
+        #hidden-input {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            opacity: 0; z-index: 10; resize: none; color: transparent; background: transparent; border: none; outline: none; cursor: default;
+        }
+        
+        #text-display::-webkit-scrollbar { display: none; }
+        #text-display {
+            -ms-overflow-style: none; scrollbar-width: none; scroll-behavior: smooth;
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            padding: 28px; font-size: 26px; line-height: 2.15; letter-spacing: 0.03em;
+            user-select: none; white-space: pre-wrap; word-wrap: break-word;
+            overflow-y: auto; color: var(--text-dark);
+        }
+
+        .char-correct { color: var(--success); }
+        .char-composing { color: var(--composing); border-bottom: 2px dashed var(--composing); }
+        .char-wrong { color: var(--danger); background-color: rgba(248, 113, 113, 0.28); border-radius: 3px; }
+        .char-wrong-space { background-color: rgba(248, 113, 113, 0.45); border-bottom: 2px solid var(--danger); }
+        .char-pending { color: var(--text-dark); }
+        
+        .cursor-active { position: relative; color: var(--text-main); }
+        .cursor-active::before {
+            content: ''; position: absolute; left: -1px; top: 12%; height: 76%; width: 2.5px;
+            background-color: var(--primary); animation: blink 1s infinite; border-radius: 2px; z-index: 10;
+        }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
+        .focus-overlay {
+            position: absolute; inset: 0; z-index: 20; background-color: rgba(15, 23, 42, 0.82);
+            backdrop-filter: blur(4px); display: none; flex-direction: column; align-items: center;
+            justify-content: center; cursor: pointer; color: white; font-size: 1.2rem; font-weight: 700; gap: 8px;
+        }
+        .focus-overlay.active { display: flex; }
+
+        /* --- SCREEN 3: STATS --- */
+        #screen-stats { background-color: var(--bg-panel-dark); align-items: center; justify-content: center; padding: 24px; }
+        #screen-stats h2 { font-size: 1.75rem; font-weight: 700; color: #e2e8f0; margin-bottom: 4px; }
+        #screen-stats p { color: var(--text-muted); margin-bottom: 24px; font-size: 0.9rem; }
+        
+        .results-wrapper { width: 100%; max-width: 820px; display: flex; flex-direction: column; gap: 14px; margin-bottom: 20px; }
+        .res-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+        .res-box {
+            background-color: var(--bg-panel); padding: 20px; border-radius: 12px;
+            border: 1px solid var(--border-color); text-align: center;
+            display: flex; flex-direction: column; justify-content: center;
+        }
+        
+        .res-title { color: var(--text-muted); font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+        .res-val { font-size: 2.5rem; font-weight: 700; }
+        .res-sub { font-size: 0.75rem; color: var(--text-dark); margin-top: 4px; }
+        .val-wpm { color: var(--success); }
+        .val-acc { color: #60a5fa; }
+        .val-raw { color: #cbd5e1; }
+        .val-chars { color: #38bdf8; font-size: 2rem; }
+        .val-errs { color: var(--danger); font-size: 2rem; }
+        .val-bs { color: var(--warning); font-size: 2rem; }
+
+        .stats-btn-group { display: flex; gap: 12px; }
+        .btn-restart {
+            background-color: var(--primary-hover); color: white; padding: 12px 28px; border-radius: 12px;
+            font-weight: 700; font-size: 1rem; display: flex; align-items: center; gap: 8px; transition: background 0.2s;
+        }
+        .btn-restart:hover { background-color: var(--primary); }
+        .btn-setup {
+            background-color: var(--bg-panel); color: var(--text-muted); border: 1px solid var(--border-color);
+            padding: 12px 24px; border-radius: 12px; font-weight: 600; font-size: 1rem; transition: all 0.2s;
+        }
+        .btn-setup:hover { color: white; border-color: #64748b; }
+
+        /* --- BÀN PHÍM --- */
+        .keyboard-wrapper {
+            width: 100%; background-color: var(--bg-panel); padding: 18px;
+            border-radius: 16px; border: 1px solid var(--border-color); overflow-x: auto; user-select: none;
+        }
+        .keyboard-container {
+            min-width: 850px; max-width: 1024px; margin: 0 auto; display: flex; flex-direction: column; gap: 8px;
+        }
+        .key-row { display: flex; width: 100%; gap: 8px; }
+        .key-base {
+            height: 42px; background-color: var(--border-color); border-radius: 6px;
+            display: flex; align-items: center; justify-content: center; font-size: 12px;
+            font-weight: 600; color: #cbd5e1; text-transform: uppercase; transition: all 0.05s ease;
+        }
+        .key-active { background-color: var(--primary) !important; color: white !important; transform: translateY(1px); }
+
+        @media (max-width: 768px) {
+            .header h1 { font-size: 1.8rem; }
+            #text-display { font-size: 20px; padding: 16px; }
+            .res-grid-3 { grid-template-columns: 1fr 1fr; }
+            .mode-grid { grid-template-columns: 1fr; }
+            .stats-info { gap: 12px; flex-wrap: wrap; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header class="header">
+            <h1>TypeMaster <span>| Tiếng Việt Chuẩn</span></h1>
+            <div class="shortcut-hint">Mẹo: Nhấn <kbd>Tab</kbd> + <kbd>Enter</kbd> để tạo lại bài gõ mới nhanh chóng</div>
+        </header>
+
+        <main class="main-box">
+            <!-- 1. Màn hình Setup -->
+            <div id="screen-setup" class="screen active">
+                <h2>Tùy Chọn Luyện Tập</h2>
+                
+                <div class="mode-grid">
+                    <button id="btn-mode-random" class="mode-btn active">
+                        <div class="title">Kho Câu Ngẫu Nhiên</div>
+                        <div class="desc">Tự động nối câu Tiếng Việt không trùng lặp.</div>
+                    </button>
+                    <button id="btn-mode-custom" class="mode-btn">
+                        <div class="title">Văn Bản Tự Chọn</div>
+                        <div class="desc">Dán đoạn văn bản bất kỳ bạn muốn luyện gõ.</div>
+                    </button>
+                </div>
+
+                <div class="time-selector" id="time-selector-bar">
+                    <span>Thời gian:</span>
+                    <button class="time-chip" data-time="15">15 giây</button>
+                    <button class="time-chip" data-time="30">30 giây</button>
+                    <button class="time-chip active" data-time="60">60 giây</button>
+                    <button class="time-chip" data-time="0">Vô tận</button>
+                </div>
+
+                <div class="input-group">
+                    <label>Nội dung văn bản:</label>
+                    <textarea id="setup-textarea" class="setup-textarea mono" disabled placeholder="Chế độ Ngẫu Nhiên đang bật. Hệ thống sẽ tự động sinh câu tiếng Việt..."></textarea>
+                </div>
+
+                <div class="start-btn-wrapper">
+                    <button id="btn-start" class="btn-primary">Bắt Đầu Luyện Gõ</button>
+                </div>
+            </div>
+
+            <!-- 2. Màn hình Typing -->
+            <div id="screen-typing" class="screen">
+                <div class="stats-bar">
+                    <div class="stats-info">
+                        <div>Thời gian:<span id="live-time" class="live-time mono">01:00</span></div>
+                        <div>Tốc độ:<span id="live-wpm" class="live-wpm mono">0</span> WPM</div>
+                        <div>Chính xác:<span id="live-acc" class="live-acc mono">100%</span></div>
+                        <div>Ký tự:<span id="live-chars" class="live-chars mono">0</span></div>
+                        <span id="waiting-badge" class="waiting-badge">Gõ phím bất kỳ để tính giờ...</span>
+                    </div>
+                    <div class="typing-actions">
+                        <button id="btn-quick-redo" class="btn-action" title="Làm lại (Tab + Enter)">Làm lại</button>
+                        <button id="btn-end-early" class="btn-end">Kết thúc</button>
+                    </div>
+                </div>
+
+                <div class="typing-area" id="typing-container">
+                    <textarea id="hidden-input" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off"></textarea>
+                    <div id="text-display" class="mono"></div>
+                    <div id="focus-overlay" class="focus-overlay">
+                        <div>Tạm dừng do mất tiêu điểm</div>
+                        <div style="font-size: 0.9rem; color: var(--text-muted); font-weight: 400;">Nhấp chuột vào đây hoặc nhấn phím bất kỳ để tiếp tục</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. Màn hình Stats (Kết quả) -->
+            <div id="screen-stats" class="screen">
+                <h2>Kết Quả Lượt Gõ</h2>
+                <p id="stats-subtitle">Thống kê chi tiết theo tiêu chuẩn quốc tế</p>
+                
+                <div class="results-wrapper">
+                    <div class="res-grid-3">
+                        <div class="res-box">
+                            <div class="res-title">Tốc Độ Chuẩn (Net WPM)</div>
+                            <div id="res-wpm" class="res-val val-wpm mono">0</div>
+                            <div class="res-sub">Chỉ tính các ký tự gõ đúng</div>
+                        </div>
+                        <div class="res-box">
+                            <div class="res-title">Độ Chính Xác</div>
+                            <div id="res-acc" class="res-val val-acc mono">100%</div>
+                            <div class="res-sub" id="res-err-rate">Tỷ lệ sai: 0%</div>
+                        </div>
+                        <div class="res-box">
+                            <div class="res-title">Tốc Độ Thô (Raw WPM)</div>
+                            <div id="res-raw-wpm" class="res-val val-raw mono">0</div>
+                            <div class="res-sub">Tính trên tổng số ký tự đã gõ</div>
+                        </div>
+                    </div>
+                    
+                    <div class="res-grid-3">
+                        <div class="res-box">
+                            <div class="res-title">Ký Tự (Đúng / Tổng)</div>
+                            <div id="res-chars" class="res-val val-chars mono">0 / 0</div>
+                        </div>
+                        <div class="res-box">
+                            <div class="res-title">Lỗi Sai Cuối Cùng</div>
+                            <div id="res-errors" class="res-val val-errs mono">0</div>
+                        </div>
+                        <div class="res-box">
+                            <div class="res-title">Số Lần Sửa (Backspace)</div>
+                            <div id="res-backspace" class="res-val val-bs mono">0</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="stats-btn-group">
+                    <button id="btn-restart-same" class="btn-restart">
+                        Gõ Lại Bài Mới (Tab + Enter)
+                    </button>
+                    <button id="btn-back-setup" class="btn-setup">
+                        Đổi Chế Độ
+                    </button>
+                </div>
+            </div>
+        </main>
+
+        <!-- Bàn phím Mô phỏng -->
+        <div class="keyboard-wrapper">
+            <div id="keyboard-container" class="keyboard-container"></div>
+        </div>
+    </div>
+
+    <script>
+        // --- DATA BÀN PHÍM ---
+        const keyboardLayout = [
+            [
+                { code: 'Backquote', label: '`' }, { code: 'Digit1', label: '1' }, { code: 'Digit2', label: '2' }, { code: 'Digit3', label: '3' }, 
+                { code: 'Digit4', label: '4' }, { code: 'Digit5', label: '5' }, { code: 'Digit6', label: '6' }, { code: 'Digit7', label: '7' }, 
+                { code: 'Digit8', label: '8' }, { code: 'Digit9', label: '9' }, { code: 'Digit0', label: '0' }, { code: 'Minus', label: '-' }, 
+                { code: 'Equal', label: '=' }, { code: 'Backspace', label: 'BACKSPACE', flex: 2 }
+            ],
+            [
+                { code: 'Tab', label: 'TAB', flex: 1.5 }, { code: 'KeyQ', label: 'Q' }, { code: 'KeyW', label: 'W' }, { code: 'KeyE', label: 'E' }, 
+                { code: 'KeyR', label: 'R' }, { code: 'KeyT', label: 'T' }, { code: 'KeyY', label: 'Y' }, { code: 'KeyU', label: 'U' }, 
+                { code: 'KeyI', label: 'I' }, { code: 'KeyO', label: 'O' }, { code: 'KeyP', label: 'P' }, { code: 'BracketLeft', label: '[' }, 
+                { code: 'BracketRight', label: ']' }, { code: 'Backslash', label: '\\', flex: 1.5 }
+            ],
+            [
+                { code: 'CapsLock', label: 'CAPS', flex: 1.8 }, { code: 'KeyA', label: 'A' }, { code: 'KeyS', label: 'S' }, { code: 'KeyD', label: 'D' }, 
+                { code: 'KeyF', label: 'F' }, { code: 'KeyG', label: 'G' }, { code: 'KeyH', label: 'H' }, { code: 'KeyJ', label: 'J' }, 
+                { code: 'KeyK', label: 'K' }, { code: 'KeyL', label: 'L' }, { code: 'Semicolon', label: ';' }, { code: 'Quote', label: '\'' }, 
+                { code: 'Enter', label: 'ENTER', flex: 2.2 }
+            ],
+            [
+                { code: 'ShiftLeft', label: 'SHIFT', flex: 2.5 }, { code: 'KeyZ', label: 'Z' }, { code: 'KeyX', label: 'X' }, { code: 'KeyC', label: 'C' }, 
+                { code: 'KeyV', label: 'V' }, { code: 'KeyB', label: 'B' }, { code: 'KeyN', label: 'N' }, { code: 'KeyM', label: 'M' }, 
+                { code: 'Comma', label: ',' }, { code: 'Period', label: '.' }, { code: 'Slash', label: '/' }, { code: 'ShiftRight', label: 'SHIFT', flex: 2.5 }
+            ],
+            [
+                { code: 'ControlLeft', label: 'CTRL', flex: 1.25 }, { code: 'MetaLeft', label: 'WIN', flex: 1.25 }, { code: 'AltLeft', label: 'ALT', flex: 1.25 }, 
+                { code: 'Space', label: '', flex: 6.25 }, 
+                { code: 'AltRight', label: 'ALT', flex: 1.25 }, { code: 'MetaRight', label: 'WIN', flex: 1.25 }, { code: 'ContextMenu', label: 'MENU', flex: 1.25 }, 
+                { code: 'ControlRight', label: 'CTRL', flex: 1.25 }
+            ]
+        ];
+
+        // --- KHO VĂN BẢN (Đã lọc trùng lặp) ---
+        const vietnameseSentences = [
+            "Hà Nội mùa thu thật đẹp với những con đường rợp bóng cây xanh.",
+            "Công nghệ thông tin đang thay đổi cách chúng ta làm việc mỗi ngày.",
+            "Một nụ cười bằng mười thang thuốc bổ, hãy luôn giữ tinh thần lạc quan.",
+            "Luyện gõ phím mười ngón giúp bạn tiết kiệm được rất nhiều thời gian.",
+            "Bầu trời đêm nay đầy sao, ánh trăng sáng chiếu rọi xuống mặt hồ tĩnh lặng.",
+            "Đọc sách là cách tốt nhất để mở rộng kiến thức và nuôi dưỡng tâm hồn.",
+            "Sự kiên trì và nỗ lực không ngừng nghỉ sẽ dẫn đến con đường thành công.",
+            "Thất bại là mẹ thành công, mỗi vấp ngã đều là một bài học vô cùng quý giá.",
+            "Đừng bao giờ từ bỏ ước mơ của mình, hãy dũng cảm theo đuổi nó đến cùng.",
+            "Gia đình là điểm tựa vững chắc nhất trong cuộc đời của mỗi con người.",
+            "Cuộc sống luôn chứa đựng những điều bất ngờ thú vị đang chờ ta khám phá.",
+            "Thiên nhiên ban tặng cho chúng ta vô vàn cảnh đẹp hùng vĩ và tráng lệ.",
+            "Uống đủ nước và tập thể dục đều đặn là bí quyết để có một cơ thể khỏe mạnh.",
+            "Hãy sống trọn vẹn từng khoảnh khắc vì thời gian trôi qua không thể quay lại.",
+            "Học hỏi không bao giờ là quá muộn đối với bất kỳ ai có lòng quyết tâm.",
+            "Một thói quen tốt cần được rèn luyện kiên trì qua từng ngày tháng.",
+            "Mỗi buổi sáng thức dậy là một cơ hội mới để bạn hoàn thiện chính mình.",
+            "Tập trung vào hiện tại là cách tốt nhất để xây dựng một tương lai tươi sáng.",
+            "Sự trung thực luôn là nền tảng vững chắc cho mọi mối quan hệ lâu dài.",
+            "Biết ơn những điều giản dị quanh ta sẽ khiến cuộc sống thêm phần an vui.",
+            "Việc tự học đòi hỏi tính kỷ luật và sự nghiêm túc tuyệt đối từ bản thân.",
+            "Kỹ năng giải quyết vấn đề là chìa khóa giúp nâng cao hiệu suất công việc.",
+            "Giao tiếp hiệu quả bắt đầu từ việc lắng nghe chủ động và phản hồi chân thành.",
+            "Lập trình viên cần không ngừng cập nhật các công nghệ mới nổi bật.",
+            "Một thuật toán tối ưu có thể giảm thiểu đáng kể tài nguyên của hệ thống.",
+            "Kiểm thử phần mềm kỹ lưỡng giúp hạn chế tối đa các lỗi tiềm ẩn khi vận hành.",
+            "Tư duy logic giúp chúng ta phân tích các tình huống phức tạp mạch lạc hơn.",
+            "Quản lý thời gian tốt giúp bạn cân bằng giữa công việc và cuộc sống cá nhân.",
+            "Những rặng thông xanh ngắt trải dài trên đồi cao đón gió lộng bốn phương.",
+            "Tiếng sóng vỗ rì rào bên bờ cát trắng xóa mang lại cảm giác bình yên đến lạ.",
+            "Mặt trời từ từ nhô lên từ phía chân trời, nhuộm đỏ cả một vùng biển rộng lớn.",
+            "Rừng nguyên sinh là lá phổi xanh bảo vệ sự cân bằng sinh thái của Trái Đất.",
+            "Trí tuệ nhân tạo đang mở ra một kỷ nguyên mới cho toàn nhân loại.",
+            "Khoa học dữ liệu giúp các doanh nghiệp đưa ra quyết định dựa trên bằng chứng xác thực.",
+            "Áo dài truyền thống tôn vinh vẻ đẹp dịu dàng và duyên dáng của người phụ nữ Việt Nam.",
+            "Bát phở bò nóng hổi thơm phức mùi quế hồi là nét ẩm thực tinh tế nổi tiếng thế giới.",
+  "Bún chả Hà Nội nướng trên than hoa tỏa hương thơm lừng khắp con ngõ nhỏ buổi trưa.",
+  "Bánh mì Sài Gòn giòn rụm kẹp đầy thịt nguội, chả lụa, đồ chua và rau mùi tươi xanh.",
+  "Món bún bò Huế chuẩn vị không thể thiếu chút mắm ruốc đậm đà và sả băm thơm nồng.",
+  "Cơm tấm sườn bì chả ăn kèm nước mắm tỏi ớt chua ngọt là thức quà quen thuộc của phương Nam.",
+  "Những hạt cốm làng Vòng xanh non được gói ghém cẩn thận trong hai lớp lá sen thơm ngát.",
+  "Chả cá Lã Vọng vàng ươm ăn cùng thì là, hành hoa, bún rối và mắm tôm đánh sủi bọt.",
+  "Bánh xèo miền Tây đổ mỏng tang, vành bánh giòn tan ôm trọn nhân tôm thịt và giá đỗ.",
+  "Lẩu mắm miền sông nước quy tụ hàng chục loại rau đồng dân dã như bông điên điển, bông súng.",
+  "Mì Quảng đậm đà với sợi mì vàng óng, nước nhân xâm xấp và bánh tráng nướng giòn rụm.",
+  "Cao lầu Hội An mang hương vị đặc trưng nhờ sợi mì được chế biến kỳ công từ nước giếng cổ.",
+  "Nem chua Thanh Hóa lên men tự nhiên, vị chua thanh quyện cùng vị cay nồng của tỏi ớt.",
+  "Bánh đa cua Hải Phòng hấp dẫn thực khách bởi sắc đỏ của gạch cua và màu xanh của rau rút.",
+  "Chè bưởi An Giang nấu khéo có phần cùi bưởi giòn sần sật hòa quyện cùng nước cốt dừa béo ngậy.",
+  "Thịt trâu gác bếp Tây Bắc mang vị ngọt đậm của thịt rừng quyện với mùi thơm cay của hạt mắc khén.",
+  "Cơm lam nướng trong ống tre non giữ trọn vị dẻo thơm của nếp nương vùng sơn cước.",
+  "Gỏi cá trích Phú Quốc cuốn bánh tráng cùng dừa nạo và rau rừng chấm nước mắm đậu phộng.",
+  "Bánh đậu xanh Hải Dương tan nhẹ đầu lưỡi, tuyệt vời nhất khi nhâm nhi cùng chén trà mạn.",
+  "Phở khô Gia Lai độc đáo với hai tô riêng biệt gồm một tô bánh phở trộn và một tô nước dùng.",
+  "Bánh căn Đà Lạt nướng trong khuôn đất nung nóng hổi, ăn kèm xíu mại giữa tiết trời se lạnh.",
+  "Kẹo dừa Bến Tre dẻo ngọt là món quà quê mộc mạc kết tinh từ xứ sở rợp bóng dừa xanh.",
+  "Bún cá Nha Trang thanh ngọt tự nhiên nhờ nước dùng ninh từ xương cá biển tươi rói.",
+  "Cháo lươn Nghệ An cay nồng, thịt lươn đồng xào nghệ vàng ươm thấm đẫm gia vị truyền thống.",
+  "Bánh cuốn Thanh Trì tráng mỏng như tờ giấy, rắc thêm hành phi vàng giòn và chấm nước mắm cà cuống.",
+  "Sầu riêng chín cây rụng xuống mang hương thơm nồng nàn và lớp cơm vàng béo ngậy khó quên.",
+  "Một ly cà phê trứng béo bùi, thơm dịu là trải nghiệm ẩm thực thú vị mỗi độ thu về.",
+
+  // 526 - 550: Kinh tế, Tài chính & Khởi nghiệp
+  "Quản trị dòng tiền hiệu quả là yếu tố sống còn giúp doanh nghiệp vượt qua giai đoạn suy thoái.",
+  "Đa dạng hóa danh mục đầu tư giúp giảm thiểu rủi ro trước những biến động bất ngờ của thị trường.",
+  "Lãi suất kép được mệnh danh là kỳ quan thứ tám của thế giới đối với những nhà đầu tư dài hạn.",
+  "Khởi nghiệp đòi hỏi sự kết hợp nhuần nhuyễn giữa tầm nhìn táo bạo và năng lực thực thi bền bỉ.",
+  "Thương mại điện tử xuyên biên giới đang mở ra cơ hội xuất khẩu rộng lớn cho hàng hóa nội địa.",
+  "Xây dựng thương hiệu uy tín cần nhiều năm nỗ lực nhưng có thể sụp đổ chỉ sau một khủng hoảng.",
+  "Tối ưu hóa chuỗi cung ứng giúp rút ngắn thời gian giao hàng và tiết giảm chi phí vận hành.",
+  "Nghiên cứu thị trường kỹ lưỡng giúp doanh nghiệp định vị chính xác phân khúc khách hàng mục tiêu.",
+  "Lạm phát tăng cao làm suy giảm sức mua của đồng tiền và ảnh hưởng trực tiếp đến chi tiêu hộ gia đình.",
+  "Báo cáo tài chính minh bạch là cơ sở quan trọng để thu hút nguồn vốn từ các quỹ đầu tư mạo hiểm.",
+  "Kinh tế tuần hoàn hướng tới việc tái sử dụng tài nguyên và giảm thiểu rác thải ra môi trường.",
+  "Dịch vụ chăm sóc khách hàng tận tâm là vũ khí cạnh tranh sắc bén để giữ chân người tiêu dùng.",
+  "Quyết định cắt lỗ đúng thời điểm đòi hỏi bản lĩnh tâm lý vững vàng và kỷ luật giao dịch nghiêm ngặt.",
+  "Tự động hóa quy trình kế toán giúp hạn chế sai sót thủ công và tăng tốc độ xử lý chứng từ.",
+  "Chiến lược giá linh hoạt giúp sản phẩm nhanh chóng thâm nhập thị trường mới đầy tính cạnh tranh.",
+  "Hợp đồng kinh tế cần được rà soát chặt chẽ từng điều khoản pháp lý để tránh tranh chấp về sau.",
+  "Văn hóa doanh nghiệp lành mạnh tạo dựng môi trường làm việc gắn kết và thúc đẩy hiệu suất lao động.",
+  "Đầu tư vào nghiên cứu và phát triển sản phẩm mới là chìa khóa tạo ra lợi thế cạnh tranh bền vững.",
+  "Kỹ năng quản trị rủi ro giúp ban lãnh đạo chủ động ứng phó với các kịch bản bất lợi trên thương trường.",
+  "Thanh toán không dùng tiền mặt đang trở thành thói quen phổ biến từ thành thị đến nông thôn.",
+  "Giá trị cốt lõi của một sản phẩm nằm ở khả năng giải quyết triệt để nỗi đau của khách hàng.",
+  "Cổ tức đều đặn hàng năm là tiêu chí hấp dẫn đối với những nhà đầu tư ưa chuộng sự an toàn.",
+  "Mở rộng quy mô quá nhanh khi nền tảng quản trị chưa vững chắc dễ dẫn đến đứt gãy hệ thống.",
+  "Tín dụng xanh đang được các ngân hàng ưu tiên giải ngân nhằm thúc đẩy các dự án phát triển bền vững.",
+  "Sự nhạy bén với xu hướng tiêu dùng mới giúp các nhà bán lẻ luôn đi trước đối thủ một bước.",
+
+  // 551 - 575: Địa danh, Di sản & Lịch sử Việt Nam
+  "Vịnh Hạ Long với hàng nghìn đảo đá vôi kỳ vĩ là di sản thiên nhiên thế giới được quốc tế vinh danh.",
+  "Quần thể danh thắng Tràng An mang vẻ đẹp non nước hữu tình với hệ thống hang động xuyên thủy độc đáo.",
+  "Văn Miếu Quốc Tử Giám là trường đại học đầu tiên của nước ta, biểu tượng cho truyền thống hiếu học.",
+  "Cố đô Huế trầm mặc bên dòng sông Hương lưu giữ hệ thống cung điện, lăng tẩm uy nghiêm của triều Nguyễn.",
+  "Thánh địa Mỹ Sơn ẩn mình trong thung lũng xanh rì với những tòa tháp gạch Chăm Pa cổ kính đầy bí ẩn.",
+  "Vườn quốc gia Phong Nha Kẻ Bàng sở hữu hang Sơn Đoòng lớn nhất thế giới với hệ sinh thái nguyên sơ.",
+  "Cao nguyên đá Đồng Văn trải dài một màu xám trầm hùng vĩ nơi địa đầu cực Bắc của Tổ quốc.",
+  "Chiến thắng Bạch Đằng năm chín trăm ba mươi tám đã chấm dứt hơn một thiên niên kỷ Bắc thuộc.",
+  "Chợ Bến Thành nhộn nhịp suốt ngày đêm là một trong những biểu tượng kiến trúc lâu đời của Sài Gòn.",
+  "Tháp Rùa cổ kính soi bóng xuống mặt nước Hồ Gươm xanh biếc giữa lòng thủ đô ngàn năm văn hiến.",
+  "Mũi Cà Mau là nơi mảnh đất hình chữ S vươn mình ra biển lớn, nơi đất biết nở và rừng biết đi.",
+  "Đèo Hải Vân uốn lượn hiểm trở giữa một bên là núi cao vời vợi và một bên là biển cả bao la.",
+  "Cầu Long Biên chứng kiến bao thăng trầm lịch sử qua hơn một thế kỷ nối đôi bờ sông Hồng đỏ nặng phù sa.",
+  "Quần đảo Trường Sa và Hoàng Sa là phần máu thịt thiêng liêng không thể tách rời của biển đảo Việt Nam.",
+  "Thành nhà Hồ được xây dựng bằng những khối đá xanh khổng lồ ghép khít vào nhau không cần chất kết dính.",
+  "Làng cổ Đường Lâm vẫn bảo tồn nguyên vẹn nét kiến trúc nhà đá ong cùng cổng làng, cây đa, bến nước.",
+  "Ruộng bậc thang Mù Cang Chải mùa nước đổ lấp lánh như những tấm gương khổng lồ phản chiếu mây trời.",
+  "Dinh Độc Lập rợp bóng cây xanh là công trình kiến trúc lịch sử gắn liền với ngày thống nhất đất nước.",
+  "Hồ Ba Bể nằm tĩnh lặng giữa đại ngàn rừng nguyên sinh xanh thẳm của vùng núi đá vôi Bắc Kạn.",
+  "Thác Bản Giốc tung bọt trắng xóa giữa núi rừng biên cương tạo nên khung cảnh thiên nhiên tráng lệ.",
+  "Phố cổ Hội An giữ được vẻ đẹp yên bình với những mái nhà ngói rêu phong và tường vàng cổ kính.",
+  "Địa đạo Củ Chi là công trình ngầm kỳ vĩ thể hiện ý chí kiên cường và sức sáng tạo phi thường.",
+  "Chùa Một Cột có kiến trúc độc đáo tựa như một đóa hoa sen vươn lên thanh tao từ mặt hồ vuông vức.",
+  "Gành Đá Đĩa Phú Yên gây ấn tượng mạnh mẽ bởi những cột đá bazan xếp chồng lên nhau như tổ ong khổng lồ.",
+  "Trống đồng Đông Sơn là bảo vật tiêu biểu cho nền văn minh sông Hồng rực rỡ thời các vua Hùng dựng nước.",
+
+  // 576 - 600: Tâm lý học, Sáng tạo & Nghệ thuật đương đại
+  "Hiệu ứng tâm lý đám đông đôi khi khiến con người đưa ra những lựa chọn thiếu đi sự suy xét độc lập.",
+  "Trí tuệ cảm xúc đóng vai trò then chốt giúp mỗi cá nhân thấu hiểu bản thân và kết nối sâu sắc với xã hội.",
+  "Sự cô đơn tích cực tạo ra khoảng lặng quý giá để người nghệ sĩ lắng nghe tiếng vọng từ nội tâm.",
+  "Nhiếp ảnh đường phố ghi lại những khoảnh khắc đời thường chân thực chỉ diễn ra trong một phần nghìn giây.",
+  "Kiến trúc xanh hiện đại ưu tiên tận dụng ánh sáng tự nhiên và thông gió trời để tiết kiệm năng lượng.",
+  "Điện ảnh là môn nghệ thuật tổng hợp kết nối hình ảnh, âm thanh, ánh sáng và kịch bản giàu cảm xúc.",
+  "Thói quen viết lách tự do mỗi buổi sáng giúp khai thông dòng chảy ý tưởng đang bị tắc nghẽn.",
+  "Thiết kế tối giản loại bỏ những chi tiết rườm rà để tôn vinh công năng cốt lõi và đường nét tinh tế.",
+  "Bản giao hưởng thính phòng đưa người nghe đi qua nhiều cung bậc cảm xúc từ êm đềm đến cao trào mãnh liệt.",
+  "Hội chứng sợ bỏ lỡ khiến nhiều người trẻ luôn cảm thấy bất an khi lướt mạng xã hội hàng giờ liền.",
+  "Khả năng tập trung sâu đang trở thành một lợi thế hiếm có giữa kỷ nguyên bùng nổ thông tin giải trí ngắn.",
+  "Màu sắc trong hội họa không chỉ mô tả hiện thực mà còn truyền tải tâm trạng ẩn giấu của người cầm cọ.",
+  "Nghệ thuật kể chuyện cuốn hút giúp một thông điệp khô khan trở nên sống động và in sâu vào trí nhớ.",
+  "Sự hoàn hảo cực đoan đôi khi lại là rào cản vô hình ngăn chặn quá trình thử nghiệm những ý tưởng đột phá.",
+  "Giấc mơ thường phản chiếu những mong ước thầm kín hoặc những nỗi lo âu chưa được giải quyết lúc thức.",
+  "Không gian triển lãm tương tác cho phép khán giả trực tiếp chạm vào và trở thành một phần của tác phẩm.",
+  "Ký ức tuổi thơ có ảnh hưởng sâu rộng đến cách một người trưởng thành xây dựng niềm tin với thế giới.",
+  "Nhịp điệu của câu văn quyết định độ mượt mà khi người đọc lướt mắt qua từng trang sách in.",
+  "Tư duy thiết kế lấy con người làm trung tâm luôn bắt đầu từ sự đồng cảm sâu sắc với người sử dụng.",
+  "Ánh sáng sân khấu được tính toán tỉ mỉ nhằm dẫn dắt sự chú ý của khán giả vào diễn biến tâm lý nhân vật.",
+  "Vượt qua định kiến nhận thức giúp chúng ta đánh giá sự việc một cách đa chiều và công tâm hơn.",
+  "Những tác phẩm văn học kinh điển luôn mang giá trị nhân văn vượt thời gian và chạm tới mọi thế hệ.",
+  "Sự hài hước tinh tế là chiếc chìa khóa thông minh giúp hóa giải những bầu không khí căng thẳng nhất.",
+  "Cảm hứng sáng tạo hiếm khi tự nhiên tìm đến nếu ta không chủ động bắt tay vào làm việc nghiêm túc.",
+  "Mỗi bản thảo hoàn chỉnh đều là kết quả của hàng chục lần biên tập, gọt giũa từng dấu câu và từ ngữ.",
+    // 351 - 400: Đời sống thường nhật, gia đình & bạn bè
+  "Một tách trà nóng vào buổi chiều se lạnh làm ấm áp lòng người biết bao.",
+  "Cùng nhau vào bếp nấu một bữa cơm giản dị mang lại tiếng cười rộn rã khắp gian nhà.",
+  "Những mẩu chuyện phiếm bên quán cóc ven đường giúp vơi đi nỗi mệt nhọc cuối ngày.",
+  "Ánh mắt trìu mến của cha mẹ luôn dõi theo từng bước trưởng thành của con cái.",
+  "Những chuyến đi dã ngoại cùng người thân để lại bao kỷ niệm ngọt ngào khó quên.",
+  "Một cái ôm siết chặt có thể xoa dịu mọi giông bão và lo âu trong lòng người khác.",
+  "Tiếng cười đùa giòn tan của con trẻ làm bừng sáng cả một góc sân nhỏ bình yên.",
+  "Bữa tiệc sinh nhật ấm cúng bên những người bạn thân thiết nhất trần đời.",
+  "Chia sẻ buồn vui cùng người tri kỷ giúp gánh nặng trong lòng nhẹ bớt đi một nửa.",
+  "Bức thư tay viết vội gửi gắm bao ân tình sâu sắc của những ngày xa cách nhớ thương.",
+  "Cùng nhau dọn dẹp nhà cửa chuẩn bị đón chào một năm mới an khang thịnh vượng.",
+  "Mùi hoa bưởi thoang thoảng trong khu vườn nhỏ gợi nhớ bao ký ức tuổi thơ tươi đẹp.",
+  "Chăm sóc cây cối và ngắm nhìn hoa nở là niềm vui tao nhã của những ngày nghỉ ngơi.",
+  "Những lời động viên đúng lúc tiếp thêm sức mạnh to lớn cho người đang gặp khó khăn.",
+  "Ngồi ngắm mưa rơi qua khung cửa sổ và thưởng thức một bản nhạc không lời êm dịu.",
+  "Đi dạo thong thả trên những con phố quen thuộc để cảm nhận nhịp sống chậm rãi trôi.",
+  "Hương vị ấm áp của nồi cháo hoa thơm mùi hành hoa và hạt tiêu cay nồng.",
+  "Những tấm ảnh cũ nhuốm màu thời gian lưu giữ lại khoảnh khắc thanh xuân tươi đẹp.",
+  "Tình bạn chân chính như dòng nước ngầm âm thầm chảy qua năm tháng không hề vơi cạn.",
+  "Ngọn đèn bàn thắp sáng căn phòng nhỏ nơi có người đang miệt mài học tập đêm khuya.",
+  "Bữa sáng giản đơn với chiếc bánh mì giòn tan đủ để khởi đầu ngày mới ngập tràn năng lượng.",
+  "Lời căn dặn ân cần của bà trước lúc cháu lên đường đi học xa nhà.",
+  "Sự quan tâm chân thành thể hiện qua những hành động nhỏ nhặt mà đầy tinh tế.",
+  "Chiếc áo ấm mẹ đan từ những ngày đông cũ vẫn nâng niu hơi ấm qua bao mùa giá rét.",
+  "Gặp lại người bạn thân thuở ấu thơ mang lại niềm xúc động bồi hồi khôn tả.",
+  "Những buổi tối sum vầy bên bàn cờ tướng của các bậc cao niên dưới bóng cây râm mát.",
+  "Một cuộc gọi ngắn về thăm cha mẹ làm vơi đi nỗi nhớ mong của người ở nơi xa.",
+  "Nấu một món ăn ngon cho người mình yêu thương là một niềm hạnh phúc bình dị.",
+  "Sự đồng lòng của cả gia đình giúp vượt qua mọi gian khó và biến cố trong cuộc sống.",
+  "Cùng nhau ngắm hoàng hôn buông xuống nơi chân trời xa xăm để lòng thấy bình yên.",
+  "Mùi sách mới mở ra luôn mang lại cảm giác hào hứng và khát khao khám phá điều mới.",
+  "Những câu chuyện vui bên mâm cơm tối xóa tan mọi căng thẳng của một ngày bận rộn.",
+  "Tình làng nghĩa xóm tối lửa tắt đèn có nhau là nét đẹp ngàn đời của người Việt.",
+  "Một món quà nhỏ bất ngờ đem lại nụ cười rạng rỡ và niềm vui ngập tràn trong mắt ai.",
+  "Trân trọng những giây phút được ở bên cạnh những người thân yêu nhất của cuộc đời.",
+  "Tiếng chim hót ríu rít ngoài ban công đánh thức một ngày mới tràn ngập ánh nắng chan hòa.",
+  "Cùng nhau ngồi lại giải quyết những hiểu lầm để tình cảm thêm phần bền chặt hơn.",
+  "Món canh cua đồng mát rượi giải nhiệt cho những ngày hè oi ả miền Bắc Bộ.",
+  "Sự sẻ chia kịp thời giúp sưởi ấm những mảnh đời bất hạnh và cơ nhỡ ngoài xã hội.",
+  "Những ký ức tuổi học trò bên mái trường xưa mãi là góc ký ức trong trẻo và tươi đẹp nhất.",
+  "Ngồi lại bên nhau ôn lại những kỷ niệm ngày xưa mà ngỡ như vừa mới hôm qua.",
+  "Chiếc xe đạp cũ chở đầy hoa tươi rong ruổi qua khắp các con phố thân thương.",
+  "Dành thời gian chất lượng cho con cái là món quà vô giá mà cha mẹ có thể trao tặng.",
+  "Một cốc nước chanh mát lạnh xua tan đi sự mệt mỏi sau chuyến đi đường dài.",
+  "Sự tha thứ và thấu hiểu là chìa khóa mở ra cánh cửa hạnh phúc cho mái ấm gia đình.",
+  "Những cái bắt tay thật chặt gửi trao niềm tin và sự hợp tác chân thành giữa người với người.",
+  "Hương sen ngào ngạt tỏa bay khắp mặt hồ mỗi độ hè sang làm dịu mát lòng người.",
+  "Tiếng rao hàng rong quen thuộc vang vọng trong con ngõ nhỏ lúc nửa đêm về sáng.",
+  "Hạnh phúc không ở đâu xa mà nằm ngay trong những khoảnh khắc bình dị thường ngày.",
+  "Biết ơn cuộc đời vì mỗi sớm mai thức dậy ta có thêm một ngày nữa để yêu thương.",
+
+  // 401 - 450: Tri thức, khám phá & vũ trụ bao la
+  "Vũ trụ bao la rộng lớn chứa đựng hàng tỷ thiên hà với vô vàn điều bí ẩn chưa lời giải.",
+  "Mỗi hạt cát trên bãi biển đều là một chứng nhân thầm lặng của thời gian đằng đẵng.",
+  "Trái Đất là ngôi nhà chung xinh đẹp duy nhất mà nhân loại đang cùng nhau chia sẻ sự sống.",
+  "Sự tò mò của con người là động lực mở ra những chân trời khám phá khoa học mới.",
+  "Các định luật vật lý mô tả trật tự kỳ diệu của vạn vật trong thế giới tự nhiên.",
+  "Ánh sáng từ các vì sao xa xôi phải mất hàng triệu năm mới đến được mắt của chúng ta.",
+  "Đại dương sâu thẳm vẫn còn ẩn chứa vô số loài sinh vật kỳ lạ mà con người chưa từng biết tới.",
+  "Lịch sử loài người là bản hùng ca về sự kiên cường và khát vọng vươn lên không ngừng.",
+  "Các nền văn minh cổ đại đã để lại những công trình kiến trúc kỳ vĩ thách thức thời gian.",
+  "Ngôn ngữ là công cụ vĩ đại nhất giúp con người truyền tải tư tưởng và tri thức qua ngàn đời.",
+  "Toán học là ngôn ngữ chung của vũ trụ giúp giải mã những quy luật bí ẩn của tự nhiên.",
+  "Sự tiến hóa của các loài sinh vật phản ánh khả năng thích nghi tuyệt vời với môi trường sống.",
+  "Khí quyển Trái Đất như một tấm khiên vô hình che chở sự sống khỏi các bức xạ nguy hiểm.",
+  "Mỗi nguyên tố hóa học đều mang những tính chất độc đáo tạo nên sự phong phú của vật chất.",
+  "Sự quay của các hành tinh quanh Mặt Trời tuân theo những quỹ đạo elip vô cùng chuẩn xác.",
+  "Bản đồ gen mở ra chìa khóa thấu hiểu cội nguồn và cơ chế hoạt động của sự sống con người.",
+  "Các hiện tượng nhật thực và nguyệt thực luôn khơi dậy sự kinh ngạc trước trật tự của vũ trụ.",
+  "Khám phá các vùng đất mới giúp chúng ta nhận ra sự nhỏ bé của bản thân trước thiên nhiên.",
+  "Thời gian là một dòng chảy vô tận không ngừng trôi qua quá khứ, hiện tại và tương lai.",
+  "Tri thức là ngọn đuốc soi đường giúp nhân loại thoát khỏi đêm tối của sự ngu dốt và sợ hãi.",
+  "Bảo tồn các loài động vật hoang dã là trách nhiệm cấp bách để duy trì đa dạng sinh học.",
+  "Sự biến đổi của các mùa trong năm mang lại nhịp điệu sinh sôi nảy nở cho vạn vật.",
+  "Trọng lực là sợi dây vô hình liên kết các vật thể lại với nhau trong không gian bao la.",
+  "Học hỏi từ lịch sử giúp chúng ta tránh lặp lại những sai lầm đau thương của thế hệ trước.",
+  "Mỗi nền văn hóa đều đóng góp những giá trị tinh hoa vào kho tàng tri thức chung của nhân loại.",
+  "Các hóa thạch cổ xưa lưu giữ bằng chứng sống động về sự sống trên Trái Đất hàng triệu năm trước.",
+  "Những phát minh vĩ đại thường bắt nguồn từ những quan sát tỉ mỉ về các hiện tượng quanh ta.",
+  "Khám phá các cực của Trái Đất cho thấy sức chịu đựng phi thường của con người trước nghịch cảnh.",
+  "Sự hiểu biết sâu sắc về tự nhiên giúp con người sống hài hòa và bền vững hơn với môi trường.",
+  "Âm thanh truyền qua không khí dưới dạng những làn sóng rung động tinh tế chạm tới tai ta.",
+  "Thế giới vi mô của các hạt nguyên tử mở ra những góc nhìn hoàn toàn mới về bản chất vật chất.",
+  "Bảo vệ nguồn nước sạch là bảo vệ mạch máu nuôi dưỡng sự sống trên hành tinh xanh tươi này.",
+  "Các dòng hải lưu luân chuyển khắp các đại dương góp phần điều hòa khí hậu toàn cầu.",
+  "Nghiên cứu về não bộ giúp giải mã những bí ẩn sâu kín nhất về ý thức và tư duy con người.",
+  "Sự hình thành của các dãy núi cao là kết quả của sự va chạm giữa các mảng kiến tạo Trái Đất.",
+  "Mỗi cuốn sách lịch sử là một cỗ máy thời gian đưa ta trở về thăm lại những thời khắc hào hùng.",
+  "Tinh thần hoài nghi khoa học giúp chúng ta luôn tìm kiếm sự thật dựa trên các bằng chứng vững chắc.",
+  "Bầu trời đêm không chỉ đẹp mà còn là một cuốn sách mở chứa đầy những câu chuyện cổ xưa.",
+  "Các vệ tinh nhân tạo quay quanh Trái Đất cung cấp dữ liệu quý giá phục vụ cuộc sống hàng ngày.",
+  "Tôn trọng sự đa dạng của các hệ sinh thái là tôn trọng chính cuộc sống của toàn nhân loại.",
+  "Triết học đặt ra những câu hỏi nền tảng giúp con người tìm kiếm ý nghĩa chân thực của cuộc đời.",
+  "Bảo tồn các di sản văn hóa là bảo vệ rễ cây nuôi dưỡng bản sắc của một dân tộc trường tồn.",
+  "Những bước tiến của y học hiện đại đã cứu sống hàng triệu sinh mạng khỏi các căn bệnh hiểm nghèo.",
+  "Sự thấu hiểu quy luật tự nhiên mang lại cho con người sức mạnh để tạo dựng một thế giới tốt đẹp hơn.",
+  "Khoa học và nghệ thuật là đôi cánh nâng tâm hồn con người bay cao tới những tầm vóc mới.",
+  "Mỗi khám phá mới đều mở ra thêm hàng ngàn câu hỏi thú vị đang chờ thế hệ mai sau giải đáp.",
+  "Vũ trụ không ngừng giãn nở nhắc nhở chúng ta về sự vô tận của không gian và thời gian.",
+  "Tình yêu tri thức là ngọn lửa sưởi ấm tâm hồn và thắp sáng con đường tìm kiếm chân lý.",
+  "Hãy luôn giữ tâm thế mở rộng để đón nhận những chân trời kiến thức mới mỗi ngày trôi qua.",
+  "Con người là một phần nhỏ bé nhưng vô cùng kỳ diệu của bức tranh tự nhiên vĩ đại này."
+        ];
+
+        // --- BẢNG NHẬN DIỆN KÝ TỰ GỐC TIẾNG VIỆT (Hỗ trợ Telex/VNI khi đang gõ dấu) ---
+        // Giúp không báo lỗi đỏ ngay lập tức khi người dùng vừa gõ chữ cái gốc (vd: gõ 'e' để chuẩn bị lên 'ệ')
+        function isVietnamesePrefixMatch(typedChar, targetChar) {
+            if (!typedChar || !targetChar) return false;
+            const stripBase = (str) => str.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+            const typedNorm = typedChar.normalize('NFC');
+            const targetNorm = targetChar.normalize('NFC');
+            if (typedNorm === targetNorm) return true;
+            if (typedChar === 'd' && targetNorm === 'đ') return true;
+            if (typedChar === 'D' && targetNorm === 'Đ') return true;
+            // Nếu ký tự vừa gõ cùng gốc chữ cái và chữ đích có dấu tiếng Việt
+            return stripBase(typedNorm) === stripBase(targetNorm) && targetNorm !== stripBase(targetNorm);
+        }
+
+        // --- TRẠNG THÁI (STATE) ---
+        let currentMode = 'random'; // 'random' | 'custom'
+        let selectedDuration = 60;  // 15, 30, 60, hoặc 0 (Vô tận)
+        let targetText = "";
+        let spanElements = [];      // Lưu cache DOM spans để không phải innerHTML lại từ đầu
+        let prevTypedLength = 0;
+        let lastSentenceIdx = -1;
+
+        let isPracticing = false;
+        let hasStartedTyping = false;
+        let isComposingIME = false;
+        let startTime = 0;
+        let timerInterval = null;
+        let backspaceCount = 0;
+
+        // DOM Elements
+        const screens = {
+            setup: document.getElementById('screen-setup'),
+            typing: document.getElementById('screen-typing'),
+            stats: document.getElementById('screen-stats')
+        };
+        
+        const ui = {
+            btnRandom: document.getElementById('btn-mode-random'),
+            btnCustom: document.getElementById('btn-mode-custom'),
+            timeChips: document.querySelectorAll('.time-chip'),
+            setupTextarea: document.getElementById('setup-textarea'),
+            btnStart: document.getElementById('btn-start'),
+            btnQuickRedo: document.getElementById('btn-quick-redo'),
+            btnEndEarly: document.getElementById('btn-end-early'),
+            btnRestartSame: document.getElementById('btn-restart-same'),
+            btnBackSetup: document.getElementById('btn-back-setup'),
+            
+            hiddenInput: document.getElementById('hidden-input'),
+            textDisplay: document.getElementById('text-display'),
+            focusOverlay: document.getElementById('focus-overlay'),
+            typingContainer: document.getElementById('typing-container'),
+            waitingBadge: document.getElementById('waiting-badge'),
+            
+            liveTime: document.getElementById('live-time'),
+            liveWpm: document.getElementById('live-wpm'),
+            liveAcc: document.getElementById('live-acc'),
+            liveChars: document.getElementById('live-chars'),
+            
+            resWpm: document.getElementById('res-wpm'),
+            resRawWpm: document.getElementById('res-raw-wpm'),
+            resAcc: document.getElementById('res-acc'),
+            resErrRate: document.getElementById('res-err-rate'),
+            resChars: document.getElementById('res-chars'),
+            resErrors: document.getElementById('res-errors'),
+            resBackspace: document.getElementById('res-backspace')
+        };
+
+        // 1. Khởi tạo Bàn phím ảo
+        function initKeyboard() {
+            const container = document.getElementById('keyboard-container');
+            keyboardLayout.forEach(row => {
+                const rowDiv = document.createElement('div');
+                rowDiv.className = 'key-row';
+                row.forEach(key => {
+                    const keyEl = document.createElement('div');
+                    keyEl.id = 'key-' + key.code;
+                    keyEl.className = 'key-base';
+                    keyEl.innerText = key.label;
+                    keyEl.style.flex = key.flex || 1;
+                    rowDiv.appendChild(keyEl);
+                });
+                container.appendChild(rowDiv);
+            });
+        }
+        initKeyboard();
+
+        function clearAllActiveKeys() {
+            document.querySelectorAll('.key-active').forEach(el => el.classList.remove('key-active'));
+        }
+        window.addEventListener('blur', clearAllActiveKeys);
+
+        // 2. Chuyển đổi màn hình & Chế độ
+        function switchScreen(screenName) {
+            Object.values(screens).forEach(s => s.classList.remove('active'));
+            screens[screenName].classList.add('active');
+        }
+
+        function setMode(mode) {
+            currentMode = mode;
+            if (mode === 'random') {
+                ui.btnRandom.classList.add('active');
+                ui.btnCustom.classList.remove('active');
+                ui.setupTextarea.disabled = true;
+                ui.setupTextarea.value = '';
+                ui.setupTextarea.placeholder = "Chế độ Ngẫu Nhiên đang bật. Hệ thống sẽ tự động sinh câu tiếng Việt...";
+            } else {
+                ui.btnCustom.classList.add('active');
+                ui.btnRandom.classList.remove('active');
+                ui.setupTextarea.disabled = false;
+                ui.setupTextarea.placeholder = "Dán hoặc nhập đoạn văn bản bạn muốn luyện gõ vào đây...";
+                ui.setupTextarea.focus();
+            }
+        }
+        ui.btnRandom.addEventListener('click', () => setMode('random'));
+        ui.btnCustom.addEventListener('click', () => setMode('custom'));
+
+        ui.timeChips.forEach(chip => {
+            chip.addEventListener('click', () => {
+                ui.timeChips.forEach(c => c.classList.remove('active'));
+                chip.classList.add('active');
+                selectedDuration = parseInt(chip.dataset.time, 10);
+            });
+        });
+
+        // 3. Sinh văn bản ngẫu nhiên không lặp câu liền kề & Chuẩn hóa NFC
+        function generateRandomText(sentencesCount) {
+            let res = [];
+            for (let i = 0; i < sentencesCount; i++) {
+                let idx;
+                do {
+                    idx = Math.floor(Math.random() * vietnameseSentences.length);
+                } while (idx === lastSentenceIdx && vietnameseSentences.length > 1);
+                lastSentenceIdx = idx;
+                res.push(vietnameseSentences[idx].normalize('NFC'));
+            }
+            return res.join(" ");
+        }
+
+        function formatTime(totalSecs) {
+            totalSecs = Math.max(0, Math.floor(totalSecs));
+            let m = Math.floor(totalSecs / 60).toString().padStart(2, '0');
+            let s = (totalSecs % 60).toString().padStart(2, '0');
+            return `${m}:${s}`;
+        }
+
+        // 4. Quản lý DOM Ký tự tối ưu (Không dùng innerHTML lại từ đầu)
+        function appendTargetTextToDOM(newTextChunk) {
+            const fragment = document.createDocumentFragment();
+            for (let i = 0; i < newTextChunk.length; i++) {
+                const span = document.createElement('span');
+                span.className = 'char-pending';
+                span.textContent = newTextChunk[i]; // An toàn tuyệt đối với các ký tự <, >, &
+                spanElements.push(span);
+                fragment.appendChild(span);
+            }
+            ui.textDisplay.appendChild(fragment);
+            targetText += newTextChunk;
+        }
+
+        function updateSingleSpanState(index, typedStr) {
+            const span = spanElements[index];
+            if (!span) return;
+            const targetChar = targetText[index];
+
+            if (index < typedStr.length) {
+                const typedChar = typedStr[index];
+                if (typedChar === targetChar) {
+                    span.className = 'char-correct';
+                } else if (index === typedStr.length - 1 && isVietnamesePrefixMatch(typedChar, targetChar)) {
+                    // Đang ở ký tự cuối cùng và khớp chữ cái gốc chờ gõ dấu Telex/VNI
+                    span.className = 'char-composing';
+                } else {
+                    span.className = targetChar === ' ' ? 'char-wrong char-wrong-space' : 'char-wrong';
+                }
+            } else if (index === typedStr.length) {
+                span.className = 'cursor-active';
+            } else {
+                span.className = 'char-pending';
+            }
+        }
+
+        function updateTypingDOM() {
+            const typed = ui.hiddenInput.value.normalize('NFC');
+            const currentLen = typed.length;
+
+            // Chỉ cập nhật những vị trí bị thay đổi thay vì render lại hàng nghìn thẻ span
+            const startIdx = Math.max(0, Math.min(prevTypedLength, currentLen) - 2);
+            const endIdx = Math.min(spanElements.length - 1, Math.max(prevTypedLength, currentLen) + 1);
+
+            for (let i = startIdx; i <= endIdx; i++) {
+                updateSingleSpanState(i, typed);
+            }
+            prevTypedLength = currentLen;
+
+            // Cuộn mượt giữ dòng đang gõ ở giữa khung nhìn
+            const cursorEl = spanElements[currentLen];
+            if (cursorEl) {
+                const scrollTarget = cursorEl.offsetTop - (ui.textDisplay.clientHeight / 2) + 24;
+                ui.textDisplay.scrollTop = scrollTarget > 0 ? scrollTarget : 0;
+            }
+        }
+
+        // 5. Tính toán chỉ số thời gian thực & Kết thúc
+        function calculateMetrics() {
+            const typed = ui.hiddenInput.value.normalize('NFC');
+            const finalLength = typed.length;
+            let correctChars = 0;
+            let finalErrors = 0;
+
+            for (let i = 0; i < finalLength; i++) {
+                if (typed[i] === targetText[i]) {
+                    correctChars++;
+                } else if (i === finalLength - 1 && isVietnamesePrefixMatch(typed[i], targetText[i])) {
+                    // Không phạt lỗi cho ký tự cuối đang gõ dở dấu tiếng Việt
+                    correctChars++;
+                } else {
+                    finalErrors++;
+                }
+            }
+
+            const elapsedMs = hasStartedTyping ? Math.max(500, Date.now() - startTime) : 0;
+            const elapsedMins = elapsedMs / 60000;
+
+            const netWpm = elapsedMins > 0 ? Math.round((correctChars / 5) / elapsedMins) : 0;
+            const rawWpm = elapsedMins > 0 ? Math.round((finalLength / 5) / elapsedMins) : 0;
+            const accuracy = finalLength > 0 ? ((correctChars / finalLength) * 100) : 100;
+            const errRate = finalLength > 0 ? ((finalErrors / finalLength) * 100) : 0;
+
+            return { finalLength, correctChars, finalErrors, netWpm, rawWpm, accuracy, errRate };
+        }
+
+        function updateLiveStatsBar() {
+            if (!hasStartedTyping) return;
+            const elapsedSecs = (Date.now() - startTime) / 1000;
+
+            if (selectedDuration > 0) {
+                const remaining = selectedDuration - elapsedSecs;
+                ui.liveTime.innerText = formatTime(Math.ceil(remaining));
+                if (remaining <= 0) {
+                    finishGame();
+                    return;
+                }
+            } else {
+                ui.liveTime.innerText = formatTime(elapsedSecs);
+            }
+
+            const { finalLength, netWpm, accuracy } = calculateMetrics();
+            ui.liveWpm.innerText = netWpm;
+            ui.liveAcc.innerText = accuracy.toFixed(0) + '%';
+            ui.liveChars.innerText = finalLength;
+        }
+
+        // 6. Khởi động bài gõ
+        function startNewSession() {
+            clearInterval(timerInterval);
+            targetText = "";
+            spanElements = [];
+            prevTypedLength = 0;
+            ui.textDisplay.innerHTML = "";
+            ui.textDisplay.scrollTop = 0;
+
+            let initialText = "";
+            if (currentMode === 'random') {
+                initialText = generateRandomText(8);
+            } else {
+                let customText = ui.setupTextarea.value.trim().normalize('NFC');
+                if (!customText) customText = "Bạn chưa nhập văn bản tùy chỉnh, đây là câu mẫu mặc định để bạn luyện gõ phím.";
+                initialText = customText.replace(/\s+/g, ' ');
+            }
+
+            appendTargetTextToDOM(initialText);
+
+            ui.hiddenInput.value = '';
+            backspaceCount = 0;
+            isPracticing = true;
+            hasStartedTyping = false;
+
+            updateSingleSpanState(0, "");
+
+            ui.liveTime.innerText = selectedDuration > 0 ? formatTime(selectedDuration) : "00:00";
+            ui.liveWpm.innerText = "0";
+            ui.liveAcc.innerText = "100%";
+            ui.liveChars.innerText = "0";
+            ui.waitingBadge.style.display = "inline-block";
+
+            switchScreen('typing');
+            ui.focusOverlay.classList.remove('active');
+            ui.hiddenInput.focus();
+            setTimeout(() => { if (isPracticing) ui.hiddenInput.focus(); }, 50);
+        }
+
+        ui.btnStart.addEventListener('click', startNewSession);
+        ui.btnQuickRedo.addEventListener('click', startNewSession);
+        ui.btnRestartSame.addEventListener('click', startNewSession);
+
+        // 7. Xử lý bộ gõ IME & Sự kiện nhập liệu
+        ui.hiddenInput.addEventListener('compositionstart', () => { isComposingIME = true; });
+        ui.hiddenInput.addEventListener('compositionend', () => {
+            isComposingIME = false;
+            handleTypingInput();
+        });
+
+        // Chặn dán văn bản (Paste) và khóa con trỏ luôn nằm ở cuối chuỗi
+        ui.hiddenInput.addEventListener('paste', (e) => e.preventDefault());
+        ui.hiddenInput.addEventListener('keydown', (e) => {
+            if (!isPracticing) return;
+            // Chặn các phím di chuyển con trỏ làm lệch vị trí gõ và chặn phím Enter xuống dòng
+            if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End', 'PageUp', 'PageDown', 'Enter'].includes(e.code)) {
+                e.preventDefault();
+            }
+            // Chỉ đếm Backspace thật của người dùng (không đếm khi ô trống hoặc khi IME tự xóa ngầm)
+            if (e.code === 'Backspace' && !e.isComposing && !isComposingIME && ui.hiddenInput.value.length > 0 && !e.repeat) {
+                backspaceCount++;
+            }
+        });
+
+        function handleTypingInput() {
+            if (!isPracticing) return;
+
+            // Chuẩn hóa NFC ngay trên ô input để đồng bộ ký tự tiếng Việt
+            const normalizedVal = ui.hiddenInput.value.replace(/\n/g, ' ').normalize('NFC');
+            if (ui.hiddenInput.value !== normalizedVal) {
+                ui.hiddenInput.value = normalizedVal;
+            }
+            // Luôn neo con trỏ ở cuối textarea
+            const len = ui.hiddenInput.value.length;
+            ui.hiddenInput.setSelectionRange(len, len);
+
+            // Bắt đầu tính giờ khi gõ ký tự đầu tiên
+            if (!hasStartedTyping && len > 0) {
+                hasStartedTyping = true;
+                startTime = Date.now();
+                ui.waitingBadge.style.display = "none";
+                timerInterval = setInterval(updateLiveStatsBar, 200);
+            }
+
+            // Nối thêm câu mới nếu đang ở chế độ Random và sắp gõ hết
+            if (currentMode === 'random' && len > targetText.length - 120) {
+                appendTargetTextToDOM(" " + generateRandomText(5));
+            }
+
+            updateTypingDOM();
+            updateLiveStatsBar();
+
+            // Kết thúc khi gõ hết văn bản (nếu ở chế độ Tự Chọn)
+            if (currentMode === 'custom' && len >= targetText.length) {
+                const lastTyped = ui.hiddenInput.value[len - 1];
+                const lastTarget = targetText[targetText.length - 1];
+                // Nếu ký tự cuối cùng đã khớp hoàn toàn thì kết thúc ngay
+                if (lastTyped === lastTarget) {
+                    finishGame();
+                }
+            }
+        }
+
+        ui.hiddenInput.addEventListener('input', handleTypingInput);
+
+        // 8. Quản lý Focus & Phím tắt nhanh (Tab + Enter)
+        ui.hiddenInput.addEventListener('blur', () => {
+            if (isPracticing) ui.focusOverlay.classList.add('active');
+        });
+        ui.focusOverlay.addEventListener('click', () => {
+            ui.focusOverlay.classList.remove('active');
+            ui.hiddenInput.focus();
+        });
+        ui.typingContainer.addEventListener('click', () => {
+            ui.focusOverlay.classList.remove('active');
+            ui.hiddenInput.focus();
+        });
+
+        ui.btnEndEarly.addEventListener('click', () => {
+            if (isPracticing) finishGame();
+        });
+
+        function finishGame() {
+            isPracticing = false;
+            clearInterval(timerInterval);
+            ui.hiddenInput.blur();
+            clearAllActiveKeys();
+
+            const { finalLength, correctChars, finalErrors, netWpm, rawWpm, accuracy, errRate } = calculateMetrics();
+
+            ui.resWpm.innerText = netWpm;
+            ui.resRawWpm.innerText = rawWpm;
+            ui.resAcc.innerText = accuracy.toFixed(1) + '%';
+            ui.resErrRate.innerText = `Tỷ lệ sai: ${errRate.toFixed(1)}%`;
+            ui.resChars.innerText = `${correctChars} / ${finalLength}`;
+            ui.resErrors.innerText = finalErrors;
+            ui.resBackspace.innerText = backspaceCount;
+
+            switchScreen('stats');
+        }
+
+        ui.btnBackSetup.addEventListener('click', () => {
+            switchScreen('setup');
+            if (currentMode === 'custom') ui.setupTextarea.focus();
+        });
+
+        // Đồng bộ bàn phím ảo & Phím tắt Tab + Enter
+        let tabPressedRecently = false;
+        window.addEventListener('keydown', (e) => {
+            const keyEl = document.getElementById('key-' + e.code);
+            if (keyEl) keyEl.classList.add('key-active');
+
+            if (e.code === 'Tab') {
+                e.preventDefault();
+                tabPressedRecently = true;
+                setTimeout(() => { tabPressedRecently = false; }, 1200);
+            } else if (e.code === 'Enter' && tabPressedRecently) {
+                e.preventDefault();
+                tabPressedRecently = false;
+                startNewSession();
+            } else if (isPracticing && ui.focusOverlay.classList.contains('active')) {
+                // Nhấn phím bất kỳ để mở khóa màn hình tạm dừng
+                ui.focusOverlay.classList.remove('active');
+                ui.hiddenInput.focus();
+            }
+        });
+
+        window.addEventListener('keyup', (e) => {
+            const keyEl = document.getElementById('key-' + e.code);
+            if (keyEl) keyEl.classList.remove('key-active');
+        });
+    </script>
+</body>
+</html>
