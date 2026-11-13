@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Đế Chế AoE I: Rise of Rome - Chuẩn AoE 1 Offline</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         :root {
             --gold-bright: #ffe89e;
@@ -30,8 +33,10 @@
             height: 100vh;
             overflow: hidden;
             background: #090705;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Be Vietnam Pro', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
             color: var(--text-cream);
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
 
         /* ================= TOP HUD BAR ================= */
@@ -101,7 +106,7 @@
             box-shadow: 0 4px 14px rgba(0,0,0,0.85), inset 0 1px 2px rgba(255,245,200,0.35);
         }
         #age-title {
-            font-family: 'Georgia', serif;
+            font-family: 'Be Vietnam Pro', system-ui, -apple-system, sans-serif;
             font-weight: 900;
             font-size: 13px;
             color: var(--gold-bright);
@@ -271,7 +276,7 @@
             margin-top: 3px;
         }
         .cmd-slot .lbl {
-            font-size: 9.5px;
+            font-size: 10px;
             font-weight: 700;
             margin-top: 1px;
             white-space: nowrap;
@@ -345,14 +350,14 @@
             min-width: 0;
         }
         #sel-name {
-            font-family: 'Georgia', serif;
+            font-family: 'Be Vietnam Pro', system-ui, -apple-system, sans-serif;
             font-size: 16px;
             font-weight: 900;
             color: var(--gold-bright);
             text-shadow: 0 2px 4px #000;
         }
         #sel-desc {
-            font-size: 11.5px;
+            font-size: 12px;
             color: var(--text-muted);
             white-space: nowrap;
             overflow: hidden;
@@ -442,7 +447,7 @@
             display: none;
         }
         #tt-head {
-            font-family: 'Georgia', serif;
+            font-family: 'Be Vietnam Pro', system-ui, -apple-system, sans-serif;
             font-size: 14px;
             font-weight: 900;
             color: var(--gold-bright);
@@ -506,7 +511,7 @@
             color: var(--text-cream);
         }
         .modal-title {
-            font-family: 'Georgia', serif;
+            font-family: 'Be Vietnam Pro', system-ui, -apple-system, sans-serif;
             font-size: 26px;
             font-weight: 900;
             text-align: center;
@@ -545,7 +550,7 @@
             box-shadow: 0 0 15px rgba(212,163,67,0.32);
         }
         .diff-option h3 {
-            font-family: 'Georgia', serif;
+            font-family: 'Be Vietnam Pro', system-ui, -apple-system, sans-serif;
             font-size: 15px;
             color: var(--gold-bright);
             margin-bottom: 5px;
@@ -560,7 +565,7 @@
             border: 1px solid #544332;
             border-radius: 8px;
             padding: 10px 14px;
-            font-size: 11.8px;
+            font-size: 12.5px;
             line-height: 1.58;
             margin-bottom: 14px;
             color: #e6dac8;
@@ -571,7 +576,7 @@
         .btn-start-match {
             width: 100%;
             padding: 12px;
-            font-family: 'Georgia', serif;
+            font-family: 'Be Vietnam Pro', system-ui, -apple-system, sans-serif;
             font-size: 17px;
             font-weight: 900;
             background: linear-gradient(180deg, #df9f26 0%, #9b680b 55%, #694404 100%);
@@ -1219,7 +1224,7 @@ function selectIdleVillager() {
 
 // ================= PLAYER & MAP INITIALIZATION =================
 function createPlayerState(team, isAI) {
-    const bonus = (isAI && game.difficulty === 'hard') ? 100 : 0;
+    const bonus = (isAI && game.difficulty === 'hard') ? 40 : 0;
     return {
         team,
         isAI,
@@ -1227,7 +1232,7 @@ function createPlayerState(team, isAI) {
         agingUp: false,
         wood: 200 + bonus,
         food: 200 + bonus,
-        gold: 0 + (isAI && game.difficulty === 'hard' ? 50 : 0),
+        gold: 0 + (isAI && game.difficulty === 'hard' ? 25 : 0),
         stone: 100 + bonus,
         pop: 0,
         maxPop: 4,
@@ -1986,7 +1991,7 @@ function updateSimulation(dt) {
             } else {
                 u.anim += dt * 11;
                 u.gatherTimer += dt;
-                let baseInterval = (u.team === 2 && game.difficulty === 'hard') ? 0.55 : (u.team === 2 && game.difficulty === 'easy') ? 1.0 : 0.68;
+                let baseInterval = (u.team === 2 && game.difficulty === 'hard') ? 0.72 : (u.team === 2 && game.difficulty === 'easy') ? 1.25 : 0.85;
                 // Hunting meat is faster than berries in AoE 1!
                 const cat = getResourceDropCategory(t);
                 if (cat === 'meat') baseInterval *= 0.78;
@@ -2227,7 +2232,7 @@ function spawnParticles(x, y, color, count) {
 function updateAI(dt) {
     game.aiTimer += dt;
     game.aiWaveTimer += dt;
-    const tickRate = game.difficulty === 'hard' ? 1.3 : game.difficulty === 'normal' ? 2.2 : 3.8;
+    const tickRate = game.difficulty === 'hard' ? 2.0 : game.difficulty === 'normal' ? 3.2 : 4.8;
     if (game.aiTimer < tickRate) return;
     game.aiTimer = 0;
 
@@ -2236,7 +2241,7 @@ function updateAI(dt) {
     if (!aiBN) return;
 
     const aiVills = units.filter(u => u.team === 2 && u.type === 'villager');
-    const maxVills = game.difficulty === 'hard' ? 20 : game.difficulty === 'normal' ? 14 : 9;
+    const maxVills = game.difficulty === 'hard' ? 15 : game.difficulty === 'normal' ? 11 : 7;
     const countB = (t) => buildings.filter(b => b.team === 2 && b.type === t).length;
 
     // 1. Assign idle AI villagers
@@ -2341,8 +2346,8 @@ function updateAI(dt) {
     });
 
     // 6. Launch periodic attack waves
-    const waveInterval = game.difficulty === 'hard' ? 40 : game.difficulty === 'normal' ? 60 : 95;
-    const minArmy = game.difficulty === 'hard' ? 6 : game.difficulty === 'normal' ? 4 : 3;
+    const waveInterval = game.difficulty === 'hard' ? 55 : game.difficulty === 'normal' ? 80 : 120;
+    const minArmy = game.difficulty === 'hard' ? 5 : game.difficulty === 'normal' ? 4 : 3;
     const army = units.filter(u => u.team === 2 && u.type !== 'villager');
 
     if (game.aiWaveTimer >= waveInterval && army.length >= minArmy) {
@@ -2607,7 +2612,7 @@ function renderGame() {
             }
 
             ctx.fillStyle = '#fff';
-            ctx.font = 'bold 11px Segoe UI';
+            ctx.font = 'bold 11px "Be Vietnam Pro", system-ui, sans-serif';
             ctx.textAlign = 'center';
             ctx.fillText(b.type, 0, 7);
         }
@@ -2749,7 +2754,7 @@ function renderGame() {
     });
 
     floatTexts.forEach(ft => {
-        ctx.font = 'bold 12px Segoe UI';
+        ctx.font = 'bold 12px "Be Vietnam Pro", system-ui, sans-serif';
         ctx.fillStyle = ft.color;
         ctx.textAlign = 'center';
         ctx.fillText(ft.text, ft.x, ft.y);
@@ -2767,7 +2772,7 @@ function renderGame() {
         ctx.fillRect(-spec.radius, -spec.radius, spec.radius * 2, spec.radius * 2);
         ctx.strokeRect(-spec.radius, -spec.radius, spec.radius * 2, spec.radius * 2);
         ctx.fillStyle = '#fff';
-        ctx.font = 'bold 11px Segoe UI';
+        ctx.font = 'bold 11px "Be Vietnam Pro", system-ui, sans-serif';
         ctx.textAlign = 'center';
         ctx.fillText(spec.name, 0, 4);
         ctx.restore();
