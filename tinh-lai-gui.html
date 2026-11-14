@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Công Cụ Tính Lãi Gửi Ngân Hàng</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js for visual growth representation -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                            900: '#1e3a8a',
+                        },
+                        emerald: {
+                            500: '#10b981',
+                            600: '#059669',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom scrollbar for table */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased min-h-screen flex flex-col">
+
+    <!-- Header -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="bg-brand-600 text-white p-2 rounded-xl shadow-sm">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="text-lg sm:text-xl font-bold text-slate-900 leading-tight">Công Cụ Tính Lãi Gửi Ngân Hàng</h1>
+                    <p class="text-xs text-slate-500 hidden sm:block">Hoạch định tài chính & sức mạnh lãi kép chuẩn xác</p>
+                </div>
+            </div>
+            
+            <!-- Session Storage Indicator & Reset -->
+            <div class="flex items-center gap-2 sm:gap-3">
+                <div class="hidden md:flex items-center gap-1.5 text-xs font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-full">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <span>Lưu tạm phiên làm việc (Tự xóa khi thoát)</span>
+                </div>
+                <button id="btnReset" type="button" class="inline-flex items-center gap-1.5 text-xs sm:text-sm font-medium text-rose-600 bg-rose-50 hover:bg-rose-100 border border-rose-200 px-3 py-2 rounded-xl transition-colors cursor-pointer">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                    <span>Xóa dữ liệu</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Mobile Session Notice Banner -->
+    <div class="md:hidden bg-emerald-50 border-b border-emerald-200 px-4 py-2 text-center">
+        <p class="text-xs font-medium text-emerald-800 flex items-center justify-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+            Dữ liệu lưu tạm thời trên tab này và tự động xóa khi đóng trình duyệt.
+        </p>
+    </div>
+
+    <!-- Toast Notification Container (Replaces alert) -->
+    <div id="toast" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none">
+        <div class="bg-slate-900 text-white px-4 py-3 rounded-xl shadow-lg flex items-center gap-2.5 text-sm font-medium">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-emerald-400" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+            </svg>
+            <span id="toastMessage">Đã xóa dữ liệu phiên làm việc!</span>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
+            
+            <!-- Left Column: Input Form (5 cols on lg) -->
+            <section class="lg:col-span-5 bg-white rounded-2xl shadow-sm border border-slate-200 p-5 sm:p-6">
+                <div class="flex items-center justify-between mb-5 pb-3 border-b border-slate-100">
+                    <h2 class="text-base sm:text-lg font-bold text-slate-900 flex items-center gap-2">
+                        <span class="w-1.5 h-5 bg-brand-600 rounded-full"></span>
+                        Thông số khoản gửi
+                    </h2>
+                    <span id="saveStatus" class="text-xs text-slate-400 italic">Đã tự động lưu</span>
+                </div>
+
+                <form id="calculatorForm" class="space-y-5" onsubmit="return false;">
+                    <!-- 1. Số tiền gửi ban đầu -->
+                    <div>
+                        <label for="initialDeposit" class="block text-sm font-semibold text-slate-700 mb-1.5">
+                            Số tiền gửi ban đầu (VND)
+                        </label>
+                        <div class="relative">
+                            <input type="text" id="initialDeposit" inputmode="numeric" value="100.000.000" 
+                                class="w-full pl-4 pr-14 py-3 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 font-semibold text-base focus:bg-white focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition-all"
+                                placeholder="VD: 100.000.000">
+                            <span class="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">VND</span>
+                        </div>
+                    </div>
+
+                    <!-- 2. Số tiền gửi thêm định kỳ -->
+                    <div>
+                        <div class="flex justify-between items-center mb-1.5">
+                            <label for="periodicDeposit" class="block text-sm font-semibold text-slate-700">
+                                Số tiền gửi thêm định kỳ (VND)
+                            </label>
+                            <span class="text-xs text-slate-400">Tùy chọn</span>
+                        </div>
+                        <div class="relative">
+                            <input type="text" id="periodicDeposit" inputmode="numeric" value="5.000.000" 
+                                class="w-full pl-4 pr-14 py-3 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 font-semibold text-base focus:bg-white focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition-all"
+                                placeholder="0">
+                            <span class="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">VND</span>
+                        </div>
+                    </div>
+
+                    <!-- 3. Tần suất gửi thêm / ghép lãi -->
+                    <div>
+                        <label for="compoundFrequency" class="block text-sm font-semibold text-slate-700 mb-1.5">
+                            Tần suất gửi thêm & ghép lãi
+                        </label>
+                        <select id="compoundFrequency" 
+                            class="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 font-medium text-sm sm:text-base focus:bg-white focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition-all cursor-pointer">
+                            <option value="12" selected>Hàng tháng (12 lần/năm)</option>
+                            <option value="4">Hàng quý (4 lần/năm)</option>
+                            <option value="1">Hàng năm (1 lần/năm)</option>
+                        </select>
+                    </div>
+
+                    <!-- 4. Lãi suất năm & Thời gian gửi (2 columns on sm+) -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <!-- Lãi suất năm -->
+                        <div>
+                            <label for="interestRate" class="block text-sm font-semibold text-slate-700 mb-1.5">
+                                Lãi suất (%/năm)
+                            </label>
+                            <div class="relative">
+                                <input type="number" id="interestRate" step="0.01" min="0" max="100" value="6.5" 
+                                    class="w-full pl-4 pr-12 py-3 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 font-semibold text-base focus:bg-white focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition-all"
+                                    placeholder="6.5">
+                                <span class="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">%/năm</span>
+                            </div>
+                        </div>
+
+                        <!-- Thời gian gửi -->
+                        <div>
+                            <label for="duration" class="block text-sm font-semibold text-slate-700 mb-1.5">
+                                Thời gian gửi
+                            </label>
+                            <div class="flex rounded-xl border border-slate-300 bg-slate-50 focus-within:bg-white focus-within:ring-2 focus-within:ring-brand-500 focus-within:border-brand-500 overflow-hidden transition-all">
+                                <input type="number" id="duration" min="1" max="100" value="10" 
+                                    class="w-full pl-4 pr-2 py-3 bg-transparent text-slate-900 font-semibold text-base outline-none"
+                                    placeholder="10">
+                                <select id="durationUnit" aria-label="Đơn vị thời gian"
+                                    class="bg-slate-100 border-l border-slate-300 px-3 py-3 text-sm font-semibold text-slate-700 outline-none cursor-pointer hover:bg-slate-200 transition-colors">
+                                    <option value="years" selected>Năm</option>
+                                    <option value="months">Tháng</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 5. Thời điểm gửi thêm -->
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">
+                            Thời điểm gửi thêm tiền định kỳ
+                        </label>
+                        <div class="grid grid-cols-2 gap-3">
+                            <label class="relative flex items-center justify-center p-3 rounded-xl border border-slate-200 bg-slate-50 cursor-pointer hover:bg-slate-100 transition-all has-[:checked]:border-brand-600 has-[:checked]:bg-brand-50 has-[:checked]:text-brand-700">
+                                <input type="radio" name="depositTiming" value="end" checked class="sr-only">
+                                <span class="text-sm font-semibold">Cuối mỗi kỳ</span>
+                            </label>
+                            <label class="relative flex items-center justify-center p-3 rounded-xl border border-slate-200 bg-slate-50 cursor-pointer hover:bg-slate-100 transition-all has-[:checked]:border-brand-600 has-[:checked]:bg-brand-50 has-[:checked]:text-brand-700">
+                                <input type="radio" name="depositTiming" value="beginning" class="sr-only">
+                                <span class="text-sm font-semibold">Đầu mỗi kỳ</span>
+                            </label>
+                        </div>
+                        <p class="text-xs text-slate-500 mt-1.5">
+                            * Gửi đầu kỳ sẽ sinh lãi ngay trong kỳ gửi thêm đó.
+                        </p>
+                    </div>
+                </form>
+            </section>
+
+            <!-- Right Column: Results, Chart & Table (7 cols on lg) -->
+            <section class="lg:col-span-7 space-y-6">
+                
+                <!-- Summary Cards -->
+                <div class="bg-gradient-to-br from-brand-900 via-brand-700 to-brand-600 rounded-2xl p-6 text-white shadow-md">
+                    <p class="text-brand-100 text-sm font-medium mb-1">Tổng số tiền nhận được cuối kỳ</p>
+                    <div id="totalFutureValue" class="text-3xl sm:text-4xl font-extrabold tracking-tight break-words mb-6">
+                        0 ₫
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-white/15">
+                        <div class="bg-white/10 backdrop-blur-sm rounded-xl p-3.5">
+                            <div class="flex items-center gap-2 text-brand-100 text-xs font-medium mb-1">
+                                <span class="w-2.5 h-2.5 rounded-full bg-sky-300"></span>
+                                Tổng tiền gốc đã gửi
+                            </div>
+                            <div id="totalPrincipal" class="text-lg sm:text-xl font-bold">0 ₫</div>
+                            <div id="principalPercent" class="text-xs text-brand-200 mt-0.5">0% tổng giá trị</div>
+                        </div>
+                        <div class="bg-white/10 backdrop-blur-sm rounded-xl p-3.5">
+                            <div class="flex items-center gap-2 text-emerald-200 text-xs font-medium mb-1">
+                                <span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
+                                Tổng tiền lãi sinh ra
+                            </div>
+                            <div id="totalInterest" class="text-lg sm:text-xl font-bold text-emerald-300">0 ₫</div>
+                            <div id="interestPercent" class="text-xs text-emerald-200 mt-0.5">0% tổng giá trị</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chart Card -->
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 sm:p-6">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
+                        <div>
+                            <h3 class="text-base font-bold text-slate-900">Biểu đồ tăng trưởng tài sản</h3>
+                            <p class="text-xs text-slate-500">So sánh tỷ trọng tiền gốc và lãi kép tích lũy theo thời gian</p>
+                        </div>
+                        <div class="flex items-center gap-4 text-xs font-medium">
+                            <span class="flex items-center gap-1.5 text-slate-700">
+                                <span class="w-3 h-3 rounded-sm bg-brand-600 inline-block"></span> Tiền gốc
+                            </span>
+                            <span class="flex items-center gap-1.5 text-slate-700">
+                                <span class="w-3 h-3 rounded-sm bg-emerald-500 inline-block"></span> Tiền lãi
+                            </span>
+                        </div>
+                    </div>
+                    <div class="relative w-full h-64 sm:h-72">
+                        <canvas id="growthChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Detailed Breakdown Table -->
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                    <div class="p-5 sm:p-6 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div>
+                            <h3 class="text-base font-bold text-slate-900">Bảng chi tiết theo từng kỳ</h3>
+                            <p class="text-xs text-slate-500">Theo dõi biến động dòng tiền chi tiết</p>
+                        </div>
+                        <!-- View mode toggle for table -->
+                        <div class="inline-flex rounded-xl bg-slate-100 p-1 self-start sm:self-auto">
+                            <button type="button" id="viewYearly" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-white text-brand-700 shadow-sm transition-all cursor-pointer">
+                                Theo Năm
+                            </button>
+                            <button type="button" id="viewPeriod" class="px-3 py-1.5 text-xs font-semibold rounded-lg text-slate-600 hover:text-slate-900 transition-all cursor-pointer">
+                                Chi tiết từng kỳ
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="overflow-x-auto max-h-96">
+                        <table class="w-full text-left border-collapse">
+                            <thead class="bg-slate-50 sticky top-0 z-10 border-b border-slate-200 text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                                <tr>
+                                    <th id="thPeriodLabel" class="py-3.5 px-4 whitespace-nowrap">Năm</th>
+                                    <th class="py-3.5 px-4 whitespace-nowrap text-right">Đầu kỳ</th>
+                                    <th class="py-3.5 px-4 whitespace-nowrap text-right">Gửi thêm</th>
+                                    <th class="py-3.5 px-4 whitespace-nowrap text-right">Tiền lãi</th>
+                                    <th class="py-3.5 px-4 whitespace-nowrap text-right">Số dư cuối kỳ</th>
+                                </tr>
+                            </thead>
+                            <tbody id="scheduleTableBody" class="divide-y divide-slate-100 text-sm text-slate-700">
+                                <!-- Rows injected via JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </section>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-slate-200 mt-12 py-6">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
+            <p>© Công Cụ Tính Lãi Suất Gửi Ngân Hàng. Kết quả mang tính chất tham khảo dựa trên công thức lãi kép tiêu chuẩn.</p>
+            <p class="text-slate-400">Bảo mật: Không lưu trữ dữ liệu trên máy chủ.</p>
+        </div>
+    </footer>
+
+    <script>
+        /**
+         * Ứng dụng Tính Lãi Suất Kép Ngân Hàng
+         * Sử dụng sessionStorage để lưu tạm dữ liệu trong phiên tab hiện tại và tự xóa khi đóng tab/trình duyệt.
+         */
+
+        const STORAGE_KEY = 'vn_bank_compound_interest_session_v1';
+
+        // Giá trị mặc định
+        const DEFAULT_STATE = {
+            initialDeposit: 100000000,
+            periodicDeposit: 5000000,
+            compoundFrequency: 12,
+            interestRate: 6.5,
+            duration: 10,
+            durationUnit: 'years',
+            depositTiming: 'end',
+            tableView: 'yearly' // 'yearly' hoặc 'period'
+        };
+
+        let currentState = { ...DEFAULT_STATE };
+        let growthChartInstance = null;
+
+        // DOM Elements
+        const elInitialDeposit = document.getElementById('initialDeposit');
+        const elPeriodicDeposit = document.getElementById('periodicDeposit');
+        const elCompoundFrequency = document.getElementById('compoundFrequency');
+        const elInterestRate = document.getElementById('interestRate');
+        const elDuration = document.getElementById('duration');
+        const elDurationUnit = document.getElementById('durationUnit');
+        const elDepositTimings = document.getElementsByName('depositTiming');
+        
+        const elTotalFutureValue = document.getElementById('totalFutureValue');
+        const elTotalPrincipal = document.getElementById('totalPrincipal');
+        const elTotalInterest = document.getElementById('totalInterest');
+        const elPrincipalPercent = document.getElementById('principalPercent');
+        const elInterestPercent = document.getElementById('interestPercent');
+        
+        const elScheduleTableBody = document.getElementById('scheduleTableBody');
+        const elThPeriodLabel = document.getElementById('thPeriodLabel');
+        const btnViewYearly = document.getElementById('viewYearly');
+        const btnViewPeriod = document.getElementById('viewPeriod');
+        const btnReset = document.getElementById('btnReset');
+        const elSaveStatus = document.getElementById('saveStatus');
+
+        // Định dạng tiền tệ VND
+        function formatVND(amount) {
+            if (isNaN(amount) || !isFinite(amount)) return '0 ₫';
+            return Math.round(amount).toLocaleString('vi-VN') + ' ₫';
+        }
+
+        // Định dạng số có dấu chấm phân cách hàng nghìn cho ô input
+        function formatNumberInput(num) {
+            if (!num && num !== 0) return '';
+            return Math.round(num).toLocaleString('vi-VN');
+        }
+
+        // Chuyển chuỗi định dạng ("100.000.000") thành số nguyên
+        function parseFormattedNumber(str) {
+            if (!str) return 0;
+            const cleaned = str.toString().replace(/[^\d]/g, '');
+            return cleaned ? parseInt(cleaned, 10) : 0;
+        }
+
+        // Hiển thị thông báo Toast nhỏ
+        let toastTimeout;
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toastMessage');
+            toastMsg.textContent = message;
+            
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+            
+            clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                toast.classList.remove('translate-y-0', 'opacity-100');
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 2800);
+        }
+
+        // Lưu trạng thái vào sessionStorage
+        function saveToSession() {
+            try {
+                sessionStorage.setItem(STORAGE_KEY, JSON.stringify(currentState));
+                elSaveStatus.textContent = 'Đã lưu vào phiên';
+                elSaveStatus.classList.remove('text-slate-400');
+                elSaveStatus.classList.add('text-emerald-600');
+                setTimeout(() => {
+                    elSaveStatus.classList.remove('text-emerald-600');
+                    elSaveStatus.classList.add('text-slate-400');
+                }, 1000);
+            } catch (e) {
+                console.warn('Không thể lưu vào sessionStorage:', e);
+            }
+        }
+
+        // Đọc trạng thái từ sessionStorage
+        function loadFromSession() {
+            try {
+                const saved = sessionStorage.getItem(STORAGE_KEY);
+                if (saved) {
+                    const parsed = JSON.parse(saved);
+                    currentState = { ...DEFAULT_STATE, ...parsed };
+                }
+            } catch (e) {
+                console.warn('Lỗi đọc sessionStorage:', e);
+                currentState = { ...DEFAULT_STATE };
+            }
+        }
+
+        // Đồng bộ dữ liệu từ state lên giao diện form
+        function syncFormWithState() {
+            elInitialDeposit.value = formatNumberInput(currentState.initialDeposit);
+            elPeriodicDeposit.value = currentState.periodicDeposit > 0 ? formatNumberInput(currentState.periodicDeposit) : '';
+            elCompoundFrequency.value = currentState.compoundFrequency.toString();
+            elInterestRate.value = currentState.interestRate;
+            elDuration.value = currentState.duration;
+            elDurationUnit.value = currentState.durationUnit;
+
+            for (const radio of elDepositTimings) {
+                radio.checked = (radio.value === currentState.depositTiming);
+            }
+            updateTableToggleUI();
+        }
+
+        // Cập nhật giao diện nút chuyển đổi bảng Năm / Kỳ
+        function updateTableToggleUI() {
+            if (currentState.tableView === 'yearly') {
+                btnViewYearly.className = 'px-3 py-1.5 text-xs font-semibold rounded-lg bg-white text-brand-700 shadow-sm transition-all cursor-pointer';
+                btnViewPeriod.className = 'px-3 py-1.5 text-xs font-semibold rounded-lg text-slate-600 hover:text-slate-900 transition-all cursor-pointer';
+                elThPeriodLabel.textContent = 'Năm';
+            } else {
+                btnViewPeriod.className = 'px-3 py-1.5 text-xs font-semibold rounded-lg bg-white text-brand-700 shadow-sm transition-all cursor-pointer';
+                btnViewYearly.className = 'px-3 py-1.5 text-xs font-semibold rounded-lg text-slate-600 hover:text-slate-900 transition-all cursor-pointer';
+                const freqMap = { 12: 'Tháng', 4: 'Quý', 1: 'Năm' };
+                elThPeriodLabel.textContent = `Kỳ (${freqMap[currentState.compoundFrequency] || 'Kỳ'})`;
+            }
+        }
+
+        /**
+         * Tính toán chi tiết lãi suất kép
+         * Mô phỏng chính xác từng kỳ ghép lãi (tháng, quý, hoặc năm)
+         */
+        function calculateCompoundInterest() {
+            const P = Math.max(0, currentState.initialDeposit);
+            const PMT = Math.max(0, currentState.periodicDeposit);
+            const n = parseInt(currentState.compoundFrequency, 10) || 12; // Số kỳ ghép lãi mỗi năm (12, 4, 1)
+            const r = Math.max(0, parseFloat(currentState.interestRate) || 0) / 100; // Lãi suất năm dạng thập phân
+            const rawDuration = Math.max(0, parseFloat(currentState.duration) || 0);
+            const isBeginning = currentState.depositTiming === 'beginning';
+
+            // Quy đổi tổng thời gian ra số năm
+            const totalYears = currentState.durationUnit === 'years' ? rawDuration : (rawDuration / 12);
+            // Tổng số kỳ ghép lãi (làm tròn để tránh sai số dấu phẩy động)
+            const totalPeriods = Math.round(totalYears * n);
+            // Lãi suất mỗi kỳ
+            const ratePerPeriod = r / n;
+
+            let balance = P;
+            let totalPrincipal = P;
+            let totalInterest = 0;
+
+            const periodSchedule = [];
+            const yearlySchedule = [];
+
+            // Biến gom nhóm theo từng năm
+            let yearStartBalance = P;
+            let yearContribution = 0;
+            let yearInterest = 0;
+
+            for (let period = 1; period <= totalPeriods; period++) {
+                const startBalance = balance;
+                let interestEarned = 0;
+
+                if (isBeginning) {
+                    // Gửi thêm đầu kỳ: tiền gửi thêm được cộng trước khi tính lãi kỳ này
+                    balance += PMT;
+                    interestEarned = balance * ratePerPeriod;
+                    balance += interestEarned;
+                } else {
+                    // Gửi thêm cuối kỳ: tính lãi trên số dư đầu kỳ, sau đó mới cộng tiền gửi thêm
+                    interestEarned = balance * ratePerPeriod;
+                    balance += interestEarned + PMT;
+                }
+
+                totalPrincipal += PMT;
+                totalInterest += interestEarned;
+
+                periodSchedule.push({
+                    index: period,
+                    startBalance: startBalance,
+                    contribution: PMT,
+                    interest: interestEarned,
+                    endBalance: balance,
+                    cumulativePrincipal: totalPrincipal,
+                    cumulativeInterest: totalInterest
+                });
+
+                yearContribution += PMT;
+                yearInterest += interestEarned;
+
+                // Kết thúc mỗi năm (đủ n kỳ) hoặc kỳ cuối cùng của khoản gửi
+                if (period % n === 0 || period === totalPeriods) {
+                    const yearNum = Math.ceil(period / n);
+                    yearlySchedule.push({
+                        index: yearNum,
+                        startBalance: yearStartBalance,
+                        contribution: yearContribution,
+                        interest: yearInterest,
+                        endBalance: balance,
+                        cumulativePrincipal: totalPrincipal,
+                        cumulativeInterest: totalInterest
+                    });
+
+                    // Reset bộ đếm cho năm tiếp theo
+                    yearStartBalance = balance;
+                    yearContribution = 0;
+                    yearInterest = 0;
+                }
+            }
+
+            // Trường hợp thời gian = 0
+            if (totalPeriods === 0) {
+                yearlySchedule.push({
+                    index: 0,
+                    startBalance: P,
+                    contribution: 0,
+                    interest: 0,
+                    endBalance: P,
+                    cumulativePrincipal: P,
+                    cumulativeInterest: 0
+                });
+            }
+
+            return {
+                finalBalance: balance,
+                totalPrincipal: totalPrincipal,
+                totalInterest: totalInterest,
+                periodSchedule,
+                yearlySchedule
+            };
+        }
+
+        // Cập nhật toàn bộ UI (Kết quả, Biểu đồ, Bảng)
+        function updateUI() {
+            const result = calculateCompoundInterest();
+
+            // 1. Cập nhật thẻ tổng quan
+            elTotalFutureValue.textContent = formatVND(result.finalBalance);
+            elTotalPrincipal.textContent = formatVND(result.totalPrincipal);
+            elTotalInterest.textContent = formatVND(result.totalInterest);
+
+            if (result.finalBalance > 0) {
+                const pPct = ((result.totalPrincipal / result.finalBalance) * 100).toFixed(1);
+                const iPct = ((result.totalInterest / result.finalBalance) * 100).toFixed(1);
+                elPrincipalPercent.textContent = `${pPct}% tổng giá trị`;
+                elInterestPercent.textContent = `${iPct}% tổng giá trị`;
+            } else {
+                elPrincipalPercent.textContent = '0% tổng giá trị';
+                elInterestPercent.textContent = '0% tổng giá trị';
+            }
+
+            // 2. Cập nhật Bảng chi tiết
+            renderTable(result);
+
+            // 3. Cập nhật Biểu đồ
+            renderChart(result);
+        }
+
+        // Render bảng chi tiết
+        function renderTable(result) {
+            const rows = currentState.tableView === 'yearly' ? result.yearlySchedule : result.periodSchedule;
+            const prefix = currentState.tableView === 'yearly' ? 'Năm ' : 'Kỳ ';
+
+            if (!rows || rows.length === 0) {
+                elScheduleTableBody.innerHTML = `
+                    <tr>
+                        <td colspan="5" class="py-8 text-center text-slate-400 text-sm">
+                            Vui lòng nhập thời gian gửi lớn hơn 0 để xem chi tiết.
+                        </td>
+                    </tr>`;
+                return;
+            }
+
+            // Giới hạn render tối đa 600 dòng nếu chọn chi tiết kỳ quá dài để giữ hiệu năng mượt mà
+            const displayRows = rows.slice(0, 600);
+            let html = '';
+
+            for (const row of displayRows) {
+                html += `
+                    <tr class="hover:bg-slate-50/80 transition-colors">
+                        <td class="py-3 px-4 font-semibold text-slate-900 whitespace-nowrap">${prefix}${row.index}</td>
+                        <td class="py-3 px-4 text-right text-slate-600 whitespace-nowrap">${formatVND(row.startBalance)}</td>
+                        <td class="py-3 px-4 text-right text-brand-600 font-medium whitespace-nowrap">+${formatVND(row.contribution)}</td>
+                        <td class="py-3 px-4 text-right text-emerald-600 font-medium whitespace-nowrap">+${formatVND(row.interest)}</td>
+                        <td class="py-3 px-4 text-right font-bold text-slate-900 whitespace-nowrap">${formatVND(row.endBalance)}</td>
+                    </tr>
+                `;
+            }
+
+            if (rows.length > 600) {
+                html += `
+                    <tr>
+                        <td colspan="5" class="py-3 px-4 text-center text-xs text-slate-500 bg-slate-50">
+                            Đang hiển thị 600 kỳ đầu tiên. Hãy chuyển sang chế độ <strong>"Theo Năm"</strong> để xem toàn bộ ${result.yearlySchedule.length} năm.
+                        </td>
+                    </tr>`;
+            }
+
+            elScheduleTableBody.innerHTML = html;
+        }
+
+        // Render biểu đồ Chart.js
+        function renderChart(result) {
+            const ctx = document.getElementById('growthChart').getContext('2d');
+            
+            // Dùng dữ liệu theo năm cho biểu đồ gọn gàng; nếu thời gian < 1 năm thì dùng dữ liệu theo kỳ
+            const useYearly = result.yearlySchedule.length > 1 || currentState.durationUnit === 'years';
+            const dataSource = useYearly ? result.yearlySchedule : result.periodSchedule;
+            const labelPrefix = useYearly ? 'Năm ' : 'Kỳ ';
+
+            const labels = ['Bắt đầu', ...dataSource.map(item => `${labelPrefix}${item.index}`)];
+            const principalData = [currentState.initialDeposit, ...dataSource.map(item => Math.round(item.cumulativePrincipal))];
+            const interestData = [0, ...dataSource.map(item => Math.round(item.cumulativeInterest))];
+
+            if (growthChartInstance) {
+                growthChartInstance.data.labels = labels;
+                growthChartInstance.data.datasets[0].data = principalData;
+                growthChartInstance.data.datasets[1].data = interestData;
+                growthChartInstance.update('none');
+                return;
+            }
+
+            growthChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Tổng tiền gốc',
+                            data: principalData,
+                            backgroundColor: '#2563eb',
+                            borderRadius: 4,
+                            stack: 'Stack 0',
+                        },
+                        {
+                            label: 'Tổng tiền lãi',
+                            data: interestData,
+                            backgroundColor: '#10b981',
+                            borderRadius: 4,
+                            stack: 'Stack 0',
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    plugins: {
+                        legend: {
+                            display: false // Đã có chú thích custom đẹp hơn ở header card
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                            titleFont: { family: 'Inter', size: 13, weight: 'bold' },
+                            bodyFont: { family: 'Inter', size: 12 },
+                            padding: 12,
+                            cornerRadius: 10,
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) label += ': ';
+                                    label += formatVND(context.parsed.y);
+                                    return label;
+                                },
+                                footer: function(tooltipItems) {
+                                    let total = 0;
+                                    tooltipItems.forEach(item => total += item.parsed.y);
+                                    return 'Tổng cộng: ' + formatVND(total);
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            stacked: true,
+                            grid: { display: false },
+                            ticks: {
+                                font: { family: 'Inter', size: 11 },
+                                color: '#64748b',
+                                maxRotation: 0,
+                                autoSkip: true,
+                                maxTicksLimit: 10
+                            }
+                        },
+                        y: {
+                            stacked: true,
+                            border: { display: false },
+                            grid: { color: '#f1f5f9' },
+                            ticks: {
+                                font: { family: 'Inter', size: 11 },
+                                color: '#64748b',
+                                callback: function(value) {
+                                    if (value >= 1e9) return (value / 1e9).toFixed(1).replace(/\.0$/, '') + ' tỷ';
+                                    if (value >= 1e6) return (value / 1e6).toFixed(0) + ' tr';
+                                    if (value >= 1e3) return (value / 1e3).toFixed(0) + 'k';
+                                    return value;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Xử lý sự kiện nhập liệu định dạng tiền tệ
+        function handleCurrencyInput(inputEl, stateKey) {
+            const rawVal = parseFormattedNumber(inputEl.value);
+            currentState[stateKey] = rawVal;
+            inputEl.value = rawVal > 0 ? formatNumberInput(rawVal) : '';
+            saveToSession();
+            updateUI();
+        }
+
+        // Gắn các sự kiện lắng nghe
+        function bindEvents() {
+            elInitialDeposit.addEventListener('input', () => handleCurrencyInput(elInitialDeposit, 'initialDeposit'));
+            elPeriodicDeposit.addEventListener('input', () => handleCurrencyInput(elPeriodicDeposit, 'periodicDeposit'));
+
+            elCompoundFrequency.addEventListener('change', () => {
+                currentState.compoundFrequency = parseInt(elCompoundFrequency.value, 10);
+                updateTableToggleUI();
+                saveToSession();
+                updateUI();
+            });
+
+            elInterestRate.addEventListener('input', () => {
+                let val = parseFloat(elInterestRate.value);
+                if (isNaN(val) || val < 0) val = 0;
+                if (val > 100) val = 100;
+                currentState.interestRate = val;
+                saveToSession();
+                updateUI();
+            });
+
+            elDuration.addEventListener('input', () => {
+                let val = parseInt(elDuration.value, 10);
+                if (isNaN(val) || val < 0) val = 0;
+                if (val > 1200) val = 1200;
+                currentState.duration = val;
+                saveToSession();
+                updateUI();
+            });
+
+            elDurationUnit.addEventListener('change', () => {
+                currentState.durationUnit = elDurationUnit.value;
+                saveToSession();
+                updateUI();
+            });
+
+            for (const radio of elDepositTimings) {
+                radio.addEventListener('change', (e) => {
+                    if (e.target.checked) {
+                        currentState.depositTiming = e.target.value;
+                        saveToSession();
+                        updateUI();
+                    }
+                });
+            }
+
+            // Chuyển đổi chế độ xem bảng
+            btnViewYearly.addEventListener('click', () => {
+                currentState.tableView = 'yearly';
+                updateTableToggleUI();
+                saveToSession();
+                updateUI();
+            });
+
+            btnViewPeriod.addEventListener('click', () => {
+                currentState.tableView = 'period';
+                updateTableToggleUI();
+                saveToSession();
+                updateUI();
+            });
+
+            // Nút Xóa dữ liệu / Đặt lại
+            btnReset.addEventListener('click', () => {
+                try {
+                    sessionStorage.removeItem(STORAGE_KEY);
+                } catch (e) {}
+                
+                // Đặt về giá trị trống/mặc định sạch sẽ
+                currentState = {
+                    initialDeposit: 0,
+                    periodicDeposit: 0,
+                    compoundFrequency: 12,
+                    interestRate: 6.5,
+                    duration: 5,
+                    durationUnit: 'years',
+                    depositTiming: 'end',
+                    tableView: 'yearly'
+                };
+                
+                syncFormWithState();
+                elInitialDeposit.value = '';
+                elPeriodicDeposit.value = '';
+                updateUI();
+                showToast('Đã xóa sạch dữ liệu trong phiên làm việc!');
+            });
+        }
+
+        // Khởi tạo ứng dụng khi tải trang
+        window.addEventListener('DOMContentLoaded', () => {
+            loadFromSession();
+            syncFormWithState();
+            bindEvents();
+            updateUI();
+        });
+    </script>
+</body>
+</html>

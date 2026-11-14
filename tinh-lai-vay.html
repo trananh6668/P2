@@ -1,0 +1,1112 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Công Cụ Tính Lãi Vay Ngân Hàng</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            /* Giao diện Sáng (Mặc định khi hệ thống ở Light Mode) */
+            --bg-body: #f1f5f9;
+            --bg-card: #ffffff;
+            --bg-subcard: #f8fafc;
+            --bg-input: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --accent: #059669;
+            --warning: #d97706;
+            --danger: #dc2626;
+            --border: #cbd5e1;
+            --table-head: #f8fafc;
+            --table-hover: #f1f5f9;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+            --chart-grid: rgba(148, 163, 184, 0.25);
+            --chart-text: #475569;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                /* Giao diện Tối (Tự động kích hoạt khi hệ thống ở Dark Mode) */
+                --bg-body: #0f172a;
+                --bg-card: #1e293b;
+                --bg-subcard: rgba(15, 23, 42, 0.65);
+                --bg-input: #334155;
+                --text-main: #f8fafc;
+                --text-muted: #94a3b8;
+                --primary: #3b82f6;
+                --primary-hover: #2563eb;
+                --accent: #10b981;
+                --warning: #f59e0b;
+                --danger: #ef4444;
+                --border: #475569;
+                --table-head: #0f172a;
+                --table-hover: rgba(51, 65, 85, 0.5);
+                --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+                --chart-grid: rgba(71, 85, 105, 0.35);
+                --chart-text: #94a3b8;
+            }
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            line-height: 1.5;
+            padding: 20px;
+            transition: background-color 0.2s, color 0.2s;
+        }
+
+        .container {
+            max-width: 1280px;
+            margin: 0 auto;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        header h1 {
+            font-size: 1.45rem;
+            color: var(--text-main);
+        }
+
+        .badges {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.82rem;
+            font-weight: 500;
+        }
+
+        .badge-session {
+            background: rgba(16, 185, 129, 0.12);
+            color: var(--accent);
+            border: 1px solid var(--accent);
+        }
+
+        .badge-theme {
+            background: rgba(59, 130, 246, 0.12);
+            color: var(--primary);
+            border: 1px solid var(--primary);
+        }
+
+        .grid-layout {
+            display: grid;
+            grid-template-columns: 440px 1fr;
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        @media (max-width: 1024px) {
+            .grid-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background-color: var(--bg-card);
+            border-radius: 12px;
+            padding: 22px;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+        }
+
+        .card-title {
+            font-size: 1.08rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+        }
+
+        .form-group {
+            margin-bottom: 14px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.88rem;
+            color: var(--text-muted);
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+
+        .input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-group-combo {
+            display: flex;
+            width: 100%;
+        }
+
+        .input-group-combo input {
+            border-top-right-radius: 0;
+            border-bottom-right-radius: 0;
+            flex: 1;
+        }
+
+        .input-group-combo select {
+            width: 92px;
+            border-top-left-radius: 0;
+            border-bottom-left-radius: 0;
+            border-left: none;
+            background-color: var(--bg-subcard);
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        input[type="date"],
+        select {
+            width: 100%;
+            background-color: var(--bg-input);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 9px 11px;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        input:focus, select:focus {
+            border-color: var(--primary);
+        }
+
+        .unit {
+            position: absolute;
+            right: 32px;
+            color: var(--text-muted);
+            font-size: 0.82rem;
+            pointer-events: none;
+        }
+		
+        .row-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .section-header-inline {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 18px 0 10px;
+            padding-top: 14px;
+            border-top: 1px dashed var(--border);
+        }
+
+        .section-header-inline span {
+            font-size: 0.82rem;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: var(--warning);
+            font-weight: 700;
+        }
+
+        /* Danh sách chu kỳ lãi suất */
+        .stage-card {
+            background-color: var(--bg-subcard);
+            border: 1px solid var(--border);
+            border-radius: 9px;
+            padding: 12px;
+            margin-bottom: 10px;
+            position: relative;
+        }
+
+        .stage-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            gap: 8px;
+        }
+
+        .stage-name-input {
+            font-weight: 600;
+            font-size: 0.88rem !important;
+            padding: 4px 8px !important;
+            border-radius: 6px !important;
+            background: transparent !important;
+            border: 1px solid transparent !important;
+            color: var(--primary) !important;
+        }
+
+        .stage-name-input:hover, .stage-name-input:focus {
+            border-color: var(--border) !important;
+            background: var(--bg-input) !important;
+        }
+
+        .btn-remove-stage {
+            background: rgba(220, 38, 38, 0.12);
+            color: var(--danger);
+            border: 1px solid transparent;
+            border-radius: 6px;
+            padding: 3px 8px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            flex: unset;
+        }
+
+        .btn-remove-stage:hover {
+            background: var(--danger);
+            color: #fff;
+        }
+
+        .btn-add-stage {
+            background: rgba(37, 99, 235, 0.1);
+            color: var(--primary);
+            border: 1px dashed var(--primary);
+            padding: 8px 12px;
+            font-size: 0.86rem;
+            border-radius: 8px;
+            width: 100%;
+            margin-bottom: 10px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .btn-add-stage:hover {
+            background: rgba(37, 99, 235, 0.18);
+        }
+
+        .remaining-stage {
+            border-style: dashed;
+            border-color: var(--warning);
+        }
+
+        .remaining-badge {
+            font-size: 0.75rem;
+            color: var(--warning);
+            font-weight: 600;
+            background: rgba(245, 158, 11, 0.12);
+            padding: 2px 8px;
+            border-radius: 4px;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 18px;
+        }
+
+        button.action-btn {
+            cursor: pointer;
+            border: none;
+            border-radius: 8px;
+            padding: 11px 16px;
+            font-weight: 600;
+            font-size: 0.92rem;
+            transition: all 0.2s;
+            flex: 1;
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .btn-outline {
+            background-color: transparent;
+            border: 1px solid var(--border) !important;
+            color: var(--text-muted);
+        }
+
+        .btn-outline:hover {
+            border-color: var(--text-main) !important;
+            color: var(--text-main);
+        }
+
+        /* Summary Boxes */
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+            gap: 14px;
+            margin-bottom: 20px;
+        }
+
+        .stat-box {
+            background-color: var(--bg-subcard);
+            padding: 14px 16px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+        }
+
+        .stat-box .label {
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+        }
+
+        .stat-box .value {
+            font-size: 1.2rem;
+            font-weight: 700;
+        }
+
+        .val-principal { color: var(--primary); }
+        .val-interest { color: var(--warning); }
+        .val-total { color: var(--accent); }
+        .val-monthly { color: #db2777; }
+
+        @media (prefers-color-scheme: dark) {
+            .val-monthly { color: #f472b6; }
+        }
+
+        .chart-container {
+            position: relative;
+            height: 310px;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        /* Schedule Table */
+        .table-header-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 14px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .table-responsive {
+            overflow-x: auto;
+            max-height: 560px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: right;
+            font-size: 0.88rem;
+        }
+
+        th {
+            background-color: var(--table-head);
+            color: var(--text-muted);
+            font-weight: 600;
+            padding: 11px 13px;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            border-bottom: 1px solid var(--border);
+        }
+
+        td {
+            padding: 9px 13px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        th:first-child, td:first-child { text-align: center; }
+        th:nth-child(2), td:nth-child(2),
+        th:nth-child(3), td:nth-child(3) { text-align: left; }
+
+        tr:hover {
+            background-color: var(--table-hover);
+        }
+
+        .phase-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.76rem;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .note-box {
+            margin-top: 14px;
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            background: rgba(59, 130, 246, 0.08);
+            padding: 10px 12px;
+            border-left: 3px solid var(--primary);
+            border-radius: 4px;
+        }
+
+        .alert-warning {
+            background: rgba(245, 158, 11, 0.14);
+            color: var(--warning);
+            border: 1px solid var(--warning);
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 0.83rem;
+            margin-bottom: 12px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <div>
+            <h1>🏦 Công Cụ Tính Lãi Vay Ngân Hàng</h1>
+            <small style="color: var(--text-muted);">Hỗ trợ nhiều chu kỳ điều chỉnh lãi suất thả nổi</small>
+        </div>
+        <div class="badges">
+            <span class="badge badge-theme" id="themeIndicator">🌓 Giao diện theo hệ thống</span>
+            <span class="badge badge-session">🔒 Tự xóa dữ liệu khi đóng tab</span>
+        </div>
+    </header>
+
+    <div class="grid-layout">
+        <!-- Cột nhập dữ liệu -->
+        <div class="card">
+            <div class="card-title">⚙️ Thông số khoản vay</div>
+
+            <div class="form-group">
+                <label for="loanAmount">Số tiền vay</label>
+                <div class="input-wrapper">
+                    <input type="text" id="loanAmount" value="2.000.000.000" oninput="formatCurrencyInput(this); handleInputChange();">
+                    <span class="unit">VNĐ</span>
+                </div>
+            </div>
+
+            <div class="row-2">
+                <div class="form-group">
+                    <label for="totalDuration">Tổng thời gian vay</label>
+                    <div class="input-group-combo">
+                        <input type="number" id="totalDuration" value="20" min="1" step="1" oninput="handleInputChange();">
+                        <select id="totalUnit" onchange="handleInputChange();">
+                            <option value="years" selected>Năm</option>
+                            <option value="months">Tháng</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="disbursementDate">Ngày giải ngân</label>
+                    <input type="date" id="disbursementDate" onchange="handleInputChange();">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="graceMonths">Thời gian ân hạn nợ gốc (chỉ trả lãi)</label>
+                <div class="input-wrapper">
+                    <input type="number" id="graceMonths" value="0" min="0" step="1" oninput="handleInputChange();">
+                    <span class="unit">Tháng</span>
+                </div>
+            </div>
+
+            <div class="section-header-inline">
+                <span>📈 Các chu kỳ lãi suất</span>
+                <small style="color: var(--text-muted);" id="totalMonthsBadge">Tổng: 240 tháng</small>
+            </div>
+
+            <div id="durationWarning" class="alert-warning">
+                ⚠️ Tổng thời gian các chu kỳ đã vượt quá tổng thời gian vay. Hệ thống sẽ tự động cắt tại kỳ trả nợ cuối cùng.
+            </div>
+
+            <!-- Danh sách các chu kỳ cố định / điều chỉnh cụ thể -->
+            <div id="stagesContainer"></div>
+
+            <button type="button" class="btn-add-stage" onclick="addStage()">
+                + Thêm chu kỳ lãi suất (Ưu đãi / Thả nổi theo kỳ)
+            </button>
+
+            <!-- Chu kỳ thả nổi cho toàn bộ thời gian còn lại -->
+            <div class="stage-card remaining-stage">
+                <div class="stage-top">
+                    <strong style="font-size: 0.88rem; color: var(--warning);">Chu kỳ thả nổi còn lại</strong>
+                    <span class="remaining-badge" id="remainingDurationLabel">Còn lại: 18 năm (216 tháng)</span>
+                </div>
+                <div class="row-2">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label>Thời gian áp dụng</label>
+                        <input type="text" id="remainingSummaryInput" value="Tự động tính phần còn lại" readonly style="opacity: 0.75; cursor: not-allowed; font-size: 0.85rem;">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label for="finalFloatingRate">Lãi suất thả nổi dự kiến</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="finalFloatingRate" value="10.5" min="0" max="100" step="0.1" oninput="handleInputChange();">
+                            <span class="unit">%/năm</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="btn-group">
+                <button type="button" class="action-btn btn-primary" onclick="calculateLoan()">Tính toán ngay</button>
+                <button type="button" class="action-btn btn-outline" onclick="resetForm()">Đặt lại mặc định</button>
+            </div>
+
+            <div class="note-box">
+                <strong>Bảo mật phiên làm việc:</strong> Dữ liệu lưu tạm trong <code>sessionStorage</code> (F5 không mất, đóng tab/trình duyệt tự động xóa).
+            </div>
+        </div>
+
+        <!-- Cột kết quả tổng quan & Biểu đồ -->
+        <div class="card">
+            <div class="card-title">📊 Tổng quan nghĩa vụ trả nợ</div>
+
+            <div class="summary-grid">
+                <div class="stat-box">
+                    <div class="label">Trả tháng đầu tiên</div>
+                    <div class="value val-monthly" id="firstMonthPay">0 đ</div>
+                </div>
+                <div class="stat-box">
+                    <div class="label">Tháng trả cao nhất</div>
+                    <div class="value val-monthly" id="maxMonthPay">0 đ</div>
+                </div>
+                <div class="stat-box">
+                    <div class="label">Tổng tiền lãi phải trả</div>
+                    <div class="value val-interest" id="totalInterest">0 đ</div>
+                </div>
+                <div class="stat-box">
+                    <div class="label">Tổng gốc + lãi phải trả</div>
+                    <div class="value val-total" id="totalPayment">0 đ</div>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <canvas id="loanChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bảng lịch trả nợ chi tiết -->
+    <div class="card">
+        <div class="table-header-bar">
+            <div class="card-title" style="margin-bottom: 0;">📅 Lịch trả nợ chi tiết từng tháng</div>
+            <button type="button" class="action-btn btn-outline" style="flex: unset; padding: 7px 14px; font-size: 0.85rem;" onclick="exportCSV()">
+                ⬇️ Xuất file Excel (CSV)
+            </button>
+        </div>
+
+        <div class="table-responsive">
+            <table id="scheduleTable">
+                <thead>
+                    <tr>
+                        <th>Kỳ</th>
+                        <th>Ngày trả</th>
+                        <th>Chu kỳ lãi suất</th>
+                        <th>Lãi suất</th>
+                        <th>Dư nợ đầu kỳ</th>
+                        <th>Gốc phải trả</th>
+                        <th>Lãi phải trả</th>
+                        <th>Tổng trả trong kỳ</th>
+                        <th>Dư nợ cuối kỳ</th>
+                    </tr>
+                </thead>
+                <tbody id="scheduleBody"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    const STORAGE_KEY = 'bank_loan_multistage_session_v2';
+    let loanChartInstance = null;
+    let currentScheduleData = [];
+
+    // Bảng màu phân biệt cho từng chu kỳ
+    const STAGE_COLORS = [
+        { bg: 'rgba(59, 130, 246, 0.16)', text: '#3b82f6' },
+        { bg: 'rgba(16, 185, 129, 0.16)', text: '#10b981' },
+        { bg: 'rgba(168, 85, 247, 0.16)', text: '#a855f7' },
+        { bg: 'rgba(236, 72, 153, 0.16)', text: '#ec4899' },
+        { bg: 'rgba(6, 182, 212, 0.16)', text: '#06b6d4' }
+    ];
+    const FINAL_STAGE_COLOR = { bg: 'rgba(245, 158, 11, 0.16)', text: '#f59e0b' };
+
+    // Danh sách chu kỳ mặc định
+    let interestStages = [
+        { id: 1, name: 'Giai đoạn 1 (Cố định ưu đãi)', duration: 2, unit: 'years', rate: 6.5 }
+    ];
+
+    function getTodayString() {
+        return new Date().toISOString().split('T')[0];
+    }
+
+    function formatNumber(num) {
+        return Math.round(num).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+    }
+
+    function formatCurrencyInput(input) {
+        let raw = input.value.replace(/\D/g, '');
+        if (!raw) {
+            input.value = '';
+            return;
+        }
+        input.value = parseInt(raw, 10).toLocaleString('vi-VN');
+    }
+
+    function parseCurrency(str) {
+        if (!str) return 0;
+        return parseFloat(str.toString().replace(/\./g, '').replace(/,/g, '')) || 0;
+    }
+
+    function toMonths(duration, unit) {
+        const val = parseFloat(duration) || 0;
+        return unit === 'years' ? Math.round(val * 12) : Math.round(val);
+    }
+
+    function formatMonthsReadable(months) {
+        if (months <= 0) return '0 tháng';
+        const y = Math.floor(months / 12);
+        const m = months % 12;
+        if (y > 0 && m > 0) return `${y} năm ${m} tháng (${months} tháng)`;
+        if (y > 0) return `${y} năm (${months} tháng)`;
+        return `${m} tháng`;
+    }
+
+    // Render giao diện các chu kỳ lãi suất
+    function renderStagesUI() {
+        const container = document.getElementById('stagesContainer');
+        container.innerHTML = '';
+
+        interestStages.forEach((stage, index) => {
+            const card = document.createElement('div');
+            card.className = 'stage-card';
+            card.innerHTML = `
+                <div class="stage-top">
+                    <input type="text" class="stage-name-input" value="${stage.name}"
+                        onchange="updateStage(${index}, 'name', this.value)" title="Nhấn để sửa tên chu kỳ">
+                    ${interestStages.length > 0 ? `<button type="button" class="btn-remove-stage" onclick="removeStage(${index})">✕ Xóa</button>` : ''}
+                </div>
+                <div class="row-2">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label>Thời gian chu kỳ</label>
+                        <div class="input-group-combo">
+                            <input type="number" value="${stage.duration}" min="1" step="1"
+                                oninput="updateStage(${index}, 'duration', this.value)">
+                            <select onchange="updateStage(${index}, 'unit', this.value)">
+                                <option value="years" ${stage.unit === 'years' ? 'selected' : ''}>Năm</option>
+                                <option value="months" ${stage.unit === 'months' ? 'selected' : ''}>Tháng</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label>Lãi suất áp dụng</label>
+                        <div class="input-wrapper">
+                            <input type="number" value="${stage.rate}" min="0" max="100" step="0.1"
+                                oninput="updateStage(${index}, 'rate', this.value)">
+                            <span class="unit">%/năm</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+            container.appendChild(card);
+        });
+    }
+
+    function addStage() {
+        const nextIndex = interestStages.length + 1;
+        const prevRate = interestStages.length > 0
+            ? parseFloat(interestStages[interestStages.length - 1].rate) + 1.5
+            : 8.5;
+
+        interestStages.push({
+            id: Date.now(),
+            name: `Chu kỳ điều chỉnh ${nextIndex}`,
+            duration: 12,
+            unit: 'months',
+            rate: +(Math.min(prevRate, 25)).toFixed(1)
+        });
+        renderStagesUI();
+        handleInputChange();
+    }
+
+    function removeStage(index) {
+        interestStages.splice(index, 1);
+        renderStagesUI();
+        handleInputChange();
+    }
+
+    function updateStage(index, field, value) {
+        if (field === 'duration' || field === 'rate') {
+            interestStages[index][field] = parseFloat(value) || 0;
+        } else {
+            interestStages[index][field] = value;
+        }
+        handleInputChange();
+    }
+
+    // Lưu vào sessionStorage
+    function saveToSession() {
+        const payload = {
+            loanAmount: document.getElementById('loanAmount').value,
+            totalDuration: document.getElementById('totalDuration').value,
+            totalUnit: document.getElementById('totalUnit').value,
+            disbursementDate: document.getElementById('disbursementDate').value,
+            graceMonths: document.getElementById('graceMonths').value,
+            finalFloatingRate: document.getElementById('finalFloatingRate').value,
+            stages: interestStages
+        };
+        sessionStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+    }
+
+    // Đọc từ sessionStorage
+    function loadFromSession() {
+        const raw = sessionStorage.getItem(STORAGE_KEY);
+        if (raw) {
+            try {
+                const data = JSON.parse(raw);
+                document.getElementById('loanAmount').value = data.loanAmount || '2.000.000.000';
+                document.getElementById('totalDuration').value = data.totalDuration || 20;
+                document.getElementById('totalUnit').value = data.totalUnit || 'years';
+                document.getElementById('disbursementDate').value = data.disbursementDate || getTodayString();
+                document.getElementById('graceMonths').value = data.graceMonths || 0;
+                document.getElementById('finalFloatingRate').value = data.finalFloatingRate || 10.5;
+                if (Array.isArray(data.stages)) {
+                    interestStages = data.stages;
+                }
+                renderStagesUI();
+                return;
+            } catch (e) {
+                console.error('Lỗi đọc sessionStorage:', e);
+            }
+        }
+        document.getElementById('disbursementDate').value = getTodayString();
+        renderStagesUI();
+    }
+
+    function handleInputChange() {
+        saveToSession();
+        calculateLoan();
+    }
+
+    function resetForm() {
+        sessionStorage.removeItem(STORAGE_KEY);
+        document.getElementById('loanAmount').value = '2.000.000.000';
+        document.getElementById('totalDuration').value = 20;
+        document.getElementById('totalUnit').value = 'years';
+        document.getElementById('disbursementDate').value = getTodayString();
+        document.getElementById('graceMonths').value = 0;
+        document.getElementById('finalFloatingRate').value = 10.5;
+        interestStages = [
+            { id: 1, name: 'Giai đoạn 1 (Cố định ưu đãi)', duration: 2, unit: 'years', rate: 6.5 }
+        ];
+        renderStagesUI();
+        calculateLoan();
+    }
+
+    // Tính toán lịch trả nợ đa chu kỳ
+    function calculateLoan() {
+        const principal = parseCurrency(document.getElementById('loanAmount').value);
+        const totalDuration = parseFloat(document.getElementById('totalDuration').value) || 0;
+        const totalUnit = document.getElementById('totalUnit').value;
+        const totalMonths = toMonths(totalDuration, totalUnit);
+
+        const finalFloatingRate = parseFloat(document.getElementById('finalFloatingRate').value) || 0;
+        let graceMonths = parseInt(document.getElementById('graceMonths').value, 10) || 0;
+        const startDateStr = document.getElementById('disbursementDate').value || getTodayString();
+
+        document.getElementById('totalMonthsBadge').innerText = `Tổng: ${totalMonths} tháng`;
+
+        // Xây dựng bản đồ lãi suất cho từng tháng (1 -> totalMonths)
+        const monthScheduleConfig = [];
+        let allocatedMonths = 0;
+
+        interestStages.forEach((stage, idx) => {
+            const stageMonths = Math.max(0, toMonths(stage.duration, stage.unit));
+            const color = STAGE_COLORS[idx % STAGE_COLORS.length];
+            for (let i = 0; i < stageMonths; i++) {
+                if (monthScheduleConfig.length < totalMonths) {
+                    monthScheduleConfig.push({
+                        name: stage.name,
+                        rate: parseFloat(stage.rate) || 0,
+                        color: color
+                    });
+                }
+            }
+            allocatedMonths += stageMonths;
+        });
+
+        // Kiểm tra cảnh báo nếu tổng chu kỳ vượt quá thời gian vay
+        const warningEl = document.getElementById('durationWarning');
+        if (allocatedMonths > totalMonths && totalMonths > 0) {
+            warningEl.style.display = 'block';
+        } else {
+            warningEl.style.display = 'none';
+        }
+
+        // Phần tháng còn lại áp dụng lãi suất thả nổi cuối cùng
+        const remainingMonths = Math.max(0, totalMonths - allocatedMonths);
+        document.getElementById('remainingDurationLabel').innerText = `Còn lại: ${formatMonthsReadable(remainingMonths)}`;
+        document.getElementById('remainingSummaryInput').value =
+            remainingMonths > 0 ? `${remainingMonths} tháng cuối cùng` : 'Đã phủ kín toàn bộ kỳ vay';
+
+        while (monthScheduleConfig.length < totalMonths) {
+            monthScheduleConfig.push({
+                name: 'Thả nổi còn lại',
+                rate: finalFloatingRate,
+                color: FINAL_STAGE_COLOR
+            });
+        }
+
+        if (principal <= 0 || totalMonths <= 0) return;
+
+        if (graceMonths >= totalMonths) {
+            graceMonths = totalMonths - 1;
+            document.getElementById('graceMonths').value = graceMonths;
+        }
+
+        const repayMonths = totalMonths - graceMonths;
+        const monthlyPrincipalNormal = principal / repayMonths;
+
+        let remainingBalance = principal;
+        let totalInterestPaid = 0;
+        let firstMonthPayment = 0;
+        let maxMonthPayment = 0;
+
+        currentScheduleData = [];
+        const startDate = new Date(startDateStr);
+
+        // Gom dữ liệu biểu đồ (theo năm nếu vay > 24 tháng, theo tháng nếu vay <= 24 tháng)
+        const groupByMonth = totalMonths <= 24;
+        const chartLabels = [];
+        const chartPrincipalData = [];
+        const chartInterestData = [];
+        let accPrincipal = 0;
+        let accInterest = 0;
+
+        for (let m = 1; m <= totalMonths; m++) {
+            const config = monthScheduleConfig[m - 1];
+            const monthlyRate = (config.rate / 100) / 12;
+
+            const interestForMonth = remainingBalance * monthlyRate;
+            let principalForMonth = 0;
+
+            if (m > graceMonths) {
+                principalForMonth = (m === totalMonths) ? remainingBalance : monthlyPrincipalNormal;
+            }
+
+            const totalForMonth = principalForMonth + interestForMonth;
+            const closingBalance = Math.max(0, remainingBalance - principalForMonth);
+
+            if (m === 1) firstMonthPayment = totalForMonth;
+            if (totalForMonth > maxMonthPayment) maxMonthPayment = totalForMonth;
+
+            totalInterestPaid += interestForMonth;
+
+            const payDate = new Date(startDate);
+            payDate.setMonth(startDate.getMonth() + m);
+            const formattedDate = payDate.toLocaleDateString('vi-VN');
+
+            currentScheduleData.push({
+                period: m,
+                date: formattedDate,
+                stageName: config.name,
+                color: config.color,
+                rate: config.rate,
+                opening: remainingBalance,
+                principal: principalForMonth,
+                interest: interestForMonth,
+                total: totalForMonth,
+                closing: closingBalance
+            });
+
+            if (groupByMonth) {
+                chartLabels.push('T' + m);
+                chartPrincipalData.push(Math.round(principalForMonth));
+                chartInterestData.push(Math.round(interestForMonth));
+            } else {
+                accPrincipal += principalForMonth;
+                accInterest += interestForMonth;
+                if (m % 12 === 0 || m === totalMonths) {
+                    chartLabels.push('Năm ' + Math.ceil(m / 12));
+                    chartPrincipalData.push(Math.round(accPrincipal));
+                    chartInterestData.push(Math.round(accInterest));
+                    accPrincipal = 0;
+                    accInterest = 0;
+                }
+            }
+
+            remainingBalance = closingBalance;
+        }
+
+        document.getElementById('firstMonthPay').innerText = formatNumber(firstMonthPayment) + ' đ';
+        document.getElementById('maxMonthPay').innerText = formatNumber(maxMonthPayment) + ' đ';
+        document.getElementById('totalInterest').innerText = formatNumber(totalInterestPaid) + ' đ';
+        document.getElementById('totalPayment').innerText = formatNumber(principal + totalInterestPaid) + ' đ';
+
+        renderTable(currentScheduleData);
+        renderChart(chartLabels, chartPrincipalData, chartInterestData, groupByMonth);
+    }
+
+    function renderTable(data) {
+        const tbody = document.getElementById('scheduleBody');
+        let html = '';
+
+        for (let i = 0; i < data.length; i++) {
+            const row = data[i];
+            html += `
+                <tr>
+                    <td>${row.period}</td>
+                    <td>${row.date}</td>
+                    <td>
+                        <span class="phase-badge" style="background: ${row.color.bg}; color: ${row.color.text};">
+                            ${row.stageName}
+                        </span>
+                    </td>
+                    <td>${row.rate.toFixed(2)}%</td>
+                    <td>${formatNumber(row.opening)}</td>
+                    <td style="color: var(--primary);">${formatNumber(row.principal)}</td>
+                    <td style="color: var(--warning);">${formatNumber(row.interest)}</td>
+                    <td style="font-weight: 600;">${formatNumber(row.total)}</td>
+                    <td>${formatNumber(row.closing)}</td>
+                </tr>
+            `;
+        }
+        tbody.innerHTML = html;
+    }
+
+    function getThemeColors() {
+        const isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        return {
+            textColor: isDark ? '#94a3b8' : '#475569',
+            legendColor: isDark ? '#f8fafc' : '#0f172a',
+            gridColor: isDark ? 'rgba(71, 85, 105, 0.35)' : 'rgba(148, 163, 184, 0.25)',
+            label: isDark ? '🌙 Đang dùng giao diện Tối (Hệ thống)' : '☀️ Đang dùng giao diện Sáng (Hệ thống)'
+        };
+    }
+
+    function renderChart(labels, principalData, interestData, groupByMonth) {
+        const theme = getThemeColors();
+        document.getElementById('themeIndicator').innerText = theme.label;
+
+        const ctx = document.getElementById('loanChart').getContext('2d');
+        if (loanChartInstance) {
+            loanChartInstance.destroy();
+        }
+
+        const unitText = groupByMonth ? 'trong tháng' : 'trong năm';
+
+        loanChartInstance = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: `Tiền gốc trả ${unitText}`,
+                        data: principalData,
+                        backgroundColor: '#3b82f6',
+                        borderRadius: 4
+                    },
+                    {
+                        label: `Tiền lãi trả ${unitText}`,
+                        data: interestData,
+                        backgroundColor: '#f59e0b',
+                        borderRadius: 4
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        labels: { color: theme.legendColor }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.dataset.label + ': ' + formatNumber(context.raw) + ' VNĐ';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        stacked: true,
+                        ticks: { color: theme.textColor },
+                        grid: { display: false }
+                    },
+                    y: {
+                        stacked: true,
+                        ticks: {
+                            color: theme.textColor,
+                            callback: function(value) {
+                                if (value >= 1e9) return (value / 1e9).toFixed(1) + ' tỷ';
+                                if (value >= 1e6) return (value / 1e6).toFixed(0) + ' tr';
+                                return value;
+                            }
+                        },
+                        grid: { color: theme.gridColor }
+                    }
+                }
+            }
+        });
+    }
+
+    function exportCSV() {
+        if (!currentScheduleData.length) return;
+
+        let csvContent = '\uFEFF';
+        csvContent += 'Kỳ trả nợ,Ngày thanh toán,Chu kỳ lãi suất,Lãi suất (%/năm),Dư nợ đầu kỳ,Gốc phải trả,Lãi phải trả,Tổng tiền phải trả,Dư nợ cuối kỳ\n';
+
+        currentScheduleData.forEach(row => {
+            csvContent += [
+                row.period,
+                row.date,
+                `"${row.stageName}"`,
+                row.rate,
+                Math.round(row.opening),
+                Math.round(row.principal),
+                Math.round(row.interest),
+                Math.round(row.total),
+                Math.round(row.closing)
+            ].join(',') + '\n';
+        });
+
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', 'lich-tra-no-da-chu-ky.csv');
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    }
+
+    // Lắng nghe thay đổi chế độ Sáng/Tối của hệ điều hành theo thời gian thực
+    if (window.matchMedia) {
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+            calculateLoan();
+        });
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+        loadFromSession();
+        calculateLoan();
+    });
+</script>
+
+</body>
+</html>
