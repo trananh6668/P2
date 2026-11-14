@@ -1,0 +1,3087 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Boom Online (Crazy Arcade BnB) - Phiên Bản Hoàn Chỉnh</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Nunito', sans-serif;
+            background: radial-gradient(circle at 50% 12%, #2294f2 0%, #094082 52%, #031530 100%);
+            color: #fff;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .font-cartoon {
+            font-family: 'Baloo 2', cursive, sans-serif;
+        }
+
+        .tabular-nums {
+            font-variant-numeric: tabular-nums;
+        }
+
+        .bnb-window {
+            background: linear-gradient(180deg, #34afff 0%, #006be6 14%, #004799 86%, #002b66 100%);
+            border: 4px solid #88eeff;
+            box-shadow: 
+                0 14px 36px rgba(0, 0, 0, 0.68),
+                inset 0 3px 0 rgba(255, 255, 255, 0.75),
+                inset 0 -5px 0 rgba(0, 20, 55, 0.8);
+            border-radius: 24px;
+        }
+
+        .bnb-subpanel {
+            background: linear-gradient(180deg, #f7fcff 0%, #d8eeff 100%);
+            border: 3px solid #004a99;
+            box-shadow: inset 0 2px 5px rgba(255,255,255,0.95), 0 3px 0 rgba(0,30,70,0.22);
+            border-radius: 16px;
+            color: #062f5c;
+        }
+
+        .bnb-darkpanel {
+            background: linear-gradient(180deg, #032247 0%, #073873 100%);
+            border: 3px solid #55beff;
+            box-shadow: inset 0 4px 10px rgba(0,0,0,0.65), 0 2px 0 rgba(255,255,255,0.18);
+            border-radius: 16px;
+        }
+
+        .bnb-btn {
+            position: relative;
+            font-family: 'Baloo 2', cursive;
+            font-weight: 800;
+            border-radius: 999px;
+            transition: filter 0.12s ease;
+            text-shadow: 0 2px 2px rgba(0, 0, 0, 0.45);
+            cursor: pointer;
+            overflow: hidden;
+        }
+        .bnb-btn::before {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 8%;
+            width: 84%;
+            height: 44%;
+            background: linear-gradient(180deg, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0.05) 100%);
+            border-radius: 999px;
+            pointer-events: none;
+        }
+        .bnb-btn:hover { filter: brightness(1.08); }
+        .bnb-btn:active { filter: brightness(0.95); }
+
+        .bnb-btn-yellow {
+            background: linear-gradient(180deg, #fff066 0%, #ffb300 62%, #e07000 100%);
+            border: 3px solid #fff7b8;
+            box-shadow: 0 4px 0 #8f4200, 0 6px 14px rgba(0,0,0,0.4);
+            color: #451800;
+            text-shadow: 0 1px 0 rgba(255,255,255,0.8);
+        }
+
+        .bnb-btn-green {
+            background: linear-gradient(180deg, #6bff75 0%, #16bd23 62%, #0a8014 100%);
+            border: 3px solid #c4ffc8;
+            box-shadow: 0 4px 0 #044a0a, 0 6px 14px rgba(0,0,0,0.4);
+            color: #ffffff;
+        }
+
+        .bnb-btn-blue {
+            background: linear-gradient(180deg, #5cc4ff 0%, #0077e6 62%, #004da3 100%);
+            border: 3px solid #b5e6ff;
+            box-shadow: 0 4px 0 #00295c, 0 6px 12px rgba(0,0,0,0.35);
+            color: #ffffff;
+        }
+
+        .bnb-btn-red {
+            background: linear-gradient(180deg, #ff7575 0%, #e01e1e 62%, #9e0b0b 100%);
+            border: 3px solid #ffc2c2;
+            box-shadow: 0 4px 0 #590404, 0 6px 12px rgba(0,0,0,0.35);
+            color: #ffffff;
+        }
+
+        .card-selected {
+            border-color: #ffdd00 !important;
+            box-shadow: 0 0 0 3px #ff7b00, 0 4px 14px rgba(255, 196, 0, 0.45) !important;
+        }
+
+        .text-outline {
+            text-shadow: 
+                -2px -2px 0 #00224d,  
+                 2px -2px 0 #00224d,
+                -2px  2px 0 #00224d,
+                 2px  2px 0 #00224d,
+                 0px  4px 8px rgba(0,0,0,0.6);
+        }
+
+        #gameCanvas {
+            display: block;
+            width: 100%;
+            height: auto;
+            aspect-ratio: 15 / 13;
+            max-width: 750px;
+            border-radius: 12px;
+            background: #14281d;
+            box-shadow: inset 0 0 18px rgba(0,0,0,0.8);
+        }
+
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #042b59; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb { background: #38b6ff; border-radius: 4px; }
+    </style>
+</head>
+<body class="flex flex-col items-center justify-start p-2 sm:p-4 select-none">
+
+    <!-- Top Header -->
+    <header class="w-full max-w-[1180px] bnb-window px-3.5 py-2.5 mb-3 flex flex-wrap items-center justify-between gap-2">
+        <div class="flex items-center gap-3">
+            <div class="w-12 h-12 rounded-full bg-gradient-to-b from-cyan-200 via-blue-500 to-blue-900 border-2 border-white flex items-center justify-center shadow-xl relative shrink-0">
+                <div class="w-4 h-3 bg-white/80 rounded-full absolute top-1.5 left-2 rotate-[-25deg]"></div>
+                <span class="font-cartoon text-xl font-extrabold text-yellow-300 drop-shadow">BnB</span>
+            </div>
+            <div>
+                <div class="flex items-center gap-2">
+                    <h1 class="font-cartoon text-2xl sm:text-3xl font-extrabold tracking-wide text-yellow-300 text-outline leading-none">
+                        BOOM ONLINE <span class="text-cyan-200 text-lg sm:text-xl">DELUXE HD</span>
+                    </h1>
+                    <span class="hidden sm:inline-block px-2 py-0.5 text-[10px] font-black rounded-full bg-amber-400 text-slate-950 shadow">ỔN ĐỊNH • ĐẤU BOSS</span>
+                </div>
+                <p class="text-xs text-cyan-100 font-bold tracking-wider mt-0.5">CRAZY ARCADE BnB • ĐẤU TRƯỜNG BÓNG NƯỚC HUYỀN THOẠI</p>
+            </div>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-1.5 sm:gap-2">
+            <button onclick="BombTrailSys.cycleGhostMode()" class="bnb-btn bnb-btn-blue px-3 py-1.5 text-xs sm:text-sm flex items-center gap-1.5">
+                <span>👻</span> <span id="ghostModeText">Bóng mờ: RÕ NÉT</span>
+            </button>
+            <button onclick="BombTrailSys.cycleBombColor()" class="bnb-btn bnb-btn-blue px-3 py-1.5 text-xs sm:text-sm flex items-center gap-1.5">
+                <span id="bombColorDot" class="w-3 h-3 rounded-full inline-block border border-white" style="background:#38bdf8"></span>
+                <span id="bombColorText">Bóng nước: XANH BIỂN</span>
+            </button>
+            <button onclick="AudioSys.toggleMusic()" class="bnb-btn bnb-btn-blue px-2.5 py-1.5 text-xs sm:text-sm flex items-center gap-1">
+                <span id="musicIcon">🔊</span> <span>Nhạc</span>
+            </button>
+            <button onclick="AudioSys.toggleSfx()" class="bnb-btn bnb-btn-blue px-2.5 py-1.5 text-xs sm:text-sm flex items-center gap-1">
+                <span id="sfxIcon">🔔</span> <span>SFX</span>
+            </button>
+            <button onclick="UI.toggleHelpModal(true)" class="bnb-btn bnb-btn-yellow px-3 py-1.5 text-xs sm:text-sm flex items-center gap-1">
+                <span>📘</span> Phím & Luật
+            </button>
+
+        </div>
+    </header>
+
+    <!-- ==================== LOBBY SCREEN (SẢNH CHỜ) ==================== -->
+    <main id="lobbyScreen" class="w-full max-w-[1180px] bnb-window p-3 sm:p-5">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+            
+            <!-- Left Column: Mode, Map & Options (7 cols) -->
+            <div class="lg:col-span-7 flex flex-col gap-3.5">
+                
+                <!-- 1. Chế độ chơi -->
+                <div class="bnb-subpanel p-3.5">
+                    <div class="flex items-center justify-between mb-2">
+                        <h2 class="font-cartoon text-lg sm:text-xl font-extrabold text-blue-950 flex items-center gap-2">
+                            <span class="bg-blue-600 text-white w-7 h-7 rounded-full inline-flex items-center justify-center text-sm shadow">1</span>
+                            CHỌN CHẾ ĐỘ CHƠI & ĐẤU BOSS (7 CHẾ ĐỘ)
+                        </h2>
+                        <span class="text-xs font-extrabold px-2.5 py-0.5 rounded-full bg-red-600 text-white shadow-sm">+3 Boss Mới!</span>
+                    </div>
+                    <div id="modeGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-[230px] overflow-y-auto pr-1"></div>
+                </div>
+
+                <!-- 2. Bản đồ -->
+                <div class="bnb-subpanel p-3.5">
+                    <div class="flex items-center justify-between mb-2">
+                        <h2 class="font-cartoon text-lg sm:text-xl font-extrabold text-blue-950 flex items-center gap-2">
+                            <span class="bg-blue-600 text-white w-7 h-7 rounded-full inline-flex items-center justify-center text-sm shadow">2</span>
+                            CHỌN BẢN ĐỒ CHIẾN ĐẤU (8 MAP 15x13)
+                        </h2>
+                        <span class="text-xs font-extrabold px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-800 border border-blue-300">+4 Map Mới</span>
+                    </div>
+                    <div id="mapGrid" class="grid grid-cols-2 sm:grid-cols-4 gap-2"></div>
+                </div>
+
+                <!-- 3. Tùy chỉnh Bóng Mờ Xám & Màu Bóng Nước + Số Người Chơi -->
+                <div class="bnb-subpanel p-3.5 space-y-3">
+                    <div class="flex flex-wrap items-center justify-between gap-2 pb-2.5 border-b border-blue-200">
+                        <div>
+                            <h2 class="font-cartoon text-base sm:text-lg font-extrabold text-blue-950 flex items-center gap-2">
+                                <span class="bg-blue-600 text-white w-6 h-6 rounded-full inline-flex items-center justify-center text-xs shadow">3</span>
+                                BÓNG MỜ DI CHUYỂN (XÁM) & MÀU BÓNG NƯỚC
+                            </h2>
+                            <p class="text-[11px] text-slate-600 font-bold mt-0.5">Bóng mờ nhân vật mặc định màu xám • Tùy chọn đổi màu quả bóng nước</p>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                            <button onclick="BombTrailSys.setGhostMode('strong')" id="lobbyGhostStrong" class="px-2.5 py-1 rounded-lg text-xs font-extrabold border-2">👻 Rõ Nét</button>
+                            <button onclick="BombTrailSys.setGhostMode('soft')" id="lobbyGhostSoft" class="px-2.5 py-1 rounded-lg text-xs font-extrabold border-2">🌫️ Mờ Nhẹ</button>
+                            <button onclick="BombTrailSys.setGhostMode('off')" id="lobbyGhostOff" class="px-2.5 py-1 rounded-lg text-xs font-extrabold border-2">🚫 Tắt</button>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-wrap items-center justify-between gap-2 pb-2.5 border-b border-blue-200">
+                        <span class="text-xs font-extrabold text-blue-950">🎈 Chọn Màu Bóng Nước:</span>
+                        <div id="lobbyBombColorList" class="flex flex-wrap items-center gap-1.5"></div>
+                    </div>
+
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                        <div class="text-xs font-extrabold text-blue-950">🎮 Số Người Chơi Trên Máy:</div>
+                        <div class="flex items-center gap-2">
+                            <button id="btn1P" onclick="Lobby.setPlayerCount(1)" class="bnb-btn bnb-btn-blue px-3.5 py-1.5 text-xs sm:text-sm card-selected">
+                                👤 1 Người Chơi (1P)
+                            </button>
+                            <button id="btn2P" onclick="Lobby.setPlayerCount(2)" class="bnb-btn bnb-btn-blue px-3.5 py-1.5 text-xs sm:text-sm">
+                                👥 2 Người Chơi (2P)
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="p2TeamOption" class="hidden pt-2 border-t border-blue-200 flex items-center justify-between text-xs font-bold text-blue-900">
+                        <span>Chế độ 2 Người Chơi:</span>
+                        <div class="flex gap-2">
+                            <button id="btnCoop2P" onclick="Lobby.setP2Coop(true)" class="px-3 py-1 rounded-lg bg-blue-600 text-white shadow">🤝 Hợp Sức (Cùng Đội)</button>
+                            <button id="btnPvp2P" onclick="Lobby.setP2Coop(false)" class="px-3 py-1 rounded-lg bg-slate-200 text-slate-700">⚔️ Đối Kháng (Khác Đội)</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Characters & Start (5 cols) -->
+            <div class="lg:col-span-5 flex flex-col justify-between gap-3.5">
+                <div class="bnb-subpanel p-3.5 flex-1 flex flex-col">
+                    <div class="flex items-center justify-between mb-2">
+                        <h2 class="font-cartoon text-lg sm:text-xl font-extrabold text-blue-950 flex items-center gap-2">
+                            <span class="bg-blue-600 text-white w-7 h-7 rounded-full inline-flex items-center justify-center text-sm shadow">4</span>
+                            NHÂN VẬT HUYỀN THOẠI
+                        </h2>
+                        <div id="charPickTabs" class="flex gap-1"></div>
+                    </div>
+
+                    <div id="charGrid" class="grid grid-cols-2 gap-2.5 mb-3"></div>
+
+                    <div id="charStatsBox" class="mt-auto bg-gradient-to-br from-blue-950 via-blue-900 to-indigo-950 text-white p-3.5 rounded-xl border-2 border-cyan-400 shadow-inner"></div>
+                </div>
+
+                <div class="bnb-darkpanel p-3.5 flex flex-col gap-2">
+                    <button onclick="Game.startFromLobby()" class="bnb-btn bnb-btn-yellow w-full py-3.5 text-2xl tracking-wider uppercase flex items-center justify-center gap-3">
+                        <span>💣</span> BẮT ĐẦU TRẬN ĐẤU! <span>🌊</span>
+                    </button>
+                    <div class="flex justify-between text-[11px] text-cyan-200 font-bold px-1">
+                        <span>P1: WASD + Space (Q: Kim, E: Khiên, R: Giải)</span>
+                        <span>P2: Mũi Tên + Enter (. : Kim, / : Khiên)</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- ==================== IN-GAME SCREEN (TRONG TRẬN) ==================== -->
+    <section id="gameScreen" class="hidden w-full max-w-[1180px] bnb-window p-2.5 sm:p-4">
+        
+        <!-- Top Boss Health Bar -->
+        <div id="bossHudBar" class="hidden mb-3 bnb-darkpanel p-2.5 border-2 border-red-400 relative overflow-hidden">
+            <div class="flex flex-wrap items-center justify-between gap-2 mb-1.5">
+                <div class="flex items-center gap-2.5">
+                    <div id="bossHudIcon" class="w-11 h-11 rounded-xl bg-red-950/90 border-2 border-amber-400 flex items-center justify-center text-2xl shadow-lg shrink-0">🐙</div>
+                    <div>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <span id="bossHudName" class="font-cartoon text-lg sm:text-xl font-extrabold text-yellow-300 tracking-wide">BẠCH TUỘC KHỔNG LỒ</span>
+                            <span id="bossStageBadge" class="hidden px-2 py-0.5 text-[11px] font-black rounded-full bg-purple-600 text-white uppercase shadow">ẢI 1/3</span>
+                            <span id="bossPhaseBadge" class="px-2 py-0.5 text-[11px] font-black rounded-full bg-red-600 text-white uppercase shadow">PHASE 1</span>
+                        </div>
+                        <p id="bossSkillHint" class="text-xs text-cyan-200 font-bold">Đặt bóng nước nổ trúng thân Boss để gây sát thương! Chú ý ô cảnh báo đỏ!</p>
+                    </div>
+                </div>
+                <div class="text-right tabular-nums shrink-0">
+                    <div class="font-cartoon text-lg sm:text-xl font-extrabold text-white leading-none">
+                        HP: <span id="bossHpText" class="text-yellow-300">1000 / 1000</span>
+                    </div>
+                    <span id="bossNextSkillTimer" class="text-[11px] font-bold text-rose-300 block mt-0.5">Tuyệt kỹ sau: 4.0s</span>
+                </div>
+            </div>
+            <div class="w-full h-5 bg-slate-950 rounded-full p-0.5 border border-red-300/60 overflow-hidden relative shadow-inner">
+                <div id="bossHpFill" class="h-full bg-gradient-to-r from-red-600 via-orange-500 to-yellow-400 rounded-full transition-all duration-150 relative" style="width: 100%;"></div>
+            </div>
+        </div>
+
+        <!-- Arena + Right HUD -->
+        <div class="flex flex-col lg:flex-row items-center lg:items-stretch justify-center gap-3.5">
+            
+            <!-- Left: 15x13 Map Canvas -->
+            <div class="w-full lg:w-[750px] flex flex-col items-center justify-center relative">
+                <div class="w-full p-1.5 rounded-2xl bg-gradient-to-b from-cyan-300 via-blue-600 to-blue-950 border-2 border-white/85 shadow-2xl relative">
+                    <canvas id="gameCanvas" width="750" height="650"></canvas>
+
+                    <!-- Announcement Banner -->
+                    <div id="arenaBanner" class="pointer-events-none hidden absolute inset-x-0 top-1/3 flex flex-col items-center justify-center z-20">
+                        <div class="px-8 py-3.5 rounded-2xl bg-blue-950/95 border-4 border-yellow-400 shadow-2xl text-center">
+                            <div id="arenaBannerTitle" class="font-cartoon text-3xl sm:text-4xl font-extrabold text-yellow-300 text-outline">START!</div>
+                            <div id="arenaBannerSub" class="text-sm sm:text-base font-bold text-cyan-200">Tiêu diệt đối thủ bằng bóng nước!</div>
+                        </div>
+                    </div>
+
+                    <!-- Match End Overlay -->
+                    <div id="matchEndOverlay" class="hidden absolute inset-0 bg-slate-950/85 backdrop-blur-sm rounded-xl flex flex-col items-center justify-center p-4 z-30">
+                        <div class="bnb-window p-6 max-w-md w-full text-center border-4 border-yellow-300">
+                            <div id="endResultEmoji" class="text-6xl mb-2">🏆</div>
+                            <h3 id="endResultTitle" class="font-cartoon text-4xl font-extrabold text-yellow-300 text-outline mb-1">CHIẾN THẮNG!</h3>
+                            <p id="endResultDesc" class="text-sm font-bold text-cyan-100 mb-4">Bạn đã làm chủ đấu trường bóng nước!</p>
+                            <div id="endStatsSummary" class="bnb-darkpanel p-3 mb-5 text-left text-xs space-y-1.5 text-cyan-100 font-bold"></div>
+                            <div class="flex gap-3 justify-center">
+                                <button onclick="Game.restartMatch()" class="bnb-btn bnb-btn-green px-5 py-2.5 text-base flex-1">🔄 Chơi Lại</button>
+                                <button onclick="Game.returnToLobby()" class="bnb-btn bnb-btn-yellow px-5 py-2.5 text-base flex-1">🏠 Về Sảnh Chờ</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Touch / Mobile Controls -->
+                <div class="w-full mt-2.5 flex lg:hidden flex-wrap items-center justify-between gap-2 bnb-darkpanel p-2.5">
+                    <div class="grid grid-cols-3 gap-1.5 w-36 h-36">
+                        <div></div>
+                        <button data-dir="up" class="touch-dir bnb-btn bnb-btn-blue flex items-center justify-center text-xl">▲</button>
+                        <div></div>
+                        <button data-dir="left" class="touch-dir bnb-btn bnb-btn-blue flex items-center justify-center text-xl">◀</button>
+                        <div class="flex items-center justify-center text-[10px] font-bold text-cyan-300">P1</div>
+                        <button data-dir="right" class="touch-dir bnb-btn bnb-btn-blue flex items-center justify-center text-xl">▶</button>
+                        <div></div>
+                        <button data-dir="down" class="touch-dir bnb-btn bnb-btn-blue flex items-center justify-center text-xl">▼</button>
+                        <div></div>
+                    </div>
+
+                    <div class="flex flex-col gap-2 flex-1 max-w-[240px]">
+                        <button ontouchstart="event.preventDefault(); Game.playerActionBomb(0)" onclick="Game.playerActionBomb(0)" class="bnb-btn bnb-btn-yellow py-3.5 text-lg font-extrabold">
+                            💣 ĐẶT BÓNG NƯỚC
+                        </button>
+                        <div class="grid grid-cols-3 gap-1.5">
+                            <button ontouchstart="event.preventDefault(); Game.playerUseNeedle(0)" onclick="Game.playerUseNeedle(0)" class="bnb-btn bnb-btn-green py-2 text-[11px]">📍 Kim (Q)</button>
+                            <button ontouchstart="event.preventDefault(); Game.playerUseShield(0)" onclick="Game.playerUseShield(0)" class="bnb-btn bnb-btn-blue py-2 text-[11px]">🛡️ Khiên (E)</button>
+                            <button ontouchstart="event.preventDefault(); Game.playerUseCure(0)" onclick="Game.playerUseCure(0)" class="bnb-btn bnb-btn-blue py-2 text-[11px]">🧪 Giải (R)</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Sidebar HUD -->
+            <aside class="w-full lg:w-[355px] flex flex-col justify-between gap-2.5">
+                <div class="bnb-darkpanel p-3 flex items-center justify-between border-2 border-cyan-300">
+                    <div class="min-w-0 pr-2">
+                        <div class="flex items-center gap-1.5">
+                            <span id="hudMapIcon" class="text-lg">🏡</span>
+                            <span id="hudMapName" class="text-xs font-extrabold text-cyan-300 uppercase truncate block">NGÔI LÀNG CỔ</span>
+                        </div>
+                        <span id="hudModeName" class="text-[11px] font-bold text-yellow-300 truncate block mt-0.5">Đấu Thường</span>
+                    </div>
+                    <div class="bg-slate-950 px-3.5 py-1.5 rounded-xl border-2 border-cyan-400 shadow-inner flex items-center gap-1.5 shrink-0 tabular-nums">
+                        <span class="text-sm">⏱️</span>
+                        <span id="hudTimer" class="font-cartoon text-2xl font-extrabold text-yellow-300 tracking-wider inline-block w-[66px] text-center">03:00</span>
+                    </div>
+                </div>
+
+                <div class="bnb-subpanel p-2.5 flex-1 flex flex-col gap-2 overflow-y-auto max-h-[340px] lg:max-h-none">
+                    <div class="flex items-center justify-between border-b border-blue-200 pb-1">
+                        <span class="font-cartoon text-sm font-extrabold text-blue-950 uppercase">DANH SÁCH CHIẾN BINH</span>
+                        <span class="text-[11px] font-bold text-blue-700">Trạng thái & Chỉ số</span>
+                    </div>
+                    <div id="hudRosterList" class="flex flex-col gap-2 tabular-nums"></div>
+                </div>
+
+                <div class="bnb-subpanel p-2.5">
+                    <div class="flex items-center justify-between mb-1.5">
+                        <span class="font-cartoon text-sm font-extrabold text-blue-950 uppercase">KHAY VẬT PHẨM PHỤ TRỢ</span>
+                        <span class="text-[10px] font-extrabold text-blue-700 bg-blue-100 px-2 py-0.5 rounded-full">Phím tắt: Q / E / R</span>
+                    </div>
+
+                    <div class="grid grid-cols-3 gap-2 tabular-nums">
+                        <button onclick="Game.playerUseNeedle(0)" class="bnb-darkpanel p-2 text-center hover:brightness-110 transition flex flex-col items-center relative">
+                            <span class="absolute top-1 left-1.5 text-[10px] font-black px-1.5 rounded bg-yellow-400 text-slate-950">Q</span>
+                            <span class="text-2xl my-0.5">📍</span>
+                            <span class="text-[11px] font-extrabold text-cyan-200">Kim Chích</span>
+                            <span id="p1NeedleCount" class="text-xs font-black text-yellow-300">x1</span>
+                        </button>
+                        <button onclick="Game.playerUseShield(0)" class="bnb-darkpanel p-2 text-center hover:brightness-110 transition flex flex-col items-center relative">
+                            <span class="absolute top-1 left-1.5 text-[10px] font-black px-1.5 rounded bg-yellow-400 text-slate-950">E</span>
+                            <span class="text-2xl my-0.5">🛡️</span>
+                            <span class="text-[11px] font-extrabold text-cyan-200">Khiên Vàng</span>
+                            <span id="p1ShieldCount" class="text-xs font-black text-yellow-300">x1</span>
+                        </button>
+                        <button onclick="Game.playerUseCure(0)" class="bnb-darkpanel p-2 text-center hover:brightness-110 transition flex flex-col items-center relative">
+                            <span class="absolute top-1 left-1.5 text-[10px] font-black px-1.5 rounded bg-yellow-400 text-slate-950">R</span>
+                            <span class="text-2xl my-0.5">🧪</span>
+                            <span class="text-[11px] font-extrabold text-cyan-200">Thuốc Giải</span>
+                            <span id="p1CureCount" class="text-xs font-black text-yellow-300">x1</span>
+                        </button>
+                    </div>
+
+                    <div id="p2ItemTray" class="hidden mt-2 pt-2 border-t border-blue-300 flex items-center justify-between text-xs font-extrabold text-blue-950 tabular-nums">
+                        <span>P2 Phụ Trợ:</span>
+                        <div class="flex gap-2">
+                            <span class="px-2 py-0.5 rounded bg-blue-900 text-yellow-300">📍 Kim [.]: <b id="p2NeedleCount">1</b></span>
+                            <span class="px-2 py-0.5 rounded bg-blue-900 text-cyan-200">🛡️ Khiên [/]: <b id="p2ShieldCount">1</b></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-3 gap-2">
+                    <button id="btnPauseGame" onclick="Game.togglePause()" class="bnb-btn bnb-btn-blue py-2 text-xs sm:text-sm">⏸️ Tạm Dừng</button>
+                    <button onclick="Game.restartMatch()" class="bnb-btn bnb-btn-green py-2 text-xs sm:text-sm">🔄 Chơi Lại</button>
+                    <button onclick="Game.returnToLobby()" class="bnb-btn bnb-btn-red py-2 text-xs sm:text-sm">🚪 Sảnh Chờ</button>
+                </div>
+            </aside>
+        </div>
+    </section>
+
+    <!-- ==================== HELP MODAL ==================== -->
+    <div id="helpModal" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+        <div class="bnb-window max-w-2xl w-full p-5 max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between pb-3 mb-3 border-b-2 border-cyan-300/50">
+                <h3 class="font-cartoon text-2xl font-extrabold text-yellow-300 text-outline">📘 CẨM NANG BOOM ONLINE DELUXE</h3>
+                <button onclick="UI.toggleHelpModal(false)" class="bnb-btn bnb-btn-red px-3 py-1 text-sm">Đóng ✕</button>
+            </div>
+            <div class="space-y-3 text-sm">
+                <div class="bnb-subpanel p-3">
+                    <h4 class="font-cartoon text-base font-extrabold text-blue-900 mb-1">🎮 ĐIỀU KHIỂN BÀN PHÍM (1P & 2P)</h4>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs font-bold">
+                        <div class="bg-blue-100 p-2.5 rounded-lg border border-blue-300">
+                            <div class="text-blue-900 font-black mb-1">👤 NGƯỜI CHƠI 1 (P1):</div>
+                            <p>• Di chuyển: <kbd class="px-1.5 py-0.5 bg-white rounded border">W</kbd> <kbd class="px-1.5 py-0.5 bg-white rounded border">A</kbd> <kbd class="px-1.5 py-0.5 bg-white rounded border">S</kbd> <kbd class="px-1.5 py-0.5 bg-white rounded border">D</kbd></p>
+                            <p>• Đặt bóng nước: <kbd class="px-1.5 py-0.5 bg-white rounded border">SPACE (Phím Cách)</kbd></p>
+                            <p>• Kim Chích: <kbd class="px-1.5 py-0.5 bg-white rounded border">Q</kbd> | Khiên: <kbd class="px-1.5 py-0.5 bg-white rounded border">E</kbd> | Giải Độc: <kbd class="px-1.5 py-0.5 bg-white rounded border">R</kbd></p>
+                        </div>
+                        <div class="bg-amber-100 p-2.5 rounded-lg border border-amber-300">
+                            <div class="text-amber-900 font-black mb-1">👥 NGƯỜI CHƠI 2 (P2 - hoặc dùng Mũi tên ở 1P):</div>
+                            <p>• Di chuyển: <kbd class="px-1.5 py-0.5 bg-white rounded border">▲</kbd> <kbd class="px-1.5 py-0.5 bg-white rounded border">◀</kbd> <kbd class="px-1.5 py-0.5 bg-white rounded border">▼</kbd> <kbd class="px-1.5 py-0.5 bg-white rounded border">▶</kbd></p>
+                            <p>• Đặt bóng nước: <kbd class="px-1.5 py-0.5 bg-white rounded border">ENTER</kbd> hoặc <kbd class="px-1.5 py-0.5 bg-white rounded border">Numpad 0</kbd></p>
+                            <p>• Kim Chích: <kbd class="px-1.5 py-0.5 bg-white rounded border">.</kbd> (hoặc <kbd class="px-1.5 py-0.5 bg-white rounded border">M</kbd>) | Khiên: <kbd class="px-1.5 py-0.5 bg-white rounded border">/</kbd> (hoặc <kbd class="px-1.5 py-0.5 bg-white rounded border">N</kbd>)</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bnb-subpanel p-3">
+                    <h4 class="font-cartoon text-base font-extrabold text-blue-900 mb-1">💧 LUẬT CHƠI & TÍNH NĂNG</h4>
+                    <ul class="text-xs font-bold space-y-1 text-slate-800">
+                        <li>• <b>Sặc Nước (4.5s):</b> Trúng tia nước sẽ bị nhốt vào bóng nước. Đồng đội chạm vào sẽ giải cứu, kẻ địch/Boss chạm vào sẽ nổ bóng ngay. Nhấn <b>Q</b> (hoặc <b>.</b>) để dùng Kim Chích tự thoát.</li>
+                        <li>• <b>Đẩy Thùng & Đá Bóng:</b> Nhấn giữ hướng đi vào thùng gỗ/rương để đẩy trượt đi. Nhặt <b>Giày Đá (👟)</b> để đá văng bóng nước.</li>
+                        <li>• <b>Bóng Mờ Xám & Màu Bóng Nước:</b> Nhân vật di chuyển để lại vệt bóng mờ màu xám khói mặc định; bạn có thể tùy chọn 7 màu sắc cho quả Bóng Nước.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Polyfill roundRect cho các trình duyệt cũ
+        if (!CanvasRenderingContext2D.prototype.roundRect) {
+            CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h, r) {
+                const radius = typeof r === 'number' ? r : 4;
+                this.moveTo(x + radius, y);
+                this.arcTo(x + w, y, x + w, y + h, radius);
+                this.arcTo(x + w, y + h, x, y + h, radius);
+                this.arcTo(x, y + h, x, y, radius);
+                this.arcTo(x, y, x + w, y, radius);
+                this.closePath();
+                return this;
+            };
+        }
+
+        /* ============================================================================
+         * 0. HỆ THỐNG BÓNG MỜ NHÂN VẬT (MÀU XÁM MẶC ĐỊNH) & TÙY CHỌN MÀU BÓNG NƯỚC
+         * ============================================================================ */
+        const WATER_BOMB_PALETTES = [
+            { id: 'cyan',    name: 'XANH BIỂN',      hex: '#38bdf8', light: '#e0f2fe', mid: '#38bdf8', dark: '#0284c7', deep: '#1e3a8a', knot: '#0284c7' },
+            { id: 'gold',    name: 'HOÀNG KIM',      hex: '#facc15', light: '#fef9c3', mid: '#facc15', dark: '#ca8a04', deep: '#713f12', knot: '#eab308' },
+            { id: 'purple',  name: 'TÍM MA THUẬT',   hex: '#c084fc', light: '#f3e8ff', mid: '#c084fc', dark: '#9333ea', deep: '#4c1d95', knot: '#9333ea' },
+            { id: 'crimson', name: 'ĐỎ HỒNG NGỌC',   hex: '#fb7185', light: '#ffe4e6', mid: '#fb7185', dark: '#e11d48', deep: '#881337', knot: '#e11d48' },
+            { id: 'emerald', name: 'XANH NGỌC',      hex: '#34d399', light: '#d1fae5', mid: '#34d399', dark: '#059669', deep: '#064e3b', knot: '#10b981' },
+            { id: 'rainbow', name: 'CẦU VỒNG 7 SẮC', hex: 'linear-gradient(90deg,#f43f5e,#facc15,#38bdf8,#c084fc)', light: '#ffffff', mid: '#38bdf8', dark: '#0284c7', deep: '#1e3a8a', knot: '#facc15' },
+            { id: 'dark',    name: 'ĐEN BÓNG ĐÊM',   hex: '#334155', light: '#cbd5e1', mid: '#64748b', dark: '#334155', deep: '#0f172a', knot: '#334155' }
+        ];
+
+        const BombTrailSys = {
+            ghostMode: 'strong', // 'strong' | 'soft' | 'off'
+            colorIndex: 0,       // Mặc định: XANH BIỂN
+            snapshots: [],
+
+            init() {
+                this.renderControls();
+            },
+
+            getCurrentPalette() {
+                return WATER_BOMB_PALETTES[this.colorIndex] || WATER_BOMB_PALETTES[0];
+            },
+
+            getBombColors(timeSec, offset = 0) {
+                const pal = this.getCurrentPalette();
+                if (pal.id === 'rainbow') {
+                    const hue = Math.floor((timeSec * 160 + offset * 45) % 360);
+                    return {
+                        light: `hsl(${hue}, 100%, 88%)`,
+                        mid: `hsl(${hue}, 95%, 60%)`,
+                        dark: `hsl(${hue}, 90%, 42%)`,
+                        deep: `hsl(${hue}, 85%, 22%)`,
+                        knot: `hsl(${hue}, 95%, 50%)`
+                    };
+                }
+                return pal;
+            },
+
+            setGhostMode(mode) {
+                AudioSys.playPickup();
+                this.ghostMode = mode;
+                if (mode === 'off') this.snapshots = [];
+                this.renderControls();
+            },
+
+            cycleGhostMode() {
+                const order = ['strong', 'soft', 'off'];
+                this.setGhostMode(order[(order.indexOf(this.ghostMode) + 1) % order.length]);
+            },
+
+            setBombColor(idx) {
+                AudioSys.playPickup();
+                this.colorIndex = idx;
+                this.renderControls();
+            },
+
+            cycleBombColor() {
+                this.setBombColor((this.colorIndex + 1) % WATER_BOMB_PALETTES.length);
+            },
+
+            renderControls() {
+                const modeNames = { strong: 'RÕ NÉT', soft: 'MỜ NHẸ', off: 'TẮT' };
+                const ghostTxt = document.getElementById('ghostModeText');
+                if (ghostTxt) ghostTxt.textContent = `Bóng mờ: ${modeNames[this.ghostMode]}`;
+
+                const pal = this.getCurrentPalette();
+                const dot = document.getElementById('bombColorDot');
+                const colTxt = document.getElementById('bombColorText');
+                if (dot) dot.style.background = pal.hex;
+                if (colTxt) colTxt.textContent = `Bóng nước: ${pal.name}`;
+
+                const activeCls = 'px-2.5 py-1 rounded-lg text-xs font-extrabold border-2 bg-blue-600 text-white border-yellow-400 shadow';
+                const idleCls = 'px-2.5 py-1 rounded-lg text-xs font-extrabold border-2 bg-white text-slate-700 border-blue-200 hover:bg-blue-50';
+                const bStrong = document.getElementById('lobbyGhostStrong');
+                const bSoft = document.getElementById('lobbyGhostSoft');
+                const bOff = document.getElementById('lobbyGhostOff');
+                if (bStrong) bStrong.className = this.ghostMode === 'strong' ? activeCls : idleCls;
+                if (bSoft) bSoft.className = this.ghostMode === 'soft' ? activeCls : idleCls;
+                if (bOff) bOff.className = this.ghostMode === 'off' ? activeCls : idleCls;
+
+                const listEl = document.getElementById('lobbyBombColorList');
+                if (listEl) {
+                    listEl.innerHTML = WATER_BOMB_PALETTES.map((p, idx) => {
+                        const selected = idx === this.colorIndex;
+                        return `
+                            <button onclick="BombTrailSys.setBombColor(${idx})"
+                                class="px-2.5 py-1 rounded-full text-[11px] font-extrabold flex items-center gap-1.5 border-2 transition ${selected ? 'bg-slate-900 text-yellow-300 border-yellow-400 shadow' : 'bg-white text-slate-700 border-blue-200 hover:bg-blue-50'}">
+                                <span class="w-3 h-3 rounded-full inline-block border border-white/80" style="background:${p.hex}"></span>
+                                <span>${p.name}</span>
+                            </button>
+                        `;
+                    }).join('');
+                }
+            },
+
+            // Bóng mờ nhân vật di chuyển luôn là màu xám mặc định
+            spawnPlayerTrail(p) {
+                if (this.ghostMode === 'off') return;
+                const startAlpha = this.ghostMode === 'strong' ? 0.52 : 0.26;
+                this.snapshots.push({
+                    kind: 'player',
+                    x: p.x,
+                    y: p.y,
+                    mount: p.mount,
+                    alpha: startAlpha,
+                    maxAlpha: startAlpha,
+                    life: this.ghostMode === 'strong' ? 0.34 : 0.22
+                });
+            },
+
+            spawnBombTrail(b, timeSec) {
+                if (this.ghostMode === 'off') return;
+                const bCol = this.getBombColors(timeSec, b.c + b.r);
+                const startAlpha = this.ghostMode === 'strong' ? 0.5 : 0.25;
+                this.snapshots.push({
+                    kind: 'bomb',
+                    x: b.px,
+                    y: b.py,
+                    color: bCol.mid,
+                    alpha: startAlpha,
+                    maxAlpha: startAlpha,
+                    life: 0.28
+                });
+            },
+
+            update(dt) {
+                for (let i = this.snapshots.length - 1; i >= 0; i--) {
+                    const s = this.snapshots[i];
+                    s.life -= dt;
+                    s.alpha = Math.max(0, (s.life / 0.34) * s.maxAlpha);
+                    if (s.life <= 0) this.snapshots.splice(i, 1);
+                }
+            },
+
+            drawTrails(ctx) {
+                if (this.ghostMode === 'off') return;
+                for (let i = 0; i < this.snapshots.length; i++) {
+                    const s = this.snapshots[i];
+                    ctx.save();
+                    ctx.translate(s.x, s.y);
+                    ctx.globalAlpha = s.alpha;
+
+                    if (s.kind === 'player') {
+                        // Bóng đổ xám dưới chân
+                        ctx.fillStyle = 'rgba(100, 116, 139, 0.45)';
+                        ctx.beginPath();
+                        ctx.ellipse(0, 17, 15, 6, 0, 0, Math.PI * 2);
+                        ctx.fill();
+
+                        if (s.mount) {
+                            ctx.fillStyle = '#64748b';
+                            ctx.beginPath();
+                            ctx.ellipse(0, 11, 19, 8, 0, 0, Math.PI * 2);
+                            ctx.fill();
+                        }
+
+                        // Thân bóng mờ màu xám
+                        ctx.fillStyle = '#94a3b8';
+                        ctx.beginPath();
+                        ctx.roundRect(-10, -1, 20, 14, 6);
+                        ctx.fill();
+
+                        // Đầu bóng mờ xám sáng
+                        ctx.fillStyle = '#cbd5e1';
+                        ctx.beginPath();
+                        ctx.arc(0, -7, 12.5, 0, Math.PI * 2);
+                        ctx.fill();
+
+                        // Mũ bóng mờ xám đậm
+                        ctx.fillStyle = '#64748b';
+                        ctx.beginPath();
+                        ctx.arc(0, -10, 12.5, Math.PI, 0);
+                        ctx.fill();
+                    } else if (s.kind === 'bomb') {
+                        ctx.fillStyle = s.color;
+                        ctx.beginPath();
+                        ctx.arc(0, 0, 16, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                    ctx.restore();
+                }
+            }
+        };
+
+        /* ============================================================================
+         * 1. WEB AUDIO SYNTHESIZER
+         * ============================================================================ */
+        const AudioSys = {
+            ctx: null,
+            musicOn: true,
+            sfxOn: true,
+            bgmTimer: null,
+            bgmStep: 0,
+
+            init() {
+                if (!this.ctx) {
+                    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                    if (AudioCtx) this.ctx = new AudioCtx();
+                }
+                if (this.ctx && this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
+            },
+
+            toggleMusic() {
+                this.init();
+                this.musicOn = !this.musicOn;
+                document.getElementById('musicIcon').textContent = this.musicOn ? '🔊' : '🔇';
+                if (this.musicOn && Game.running && !Game.paused) this.startBgm();
+                else this.stopBgm();
+            },
+
+            toggleSfx() {
+                this.init();
+                this.sfxOn = !this.sfxOn;
+                document.getElementById('sfxIcon').textContent = this.sfxOn ? '🔔' : '🔕';
+            },
+
+            playPlaceBomb() {
+                if (!this.sfxOn) return;
+                this.init();
+                if (!this.ctx) return;
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(220, now);
+                osc.frequency.exponentialRampToValueAtTime(540, now + 0.11);
+                gain.gain.setValueAtTime(0.22, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.12);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.12);
+            },
+
+            playExplosion() {
+                if (!this.sfxOn) return;
+                this.init();
+                if (!this.ctx) return;
+                const now = this.ctx.currentTime;
+                const bufferSize = this.ctx.sampleRate * 0.26;
+                const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) {
+                    data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufferSize * 0.36));
+                }
+                const noise = this.ctx.createBufferSource();
+                noise.buffer = buffer;
+                const filter = this.ctx.createBiquadFilter();
+                filter.type = 'bandpass';
+                filter.frequency.setValueAtTime(680, now);
+                filter.frequency.exponentialRampToValueAtTime(200, now + 0.25);
+                const gain = this.ctx.createGain();
+                gain.gain.setValueAtTime(0.3, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.26);
+                noise.connect(filter);
+                filter.connect(gain);
+                gain.connect(this.ctx.destination);
+                noise.start(now);
+            },
+
+            playPickup() {
+                if (!this.sfxOn) return;
+                this.init();
+                if (!this.ctx) return;
+                const now = this.ctx.currentTime;
+                [587.33, 880, 1174.66].forEach((freq, idx) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(freq, now + idx * 0.045);
+                    gain.gain.setValueAtTime(0.16, now + idx * 0.045);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + idx * 0.045 + 0.09);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(now + idx * 0.045);
+                    osc.stop(now + idx * 0.045 + 0.09);
+                });
+            },
+
+            playTrapped() {
+                if (!this.sfxOn) return;
+                this.init();
+                if (!this.ctx) return;
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(480, now);
+                osc.frequency.linearRampToValueAtTime(240, now + 0.12);
+                osc.frequency.linearRampToValueAtTime(390, now + 0.25);
+                gain.gain.setValueAtTime(0.24, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.26);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.26);
+            },
+
+            playNeedlePop() {
+                if (!this.sfxOn) return;
+                this.init();
+                if (!this.ctx) return;
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(520, now);
+                osc.frequency.exponentialRampToValueAtTime(1380, now + 0.14);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.15);
+            },
+
+            playBossWarning() {
+                if (!this.sfxOn) return;
+                this.init();
+                if (!this.ctx) return;
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(165, now);
+                osc.frequency.linearRampToValueAtTime(340, now + 0.24);
+                gain.gain.setValueAtTime(0.18, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.26);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.26);
+            },
+
+            playFanfare(win = true) {
+                if (!this.sfxOn) return;
+                this.init();
+                if (!this.ctx) return;
+                const now = this.ctx.currentTime;
+                const seq = win ? [523.25, 659.25, 783.99, 1046.5] : [392.0, 349.23, 329.63, 261.63];
+                seq.forEach((f, i) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(f, now + i * 0.12);
+                    gain.gain.setValueAtTime(0.22, now + i * 0.12);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + i * 0.12 + 0.25);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(now + i * 0.12);
+                    osc.stop(now + i * 0.12 + 0.25);
+                });
+            },
+
+            startBgm() {
+                this.stopBgm();
+                if (!this.musicOn) return;
+                this.init();
+                const isBoss = Game.modeObj && Game.modeObj.bossId;
+                const melody = isBoss
+                    ? [440, 523.25, 659.25, 587.33, 440, 659.25, 587.33, 523.25, 392, 493.88, 587.33, 523.25, 440, 392, 329.63, 440]
+                    : [523.25, 659.25, 783.99, 659.25, 880.00, 783.99, 659.25, 523.25, 587.33, 698.46, 880.00, 698.46, 783.99, 659.25, 587.33, 523.25];
+                this.bgmTimer = setInterval(() => {
+                    if (!this.musicOn || !Game.running || Game.paused || !this.ctx) return;
+                    const freq = melody[this.bgmStep % melody.length];
+                    this.bgmStep++;
+                    const now = this.ctx.currentTime;
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = isBoss ? 'sawtooth' : 'triangle';
+                    osc.frequency.setValueAtTime(freq, now);
+                    gain.gain.setValueAtTime(isBoss ? 0.035 : 0.05, now);
+                    gain.gain.exponentialRampToValueAtTime(0.004, now + 0.19);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(now);
+                    osc.stop(now + 0.2);
+                }, isBoss ? 195 : 220);
+            },
+
+            stopBgm() {
+                if (this.bgmTimer) {
+                    clearInterval(this.bgmTimer);
+                    this.bgmTimer = null;
+                }
+            }
+        };
+
+        /* ============================================================================
+         * 2. DỮ LIỆU CHẾ ĐỘ CHƠI, NHÂN VẬT & 8 BẢN ĐỒ
+         * ============================================================================ */
+        const GAME_MODES = [
+            { id: 'classic',      name: 'Đấu Thường (Classic BnB)',       badge: 'PvP / AI',      isNew: false, icon: '💣', desc: 'Đấu trường 4 người chuẩn Boom Online! Đặt bóng nước, nhặt đồ, giải cứu đồng đội hoặc hạ gục đối thủ.', bossId: null,      suggestMap: 'village' },
+            { id: 'boss_dragon',  name: 'Đấu Boss: Rồng Hỏa Ngục',        badge: 'BOSS MỚI',      isNew: true,  icon: '🐉', desc: 'Ác Long Hỏa Diệm Sơn phun Hơi Thở Dung Nham chữ X, thả Thiên Thạch Bóng Lửa & triệu hồi Tinh Linh Lửa!', bossId: 'dragon',  suggestMap: 'volcano' },
+            { id: 'boss_iceking', name: 'Đấu Boss: Vua Băng Giá Yeti',    badge: 'BOSS MỚI',      isNew: true,  icon: '❄️', desc: 'Chúa Tể Sông Băng đập Búa Hàn Băng đóng băng nhiều hàng/cột, tạo Bão Tuyết & gọi Người Tuyết!',        bossId: 'iceking', suggestMap: 'glacier' },
+            { id: 'boss_rush',    name: 'Liên Hoàn Boss (Boss Rush 3 Ải)',badge: 'SIÊU THỬ THÁCH',isNew: true,  icon: '👑', desc: 'Liên tiếp khiêu chiến 3 Boss khổng lồ trong 1 trận đấu! Hạ mỗi Boss nhận mưa vật phẩm tiếp tế!',       bossId: 'rush',    suggestMap: 'forest' },
+            { id: 'boss_octopus', name: 'Đấu Boss: Bạch Tuộc Khổng Lồ',   badge: 'Săn Boss',      isNew: false, icon: '🐙', desc: 'Quái vật biển sâu phun vòi rồng chữ X/chữ thập, thả mưa bóng nước và triệu hồi Cua Biển!',             bossId: 'octopus', suggestMap: 'pirate' },
+            { id: 'boss_mummy',   name: 'Đấu Boss: Pháp Sư Pharaoh',      badge: 'Săn Boss',      isNew: false, icon: '🧟', desc: 'Vua Xác Ướp cổ đại triệu hồi vòng tròn bóng nước vây quanh người chơi, tạo bão cát & Bọ Cạp Cổ!',      bossId: 'mummy',   suggestMap: 'pyramid' },
+            { id: 'boss_mecha',   name: 'Đấu Boss: Đại Bàng Cơ Khí',      badge: 'Săn Boss',      isNew: false, icon: '🤖', desc: 'Siêu Robot phóng tia Laser hủy diệt toàn hàng/cột, rải bom hẹn giờ và thả Robot tuần tra!',             bossId: 'mecha',   suggestMap: 'factory' }
+        ];
+
+        const CHARACTERS = [
+            { id: 'bazzi', name: 'Khò Khò (Bazzi)', title: 'Nhanh Nhẹn & Linh Hoạt', color: '#ef4444', hatColor: '#ffffff', skin: '#ffe0bd', startBombs: 1, maxBombs: 6, startWater: 1, maxWater: 7, startSpeed: 6, maxSpeed: 9, desc: 'Tốc độ di chuyển khởi đầu cao, cực kỳ cơ động khi né tia nước và săn Boss.' },
+            { id: 'dao',   name: 'Đầu Đinh (Dao)',  title: 'Chuyên Gia Bóng Nước',   color: '#2563eb', hatColor: '#1d4ed8', skin: '#ffe0bd', startBombs: 1, maxBombs: 8, startWater: 1, maxWater: 8, startSpeed: 5, maxSpeed: 7, desc: 'Giới hạn số lượng bóng nước và độ dài tia nước cao nhất đội.' },
+            { id: 'marid', name: 'Mật Ngọt (Marid)',title: 'Bậc Thầy Đặt Bẫy',       color: '#db2777', hatColor: '#f472b6', skin: '#ffe0bd', startBombs: 2, maxBombs: 7, startWater: 1, maxWater: 6, startSpeed: 5, maxSpeed: 8, desc: 'Khởi đầu trận đấu với 2 quả bóng nước ngay lập tức, phá gạch cực nhanh.' },
+            { id: 'kephi', name: 'Bé Bỏng (Kephi)', title: 'Hỏa Lực Mạnh Mẽ',        color: '#16a34a', hatColor: '#4ade80', skin: '#ffe0bd', startBombs: 1, maxBombs: 7, startWater: 2, maxWater: 8, startSpeed: 5, maxSpeed: 8, desc: 'Khởi đầu với độ dài tia nước cấp 2, dễ dàng ép góc kẻ địch từ sớm.' }
+        ];
+
+        const MAPS = [
+            {
+                id: 'village', name: 'Ngôi Làng Cổ', sub: 'Village 10 Huyền Thoại', icon: '🏡', isNew: false, floorA: '#6ab04c', floorB: '#589e3d',
+                grid: [
+                    [0,0,2,4,2,3,2,0,2,3,2,4,2,0,0],[0,1,2,1,2,1,2,1,2,1,2,1,2,1,0],[2,2,3,2,4,2,3,2,3,2,4,2,3,2,2],
+                    [4,1,2,1,2,1,4,1,4,1,2,1,2,1,4],[2,4,2,3,2,2,2,0,2,2,2,3,2,4,2],[3,1,4,1,2,1,0,1,0,1,2,1,4,1,3],
+                    [2,2,3,2,0,0,0,4,0,0,0,2,3,2,2],[3,1,4,1,2,1,0,1,0,1,2,1,4,1,3],[2,4,2,3,2,2,2,0,2,2,2,3,2,4,2],
+                    [4,1,2,1,2,1,4,1,4,1,2,1,2,1,4],[2,2,3,2,4,2,3,2,3,2,4,2,3,2,2],[0,1,2,1,2,1,2,1,2,1,2,1,2,1,0],
+                    [0,0,2,4,2,3,2,0,2,3,2,4,2,0,0]
+                ]
+            },
+            {
+                id: 'pyramid', name: 'Kim Tự Tháp', sub: 'Sa Mạc Pharaoh', icon: '🏜️', isNew: false, floorA: '#f6d365', floorB: '#e6be53',
+                grid: [
+                    [0,0,2,2,3,2,4,0,4,2,3,2,2,0,0],[0,1,1,2,1,2,1,0,1,2,1,2,1,1,0],[2,1,3,2,3,2,2,3,2,2,3,2,3,1,2],
+                    [2,2,2,1,4,1,2,0,2,1,4,1,2,2,2],[3,1,3,4,2,3,0,0,0,3,2,4,3,1,3],[2,2,2,1,3,1,0,1,0,1,3,1,2,2,2],
+                    [4,0,3,0,0,0,0,4,0,0,0,0,3,0,4],[2,2,2,1,3,1,0,1,0,1,3,1,2,2,2],[3,1,3,4,2,3,0,0,0,3,2,4,3,1,3],
+                    [2,2,2,1,4,1,2,0,2,1,4,1,2,2,2],[2,1,3,2,3,2,2,3,2,2,3,2,3,1,2],[0,1,1,2,1,2,1,0,1,2,1,2,1,1,0],
+                    [0,0,2,2,3,2,4,0,4,2,3,2,2,0,0]
+                ]
+            },
+            {
+                id: 'pirate', name: 'Vịnh Cướp Biển', sub: 'Kho Báu Đại Dương', icon: '🏴‍☠️', isNew: false, floorA: '#9c6644', floorB: '#7f4f24',
+                grid: [
+                    [0,0,3,2,4,2,2,0,2,2,4,2,3,0,0],[0,1,2,1,2,1,3,0,3,1,2,1,2,1,0],[3,2,2,3,2,4,2,3,2,4,2,3,2,2,3],
+                    [2,1,3,1,2,1,2,1,2,1,2,1,3,1,2],[4,2,2,2,3,0,0,0,0,0,3,2,2,2,4],[2,1,4,1,0,1,0,0,0,1,0,1,4,1,2],
+                    [2,3,2,2,0,0,4,4,4,0,0,2,2,3,2],[2,1,4,1,0,1,0,0,0,1,0,1,4,1,2],[4,2,2,2,3,0,0,0,0,0,3,2,2,2,4],
+                    [2,1,3,1,2,1,2,1,2,1,2,1,3,1,2],[3,2,2,3,2,4,2,3,2,4,2,3,2,2,3],[0,1,2,1,2,1,3,0,3,1,2,1,2,1,0],
+                    [0,0,3,2,4,2,2,0,2,2,4,2,3,0,0]
+                ]
+            },
+            {
+                id: 'factory', name: 'Nhà Máy Cơ Khí', sub: 'Đấu Trường Thép', icon: '⚙️', isNew: false, floorA: '#64748b', floorB: '#475569',
+                grid: [
+                    [0,0,2,3,2,4,2,0,2,4,2,3,2,0,0],[0,1,3,1,2,1,2,1,2,1,2,1,3,1,0],[2,3,2,2,3,2,4,0,4,2,3,2,2,3,2],
+                    [3,1,2,1,3,1,2,1,2,1,3,1,2,1,3],[2,2,3,3,2,0,0,0,0,0,2,3,3,2,2],[4,1,2,1,0,1,0,0,0,1,0,1,2,1,4],
+                    [2,2,4,0,0,0,0,3,0,0,0,0,4,2,2],[4,1,2,1,0,1,0,0,0,1,0,1,2,1,4],[2,2,3,3,2,0,0,0,0,0,2,3,3,2,2],
+                    [3,1,2,1,3,1,2,1,2,1,3,1,2,1,3],[2,3,2,2,3,2,4,0,4,2,3,2,2,3,2],[0,1,3,1,2,1,2,1,2,1,2,1,3,1,0],
+                    [0,0,2,3,2,4,2,0,2,4,2,3,2,0,0]
+                ]
+            },
+            {
+                id: 'glacier', name: 'Sông Băng Tuyết', sub: 'Lãnh Địa Cực Hàn', icon: '❄️', isNew: true, floorA: '#bae6fd', floorB: '#7dd3fc',
+                grid: [
+                    [0,0,3,2,4,3,2,0,2,3,4,2,3,0,0],[0,1,3,1,2,1,0,1,0,1,2,1,3,1,0],[3,3,2,4,3,2,3,0,3,2,3,4,2,3,3],
+                    [2,1,4,1,3,1,2,1,2,1,3,1,4,1,2],[4,2,3,3,0,0,4,0,4,0,0,3,3,2,4],[3,1,2,1,0,1,0,0,0,1,0,1,2,1,3],
+                    [2,0,3,0,4,0,0,3,0,0,4,0,3,0,2],[3,1,2,1,0,1,0,0,0,1,0,1,2,1,3],[4,2,3,3,0,0,4,0,4,0,0,3,3,2,4],
+                    [2,1,4,1,3,1,2,1,2,1,3,1,4,1,2],[3,3,2,4,3,2,3,0,3,2,3,4,2,3,3],[0,1,3,1,2,1,0,1,0,1,2,1,3,1,0],
+                    [0,0,3,2,4,3,2,0,2,3,4,2,3,0,0]
+                ]
+            },
+            {
+                id: 'volcano', name: 'Hỏa Diệm Sơn', sub: 'Thung Lũng Dung Nham', icon: '🌋', isNew: true, floorA: '#451a03', floorB: '#290f02',
+                grid: [
+                    [0,0,2,3,2,2,4,0,4,2,2,3,2,0,0],[0,1,2,1,3,1,2,0,2,1,3,1,2,1,0],[2,2,3,2,2,3,2,3,2,3,2,2,3,2,2],
+                    [3,1,2,1,2,1,4,1,4,1,2,1,2,1,3],[2,3,2,2,0,0,0,0,0,0,0,2,2,3,2],[2,1,3,1,0,1,0,0,0,1,0,1,3,1,2],
+                    [4,0,2,4,0,0,3,0,3,0,0,4,2,0,4],[2,1,3,1,0,1,0,0,0,1,0,1,3,1,2],[2,3,2,2,0,0,0,0,0,0,0,2,2,3,2],
+                    [3,1,2,1,2,1,4,1,4,1,2,1,2,1,3],[2,2,3,2,2,3,2,3,2,3,2,2,3,2,2],[0,1,2,1,3,1,2,0,2,1,3,1,2,1,0],
+                    [0,0,2,3,2,2,4,0,4,2,2,3,2,0,0]
+                ]
+            },
+            {
+                id: 'forest', name: 'Rừng Phép Thuật', sub: 'Đảo Nấm Tinh Linh', icon: '🍄', isNew: true, floorA: '#15803d', floorB: '#166534',
+                grid: [
+                    [0,0,4,2,3,4,2,0,2,4,3,2,4,0,0],[0,1,4,1,2,1,4,1,4,1,2,1,4,1,0],[4,4,3,2,4,3,2,4,2,3,4,2,3,4,4],
+                    [2,1,2,1,4,1,3,1,3,1,4,1,2,1,2],[3,2,4,4,2,0,4,0,4,0,2,4,4,2,3],[4,1,3,1,0,1,0,0,0,1,0,1,3,1,4],
+                    [2,4,2,3,4,0,4,4,4,0,4,3,2,4,2],[4,1,3,1,0,1,0,0,0,1,0,1,3,1,4],[3,2,4,4,2,0,4,0,4,0,2,4,4,2,3],
+                    [2,1,2,1,4,1,3,1,3,1,4,1,2,1,2],[4,4,3,2,4,3,2,4,2,3,4,2,3,4,4],[0,1,4,1,2,1,4,1,4,1,2,1,4,1,0],
+                    [0,0,4,2,3,4,2,0,2,4,3,2,4,0,0]
+                ]
+            },
+            {
+                id: 'candyland', name: 'Vương Quốc Kẹo', sub: 'Thị Trấn Bánh Ngọt', icon: '🍭', isNew: true, floorA: '#fbcfe8', floorB: '#f9a8d4',
+                grid: [
+                    [0,0,2,3,4,2,3,0,3,2,4,3,2,0,0],[0,1,2,1,3,1,2,1,2,1,3,1,2,1,0],[2,2,3,3,2,4,2,0,2,4,2,3,3,2,2],
+                    [3,1,3,1,2,1,3,1,3,1,2,1,3,1,3],[4,3,2,2,3,0,0,4,0,0,3,2,2,3,4],[2,1,4,1,0,1,0,0,0,1,0,1,4,1,2],
+                    [3,2,0,3,4,0,0,3,0,0,4,3,0,2,3],[2,1,4,1,0,1,0,0,0,1,0,1,4,1,2],[4,3,2,2,3,0,0,4,0,0,3,2,2,3,4],
+                    [3,1,3,1,2,1,3,1,3,1,2,1,3,1,3],[2,2,3,3,2,4,2,0,2,4,2,3,3,2,2],[0,1,2,1,3,1,2,1,2,1,3,1,2,1,0],
+                    [0,0,2,3,4,2,3,0,3,2,4,3,2,0,0]
+                ]
+            }
+        ];
+
+        /* ============================================================================
+         * 3. QUẢN LÝ SẢNH CHỜ (LOBBY)
+         * ============================================================================ */
+        const Lobby = {
+            selectedMode: 'classic',
+            selectedMap: 'village',
+            playerCount: 1,
+            p2Coop: true,
+            p1Char: 'bazzi',
+            p2Char: 'dao',
+            pickingFor: 1,
+
+            init() {
+                this.renderModes();
+                this.renderMaps();
+                this.renderCharacters();
+                this.updatePlayerButtons();
+                BombTrailSys.init();
+            },
+
+            renderModes() {
+                const container = document.getElementById('modeGrid');
+                container.innerHTML = GAME_MODES.map(m => {
+                    const active = this.selectedMode === m.id ? 'card-selected bg-white' : 'bg-white/85 hover:bg-white';
+                    const isBoss = m.bossId !== null;
+                    const badgeColor = m.id === 'boss_rush'
+                        ? 'bg-purple-600 text-white'
+                        : (m.isNew ? 'bg-red-600 text-white' : (isBoss ? 'bg-orange-600 text-white' : 'bg-blue-600 text-white'));
+                    return `
+                        <div onclick="Lobby.selectMode('${m.id}')" class="cursor-pointer p-2.5 rounded-xl border-2 border-blue-300 transition flex items-start gap-2.5 ${active}">
+                            <div class="w-11 h-11 rounded-xl ${isBoss ? 'bg-red-100 border-red-300' : 'bg-blue-100 border-blue-300'} border-2 flex items-center justify-center text-2xl shrink-0">
+                                ${m.icon}
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center justify-between gap-1">
+                                    <span class="font-cartoon text-sm font-extrabold text-blue-950 truncate">${m.name}</span>
+                                    <span class="text-[9px] font-black px-1.5 py-0.5 rounded ${badgeColor} shrink-0">${m.badge}</span>
+                                </div>
+                                <p class="text-[11px] text-slate-600 font-bold leading-tight mt-0.5">${m.desc}</p>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            },
+
+            renderMaps() {
+                const container = document.getElementById('mapGrid');
+                container.innerHTML = MAPS.map(mp => {
+                    const active = this.selectedMap === mp.id ? 'card-selected bg-white' : 'bg-white/85 hover:bg-white';
+                    return `
+                        <div onclick="Lobby.selectMap('${mp.id}')" class="cursor-pointer p-2 rounded-xl border-2 border-blue-300 transition text-center flex flex-col items-center relative ${active}">
+                            ${mp.isNew ? '<span class="absolute top-1.5 right-1.5 px-1.5 py-0.2 bg-amber-400 text-slate-950 font-black text-[9px] rounded-full shadow z-20">MỚI</span>' : ''}
+                            <div class="w-full h-14 rounded-lg mb-1.5 overflow-hidden border border-slate-400/70 relative flex items-center justify-center shadow-inner" style="background:${mp.floorA}">
+                                ${this.buildMiniMapSVG(mp)}
+                                <span class="text-xl drop-shadow-md z-10">${mp.icon}</span>
+                            </div>
+                            <div class="font-cartoon text-xs sm:text-sm font-extrabold text-blue-950 leading-tight truncate w-full">${mp.name}</div>
+                            <div class="text-[10px] font-bold text-slate-500 truncate w-full">${mp.sub}</div>
+                        </div>
+                    `;
+                }).join('');
+            },
+
+            buildMiniMapSVG(mp) {
+                let rects = '';
+                for (let r = 0; r < 13; r++) {
+                    for (let c = 0; c < 15; c++) {
+                        const t = mp.grid[r][c];
+                        if (t === 0) continue;
+                        let fill = 'rgba(15,23,42,0.75)';
+                        if (t === 2) fill = 'rgba(234,88,12,0.65)';
+                        else if (t === 3) fill = 'rgba(250,204,21,0.75)';
+                        else if (t === 4) fill = 'rgba(34,197,94,0.7)';
+                        rects += `<rect x="${c * 4}" y="${r * 4}" width="3.5" height="3.5" fill="${fill}" />`;
+                    }
+                }
+                return `<svg viewBox="0 0 60 52" class="inset-0 w-full h-full opacity-75 absolute" preserveAspectRatio="none">${rects}</svg>`;
+            },
+
+            renderCharacters() {
+                const tabs = document.getElementById('charPickTabs');
+                if (this.playerCount === 2) {
+                    tabs.innerHTML = `
+                        <button onclick="Lobby.setPickingFor(1)" class="px-2.5 py-0.5 text-xs font-extrabold rounded-full ${this.pickingFor === 1 ? 'bg-amber-400 text-amber-950 shadow' : 'bg-blue-200 text-blue-800'}">P1 Chọn</button>
+                        <button onclick="Lobby.setPickingFor(2)" class="px-2.5 py-0.5 text-xs font-extrabold rounded-full ${this.pickingFor === 2 ? 'bg-emerald-400 text-emerald-950 shadow' : 'bg-blue-200 text-blue-800'}">P2 Chọn</button>
+                    `;
+                } else {
+                    this.pickingFor = 1;
+                    tabs.innerHTML = `<span class="px-2.5 py-0.5 text-xs font-extrabold rounded-full bg-amber-400 text-amber-950">P1 Chọn</span>`;
+                }
+
+                const grid = document.getElementById('charGrid');
+                grid.innerHTML = CHARACTERS.map(c => {
+                    const isP1 = this.p1Char === c.id;
+                    const isP2 = this.playerCount === 2 && this.p2Char === c.id;
+                    const active = (this.pickingFor === 1 && isP1) || (this.pickingFor === 2 && isP2);
+                    return `
+                        <div onclick="Lobby.selectChar('${c.id}')" class="cursor-pointer p-2.5 rounded-xl border-2 border-blue-300 transition flex items-center gap-2.5 relative ${active ? 'card-selected bg-white' : 'bg-white/85 hover:bg-white'}">
+                            <div class="w-12 h-12 rounded-xl flex items-center justify-center shrink-0 border-2 border-slate-700 shadow" style="background: radial-gradient(circle at 30% 30%, #fff, ${c.color})">
+                                ${this.getCharPortraitSVG(c)}
+                            </div>
+                            <div class="min-w-0 flex-1">
+                                <div class="font-cartoon text-sm font-extrabold text-blue-950 truncate">${c.name}</div>
+                                <div class="text-[10px] font-bold text-blue-700 truncate">${c.title}</div>
+                                <div class="flex gap-1 mt-1">
+                                    ${isP1 ? '<span class="px-1.5 py-0.2 bg-amber-400 text-amber-950 rounded text-[10px] font-black">P1</span>' : ''}
+                                    ${isP2 ? '<span class="px-1.5 py-0.2 bg-emerald-400 text-emerald-950 rounded text-[10px] font-black">P2</span>' : ''}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                const currentCharId = this.pickingFor === 1 ? this.p1Char : this.p2Char;
+                const ch = CHARACTERS.find(c => c.id === currentCharId) || CHARACTERS[0];
+                const statBar = (cur, max, color) => {
+                    let html = '<div class="flex gap-1">';
+                    for (let i = 1; i <= 9; i++) {
+                        let cls = 'bg-slate-800';
+                        if (i <= cur) cls = color;
+                        else if (i <= max) cls = 'bg-cyan-950 border border-cyan-400/50';
+                        html += `<span class="w-3.5 h-2.5 rounded-sm ${cls}"></span>`;
+                    }
+                    html += '</div>';
+                    return html;
+                };
+
+                document.getElementById('charStatsBox').innerHTML = `
+                    <div class="flex items-center justify-between mb-1.5">
+                        <span class="font-cartoon text-base font-extrabold text-yellow-300">${ch.name} (${this.pickingFor === 1 ? 'Người Chơi 1' : 'Người Chơi 2'})</span>
+                        <span class="text-[11px] font-bold text-cyan-200">${ch.title}</span>
+                    </div>
+                    <p class="text-xs text-cyan-100 font-semibold mb-2.5">${ch.desc}</p>
+                    <div class="space-y-1.5 text-xs font-bold">
+                        <div class="flex items-center justify-between">
+                            <span>🎈 Số Bóng (${ch.startBombs}/${ch.maxBombs}):</span>
+                            ${statBar(ch.startBombs, ch.maxBombs, 'bg-yellow-400')}
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span>🌊 Độ Dài Nước (${ch.startWater}/${ch.maxWater}):</span>
+                            ${statBar(ch.startWater, ch.maxWater, 'bg-cyan-400')}
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span>🛼 Tốc Độ Chạy (${ch.startSpeed}/${ch.maxSpeed}):</span>
+                            ${statBar(ch.startSpeed, ch.maxSpeed, 'bg-emerald-400')}
+                        </div>
+                    </div>
+                `;
+            },
+
+            getCharPortraitSVG(c) {
+                return `
+                    <svg viewBox="0 0 48 48" class="w-10 h-10">
+                        <circle cx="24" cy="26" r="14" fill="${c.skin}" stroke="#1e293b" stroke-width="2.5"/>
+                        <path d="M10 22 Q24 6 38 22 Z" fill="${c.color}" stroke="#1e293b" stroke-width="2.5"/>
+                        <circle cx="24" cy="11" r="4" fill="${c.hatColor}" stroke="#1e293b" stroke-width="2"/>
+                        <circle cx="19" cy="26" r="2.3" fill="#0f172a"/>
+                        <circle cx="29" cy="26" r="2.3" fill="#0f172a"/>
+                        <ellipse cx="15" cy="30" rx="2.5" ry="1.4" fill="#fb7185" opacity="0.75"/>
+                        <ellipse cx="33" cy="30" rx="2.5" ry="1.4" fill="#fb7185" opacity="0.75"/>
+                        <path d="M20 32 Q24 35 28 32" fill="none" stroke="#0f172a" stroke-width="2.2" stroke-linecap="round"/>
+                    </svg>
+                `;
+            },
+
+            selectMode(id) {
+                AudioSys.playPickup();
+                this.selectedMode = id;
+                const modeObj = GAME_MODES.find(m => m.id === id);
+                if (modeObj && modeObj.suggestMap) this.selectedMap = modeObj.suggestMap;
+                this.renderModes();
+                this.renderMaps();
+                this.updatePlayerButtons();
+            },
+
+            selectMap(id) {
+                AudioSys.playPickup();
+                this.selectedMap = id;
+                this.renderMaps();
+            },
+
+            setPlayerCount(cnt) {
+                AudioSys.playPickup();
+                this.playerCount = cnt;
+                this.pickingFor = cnt === 2 ? 2 : 1;
+                this.updatePlayerButtons();
+                this.renderCharacters();
+            },
+
+            setP2Coop(coop) {
+                AudioSys.playPickup();
+                this.p2Coop = coop;
+                this.updatePlayerButtons();
+            },
+
+            setPickingFor(p) {
+                this.pickingFor = p;
+                this.renderCharacters();
+            },
+
+            selectChar(charId) {
+                AudioSys.playPickup();
+                if (this.pickingFor === 1) this.p1Char = charId;
+                else this.p2Char = charId;
+                this.renderCharacters();
+            },
+
+            updatePlayerButtons() {
+                document.getElementById('btn1P').classList.toggle('card-selected', this.playerCount === 1);
+                document.getElementById('btn2P').classList.toggle('card-selected', this.playerCount === 2);
+
+                const p2Opt = document.getElementById('p2TeamOption');
+                const modeObj = GAME_MODES.find(m => m.id === this.selectedMode);
+                if (this.playerCount === 2 && !modeObj.bossId) {
+                    p2Opt.classList.remove('hidden');
+                    document.getElementById('btnCoop2P').className = this.p2Coop
+                        ? 'px-3 py-1 rounded-lg bg-blue-600 text-white shadow'
+                        : 'px-3 py-1 rounded-lg bg-slate-200 text-slate-700';
+                    document.getElementById('btnPvp2P').className = !this.p2Coop
+                        ? 'px-3 py-1 rounded-lg bg-red-600 text-white shadow'
+                        : 'px-3 py-1 rounded-lg bg-slate-200 text-slate-700';
+                } else {
+                    p2Opt.classList.add('hidden');
+                }
+            }
+        };
+
+        /* ============================================================================
+         * 4. GAME ENGINE CHÍNH (15x13 GRID)
+         * ============================================================================ */
+        const COLS = 15;
+        const ROWS = 13;
+        const TILE = 50;
+
+        const ITEM_TYPES = [
+            { id: 'bomb',     icon: '🎈', name: '+1 Bóng',     color: '#38bdf8', weight: 24 },
+            { id: 'water',    icon: '🧪', name: '+1 Nước',     color: '#60a5fa', weight: 24 },
+            { id: 'speed',    icon: '🛼', name: '+1 Giày',     color: '#4ade80', weight: 20 },
+            { id: 'kick',     icon: '👟', name: 'Giày Đá',     color: '#fb923c', weight: 10 },
+            { id: 'maxwater', icon: '🔮', name: 'Nước Tím',    color: '#c084fc', weight: 6 },
+            { id: 'needle',   icon: '📍', name: 'Kim Chích',   color: '#f43f5e', weight: 8 },
+            { id: 'shield',   icon: '🛡️', name: 'Khiên Vàng',  color: '#facc15', weight: 7 },
+            { id: 'turtle',   icon: '🐢', name: 'Rùa Cưỡi',    color: '#22c55e', weight: 7 },
+            { id: 'ufo',      icon: '🛸', name: 'Đĩa Bay UFO', color: '#a855f7', weight: 5 },
+            { id: 'devil',    icon: '😈', name: 'Quỷ Đỏ',      color: '#ef4444', weight: 4 }
+        ];
+
+        const Keys = {};
+        const TouchDirs = { up: false, down: false, left: false, right: false };
+
+        window.addEventListener('keydown', (e) => {
+            Keys[e.code] = true;
+            if (!Game.running || Game.paused) return;
+
+            if (['Space', 'Enter', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) {
+                e.preventDefault();
+            }
+
+            if (e.code === 'Space') Game.playerActionBomb(0);
+            if (e.code === 'KeyQ') Game.playerUseNeedle(0);
+            if (e.code === 'KeyE') Game.playerUseShield(0);
+            if (e.code === 'KeyR') Game.playerUseCure(0);
+
+            if (Lobby.playerCount === 2) {
+                if (e.code === 'Enter' || e.code === 'Numpad0' || e.code === 'NumpadEnter') Game.playerActionBomb(1);
+                if (e.code === 'Period' || e.code === 'KeyM' || e.code === 'ShiftRight') Game.playerUseNeedle(1);
+                if (e.code === 'Slash' || e.code === 'KeyN') Game.playerUseShield(1);
+            } else {
+                if (e.code === 'Enter') Game.playerActionBomb(0);
+            }
+        });
+
+        window.addEventListener('keyup', (e) => {
+            Keys[e.code] = false;
+        });
+
+        document.querySelectorAll('.touch-dir').forEach(btn => {
+            const dir = btn.getAttribute('data-dir');
+            const start = (ev) => { ev.preventDefault(); TouchDirs[dir] = true; };
+            const end = (ev) => { ev.preventDefault(); TouchDirs[dir] = false; };
+            btn.addEventListener('touchstart', start);
+            btn.addEventListener('touchend', end);
+            btn.addEventListener('touchcancel', end);
+            btn.addEventListener('mousedown', start);
+            btn.addEventListener('mouseup', end);
+            btn.addEventListener('mouseleave', end);
+        });
+
+        const Game = {
+            canvas: null,
+            ctx: null,
+            running: false,
+            paused: false,
+            lastTime: 0,
+            timeLeft: 180,
+            modeObj: null,
+            mapObj: null,
+            grid: [],
+            items: [],
+            bombs: [],
+            streams: [],
+            slidingBoxes: [],
+            players: [],
+            boss: null,
+            bossRushQueue: [],
+            bossRushStage: 1,
+            bossRushTotal: 1,
+            minions: [],
+            telegraphs: [],
+            floatingTexts: [],
+            particles: [],
+            shockwaves: [],
+            supplyTimer: 0,
+
+            init() {
+                this.canvas = document.getElementById('gameCanvas');
+                this.ctx = this.canvas.getContext('2d');
+                Lobby.init();
+                requestAnimationFrame((ts) => this.loop(ts));
+            },
+
+            startFromLobby() {
+                if (document.activeElement) document.activeElement.blur();
+                AudioSys.init();
+                AudioSys.playPickup();
+                document.getElementById('lobbyScreen').classList.add('hidden');
+                document.getElementById('gameScreen').classList.remove('hidden');
+                this.setupMatch();
+            },
+
+            returnToLobby() {
+                this.running = false;
+                AudioSys.stopBgm();
+                document.getElementById('gameScreen').classList.add('hidden');
+                document.getElementById('lobbyScreen').classList.remove('hidden');
+            },
+
+            restartMatch() {
+                if (document.activeElement) document.activeElement.blur();
+                document.getElementById('matchEndOverlay').classList.add('hidden');
+                this.setupMatch();
+            },
+
+            togglePause() {
+                if (!this.running) return;
+                this.paused = !this.paused;
+                document.getElementById('btnPauseGame').innerHTML = this.paused ? '▶️ Tiếp Tục' : '⏸️ Tạm Dừng';
+            },
+
+            setupMatch() {
+                this.modeObj = GAME_MODES.find(m => m.id === Lobby.selectedMode) || GAME_MODES[0];
+                this.mapObj = MAPS.find(m => m.id === Lobby.selectedMap) || MAPS[0];
+
+                this.grid = this.mapObj.grid.map(row => [...row]);
+                this.items = [];
+                this.bombs = [];
+                this.streams = [];
+                this.slidingBoxes = [];
+                this.players = [];
+                this.minions = [];
+                this.telegraphs = [];
+                this.floatingTexts = [];
+                this.particles = [];
+                this.shockwaves = [];
+                BombTrailSys.snapshots = [];
+                this.paused = false;
+                this.supplyTimer = 10;
+                document.getElementById('btnPauseGame').innerHTML = '⏸️ Tạm Dừng';
+                document.getElementById('matchEndOverlay').classList.add('hidden');
+
+                const isBossMode = Boolean(this.modeObj.bossId);
+                this.timeLeft = this.modeObj.id === 'boss_rush' ? 300 : (isBossMode ? 240 : 180);
+
+                if (isBossMode) {
+                    for (let r = 4; r <= 8; r++) {
+                        for (let c = 5; c <= 9; c++) {
+                            this.grid[r][c] = 0;
+                        }
+                    }
+                }
+
+                // Clear 4 corners for spawns
+                [{ c: 0, r: 0 }, { c: 14, r: 0 }, { c: 0, r: 12 }, { c: 14, r: 12 }].forEach(sp => {
+                    for (let dr = -1; dr <= 1; dr++) {
+                        for (let dc = -1; dc <= 1; dc++) {
+                            const nr = sp.r + dr, nc = sp.c + dc;
+                            if (nr >= 0 && nr < ROWS && nc >= 0 && nc < COLS) {
+                                if (this.grid[nr][nc] === 2 || this.grid[nr][nc] === 3) this.grid[nr][nc] = 0;
+                            }
+                        }
+                    }
+                });
+
+                const p1CharObj = CHARACTERS.find(c => c.id === Lobby.p1Char) || CHARACTERS[0];
+                this.players.push(this.createPlayer(0, 'Người Chơi 1', p1CharObj, 0, 0, false, 1));
+
+                if (Lobby.playerCount === 2) {
+                    const p2CharObj = CHARACTERS.find(c => c.id === Lobby.p2Char) || CHARACTERS[1];
+                    const p2Team = (isBossMode || Lobby.p2Coop) ? 1 : 2;
+                    this.players.push(this.createPlayer(1, 'Người Chơi 2', p2CharObj, 14, 0, false, p2Team));
+                    document.getElementById('p2ItemTray').classList.remove('hidden');
+                } else {
+                    document.getElementById('p2ItemTray').classList.add('hidden');
+                }
+
+                if (!isBossMode) {
+                    const usedIds = this.players.map(p => p.charObj.id);
+                    const availChars = CHARACTERS.filter(c => !usedIds.includes(c.id));
+                    const spawnPoints = Lobby.playerCount === 2
+                        ? [{ c: 0, r: 12, team: 2 }, { c: 14, r: 12, team: 3 }]
+                        : [{ c: 14, r: 0, team: 2 }, { c: 0, r: 12, team: 3 }, { c: 14, r: 12, team: 4 }];
+
+                    spawnPoints.forEach((sp, idx) => {
+                        const ch = availChars[idx % availChars.length] || CHARACTERS[(idx + 1) % CHARACTERS.length];
+                        this.players.push(this.createPlayer(this.players.length, `Máy ${ch.name.split(' ')[0]}`, ch, sp.c, sp.r, true, sp.team));
+                    });
+                    this.boss = null;
+                    document.getElementById('bossHudBar').classList.add('hidden');
+                } else {
+                    if (Lobby.playerCount === 1) {
+                        const allyChar = CHARACTERS.find(c => c.id !== p1CharObj.id) || CHARACTERS[1];
+                        this.players.push(this.createPlayer(1, `Đồng Đội ${allyChar.name.split(' ')[0]}`, allyChar, 14, 0, true, 1));
+                    }
+
+                    if (this.modeObj.bossId === 'rush') {
+                        this.bossRushQueue = ['octopus', 'iceking', 'dragon'];
+                        this.bossRushStage = 1;
+                        this.bossRushTotal = 3;
+                        this.boss = this.createBoss(this.bossRushQueue.shift());
+                        document.getElementById('bossStageBadge').classList.remove('hidden');
+                    } else {
+                        this.bossRushQueue = [];
+                        this.bossRushStage = 1;
+                        this.bossRushTotal = 1;
+                        this.boss = this.createBoss(this.modeObj.bossId);
+                        document.getElementById('bossStageBadge').classList.add('hidden');
+                    }
+
+                    document.getElementById('bossHudBar').classList.remove('hidden');
+                    this.updateBossHud();
+                }
+
+                document.getElementById('hudMapIcon').textContent = this.mapObj.icon;
+                document.getElementById('hudMapName').textContent = this.mapObj.name;
+                document.getElementById('hudModeName').textContent = this.modeObj.name;
+                this.updateSidebarHud();
+
+                this.showBanner('READY... START!', isBossMode ? `Tiêu diệt ${this.boss.name}!` : 'Đặt bóng nước hạ gục đối thủ!', 1800);
+                this.running = true;
+                AudioSys.startBgm();
+            },
+
+            createPlayer(index, label, charObj, c, r, isAI, team) {
+                return {
+                    index, label, charObj,
+                    x: (c + 0.5) * TILE,
+                    y: (r + 0.5) * TILE,
+                    dir: 'down',
+                    isMoving: false,
+                    walkPhase: 0,
+                    trailTimer: 0,
+                    dustTimer: 0,
+                    isAI, team,
+                    state: 'NORMAL',
+                    trappedTimer: 0,
+                    invulnTimer: 1.5,
+                    shieldTimer: 0,
+                    devilTimer: 0,
+                    mount: null,
+                    bombsMax: charObj.startBombs,
+                    waterLen: charObj.startWater,
+                    speedLvl: charObj.startSpeed,
+                    canKick: false,
+                    needles: isAI ? 1 : 2,
+                    shields: 1,
+                    cures: 1,
+                    pushTimer: 0,
+                    aiTarget: null,
+                    aiCooldown: 0,
+                    kills: 0
+                };
+            },
+
+            createBoss(bossId) {
+                const configs = {
+                    octopus: { id: 'octopus', name: 'BẠCH TUỘC ĐẠI DƯƠNG',    icon: '🐙', maxHp: 1000, speed: 62, color: '#e11d48', secondaryColor: '#fb7185', hint: 'Cẩn thận Vòi Rồng Nước Chữ Thập / Chữ X và Cua Biển!' },
+                    mummy:   { id: 'mummy',   name: 'PHÁP SƯ XÁC ƯỚP PHARAOH', icon: '🧟', maxHp: 1100, speed: 66, color: '#d97706', secondaryColor: '#fde047', hint: 'Cẩn thận Vòng Tròn Bóng Nước vây quanh và Bão Cát Sa Mạc!' },
+                    mecha:   { id: 'mecha',   name: 'ĐẠI BÀNG CƠ KHÍ ROBOT',   icon: '🤖', maxHp: 1200, speed: 74, color: '#2563eb', secondaryColor: '#38bdf8', hint: 'Cẩn thận Tia Laser Hủy Diệt toàn hàng/cột và Robot Mini!' },
+                    dragon:  { id: 'dragon',  name: 'ÁC LONG HỎA NGỤC',        icon: '🐉', maxHp: 1350, speed: 76, color: '#dc2626', secondaryColor: '#f97316', hint: 'Cẩn thận Hơi Thở Dung Nham chữ X, Mưa Thiên Thạch & Tinh Linh Lửa!' },
+                    iceking: { id: 'iceking', name: 'VUA BĂNG GIÁ YETI',       icon: '❄️', maxHp: 1250, speed: 68, color: '#0284c7', secondaryColor: '#7dd3fc', hint: 'Cẩn thận Búa Băng đóng băng hàng loạt cột/hàng, Bão Tuyết & Người Tuyết!' }
+                };
+                const cfg = configs[bossId] || configs.octopus;
+                return {
+                    ...cfg,
+                    hp: cfg.maxHp,
+                    x: 7.5 * TILE,
+                    y: 6.5 * TILE,
+                    vx: cfg.speed,
+                    vy: cfg.speed * 0.75,
+                    enraged: false,
+                    skillTimer: 4.0,
+                    summonTimer: 7.5,
+                    hitFlash: 0,
+                    damageCooldown: 0
+                };
+            },
+
+            showBanner(title, sub, duration = 1800) {
+                const banner = document.getElementById('arenaBanner');
+                document.getElementById('arenaBannerTitle').textContent = title;
+                document.getElementById('arenaBannerSub').textContent = sub;
+                banner.classList.remove('hidden');
+                setTimeout(() => banner.classList.add('hidden'), duration);
+            },
+
+            addFloatingText(x, y, text, color = '#fde047') {
+                this.floatingTexts.push({ x, y, text, color, timer: 1.15 });
+            },
+
+            playerActionBomb(pIndex) {
+                const p = this.players[pIndex];
+                if (!p || p.state !== 'NORMAL') return;
+
+                const c = Math.floor(p.x / TILE);
+                const r = Math.floor(p.y / TILE);
+                if (c < 0 || c >= COLS || r < 0 || r >= ROWS) return;
+                if (this.bombs.some(b => b.c === c && b.r === r)) return;
+                if (this.bombs.filter(b => b.owner === p).length >= p.bombsMax) return;
+                if (this.grid[r][c] === 1 || this.grid[r][c] === 2 || this.grid[r][c] === 3) return;
+
+                this.bombs.push({
+                    c, r,
+                    px: (c + 0.5) * TILE,
+                    py: (r + 0.5) * TILE,
+                    owner: p,
+                    timer: 2.8,
+                    waterLen: p.waterLen,
+                    slideVx: 0,
+                    slideVy: 0,
+                    trailCooldown: 0,
+                    passableBy: this.players.filter(pl => Math.floor(pl.x / TILE) === c && Math.floor(pl.y / TILE) === r)
+                });
+                AudioSys.playPlaceBomb();
+            },
+
+            playerUseNeedle(pIndex) {
+                const p = this.players[pIndex];
+                if (!p || p.state !== 'TRAPPED' || p.needles <= 0) return;
+                p.needles--;
+                p.state = 'NORMAL';
+                p.trappedTimer = 0;
+                p.invulnTimer = 1.5;
+                AudioSys.playNeedlePop();
+                this.spawnShockwave(p.x, p.y, '#4ade80', 48);
+                this.addFloatingText(p.x, p.y - 20, '📍 KIM CHÍCH CỨU MẠNG!', '#4ade80');
+                this.updateSidebarHud();
+            },
+
+            playerUseShield(pIndex) {
+                const p = this.players[pIndex];
+                if (!p || p.state !== 'NORMAL' || p.shields <= 0 || p.shieldTimer > 0) return;
+                p.shields--;
+                p.shieldTimer = 3.2;
+                AudioSys.playPickup();
+                this.spawnShockwave(p.x, p.y, '#facc15', 52);
+                this.addFloatingText(p.x, p.y - 20, '🛡️ KHIÊN BẤT TỬ 3S!', '#facc15');
+                this.updateSidebarHud();
+            },
+
+            playerUseCure(pIndex) {
+                const p = this.players[pIndex];
+                if (!p || p.state !== 'NORMAL' || p.cures <= 0) return;
+                p.cures--;
+                p.devilTimer = 0;
+                p.invulnTimer = Math.max(p.invulnTimer, 1.5);
+                AudioSys.playPickup();
+                this.spawnShockwave(p.x, p.y, '#38bdf8', 48);
+                this.addFloatingText(p.x, p.y - 20, '🧪 GIẢI ĐỘC & TĂNG TỐC!', '#38bdf8');
+                this.updateSidebarHud();
+            },
+
+            loop(timestamp) {
+                const dt = Math.min(0.05, (timestamp - this.lastTime) / 1000 || 0.016);
+                this.lastTime = timestamp;
+                const timeSec = timestamp / 1000;
+
+                if (this.running && !this.paused) {
+                    this.update(dt, timeSec);
+                }
+                if (this.canvas && !document.getElementById('gameScreen').classList.contains('hidden')) {
+                    this.render(timeSec);
+                }
+                requestAnimationFrame((ts) => this.loop(ts));
+            },
+
+            update(dt, timeSec) {
+                BombTrailSys.update(dt);
+
+                this.timeLeft = Math.max(0, this.timeLeft - dt);
+                const mins = String(Math.floor(this.timeLeft / 60)).padStart(2, '0');
+                const secs = String(Math.floor(this.timeLeft % 60)).padStart(2, '0');
+                document.getElementById('hudTimer').textContent = `${mins}:${secs}`;
+
+                if (this.timeLeft <= 0) {
+                    this.checkMatchEnd(true);
+                    return;
+                }
+
+                for (let i = this.slidingBoxes.length - 1; i >= 0; i--) {
+                    const sb = this.slidingBoxes[i];
+                    sb.progress += dt * 4.5;
+                    if (sb.progress >= 1) {
+                        if (this.grid[sb.toR][sb.toC] === 0) this.grid[sb.toR][sb.toC] = 3;
+                        this.items = this.items.filter(it => !(it.c === sb.toC && it.r === sb.toR));
+                        this.slidingBoxes.splice(i, 1);
+                    }
+                }
+
+                for (let i = this.bombs.length - 1; i >= 0; i--) {
+                    const b = this.bombs[i];
+                    if (!b) continue;
+
+                    b.passableBy = b.passableBy.filter(pl => Math.floor(pl.x / TILE) === b.c && Math.floor(pl.y / TILE) === b.r);
+
+                    if (b.slideVx !== 0 || b.slideVy !== 0) {
+                        b.trailCooldown = (b.trailCooldown || 0) - dt;
+                        if (b.trailCooldown <= 0) {
+                            b.trailCooldown = 0.045;
+                            BombTrailSys.spawnBombTrail(b, timeSec);
+                        }
+
+                        const nextPx = b.px + b.slideVx * dt;
+                        const nextPy = b.py + b.slideVy * dt;
+                        const leadC = Math.floor((nextPx + Math.sign(b.slideVx) * (TILE * 0.42)) / TILE);
+                        const leadR = Math.floor((nextPy + Math.sign(b.slideVy) * (TILE * 0.42)) / TILE);
+                        const curC = Math.floor(b.px / TILE);
+                        const curR = Math.floor(b.py / TILE);
+
+                        let blocked = false;
+                        if (leadC < 0 || leadC >= COLS || leadR < 0 || leadR >= ROWS) {
+                            blocked = true;
+                        } else if (leadC !== curC || leadR !== curR) {
+                            const tile = this.grid[leadR][leadC];
+                            if (tile === 1 || tile === 2 || tile === 3) blocked = true;
+                            if (this.bombs.some(ob => ob !== b && ob.c === leadC && ob.r === leadR)) blocked = true;
+                            if (this.players.some(pl => pl.state !== 'DEAD' && Math.floor(pl.x / TILE) === leadC && Math.floor(pl.y / TILE) === leadR)) blocked = true;
+                        }
+
+                        if (blocked) {
+                            b.slideVx = 0;
+                            b.slideVy = 0;
+                            b.c = curC;
+                            b.r = curR;
+                            b.px = (b.c + 0.5) * TILE;
+                            b.py = (b.r + 0.5) * TILE;
+                        } else {
+                            b.px = nextPx;
+                            b.py = nextPy;
+                            b.c = Math.floor(b.px / TILE);
+                            b.r = Math.floor(b.py / TILE);
+                        }
+                    }
+
+                    b.timer -= dt;
+                    if (b.timer <= 0) this.detonateBomb(b);
+                }
+
+                for (let i = this.streams.length - 1; i >= 0; i--) {
+                    const st = this.streams[i];
+                    st.timer -= dt;
+
+                    this.players.forEach(p => {
+                        if (p.state === 'NORMAL' && Math.floor(p.x / TILE) === st.c && Math.floor(p.y / TILE) === st.r) {
+                            this.hitPlayerWithWater(p);
+                        }
+                    });
+
+                    for (let m = this.minions.length - 1; m >= 0; m--) {
+                        const mn = this.minions[m];
+                        if (Math.floor(mn.x / TILE) === st.c && Math.floor(mn.y / TILE) === st.r) {
+                            this.spawnParticles(mn.x, mn.y, '#38bdf8', 10, 'circle');
+                            this.addFloatingText(mn.x, mn.y, '💥 DIỆT QUÁI!', '#38bdf8');
+                            this.minions.splice(m, 1);
+                        }
+                    }
+
+                    if (this.boss && this.boss.hp > 0 && st.fromPlayer && this.boss.damageCooldown <= 0) {
+                        if (this.isTileInBoss(st.c, st.r)) {
+                            const dmg = 45;
+                            this.boss.hp = Math.max(0, this.boss.hp - dmg);
+                            this.boss.hitFlash = 0.25;
+                            this.boss.damageCooldown = 0.22;
+                            this.spawnShockwave(this.boss.x, this.boss.y, '#facc15', 65);
+                            this.addFloatingText(this.boss.x, this.boss.y - 35, `-${dmg} HP!`, '#f87171');
+
+                            if (!this.boss.enraged && this.boss.hp > 0 && this.boss.hp <= this.boss.maxHp * 0.5) {
+                                this.boss.enraged = true;
+                                this.showBanner('🔥 BOSS CUỒNG NỘ!', `${this.boss.name} tăng tốc độ ra chiêu!`, 2200);
+                                AudioSys.playBossWarning();
+                            }
+                            this.updateBossHud();
+                            if (this.boss.hp <= 0) {
+                                this.onBossDefeated();
+                                return;
+                            }
+                        }
+                    }
+
+                    if (st.timer <= 0) this.streams.splice(i, 1);
+                }
+
+                this.players.forEach(p => this.updatePlayer(p, dt));
+
+                if (this.boss && this.boss.hp > 0) this.updateBoss(dt);
+                this.updateTelegraphs(dt);
+                this.updateMinions(dt);
+
+                if (this.boss && this.boss.hp > 0) {
+                    this.supplyTimer -= dt;
+                    if (this.supplyTimer <= 0) {
+                        this.supplyTimer = 9.0;
+                        this.spawnRandomSupplyItem();
+                    }
+                }
+
+                for (let i = this.floatingTexts.length - 1; i >= 0; i--) {
+                    this.floatingTexts[i].y -= 30 * dt;
+                    this.floatingTexts[i].timer -= dt;
+                    if (this.floatingTexts[i].timer <= 0) this.floatingTexts.splice(i, 1);
+                }
+                for (let i = this.particles.length - 1; i >= 0; i--) {
+                    const pt = this.particles[i];
+                    pt.x += pt.vx * dt;
+                    pt.y += pt.vy * dt;
+                    pt.timer -= dt;
+                    if (pt.timer <= 0) this.particles.splice(i, 1);
+                }
+                for (let i = this.shockwaves.length - 1; i >= 0; i--) {
+                    const sw = this.shockwaves[i];
+                    sw.radius += (sw.maxRadius - sw.radius) * 10 * dt + 40 * dt;
+                    sw.alpha -= dt * 2.4;
+                    if (sw.alpha <= 0) this.shockwaves.splice(i, 1);
+                }
+
+                this.checkMatchEnd(false);
+            },
+
+            detonateBomb(bomb) {
+                const idx = this.bombs.indexOf(bomb);
+                if (idx === -1) return;
+                this.bombs.splice(idx, 1);
+
+                AudioSys.playExplosion();
+                const c = bomb.c;
+                const r = bomb.r;
+                const len = bomb.waterLen;
+                const fromPlayer = Boolean(bomb.owner && !bomb.owner.isBoss);
+
+                const bCol = BombTrailSys.getBombColors(this.lastTime / 1000, c + r);
+                this.spawnShockwave((c + 0.5) * TILE, (r + 0.5) * TILE, fromPlayer ? bCol.mid : '#fb7185', 56);
+                this.createStreamCell(c, r, 'center', true, fromPlayer);
+
+                [
+                    { dc: 0, dr: -1, name: 'up' },
+                    { dc: 0, dr: 1, name: 'down' },
+                    { dc: -1, dr: 0, name: 'left' },
+                    { dc: 1, dr: 0, name: 'right' }
+                ].forEach(d => {
+                    for (let step = 1; step <= len; step++) {
+                        const nc = c + d.dc * step;
+                        const nr = r + d.dr * step;
+                        if (nc < 0 || nc >= COLS || nr < 0 || nr >= ROWS) break;
+
+                        const tile = this.grid[nr][nc];
+                        if (tile === 1) break;
+
+                        if (tile === 2 || tile === 3) {
+                            this.grid[nr][nc] = 0;
+                            this.spawnParticles((nc + 0.5) * TILE, (nr + 0.5) * TILE, tile === 3 ? '#f59e0b' : '#fb923c', 10, 'rect');
+                            this.maybeDropItem(nc, nr);
+                            this.createStreamCell(nc, nr, d.name, true, fromPlayer);
+                            break;
+                        }
+
+                        if (tile === 4) {
+                            this.grid[nr][nc] = 0;
+                            this.spawnParticles((nc + 0.5) * TILE, (nr + 0.5) * TILE, '#4ade80', 8, 'circle');
+                        }
+
+                        for (let it = this.items.length - 1; it >= 0; it--) {
+                            if (this.items[it].c === nc && this.items[it].r === nr && this.items[it].age > 0.45) {
+                                this.items.splice(it, 1);
+                            }
+                        }
+
+                        const otherBomb = this.bombs.find(ob => ob.c === nc && ob.r === nr);
+                        this.createStreamCell(nc, nr, d.name, step === len, fromPlayer);
+                        if (otherBomb) this.detonateBomb(otherBomb);
+                    }
+                });
+            },
+
+            createStreamCell(c, r, dir, isEnd, fromPlayer = true) {
+                this.streams.push({ c, r, dir, isEnd, timer: 0.48, maxTimer: 0.48, fromPlayer });
+                const bCol = BombTrailSys.getBombColors(this.lastTime / 1000, c + r);
+                this.spawnParticles((c + 0.5) * TILE, (r + 0.5) * TILE, fromPlayer ? bCol.mid : '#fda4af', 4, 'circle');
+            },
+
+            maybeDropItem(c, r) {
+                if (Math.random() > 0.58) return;
+                const totalWeight = ITEM_TYPES.reduce((acc, it) => acc + it.weight, 0);
+                let roll = Math.random() * totalWeight;
+                let chosen = ITEM_TYPES[0];
+                for (const it of ITEM_TYPES) {
+                    if (roll < it.weight) { chosen = it; break; }
+                    roll -= it.weight;
+                }
+                this.items.push({ c, r, type: chosen.id, icon: chosen.icon, name: chosen.name, color: chosen.color, age: 0 });
+            },
+
+            spawnRandomSupplyItem() {
+                const emptyCells = [];
+                for (let r = 1; r < ROWS - 1; r++) {
+                    for (let c = 1; c < COLS - 1; c++) {
+                        if (this.grid[r][c] === 0 && !this.items.some(i => i.c === c && i.r === r)) {
+                            emptyCells.push({ c, r });
+                        }
+                    }
+                }
+                if (emptyCells.length === 0) return;
+                const spot = emptyCells[Math.floor(Math.random() * emptyCells.length)];
+                this.maybeDropItem(spot.c, spot.r);
+            },
+
+            spawnParticles(x, y, color, count = 6, shape = 'circle') {
+                for (let i = 0; i < count; i++) {
+                    const ang = Math.random() * Math.PI * 2;
+                    const spd = 40 + Math.random() * 105;
+                    this.particles.push({
+                        x, y,
+                        vx: Math.cos(ang) * spd,
+                        vy: Math.sin(ang) * spd,
+                        color, shape,
+                        size: 3 + Math.random() * 3.5,
+                        timer: 0.35 + Math.random() * 0.25
+                    });
+                }
+            },
+
+            spawnShockwave(x, y, color = '#38bdf8', maxRadius = 55) {
+                this.shockwaves.push({ x, y, radius: 8, maxRadius, color, alpha: 0.9 });
+            },
+
+            hitPlayerWithWater(p) {
+                if (p.state !== 'NORMAL' || p.invulnTimer > 0 || p.shieldTimer > 0) return;
+
+                if (p.mount) {
+                    const oldMount = p.mount;
+                    p.mount = null;
+                    p.invulnTimer = 1.4;
+                    AudioSys.playTrapped();
+                    this.spawnShockwave(p.x, p.y, '#fde047', 48);
+                    this.addFloatingText(p.x, p.y - 20, `${oldMount === 'ufo' ? '🛸 UFO' : '🐢 RÙA'} ĐỠ ĐÒN!`, '#fde047');
+                    this.updateSidebarHud();
+                    return;
+                }
+
+                p.state = 'TRAPPED';
+                p.trappedTimer = 4.5;
+                p.devilTimer = 0;
+                AudioSys.playTrapped();
+                this.spawnShockwave(p.x, p.y, '#60a5fa', 45);
+                this.addFloatingText(p.x, p.y - 24, '💧 SẶC NƯỚC! (4.5s)', '#60a5fa');
+                this.updateSidebarHud();
+            },
+
+            updatePlayer(p, dt) {
+                if (p.state === 'DEAD') return;
+
+                if (p.invulnTimer > 0) p.invulnTimer = Math.max(0, p.invulnTimer - dt);
+                if (p.shieldTimer > 0) p.shieldTimer = Math.max(0, p.shieldTimer - dt);
+                if (p.devilTimer > 0) {
+                    p.devilTimer = Math.max(0, p.devilTimer - dt);
+                    if (Math.random() < dt * 2.5) this.playerActionBomb(p.index);
+                }
+
+                if (p.state === 'TRAPPED') {
+                    p.trappedTimer -= dt;
+
+                    if (p.isAI && p.needles > 0 && p.trappedTimer < 3.2) {
+                        this.playerUseNeedle(p.index);
+                        return;
+                    }
+
+                    for (const other of this.players) {
+                        if (other === p || other.state !== 'NORMAL') continue;
+                        if (Math.hypot(other.x - p.x, other.y - p.y) < TILE * 0.68) {
+                            if (other.team === p.team) {
+                                p.state = 'NORMAL';
+                                p.trappedTimer = 0;
+                                p.invulnTimer = 1.5;
+                                AudioSys.playPickup();
+                                this.spawnShockwave(p.x, p.y, '#4ade80', 50);
+                                this.addFloatingText(p.x, p.y - 22, '🤝 ĐỒNG ĐỘI GIẢI CỨU!', '#4ade80');
+                                this.updateSidebarHud();
+                                return;
+                            } else {
+                                other.kills++;
+                                this.eliminatePlayer(p);
+                                return;
+                            }
+                        }
+                    }
+
+                    if (this.boss && this.boss.hp > 0 && this.isPointNearBoss(p.x, p.y, TILE * 0.6)) {
+                        this.eliminatePlayer(p);
+                        return;
+                    }
+                    for (const mn of this.minions) {
+                        if (Math.hypot(mn.x - p.x, mn.y - p.y) < TILE * 0.65) {
+                            this.eliminatePlayer(p);
+                            return;
+                        }
+                    }
+
+                    if (p.trappedTimer <= 0) {
+                        this.eliminatePlayer(p);
+                        return;
+                    }
+                }
+
+                let baseSpeed = 115 + p.speedLvl * 16;
+                if (p.state === 'TRAPPED') baseSpeed = 48;
+                else if (p.mount === 'turtle') baseSpeed = 115;
+                else if (p.mount === 'super_turtle' || p.mount === 'ufo') baseSpeed = 265;
+
+                let dx = 0, dy = 0;
+                if (!p.isAI) {
+                    if (p.index === 0) {
+                        const up = Keys['KeyW'] || TouchDirs.up || (Lobby.playerCount === 1 && Keys['ArrowUp']);
+                        const down = Keys['KeyS'] || TouchDirs.down || (Lobby.playerCount === 1 && Keys['ArrowDown']);
+                        const left = Keys['KeyA'] || TouchDirs.left || (Lobby.playerCount === 1 && Keys['ArrowLeft']);
+                        const right = Keys['KeyD'] || TouchDirs.right || (Lobby.playerCount === 1 && Keys['ArrowRight']);
+                        if (up) dy = -1; else if (down) dy = 1;
+                        if (left) dx = -1; else if (right) dx = 1;
+                    } else if (p.index === 1) {
+                        if (Keys['ArrowUp']) dy = -1; else if (Keys['ArrowDown']) dy = 1;
+                        if (Keys['ArrowLeft']) dx = -1; else if (Keys['ArrowRight']) dx = 1;
+                    }
+                    if (p.devilTimer > 0) { dx = -dx; dy = -dy; }
+                } else {
+                    const aiMove = this.computeAIMove(p, dt);
+                    dx = aiMove.dx;
+                    dy = aiMove.dy;
+                }
+
+                if (dx !== 0 && dy !== 0) {
+                    dx *= 0.7071;
+                    dy *= 0.7071;
+                }
+
+                const prevX = p.x;
+                const prevY = p.y;
+
+                if (dx !== 0 || dy !== 0) {
+                    if (Math.abs(dx) >= Math.abs(dy)) p.dir = dx > 0 ? 'right' : 'left';
+                    else p.dir = dy > 0 ? 'down' : 'up';
+                    p.walkPhase += dt * 14;
+                    this.movePlayerWithCollision(p, dx * baseSpeed * dt, dy * baseSpeed * dt, dt);
+                } else {
+                    p.pushTimer = 0;
+                    p.walkPhase = 0;
+                }
+
+                p.isMoving = Math.hypot(p.x - prevX, p.y - prevY) > 0.25;
+
+                // Bóng mờ xám mặc định khi nhân vật di chuyển
+                if (p.isMoving && p.state === 'NORMAL') {
+                    p.trailTimer -= dt;
+                    if (p.trailTimer <= 0) {
+                        p.trailTimer = BombTrailSys.ghostMode === 'strong' ? 0.042 : 0.065;
+                        BombTrailSys.spawnPlayerTrail(p);
+                    }
+
+                    p.dustTimer -= dt;
+                    if (p.dustTimer <= 0) {
+                        p.dustTimer = 0.12;
+                        this.particles.push({
+                            x: p.x + (Math.random() - 0.5) * 10,
+                            y: p.y + 16,
+                            vx: -dx * 25 + (Math.random() - 0.5) * 12,
+                            vy: -dy * 25 + (Math.random() - 0.5) * 12,
+                            color: '#94a3b8',
+                            shape: 'circle',
+                            size: 3.2,
+                            timer: 0.22
+                        });
+                    }
+                }
+
+                if (p.state === 'NORMAL') {
+                    const pc = Math.floor(p.x / TILE);
+                    const pr = Math.floor(p.y / TILE);
+                    for (let i = this.items.length - 1; i >= 0; i--) {
+                        const it = this.items[i];
+                        it.age += dt;
+                        if (it.c === pc && it.r === pr) {
+                            this.applyItemToPlayer(p, it);
+                            this.items.splice(i, 1);
+                        }
+                    }
+                }
+            },
+
+            movePlayerWithCollision(p, moveX, moveY, dt) {
+                const radius = TILE * 0.34;
+                const canFly = (p.mount === 'ufo' && p.state === 'NORMAL');
+
+                const isTileSolidForPlayer = (c, r) => {
+                    if (c < 0 || c >= COLS || r < 0 || r >= ROWS) return true;
+                    const t = this.grid[r][c];
+                    if (t === 1) return true;
+                    if ((t === 2 || t === 3) && !canFly) return true;
+                    if (!canFly) {
+                        const b = this.bombs.find(bm => bm.c === c && bm.r === r);
+                        if (b && !b.passableBy.includes(p)) return true;
+                    }
+                    return false;
+                };
+
+                if (moveX !== 0) {
+                    const nextX = p.x + moveX;
+                    const leadC = Math.floor((nextX + Math.sign(moveX) * radius) / TILE);
+                    const curR = Math.floor(p.y / TILE);
+                    const topR = Math.floor((p.y - radius * 0.8) / TILE);
+                    const botR = Math.floor((p.y + radius * 0.8) / TILE);
+
+                    if (!isTileSolidForPlayer(leadC, topR) && !isTileSolidForPlayer(leadC, botR)) {
+                        p.x = nextX;
+                        p.pushTimer = 0;
+                    } else {
+                        const centerY = (curR + 0.5) * TILE;
+                        if (!isTileSolidForPlayer(leadC, curR) && Math.abs(p.y - centerY) > 2) {
+                            p.y += Math.sign(centerY - p.y) * Math.min(Math.abs(centerY - p.y), 95 * dt);
+                        }
+                        this.handleObstacleInteraction(p, leadC, curR, Math.sign(moveX), 0, dt);
+                    }
+                }
+
+                if (moveY !== 0) {
+                    const nextY = p.y + moveY;
+                    const leadR = Math.floor((nextY + Math.sign(moveY) * radius) / TILE);
+                    const curC = Math.floor(p.x / TILE);
+                    const leftC = Math.floor((p.x - radius * 0.8) / TILE);
+                    const rightC = Math.floor((p.x + radius * 0.8) / TILE);
+
+                    if (!isTileSolidForPlayer(leftC, leadR) && !isTileSolidForPlayer(rightC, leadR)) {
+                        p.y = nextY;
+                        p.pushTimer = 0;
+                    } else {
+                        const centerX = (curC + 0.5) * TILE;
+                        if (!isTileSolidForPlayer(curC, leadR) && Math.abs(p.x - centerX) > 2) {
+                            p.x += Math.sign(centerX - p.x) * Math.min(Math.abs(centerX - p.x), 95 * dt);
+                        }
+                        this.handleObstacleInteraction(p, curC, leadR, 0, Math.sign(moveY), dt);
+                    }
+                }
+            },
+
+            handleObstacleInteraction(p, targetC, targetR, dirX, dirY, dt) {
+                if (p.state !== 'NORMAL') return;
+                if (targetC < 0 || targetC >= COLS || targetR < 0 || targetR >= ROWS) return;
+
+                if (p.canKick) {
+                    const b = this.bombs.find(bm => bm.c === targetC && bm.r === targetR && bm.slideVx === 0 && bm.slideVy === 0);
+                    if (b && !b.passableBy.includes(p)) {
+                        const destC = targetC + dirX;
+                        const destR = targetR + dirY;
+                        if (destC >= 0 && destC < COLS && destR >= 0 && destR < ROWS && this.grid[destR][destC] === 0) {
+                            b.slideVx = dirX * 320;
+                            b.slideVy = dirY * 320;
+                            AudioSys.playPlaceBomb();
+                            return;
+                        }
+                    }
+                }
+
+                if (this.grid[targetR][targetC] === 3) {
+                    const destC = targetC + dirX;
+                    const destR = targetR + dirY;
+                    if (destC >= 0 && destC < COLS && destR >= 0 && destR < ROWS) {
+                        const destEmpty = this.grid[destR][destC] === 0 &&
+                            !this.bombs.some(bm => bm.c === destC && bm.r === destR) &&
+                            !this.players.some(pl => pl.state !== 'DEAD' && Math.floor(pl.x / TILE) === destC && Math.floor(pl.y / TILE) === destR);
+
+                        if (destEmpty) {
+                            p.pushTimer += dt;
+                            if (p.pushTimer >= 0.22) {
+                                p.pushTimer = 0;
+                                this.grid[targetR][targetC] = 0;
+                                this.slidingBoxes.push({ fromC: targetC, fromR: targetR, toC: destC, toR: destR, progress: 0 });
+                                AudioSys.playPlaceBomb();
+                            }
+                        }
+                    }
+                }
+            },
+
+            applyItemToPlayer(p, it) {
+                AudioSys.playPickup();
+                this.spawnShockwave(p.x, p.y, it.color, 42);
+                switch (it.type) {
+                    case 'bomb':     p.bombsMax = Math.min(p.charObj.maxBombs, p.bombsMax + 1); break;
+                    case 'water':    p.waterLen = Math.min(p.charObj.maxWater, p.waterLen + 1); break;
+                    case 'maxwater': p.waterLen = p.charObj.maxWater; break;
+                    case 'speed':    p.speedLvl = Math.min(p.charObj.maxSpeed, p.speedLvl + 1); break;
+                    case 'kick':     p.canKick = true; break;
+                    case 'needle':   p.needles = Math.min(5, p.needles + 1); break;
+                    case 'shield':   p.shields = Math.min(5, p.shields + 1); break;
+                    case 'turtle':   p.mount = (p.mount === 'turtle') ? 'super_turtle' : 'turtle'; break;
+                    case 'ufo':      p.mount = 'ufo'; break;
+                    case 'devil':    p.devilTimer = 6.0; break;
+                }
+                this.addFloatingText(p.x, p.y - 18, `${it.icon} ${it.name}`, it.color);
+                this.updateSidebarHud();
+            },
+
+            eliminatePlayer(p) {
+                p.state = 'DEAD';
+                AudioSys.playExplosion();
+                this.spawnShockwave(p.x, p.y, '#60a5fa', 65);
+                this.spawnParticles(p.x, p.y, '#60a5fa', 18, 'circle');
+                this.addFloatingText(p.x, p.y - 20, `💀 BỊ LOẠI!`, '#f87171');
+                this.updateSidebarHud();
+            },
+
+            isTileDangerous(c, r) {
+                if (this.streams.some(s => s.c === c && s.r === r)) return true;
+                for (const tg of this.telegraphs) {
+                    if (tg.cells.some(cell => cell.c === c && cell.r === r)) return true;
+                }
+                for (const b of this.bombs) {
+                    if (b.c === c && Math.abs(b.r - r) <= b.waterLen) return true;
+                    if (b.r === r && Math.abs(b.c - c) <= b.waterLen) return true;
+                }
+                return false;
+            },
+
+            computeAIMove(p, dt) {
+                const pc = Math.floor(p.x / TILE);
+                const pr = Math.floor(p.y / TILE);
+                p.aiCooldown = Math.max(0, p.aiCooldown - dt);
+
+                const dirs = [{ dc: 0, dr: -1 }, { dc: 0, dr: 1 }, { dc: -1, dr: 0 }, { dc: 1, dr: 0 }];
+                const canStep = (nc, nr) => {
+                    if (nc < 0 || nc >= COLS || nr < 0 || nr >= ROWS) return false;
+                    const t = this.grid[nr][nc];
+                    if (t === 1 || t === 2 || t === 3) return false;
+                    if (this.bombs.some(b => b.c === nc && b.r === nr)) return false;
+                    return true;
+                };
+
+                if (this.isTileDangerous(pc, pr)) {
+                    const queue = [{ c: pc, r: pr, firstDir: null }];
+                    const visited = new Set([`${pc},${pr}`]);
+                    while (queue.length > 0) {
+                        const cur = queue.shift();
+                        if (!this.isTileDangerous(cur.c, cur.r) && cur.firstDir) {
+                            return { dx: cur.firstDir.dc, dy: cur.firstDir.dr };
+                        }
+                        for (const d of dirs) {
+                            const nc = cur.c + d.dc, nr = cur.r + d.dr;
+                            const key = `${nc},${nr}`;
+                            if (!visited.has(key) && canStep(nc, nr)) {
+                                visited.add(key);
+                                queue.push({ c: nc, r: nr, firstDir: cur.firstDir || d });
+                            }
+                        }
+                    }
+                }
+
+                const specialTarget = this.players.find(other => other !== p && other.state === 'TRAPPED');
+                if (specialTarget) {
+                    const dx = Math.sign(specialTarget.x - p.x);
+                    const dy = Math.sign(specialTarget.y - p.y);
+                    if (canStep(pc + dx, pr) && !this.isTileDangerous(pc + dx, pr)) return { dx, dy: 0 };
+                    if (canStep(pc, pr + dy) && !this.isTileDangerous(pc, pr + dy)) return { dx: 0, dy };
+                }
+
+                if (p.state === 'NORMAL' && p.aiCooldown <= 0) {
+                    let nearTarget = false;
+                    for (const d of dirs) {
+                        const nc = pc + d.dc, nr = pr + d.dr;
+                        if (nc >= 0 && nc < COLS && nr >= 0 && nr < ROWS && (this.grid[nr][nc] === 2 || this.grid[nr][nc] === 3)) {
+                            nearTarget = true;
+                        }
+                    }
+                    if (this.boss && this.boss.hp > 0 && Math.hypot(this.boss.x - p.x, this.boss.y - p.y) < TILE * 3.2) nearTarget = true;
+                    for (const other of this.players) {
+                        if (other.team !== p.team && other.state === 'NORMAL' && Math.hypot(other.x - p.x, other.y - p.y) < TILE * 2.5) nearTarget = true;
+                    }
+
+                    if (nearTarget) {
+                        const hasSafeNeighbor = dirs.some(d => canStep(pc + d.dc, pr + d.dr) && !this.isTileDangerous(pc + d.dc, pr + d.dr));
+                        if (hasSafeNeighbor) {
+                            this.playerActionBomb(p.index);
+                            p.aiCooldown = 1.4;
+                        }
+                    }
+                }
+
+                if (!p.aiTarget || Math.random() < 0.04) {
+                    const safeDirs = dirs.filter(d => canStep(pc + d.dc, pr + d.dr) && !this.isTileDangerous(pc + d.dc, pr + d.dr));
+                    p.aiTarget = safeDirs.length > 0 ? safeDirs[Math.floor(Math.random() * safeDirs.length)] : { dc: 0, dr: 0 };
+                }
+                if (p.aiTarget && (!canStep(pc + p.aiTarget.dc, pr + p.aiTarget.dr) || this.isTileDangerous(pc + p.aiTarget.dc, pr + p.aiTarget.dr))) {
+                    p.aiTarget = null;
+                    return { dx: 0, dy: 0 };
+                }
+                return p.aiTarget ? { dx: p.aiTarget.dc, dy: p.aiTarget.dr } : { dx: 0, dy: 0 };
+            },
+
+            isTileInBoss(c, r) {
+                if (!this.boss) return false;
+                return Math.abs((c + 0.5) * TILE - this.boss.x) < TILE * 1.05 && Math.abs((r + 0.5) * TILE - this.boss.y) < TILE * 1.05;
+            },
+
+            isPointNearBoss(x, y, pad = 0) {
+                if (!this.boss) return false;
+                return Math.abs(x - this.boss.x) < (TILE * 0.9 + pad) && Math.abs(y - this.boss.y) < (TILE * 0.9 + pad);
+            },
+
+            updateBoss(dt) {
+                const b = this.boss;
+                if (b.hitFlash > 0) b.hitFlash = Math.max(0, b.hitFlash - dt);
+                if (b.damageCooldown > 0) b.damageCooldown = Math.max(0, b.damageCooldown - dt);
+
+                const mult = b.enraged ? 1.45 : 1.0;
+                b.x += b.vx * mult * dt;
+                b.y += b.vy * mult * dt;
+
+                const minX = 2.5 * TILE, maxX = (COLS - 2.5) * TILE;
+                const minY = 2.5 * TILE, maxY = (ROWS - 2.5) * TILE;
+                if (b.x < minX || b.x > maxX) b.vx = -b.vx;
+                if (b.y < minY || b.y > maxY) b.vy = -b.vy;
+                b.x = Math.max(minX, Math.min(maxX, b.x));
+                b.y = Math.max(minY, Math.min(maxY, b.y));
+
+                const bc = Math.floor(b.x / TILE);
+                const br = Math.floor(b.y / TILE);
+                for (let dr = -1; dr <= 1; dr++) {
+                    for (let dc = -1; dc <= 1; dc++) {
+                        const nr = br + dr, nc = bc + dc;
+                        if (nr >= 1 && nr < ROWS - 1 && nc >= 1 && nc < COLS - 1) {
+                            if (this.grid[nr][nc] === 2 || this.grid[nr][nc] === 3) this.grid[nr][nc] = 0;
+                        }
+                    }
+                }
+
+                b.skillTimer -= dt * mult;
+                const skillEl = document.getElementById('bossNextSkillTimer');
+                if (skillEl) skillEl.textContent = `Tuyệt kỹ sau: ${Math.max(0, b.skillTimer / mult).toFixed(1)}s`;
+                if (b.skillTimer <= 0) {
+                    b.skillTimer = 4.4;
+                    this.castBossSkill(b);
+                }
+
+                b.summonTimer -= dt * mult;
+                if (b.summonTimer <= 0) {
+                    b.summonTimer = 8.8;
+                    if (this.minions.length < 4) this.summonBossMinion(b);
+                }
+            },
+
+            castBossSkill(b) {
+                AudioSys.playBossWarning();
+                const bc = Math.floor(b.x / TILE);
+                const br = Math.floor(b.y / TILE);
+                const cells = [];
+
+                if (b.id === 'octopus') {
+                    if (Math.random() < 0.55) {
+                        for (let i = 0; i < COLS; i++) cells.push({ c: i, r: br });
+                        for (let j = 0; j < ROWS; j++) cells.push({ c: bc, r: j });
+                        for (let d = -6; d <= 6; d++) {
+                            if (bc + d >= 0 && bc + d < COLS && br + d >= 0 && br + d < ROWS) cells.push({ c: bc + d, r: br + d });
+                            if (bc + d >= 0 && bc + d < COLS && br - d >= 0 && br - d < ROWS) cells.push({ c: bc + d, r: br - d });
+                        }
+                        this.telegraphs.push({ cells, timer: 1.2, maxTimer: 1.2, kind: 'water', label: '🌊 VÒI RỒNG BẠCH TUỘC!' });
+                    } else {
+                        for (let k = 0; k < 7; k++) {
+                            const rc = 1 + Math.floor(Math.random() * (COLS - 2));
+                            const rr = 1 + Math.floor(Math.random() * (ROWS - 2));
+                            if (this.grid[rr][rc] === 0) cells.push({ c: rc, r: rr });
+                        }
+                        this.telegraphs.push({ cells, timer: 1.2, maxTimer: 1.2, kind: 'bombs', label: '💣 MƯA BÓNG NƯỚC ĐẠI DƯƠNG!' });
+                    }
+                } else if (b.id === 'mummy') {
+                    const alive = this.players.filter(p => p.state !== 'DEAD');
+                    if (alive.length > 0 && Math.random() < 0.55) {
+                        const target = alive[Math.floor(Math.random() * alive.length)];
+                        const tc = Math.floor(target.x / TILE);
+                        const tr = Math.floor(target.y / TILE);
+                        [
+                            { dc: -2, dr: 0 }, { dc: 2, dr: 0 }, { dc: 0, dr: -2 }, { dc: 0, dr: 2 },
+                            { dc: -1, dr: -1 }, { dc: 1, dr: -1 }, { dc: -1, dr: 1 }, { dc: 1, dr: 1 }
+                        ].forEach(o => {
+                            const nc = tc + o.dc, nr = tr + o.dr;
+                            if (nc >= 0 && nc < COLS && nr >= 0 && nr < ROWS && this.grid[nr][nc] !== 1) cells.push({ c: nc, r: nr });
+                        });
+                        this.telegraphs.push({ cells, timer: 1.2, maxTimer: 1.2, kind: 'bombs', label: '⚱️ VÒNG TRÒN PHARAOH!' });
+                    } else {
+                        for (let c = 1; c < COLS; c += 3) {
+                            for (let r = 0; r < ROWS; r++) cells.push({ c, r });
+                        }
+                        this.telegraphs.push({ cells, timer: 1.2, maxTimer: 1.2, kind: 'water', label: '🌪️ BÃO CÁT SA MẠC!' });
+                    }
+                } else if (b.id === 'dragon') {
+                    if (Math.random() < 0.55) {
+                        for (let d = -12; d <= 12; d++) {
+                            [-1, 0, 1].forEach(offset => {
+                                const c1 = bc + d, r1 = br + d + offset;
+                                const c2 = bc + d, r2 = br - d + offset;
+                                if (c1 >= 0 && c1 < COLS && r1 >= 0 && r1 < ROWS) cells.push({ c: c1, r: r1 });
+                                if (c2 >= 0 && c2 < COLS && r2 >= 0 && r2 < ROWS) cells.push({ c: c2, r: r2 });
+                            });
+                        }
+                        this.telegraphs.push({ cells, timer: 1.15, maxTimer: 1.15, kind: 'water', label: '🔥 HƠI THỞ RỒNG DUNG NHAM!' });
+                    } else {
+                        for (let k = 0; k < 9; k++) {
+                            const rc = 1 + Math.floor(Math.random() * (COLS - 2));
+                            const rr = 1 + Math.floor(Math.random() * (ROWS - 2));
+                            if (this.grid[rr][rc] === 0) cells.push({ c: rc, r: rr });
+                        }
+                        this.telegraphs.push({ cells, timer: 1.15, maxTimer: 1.15, kind: 'bombs', label: '☄️ MƯA THIÊN THẠCH LỬA!' });
+                    }
+                } else if (b.id === 'iceking') {
+                    if (Math.random() < 0.55) {
+                        for (let r = Math.max(0, br - 1); r <= Math.min(ROWS - 1, br + 1); r++) {
+                            for (let c = 0; c < COLS; c++) cells.push({ c, r });
+                        }
+                        for (let c = Math.max(0, bc - 1); c <= Math.min(COLS - 1, bc + 1); c++) {
+                            for (let r = 0; r < ROWS; r++) cells.push({ c, r });
+                        }
+                        this.telegraphs.push({ cells, timer: 1.2, maxTimer: 1.2, kind: 'water', label: '❄️ BÚA BĂNG ĐỊA CHẤN!' });
+                    } else {
+                        for (let r = 1; r < ROWS - 1; r += 2) {
+                            for (let c = 1; c < COLS - 1; c += 2) {
+                                if ((r + c) % 4 === 0) cells.push({ c, r });
+                            }
+                        }
+                        this.telegraphs.push({ cells, timer: 1.25, maxTimer: 1.25, kind: 'water', label: '🌨️ BÃO TUYẾT CỰC HÀN!' });
+                    }
+                } else {
+                    const alive = this.players.filter(p => p.state !== 'DEAD');
+                    const target = alive[0] || { x: b.x, y: b.y };
+                    const tc = Math.floor(target.x / TILE);
+                    const tr = Math.floor(target.y / TILE);
+                    for (let c = 0; c < COLS; c++) {
+                        cells.push({ c, r: tr });
+                        if (br !== tr) cells.push({ c, r: br });
+                    }
+                    for (let r = 0; r < ROWS; r++) cells.push({ c: tc, r });
+                    this.telegraphs.push({ cells, timer: 1.2, maxTimer: 1.2, kind: 'water', label: '⚡ TIA LASER HỦY DIỆT!' });
+                }
+
+                if (this.telegraphs.length > 0) {
+                    const last = this.telegraphs[this.telegraphs.length - 1];
+                    this.addFloatingText(b.x, b.y - 45, last.label, '#facc15');
+                }
+            },
+
+            updateTelegraphs(dt) {
+                for (let i = this.telegraphs.length - 1; i >= 0; i--) {
+                    const tg = this.telegraphs[i];
+                    tg.timer -= dt;
+                    if (tg.timer <= 0) {
+                        if (tg.kind === 'water') {
+                            AudioSys.playExplosion();
+                            tg.cells.forEach(cell => {
+                                if (this.grid[cell.r] && this.grid[cell.r][cell.c] !== 1) {
+                                    this.createStreamCell(cell.c, cell.r, 'center', false, false);
+                                }
+                            });
+                        } else if (tg.kind === 'bombs') {
+                            AudioSys.playPlaceBomb();
+                            tg.cells.forEach(cell => {
+                                if (this.grid[cell.r] && this.grid[cell.r][cell.c] === 0) {
+                                    this.bombs.push({
+                                        c: cell.c, r: cell.r,
+                                        px: (cell.c + 0.5) * TILE,
+                                        py: (cell.r + 0.5) * TILE,
+                                        owner: { isBoss: true },
+                                        timer: 2.0,
+                                        waterLen: 3,
+                                        slideVx: 0, slideVy: 0,
+                                        trailCooldown: 0,
+                                        passableBy: []
+                                    });
+                                }
+                            });
+                        }
+                        this.telegraphs.splice(i, 1);
+                    }
+                }
+            },
+
+            summonBossMinion(b) {
+                const types = {
+                    octopus: { icon: '🦀', name: 'Cua Biển', speed: 85 },
+                    mummy:   { icon: '🦂', name: 'Bọ Cạp Cổ', speed: 92 },
+                    mecha:   { icon: '🛰️', name: 'Robot Mini', speed: 100 },
+                    dragon:  { icon: '🔥', name: 'Tinh Linh Lửa', speed: 105 },
+                    iceking: { icon: '⛄', name: 'Người Tuyết', speed: 88 }
+                };
+                const cfg = types[b.id] || types.octopus;
+                this.minions.push({
+                    x: b.x, y: b.y,
+                    vx: (Math.random() < 0.5 ? -1 : 1) * cfg.speed,
+                    vy: 0,
+                    icon: cfg.icon,
+                    name: cfg.name,
+                    speed: cfg.speed
+                });
+                this.addFloatingText(b.x, b.y + 35, `Triệu hồi ${cfg.icon} ${cfg.name}!`, '#fb923c');
+            },
+
+            updateMinions(dt) {
+                this.minions.forEach(mn => {
+                    const nextX = mn.x + mn.vx * dt;
+                    const nextY = mn.y + mn.vy * dt;
+                    const nc = Math.floor(nextX / TILE);
+                    const nr = Math.floor(nextY / TILE);
+
+                    if (nc <= 0 || nc >= COLS - 1 || nr <= 0 || nr >= ROWS - 1 || this.grid[nr][nc] !== 0) {
+                        const dirs = [
+                            { vx: mn.speed, vy: 0 }, { vx: -mn.speed, vy: 0 },
+                            { vx: 0, vy: mn.speed }, { vx: 0, vy: -mn.speed }
+                        ];
+                        const pick = dirs[Math.floor(Math.random() * dirs.length)];
+                        mn.vx = pick.vx;
+                        mn.vy = pick.vy;
+                    } else {
+                        mn.x = nextX;
+                        mn.y = nextY;
+                    }
+
+                    this.players.forEach(p => {
+                        if (p.state === 'NORMAL' && Math.hypot(p.x - mn.x, p.y - mn.y) < TILE * 0.55) {
+                            this.hitPlayerWithWater(p);
+                        }
+                    });
+                });
+            },
+
+            onBossDefeated() {
+                AudioSys.playExplosion();
+                this.spawnShockwave(this.boss.x, this.boss.y, '#facc15', 140);
+                this.spawnParticles(this.boss.x, this.boss.y, '#facc15', 36, 'circle');
+
+                if (this.bossRushQueue && this.bossRushQueue.length > 0) {
+                    const defeatedName = this.boss.name;
+                    const nextBossId = this.bossRushQueue.shift();
+                    this.bossRushStage++;
+                    this.minions = [];
+                    this.telegraphs = [];
+                    this.timeLeft = Math.min(300, this.timeLeft + 60);
+
+                    for (let i = 0; i < 6; i++) this.spawnRandomSupplyItem();
+                    this.players.forEach(p => {
+                        if (p.state === 'TRAPPED') { p.state = 'NORMAL'; p.trappedTimer = 0; }
+                        if (p.state === 'NORMAL') {
+                            p.needles = Math.min(5, p.needles + 1);
+                            p.shields = Math.min(5, p.shields + 1);
+                            p.invulnTimer = 2.5;
+                        }
+                    });
+
+                    this.boss = this.createBoss(nextBossId);
+                    this.updateBossHud();
+                    this.updateSidebarHud();
+                    AudioSys.playFanfare(true);
+                    this.showBanner(`🎉 ĐÃ HẠ ${defeatedName}!`, `Ải ${this.bossRushStage}/${this.bossRushTotal}: ${this.boss.name} xuất hiện! (+60s)`, 2600);
+                    return;
+                }
+
+                this.endMatch(true, `🎉 HẠ GỤC ${this.boss.name}!`, 'Đội của bạn đã chiến thắng Boss Huyền Thoại!');
+            },
+
+            checkMatchEnd(timeout = false) {
+                if (!this.running) return;
+
+                if (this.boss) {
+                    const anyAlive = this.players.some(p => p.state !== 'DEAD');
+                    if (!anyAlive) this.endMatch(false, 'THẤT BẠI!', `${this.boss.name} đã áp đảo đấu trường!`);
+                    else if (timeout) this.endMatch(false, 'HẾT GIỜ!', 'Chưa kịp hạ gục Boss trước khi hết giờ!');
+                } else {
+                    const aliveTeams = new Set(this.players.filter(p => p.state !== 'DEAD').map(p => p.team));
+                    if (aliveTeams.size <= 1) {
+                        const winningTeam = [...aliveTeams][0];
+                        const humanWon = this.players.some(p => !p.isAI && p.team === winningTeam);
+                        if (winningTeam === undefined) {
+                            this.endMatch(false, 'HÒA TRẬN!', 'Tất cả chiến binh đều đã nổ bóng cùng lúc!');
+                        } else if (humanWon) {
+                            const winners = this.players.filter(p => p.team === winningTeam).map(p => p.label).join(' & ');
+                            this.endMatch(true, 'CHIẾN THẮNG!', `${winners} đã làm chủ đấu trường Boom Online!`);
+                        } else {
+                            this.endMatch(false, 'THẤT BẠI!', 'Đối thủ AI đã giành chiến thắng trận này!');
+                        }
+                    } else if (timeout) {
+                        this.endMatch(true, 'HẾT GIỜ - HÒA!', 'Thời gian thi đấu đã kết thúc!');
+                    }
+                }
+            },
+
+            endMatch(win, title, desc) {
+                this.running = false;
+                AudioSys.stopBgm();
+                AudioSys.playFanfare(win);
+
+                document.getElementById('endResultEmoji').textContent = win ? '🏆' : '💧';
+                document.getElementById('endResultTitle').textContent = title;
+                document.getElementById('endResultDesc').textContent = desc;
+
+                document.getElementById('endStatsSummary').innerHTML = this.players.map(p => `
+                    <div class="flex items-center justify-between border-b border-cyan-800/60 pb-1">
+                        <span>${p.label} (${p.charObj.name})</span>
+                        <span class="${p.state === 'DEAD' ? 'text-red-400' : 'text-emerald-300'}">
+                            ${p.state === 'DEAD' ? 'Đã bị loại' : 'Còn sống'} • 🎈${p.bombsMax} 🌊${p.waterLen} 🛼${p.speedLvl}
+                        </span>
+                    </div>
+                `).join('');
+
+                document.getElementById('matchEndOverlay').classList.remove('hidden');
+            },
+
+            updateBossHud() {
+                if (!this.boss) return;
+                document.getElementById('bossHudIcon').textContent = this.boss.icon;
+                document.getElementById('bossHudName').textContent = this.boss.name;
+                document.getElementById('bossSkillHint').textContent = this.boss.hint;
+                document.getElementById('bossHpText').textContent = `${this.boss.hp} / ${this.boss.maxHp}`;
+                const pct = Math.max(0, Math.min(100, (this.boss.hp / this.boss.maxHp) * 100));
+                document.getElementById('bossHpFill').style.width = `${pct}%`;
+
+                const stageBadge = document.getElementById('bossStageBadge');
+                if (this.bossRushTotal > 1) {
+                    stageBadge.classList.remove('hidden');
+                    stageBadge.textContent = `ẢI ${this.bossRushStage}/${this.bossRushTotal}`;
+                } else {
+                    stageBadge.classList.add('hidden');
+                }
+
+                const badge = document.getElementById('bossPhaseBadge');
+                if (this.boss.enraged) {
+                    badge.textContent = '🔥 CUỒNG NỘ PHASE 2';
+                    badge.className = 'px-2 py-0.5 text-[11px] font-black rounded-full bg-yellow-400 text-red-950 uppercase shadow';
+                } else {
+                    badge.textContent = 'PHASE 1';
+                    badge.className = 'px-2 py-0.5 text-[11px] font-black rounded-full bg-red-600 text-white uppercase shadow';
+                }
+            },
+
+            updateSidebarHud() {
+                const roster = document.getElementById('hudRosterList');
+                roster.innerHTML = this.players.map(p => {
+                    let stateBadge = '<span class="px-1.5 py-0.5 rounded bg-emerald-600 text-white text-[10px] font-black shrink-0">Chiến Đấu</span>';
+                    if (p.state === 'TRAPPED') stateBadge = '<span class="px-1.5 py-0.5 rounded bg-cyan-400 text-slate-950 text-[10px] font-black shrink-0">💧 SẶC NƯỚC!</span>';
+                    else if (p.state === 'DEAD') stateBadge = '<span class="px-1.5 py-0.5 rounded bg-slate-600 text-slate-200 text-[10px] font-black shrink-0">💀 Bị Loại</span>';
+                    else if (p.mount) stateBadge = `<span class="px-1.5 py-0.5 rounded bg-amber-400 text-slate-950 text-[10px] font-black shrink-0">${p.mount === 'ufo' ? '🛸 UFO' : '🐢 Cưỡi Rùa'}</span>`;
+
+                    return `
+                        <div class="p-2 rounded-xl border-2 ${p.state === 'DEAD' ? 'bg-slate-200 border-slate-400 opacity-60' : 'bg-white border-blue-400'} flex items-center gap-2 shadow-sm">
+                            <div class="w-10 h-10 rounded-lg border-2 border-slate-800 flex items-center justify-center shrink-0" style="background:${p.charObj.color}">
+                                ${Lobby.getCharPortraitSVG(p.charObj)}
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center justify-between gap-1">
+                                    <span class="font-cartoon text-xs font-extrabold text-blue-950 truncate">${p.label}</span>
+                                    ${stateBadge}
+                                </div>
+                                <div class="flex items-center gap-2 text-[11px] font-extrabold text-slate-700 mt-0.5">
+                                    <span>🎈${p.bombsMax}</span>
+                                    <span>🌊${p.waterLen}</span>
+                                    <span>🛼${p.speedLvl}</span>
+                                    ${p.canKick ? '<span title="Giày Đá">👟</span>' : ''}
+                                    <span class="ml-auto text-red-600">📍${p.needles}</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                const p1 = this.players[0];
+                if (p1) {
+                    document.getElementById('p1NeedleCount').textContent = `x${p1.needles}`;
+                    document.getElementById('p1ShieldCount').textContent = `x${p1.shields}`;
+                    document.getElementById('p1CureCount').textContent = `x${p1.cures}`;
+                }
+                const p2 = this.players[1];
+                if (p2 && !p2.isAI) {
+                    document.getElementById('p2NeedleCount').textContent = p2.needles;
+                    document.getElementById('p2ShieldCount').textContent = p2.shields;
+                }
+            },
+
+            /* ============================================================================
+             * 5. HỆ THỐNG VẼ ĐỒ HỌA CANVAS
+             * ============================================================================ */
+            render(timeSec) {
+                const ctx = this.ctx;
+                ctx.save();
+                ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+                const mp = this.mapObj || MAPS[0];
+
+                // 1. Sàn đấu 15x13
+                for (let r = 0; r < ROWS; r++) {
+                    for (let c = 0; c < COLS; c++) {
+                        const x = c * TILE, y = r * TILE;
+                        ctx.fillStyle = (r + c) % 2 === 0 ? mp.floorA : mp.floorB;
+                        ctx.fillRect(x, y, TILE, TILE);
+                        ctx.strokeStyle = 'rgba(0,0,0,0.09)';
+                        ctx.lineWidth = 1;
+                        ctx.strokeRect(x, y, TILE, TILE);
+                    }
+                }
+
+                // 2. Vùng cảnh báo đỏ của Boss
+                this.telegraphs.forEach(tg => {
+                    const pulse = 0.35 + 0.4 * Math.abs(Math.sin(timeSec * 16));
+                    tg.cells.forEach(cell => {
+                        const tx = cell.c * TILE, ty = cell.r * TILE;
+                        ctx.fillStyle = `rgba(239, 68, 68, ${pulse})`;
+                        ctx.fillRect(tx + 2, ty + 2, TILE - 4, TILE - 4);
+                        ctx.strokeStyle = '#fef08a';
+                        ctx.lineWidth = 2;
+                        ctx.strokeRect(tx + 4, ty + 4, TILE - 8, TILE - 8);
+                    });
+                });
+
+                // 3. Vật phẩm rơi trên sân
+                this.items.forEach(it => {
+                    const cx = (it.c + 0.5) * TILE;
+                    const cy = (it.r + 0.5) * TILE + Math.sin(timeSec * 5.5 + it.c) * 3.5;
+
+                    ctx.save();
+                    ctx.fillStyle = 'rgba(0,0,0,0.28)';
+                    ctx.beginPath();
+                    ctx.ellipse(cx, (it.r + 0.82) * TILE, 13, 4.5, 0, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    ctx.beginPath();
+                    ctx.arc(cx, cy, 17, 0, Math.PI * 2);
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fill();
+                    ctx.lineWidth = 3;
+                    ctx.strokeStyle = it.color;
+                    ctx.stroke();
+
+                    ctx.font = '20px sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(it.icon, cx, cy + 1);
+                    ctx.restore();
+                });
+
+                // 3.5 Vẽ Bóng Mờ Xám khi di chuyển
+                BombTrailSys.drawTrails(ctx);
+
+                // 4. Vẽ Quả Bóng Nước (theo màu Bóng Nước đã chọn)
+                this.bombs.forEach(b => {
+                    const inBush = this.grid[b.r] && this.grid[b.r][b.c] === 4;
+                    const urgency = b.timer < 0.9 ? 18 : 11;
+                    const scaleX = 1 + Math.sin(timeSec * urgency) * 0.09;
+                    const scaleY = 1 - Math.sin(timeSec * urgency) * 0.09;
+                    const isBossBomb = Boolean(b.owner && b.owner.isBoss);
+                    const bCol = BombTrailSys.getBombColors(timeSec, b.c + b.r);
+
+                    ctx.save();
+                    ctx.translate(b.px, b.py);
+                    if (inBush) ctx.globalAlpha = 0.45;
+
+                    ctx.fillStyle = 'rgba(0,0,0,0.34)';
+                    ctx.beginPath();
+                    ctx.ellipse(0, 18, 16 * scaleX, 6, 0, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    ctx.scale(scaleX, scaleY);
+
+                    ctx.fillStyle = isBossBomb ? '#ef4444' : bCol.knot;
+                    ctx.beginPath();
+                    ctx.moveTo(-5, -18);
+                    ctx.lineTo(5, -18);
+                    ctx.lineTo(3, -23);
+                    ctx.lineTo(-3, -23);
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.lineWidth = 2;
+                    ctx.strokeStyle = '#0f172a';
+                    ctx.stroke();
+
+                    const grad = ctx.createRadialGradient(-6, -6, 3, 0, 0, 20);
+                    if (isBossBomb) {
+                        grad.addColorStop(0, '#fecdd3');
+                        grad.addColorStop(0.45, '#f43f5e');
+                        grad.addColorStop(1, '#881337');
+                    } else if (b.timer < 0.7 && Math.floor(timeSec * 20) % 2 === 0) {
+                        grad.addColorStop(0, '#ffffff');
+                        grad.addColorStop(0.5, bCol.mid);
+                        grad.addColorStop(1, bCol.deep);
+                    } else {
+                        grad.addColorStop(0, bCol.light);
+                        grad.addColorStop(0.4, bCol.mid);
+                        grad.addColorStop(0.8, bCol.dark);
+                        grad.addColorStop(1, bCol.deep);
+                    }
+
+                    ctx.beginPath();
+                    ctx.arc(0, 0, 19.5, 0, Math.PI * 2);
+                    ctx.fillStyle = grad;
+                    ctx.fill();
+                    ctx.lineWidth = 2.6;
+                    ctx.strokeStyle = '#0f172a';
+                    ctx.stroke();
+
+                    ctx.fillStyle = 'rgba(255,255,255,0.85)';
+                    ctx.beginPath();
+                    ctx.ellipse(-6, -7, 6.5, 3.8, -0.5, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.restore();
+                });
+
+                // 5. Vẽ Tia Nước Nổ
+                const streamCols = BombTrailSys.getBombColors(timeSec, 0);
+                this.streams.forEach(st => {
+                    const x = st.c * TILE, y = st.r * TILE;
+                    ctx.save();
+                    ctx.globalAlpha = Math.min(1, st.timer / 0.18);
+
+                    ctx.fillStyle = st.fromPlayer ? streamCols.dark : '#e11d48';
+                    ctx.beginPath();
+                    ctx.roundRect(x + 2, y + 2, TILE - 4, TILE - 4, st.isEnd ? 14 : 6);
+                    ctx.fill();
+
+                    ctx.fillStyle = st.fromPlayer ? streamCols.mid : '#fb7185';
+                    ctx.beginPath();
+                    ctx.roundRect(x + 6, y + 6, TILE - 12, TILE - 12, st.isEnd ? 12 : 4);
+                    ctx.fill();
+
+                    ctx.fillStyle = st.fromPlayer ? streamCols.light : '#ffe4e6';
+                    ctx.beginPath();
+                    ctx.roundRect(x + 13, y + 13, TILE - 26, TILE - 26, 8);
+                    ctx.fill();
+                    ctx.restore();
+                });
+
+                // 6. Vẽ Tường Cứng, Gạch Mềm & Thùng Đẩy
+                for (let r = 0; r < ROWS; r++) {
+                    for (let c = 0; c < COLS; c++) {
+                        const t = this.grid[r][c];
+                        if (t === 1 || t === 2 || t === 3) this.drawMapBlock(ctx, c * TILE, r * TILE, t, mp.id);
+                    }
+                }
+
+                this.slidingBoxes.forEach(sb => {
+                    const curX = (sb.fromC + (sb.toC - sb.fromC) * sb.progress) * TILE;
+                    const curY = (sb.fromR + (sb.toR - sb.fromR) * sb.progress) * TILE;
+                    this.drawMapBlock(ctx, curX, curY, 3, mp.id);
+                });
+
+                // 7. Vẽ Nhân Vật
+                this.players.forEach(p => {
+                    if (p.state !== 'DEAD') this.drawPlayer(ctx, p, timeSec);
+                });
+
+                // 8. Vẽ Quái Con & Boss
+                this.minions.forEach(mn => {
+                    ctx.save();
+                    ctx.translate(mn.x, mn.y);
+                    ctx.fillStyle = 'rgba(0,0,0,0.35)';
+                    ctx.beginPath();
+                    ctx.ellipse(0, 15, 14, 5, 0, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.font = '28px sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(mn.icon, 0, Math.sin(timeSec * 10 + mn.x) * 2.5);
+                    ctx.restore();
+                });
+
+                if (this.boss && this.boss.hp > 0) this.drawBoss(ctx, this.boss, timeSec);
+
+                // 9. Vẽ Bụi Cỏ che phủ phía trên
+                for (let r = 0; r < ROWS; r++) {
+                    for (let c = 0; c < COLS; c++) {
+                        if (this.grid[r][c] === 4) this.drawBush(ctx, c * TILE, r * TILE, timeSec, mp.id);
+                    }
+                }
+
+                // 10. Hiệu ứng Sóng, Hạt & Chữ nổi
+                this.shockwaves.forEach(sw => {
+                    ctx.save();
+                    ctx.globalAlpha = Math.max(0, sw.alpha);
+                    ctx.strokeStyle = sw.color;
+                    ctx.lineWidth = 3.5;
+                    ctx.beginPath();
+                    ctx.arc(sw.x, sw.y, sw.radius, 0, Math.PI * 2);
+                    ctx.stroke();
+                    ctx.restore();
+                });
+
+                this.particles.forEach(pt => {
+                    ctx.save();
+                    ctx.fillStyle = pt.color;
+                    if (pt.shape === 'rect') {
+                        ctx.fillRect(pt.x - pt.size, pt.y - pt.size, pt.size * 2, pt.size * 2);
+                    } else {
+                        ctx.beginPath();
+                        ctx.arc(pt.x, pt.y, pt.size, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                    ctx.restore();
+                });
+
+                this.floatingTexts.forEach(ft => {
+                    ctx.save();
+                    ctx.font = '900 15px "Baloo 2", sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.strokeStyle = '#0f172a';
+                    ctx.lineWidth = 4;
+                    ctx.strokeText(ft.text, ft.x, ft.y);
+                    ctx.fillStyle = ft.color;
+                    ctx.fillText(ft.text, ft.x, ft.y);
+                    ctx.restore();
+                });
+
+                ctx.restore();
+            },
+
+            drawMapBlock(ctx, x, y, type, mapId) {
+                ctx.save();
+                ctx.fillStyle = 'rgba(0,0,0,0.28)';
+                ctx.fillRect(x + 3, y + TILE - 5, TILE - 6, 5);
+
+                if (type === 1) {
+                    const roofColors = { village: '#dc2626', pyramid: '#d97706', pirate: '#1e293b', factory: '#334155', glacier: '#0284c7', volcano: '#7f1d1d', forest: '#9333ea', candyland: '#db2777' };
+                    const wallColors = { village: '#fef3c7', pyramid: '#fde68a', pirate: '#64748b', factory: '#94a3b8', glacier: '#e0f2fe', volcano: '#450a0a', forest: '#f3e8ff', candyland: '#fce7f3' };
+                    ctx.fillStyle = wallColors[mapId] || '#fef3c7';
+                    ctx.beginPath();
+                    ctx.roundRect(x + 4, y + 16, TILE - 8, TILE - 20, 4);
+                    ctx.fill();
+                    ctx.lineWidth = 2;
+                    ctx.strokeStyle = '#0f172a';
+                    ctx.stroke();
+
+                    ctx.fillStyle = roofColors[mapId] || '#dc2626';
+                    ctx.beginPath();
+                    ctx.roundRect(x + 2, y + 3, TILE - 4, 18, 6);
+                    ctx.fill();
+                    ctx.stroke();
+                } else if (type === 2) {
+                    const mainColors = { village: '#ea580c', pyramid: '#eab308', pirate: '#b45309', factory: '#475569', glacier: '#38bdf8', volcano: '#991b1b', forest: '#65a30d', candyland: '#f472b6' };
+                    const topColors  = { village: '#fb923c', pyramid: '#fde047', pirate: '#d97706', factory: '#94a3b8', glacier: '#bae6fd', volcano: '#ef4444', forest: '#a3e635', candyland: '#fbcfe8' };
+
+                    ctx.fillStyle = mainColors[mapId] || '#ea580c';
+                    ctx.beginPath();
+                    ctx.roundRect(x + 3, y + 4, TILE - 6, TILE - 8, 6);
+                    ctx.fill();
+                    ctx.lineWidth = 2;
+                    ctx.strokeStyle = '#0f172a';
+                    ctx.stroke();
+
+                    ctx.fillStyle = topColors[mapId] || '#fb923c';
+                    ctx.beginPath();
+                    ctx.roundRect(x + 5, y + 6, TILE - 10, 12, 4);
+                    ctx.fill();
+                } else if (type === 3) {
+                    ctx.fillStyle = mapId === 'glacier' ? '#7dd3fc' : (mapId === 'candyland' ? '#facc15' : '#d97706');
+                    ctx.beginPath();
+                    ctx.roundRect(x + 4, y + 4, TILE - 8, TILE - 8, 6);
+                    ctx.fill();
+                    ctx.lineWidth = 2.5;
+                    ctx.strokeStyle = '#271202';
+                    ctx.stroke();
+
+                    ctx.strokeStyle = mapId === 'glacier' ? '#0284c7' : '#92400e';
+                    ctx.lineWidth = 2.5;
+                    ctx.strokeRect(x + 9, y + 9, TILE - 18, TILE - 18);
+                    ctx.beginPath();
+                    ctx.moveTo(x + 9, y + 9);
+                    ctx.lineTo(x + TILE - 9, y + TILE - 9);
+                    ctx.moveTo(x + TILE - 9, y + 9);
+                    ctx.lineTo(x + 9, y + TILE - 9);
+                    ctx.stroke();
+                }
+                ctx.restore();
+            },
+
+            drawBush(ctx, x, y, timeSec, mapId) {
+                const sway = Math.sin(timeSec * 3.2 + x * 0.1) * 1.5;
+                ctx.save();
+                ctx.translate(x + TILE / 2 + sway, y + TILE / 2);
+
+                ctx.fillStyle = mapId === 'glacier' ? '#0369a1' : (mapId === 'candyland' ? '#db2777' : '#15803d');
+                ctx.beginPath();
+                ctx.arc(-11, 6, 13, 0, Math.PI * 2);
+                ctx.arc(11, 6, 13, 0, Math.PI * 2);
+                ctx.arc(0, -7, 15, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.fillStyle = mapId === 'glacier' ? '#38bdf8' : (mapId === 'candyland' ? '#f472b6' : '#22c55e');
+                ctx.beginPath();
+                ctx.arc(-7, 3, 9.5, 0, Math.PI * 2);
+                ctx.arc(8, 3, 9.5, 0, Math.PI * 2);
+                ctx.arc(0, -6, 11.5, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            },
+
+            drawPlayer(ctx, p, timeSec) {
+                const c = Math.floor(p.x / TILE);
+                const r = Math.floor(p.y / TILE);
+                const inBush = this.grid[r] && this.grid[r][c] === 4;
+
+                ctx.save();
+                const walkBob = p.state === 'NORMAL' ? Math.abs(Math.sin(p.walkPhase)) * 3 : 0;
+                ctx.translate(p.x, p.y - walkBob);
+
+                if (inBush && p.state === 'NORMAL') ctx.globalAlpha = 0.38;
+                if (p.invulnTimer > 0 && Math.floor(timeSec * 15) % 2 === 0) ctx.globalAlpha = 0.55;
+
+                // Bóng đổ xám dưới chân nhân vật
+                ctx.fillStyle = p.isMoving ? 'rgba(100, 116, 139, 0.5)' : 'rgba(0,0,0,0.34)';
+                ctx.beginPath();
+                ctx.ellipse(0, 18 + walkBob, 15, 6, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+                if (p.mount) {
+                    ctx.fillStyle = p.mount === 'ufo' ? '#9333ea' : (p.mount === 'super_turtle' ? '#059669' : '#16a34a');
+                    ctx.beginPath();
+                    ctx.ellipse(0, 11, 20, 8.5, 0, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.lineWidth = 2;
+                    ctx.strokeStyle = '#0f172a';
+                    ctx.stroke();
+                }
+
+                // Thân
+                ctx.fillStyle = p.charObj.color;
+                ctx.beginPath();
+                ctx.roundRect(-11, -1, 22, 15, 6);
+                ctx.fill();
+                ctx.strokeStyle = '#0f172a';
+                ctx.lineWidth = 2.2;
+                ctx.stroke();
+
+                // Đầu
+                ctx.fillStyle = p.charObj.skin;
+                ctx.beginPath();
+                ctx.arc(0, -7, 13.5, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+
+                // Mũ
+                ctx.fillStyle = p.charObj.color;
+                ctx.beginPath();
+                ctx.arc(0, -10, 13.5, Math.PI, 0);
+                ctx.fill();
+                ctx.stroke();
+
+                ctx.fillStyle = p.charObj.hatColor;
+                ctx.beginPath();
+                ctx.arc(0, -23, 4, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+
+                // Mắt
+                ctx.fillStyle = '#0f172a';
+                if (p.state === 'TRAPPED') {
+                    ctx.font = '900 11px sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('><', 0, -4);
+                } else {
+                    const lookX = p.dir === 'left' ? -2 : (p.dir === 'right' ? 2 : 0);
+                    ctx.beginPath();
+                    ctx.arc(-4.5 + lookX, -6, 2.2, 0, Math.PI * 2);
+                    ctx.arc(4.5 + lookX, -6, 2.2, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+
+                // Bong bóng nước khi Sặc Nước
+                if (p.state === 'TRAPPED') {
+                    const wobble = Math.sin(timeSec * 12) * 2.2;
+                    ctx.fillStyle = 'rgba(56, 189, 248, 0.52)';
+                    ctx.beginPath();
+                    ctx.ellipse(0, -2, 25 + wobble, 25 - wobble, 0, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.lineWidth = 2.5;
+                    ctx.strokeStyle = '#e0f2fe';
+                    ctx.stroke();
+
+                    ctx.font = '900 12px "Baloo 2", sans-serif';
+                    ctx.fillStyle = '#fef08a';
+                    ctx.strokeStyle = '#0f172a';
+                    ctx.lineWidth = 3;
+                    ctx.textAlign = 'center';
+                    const txt = `SOS ${p.trappedTimer.toFixed(1)}s`;
+                    ctx.strokeText(txt, 0, -32);
+                    ctx.fillText(txt, 0, -32);
+                }
+
+                if (p.shieldTimer > 0) {
+                    ctx.strokeStyle = '#facc15';
+                    ctx.lineWidth = 3.5;
+                    ctx.beginPath();
+                    ctx.arc(0, -2, 25, 0, Math.PI * 2);
+                    ctx.stroke();
+                }
+
+                if (p.state !== 'TRAPPED') {
+                    ctx.font = '800 11px "Nunito", sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.fillStyle = p.team === 1 ? '#fde047' : '#fda4af';
+                    ctx.strokeStyle = '#0f172a';
+                    ctx.lineWidth = 3;
+                    const tag = p.isAI ? p.label : `P${p.index + 1}`;
+                    ctx.strokeText(tag, 0, -29);
+                    ctx.fillText(tag, 0, -29);
+                }
+
+                ctx.restore();
+            },
+
+            drawBoss(ctx, b, timeSec) {
+                ctx.save();
+                ctx.translate(b.x, b.y);
+                const bounce = Math.sin(timeSec * 6.5) * 4;
+
+                ctx.fillStyle = 'rgba(0,0,0,0.45)';
+                ctx.beginPath();
+                ctx.ellipse(0, 40, 44, 15, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.translate(0, bounce);
+
+                ctx.fillStyle = b.hitFlash > 0 ? '#ffffff' : (b.enraged ? '#dc2626' : b.color);
+                ctx.beginPath();
+                ctx.arc(0, 0, 43, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.lineWidth = 4;
+                ctx.strokeStyle = b.enraged ? '#fde047' : '#0f172a';
+                ctx.stroke();
+
+                ctx.font = '50px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(b.icon, 0, 3);
+
+                const barW = 76;
+                const hpPct = Math.max(0, b.hp / b.maxHp);
+                ctx.fillStyle = 'rgba(15,23,42,0.85)';
+                ctx.fillRect(-barW / 2, -60, barW, 8);
+                ctx.fillStyle = b.enraged ? '#facc15' : '#22c55e';
+                ctx.fillRect(-barW / 2 + 1, -59, (barW - 2) * hpPct, 6);
+
+                ctx.restore();
+            }
+        };
+
+        const UI = {
+            toggleHelpModal(show) {
+                document.getElementById('helpModal').classList.toggle('hidden', !show);
+            }
+        };
+
+        function downloadOfflineHTML() {
+            const htmlContent = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+            const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'Boom_Online_Clean_Working.html';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        window.onload = function () {
+            Game.init();
+        };
+    </script>
+</body>
+</html>
