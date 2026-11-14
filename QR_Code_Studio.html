@@ -1,0 +1,2250 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QR Code Studio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Thư viện qrcode-generator chuẩn ISO/IEC 18004 -->
+  <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
+  <!-- Thư viện jsQR dùng cho trình giải mã (kết hợp cùng BarcodeDetector gốc của trình duyệt) -->
+  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          },
+          colors: {
+            studioBg: '#0a0b0e',
+            studioCard: '#13151a',
+            studioSub: '#0e1014',
+            studioBorder: '#23262f',
+            studioEmerald: '#34d399',
+            studioSky: '#38bdf8',
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      background-color: #0a0b0e;
+      color: #f3f4f6;
+      font-family: 'Inter', sans-serif;
+      margin: 0;
+      padding: 0;
+      overflow-x: hidden;
+    }
+
+    /* Thanh cuộn tối giản */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #0a0b0e; }
+    ::-webkit-scrollbar-thumb { background: #262933; border-radius: 9999px; }
+    ::-webkit-scrollbar-thumb:hover { background: #3b4050; }
+
+    @keyframes orbitSpin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    .animate-orbit {
+      animation: orbitSpin 120s linear infinite;
+      transform-origin: center;
+    }
+
+    input[type="color"] {
+      -webkit-appearance: none;
+      appearance: none;
+      border: none;
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: transparent;
+      cursor: pointer;
+      padding: 0;
+    }
+    input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+    input[type="color"]::-webkit-color-swatch {
+      border: 1px solid #353945;
+      border-radius: 8px;
+    }
+    input[type="range"] {
+      accent-color: #34d399;
+    }
+  </style>
+</head>
+<body class="min-h-screen relative selection:bg-emerald-400/25 selection:text-white">
+
+  <!-- HỌA TIẾT TRANG TRÍ NỀN -->
+  <div class="fixed inset-0 pointer-events-none overflow-hidden z-0" aria-hidden="true">
+    <svg class="absolute -top-36 right-[4%] w-[540px] h-[540px] opacity-35" viewBox="0 0 540 540" fill="none">
+      <g class="animate-orbit">
+        <circle cx="270" cy="270" r="245" stroke="#2d313d" stroke-width="1.2" stroke-dasharray="4 6" />
+        <circle cx="270" cy="270" r="195" stroke="#262a35" stroke-width="1.2" stroke-dasharray="4 6" />
+        <circle cx="270" cy="270" r="145" stroke="#20242e" stroke-width="1.2" stroke-dasharray="4 6" />
+        <circle cx="52" cy="158" r="5" fill="#7f1d1d" stroke="#ef4444" stroke-width="1.5" />
+        <circle cx="496" cy="190" r="4.5" fill="#7f1d1d" stroke="#ef4444" stroke-width="1.5" />
+      </g>
+    </svg>
+    <svg class="absolute top-6 left-[41%] w-4 h-4 text-purple-500/70" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M10 2h4v8h8v4h-8v8h-4v-8H2v-4h8V2z"/>
+    </svg>
+    <svg class="absolute top-3 left-[63%] w-4 h-4 text-emerald-400/60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+      <polygon points="12 3 21 19 3 19" />
+    </svg>
+    <div class="absolute bottom-7 left-4 w-4 h-4 rounded-full border-2 border-emerald-400/50"></div>
+  </div>
+
+  <!-- TOAST THÔNG BÁO -->
+  <div id="toast" class="fixed bottom-5 right-5 z-50 transform translate-y-24 opacity-0 transition-all duration-300 pointer-events-none">
+    <div class="bg-[#161920] border border-[#34d399]/50 text-white px-4 py-3 rounded-xl shadow-2xl flex items-center gap-3">
+      <span id="toast-icon" class="w-6 h-6 rounded-full bg-[#34d399]/20 text-[#34d399] flex items-center justify-center shrink-0">
+        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="20 6 9 17 4 12"></polyline>
+        </svg>
+      </span>
+      <span id="toast-message" class="text-sm font-medium">Thao tác thành công</span>
+    </div>
+  </div>
+
+  <!-- MAIN CONTAINER -->
+  <div class="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-11">
+    
+    <!-- HERO HEADER -->
+    <header class="mb-7 sm:mb-9">
+      <h1 class="text-3xl sm:text-4xl md:text-[42px] font-extrabold tracking-tight leading-tight text-white">
+        QR Code Studio
+      </h1>
+      <p class="text-2xl sm:text-3xl md:text-[38px] font-extrabold tracking-tight leading-tight text-[#38bdf8] mt-0.5">
+        Tạo QR Codes
+      </p>
+    </header>
+
+    <!-- MAIN STUDIO CARD -->
+    <div class="bg-[#13151a] border border-[#23262f] rounded-2xl p-4 sm:p-6 lg:p-7 shadow-2xl">
+      
+      <!-- SEGMENTED PILL MODE TOGGLE -->
+      <div class="flex flex-wrap items-center justify-between gap-3 pb-6 mb-6 border-b border-[#23262f]">
+        <div class="inline-flex items-center bg-[#0a0b0e] p-1.5 rounded-full border border-[#23262f]">
+          <button
+            type="button"
+            id="tab-btn-generate"
+            onclick="switchMainTab('generate')"
+            class="px-4 sm:px-6 py-2.5 rounded-full text-xs sm:text-sm font-bold bg-[#1f232d] text-white shadow-md flex items-center gap-2 transition-all cursor-pointer"
+          >
+            <svg class="w-4 h-4 text-[#34d399]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="7" height="7" rx="1"></rect>
+              <rect x="14" y="3" width="7" height="7" rx="1"></rect>
+              <rect x="3" y="14" width="7" height="7" rx="1"></rect>
+              <path d="M14 14h3v3h-3zM20 14v3h-3M14 20h3v-3M20 20h.01"></path>
+            </svg>
+            <span>Tạo Mã QR</span>
+          </button>
+
+          <button
+            type="button"
+            id="tab-btn-decode"
+            onclick="switchMainTab('decode')"
+            class="px-4 sm:px-6 py-2.5 rounded-full text-xs sm:text-sm font-semibold text-gray-400 hover:text-white flex items-center gap-2 transition-all cursor-pointer"
+          >
+            <svg class="w-4 h-4 text-[#38bdf8]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 7V5a2 2 0 0 1 2-2h2"></path>
+              <path d="M17 3h2a2 2 0 0 1 2 2v2"></path>
+              <path d="M21 17v2a2 2 0 0 1-2 2h-2"></path>
+              <path d="M7 21H5a2 2 0 0 1-2-2v-2"></path>
+              <circle cx="11" cy="11" r="3"></circle>
+              <path d="m16 16-2.5-2.5"></path>
+            </svg>
+            <span>Đọc / Giải Mã QR</span>
+          </button>
+        </div>
+
+        <div id="header-status-pill" class="text-xs text-gray-400 flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-[#34d399]"></span>
+          <span>13 định dạng QR • Hỗ trợ tiếng Việt UTF-8 & Xuất Vector SVG / PNG</span>
+        </div>
+      </div>
+
+      <!-- =================================================================== -->
+      <!-- TAB 1: TẠO MÃ QR (QR GENERATOR)                                     -->
+      <!-- =================================================================== -->
+      <div id="view-generate" class="flex flex-col lg:flex-row gap-6 lg:gap-8">
+        
+        <!-- CỘT TRÁI (62%) -->
+        <div class="w-full lg:w-[62%] flex flex-col gap-5">
+          
+          <!-- Chọn loại nội dung QR -->
+          <div>
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-xs font-semibold uppercase tracking-wider text-gray-400">Chọn loại nội dung QR</span>
+              <button
+                type="button"
+                onclick="fillSampleData()"
+                class="text-xs font-medium text-[#38bdf8] hover:text-sky-300 flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#38bdf8]/10 hover:bg-[#38bdf8]/20 transition cursor-pointer"
+              >
+                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"/>
+                </svg>
+                <span>Điền dữ liệu mẫu</span>
+              </button>
+            </div>
+
+            <div id="category-grid" class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
+              <!-- Render bởi JS -->
+            </div>
+          </div>
+
+          <!-- Form nhập liệu động -->
+          <div class="bg-[#0e1014] border border-[#23262f] rounded-xl p-4 sm:p-5">
+            <div id="dynamic-form-box">
+              <!-- Render bởi JS -->
+            </div>
+          </div>
+
+          <!-- Customization Panel (Collapsed mặc định) -->
+          <div class="bg-[#0e1014] border border-[#23262f] rounded-xl overflow-hidden">
+            <button
+              type="button"
+              onclick="toggleCustomSection()"
+              class="w-full px-4 py-3.5 flex items-center justify-between text-left hover:bg-[#171a21] transition cursor-pointer"
+            >
+              <div class="flex items-center gap-2.5">
+                <svg class="w-4 h-4 text-[#34d399]" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>
+                </svg>
+                <span class="text-sm font-semibold text-white">Customization</span>
+                <span class="text-[11px] text-gray-400 hidden sm:inline">(Màu sắc, Điểm ảnh, Mắt QR, Logo)</span>
+              </div>
+              <svg id="custom-chevron" class="w-4 h-4 text-gray-400 transition-transform duration-200" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </button>
+
+            <div id="custom-content" class="hidden border-t border-[#23262f] p-4 sm:p-5 space-y-5 bg-[#101217]">
+              
+              <!-- Màu mã QR & Màu nền + Bảng màu mẫu -->
+              <div class="space-y-3">
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                  <span class="text-xs font-medium text-gray-300">Bảng màu nhanh:</span>
+                  <div class="flex items-center gap-1.5">
+                    <button type="button" onclick="applyColorSwatch('#000000', '#FFFFFF')" title="Đen cổ điển" class="w-6 h-6 rounded-full bg-black border-2 border-gray-500 cursor-pointer hover:scale-110 transition"></button>
+                    <button type="button" onclick="applyColorSwatch('#059669', '#FFFFFF')" title="Xanh ngọc lục bảo" class="w-6 h-6 rounded-full bg-[#059669] border-2 border-white/20 cursor-pointer hover:scale-110 transition"></button>
+                    <button type="button" onclick="applyColorSwatch('#0284C7', '#FFFFFF')" title="Xanh dương Sky" class="w-6 h-6 rounded-full bg-[#0284C7] border-2 border-white/20 cursor-pointer hover:scale-110 transition"></button>
+                    <button type="button" onclick="applyColorSwatch('#1E3A8A', '#F8FAFC')" title="Xanh Navy" class="w-6 h-6 rounded-full bg-[#1E3A8A] border-2 border-white/20 cursor-pointer hover:scale-110 transition"></button>
+                    <button type="button" onclick="applyColorSwatch('#7C3AED', '#FAF5FF')" title="Tím hiện đại" class="w-6 h-6 rounded-full bg-[#7C3AED] border-2 border-white/20 cursor-pointer hover:scale-110 transition"></button>
+                    <button type="button" onclick="applyColorSwatch('#DC2626', '#FFFBEB')" title="Đỏ nổi bật" class="w-6 h-6 rounded-full bg-[#DC2626] border-2 border-white/20 cursor-pointer hover:scale-110 transition"></button>
+                  </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label class="block text-xs font-medium text-gray-300 mb-1.5">Màu mã QR</label>
+                    <div class="flex items-center gap-2 bg-[#161920] border border-[#23262f] rounded-xl p-2">
+                      <input type="color" id="qr-fg-picker" value="#000000" oninput="onColorPickerChange('fg', this.value)" />
+                      <input type="text" id="qr-fg-hex" value="#000000" maxlength="7" oninput="onColorHexInput('fg', this.value)" class="w-full bg-transparent text-xs font-mono text-white uppercase focus:outline-none" />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label class="block text-xs font-medium text-gray-300 mb-1.5">Màu nền</label>
+                    <div class="flex items-center gap-2 bg-[#161920] border border-[#23262f] rounded-xl p-2">
+                      <input type="color" id="qr-bg-picker" value="#FFFFFF" oninput="onColorPickerChange('bg', this.value)" />
+                      <input type="text" id="qr-bg-hex" value="#FFFFFF" maxlength="7" oninput="onColorHexInput('bg', this.value)" class="w-full bg-transparent text-xs font-mono text-white uppercase focus:outline-none" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Kiểu điểm ảnh, Kiểu mắt định vị, Mức sửa lỗi -->
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                  <label class="block text-xs font-medium text-gray-300 mb-1.5">Kiểu điểm ảnh</label>
+                  <select id="qr-dot-style" onchange="updateQRCode()" class="w-full bg-[#161920] border border-[#23262f] rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-[#34d399]">
+                    <option value="square">Vuông chuẩn (Square)</option>
+                    <option value="dots">Chấm tròn (Dots)</option>
+                    <option value="rounded">Bo góc mềm (Rounded)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label class="block text-xs font-medium text-gray-300 mb-1.5">Kiểu mắt định vị</label>
+                  <select id="qr-eye-style" onchange="updateQRCode()" class="w-full bg-[#161920] border border-[#23262f] rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-[#34d399]">
+                    <option value="square">Vuông (Square)</option>
+                    <option value="rounded">Bo góc (Rounded)</option>
+                    <option value="circle">Tròn (Circle)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label class="block text-xs font-medium text-gray-300 mb-1.5">Mức sửa lỗi (ECC)</label>
+                  <select id="qr-ecc-level" onchange="updateQRCode()" class="w-full bg-[#161920] border border-[#23262f] rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-[#34d399]">
+                    <option value="L">L (7% - Thưa nhất)</option>
+                    <option value="M">M (15% - Cân bằng)</option>
+                    <option value="Q" selected>Q (25% - Khuyên dùng)</option>
+                    <option value="H">H (30% - Tốt nhất cho Logo)</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Chèn Logo ở giữa mã QR -->
+              <div class="pt-3 border-t border-[#23262f] space-y-3">
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                  <label class="text-xs font-medium text-gray-300">Chèn Logo trung tâm</label>
+                  <div class="flex items-center gap-2">
+                    <span class="text-[11px] text-gray-400">Khung nền logo:</span>
+                    <select id="qr-logo-frame" onchange="updateQRCode()" class="bg-[#161920] border border-[#23262f] rounded-lg px-2.5 py-1 text-[11px] text-white focus:outline-none focus:border-[#34d399]">
+                      <option value="rounded">Bo góc (Rounded Square)</option>
+                      <option value="circle">Hình tròn (Circle)</option>
+                      <option value="none">Không khung (None)</option>
+                    </select>
+                  </div>
+                </div>
+
+                <!-- 13 Nút Icon thông dụng -->
+                <div>
+                  <span class="block text-[11px] text-gray-400 mb-2">Chọn nhanh biểu tượng thông dụng:</span>
+                  <div id="logo-presets-container" class="flex flex-wrap gap-2">
+                    <!-- Render bởi JS -->
+                  </div>
+                </div>
+
+                <!-- Tải Logo riêng & Thanh trượt kích thước -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 items-center pt-1">
+                  <div class="flex items-center gap-2">
+                    <label class="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl bg-[#161920] hover:bg-[#1e222b] border border-dashed border-[#343946] text-xs text-gray-200 cursor-pointer transition min-w-0">
+                      <svg class="w-4 h-4 text-[#34d399] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="17 8 12 3 7 8"></polyline>
+                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                      </svg>
+                      <span id="custom-logo-name" class="truncate">Tải ảnh Logo riêng (PNG/JPG/SVG)</span>
+                      <input type="file" id="custom-logo-file" accept="image/*" class="hidden" onchange="onCustomLogoUpload(event)" />
+                    </label>
+                    <button
+                      type="button"
+                      id="btn-clear-logo"
+                      onclick="clearCenterLogo(true)"
+                      title="Xóa logo"
+                      class="hidden px-2.5 py-2.5 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 text-rose-400 border border-rose-500/30 text-xs font-semibold cursor-pointer shrink-0"
+                    >
+                      Xóa
+                    </button>
+                  </div>
+
+                  <div class="bg-[#161920] border border-[#23262f] rounded-xl px-3 py-2">
+                    <div class="flex justify-between text-[11px] text-gray-400 mb-1">
+                      <span>Kích thước Logo</span>
+                      <span id="logo-size-display" class="text-white font-mono">22%</span>
+                    </div>
+                    <input type="range" id="qr-logo-size" min="15" max="30" value="22" oninput="onLogoSizeChange(this.value)" class="w-full h-1.5 bg-[#23262f] rounded-lg cursor-pointer" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Nút Generate chính -->
+          <button
+            type="button"
+            onclick="onGenerateButtonClick()"
+            class="w-full py-3.5 px-6 rounded-xl bg-[#34d399] hover:bg-[#2bc48a] active:scale-[0.995] text-[#052016] font-extrabold text-sm sm:text-base tracking-wide shadow-lg shadow-[#34d399]/20 transition cursor-pointer"
+          >
+            Generate
+          </button>
+        </div>
+
+        <!-- CỘT PHẢI (38% - XEM TRƯỚC & XUẤT FILE) -->
+        <div class="w-full lg:w-[38%] flex flex-col justify-between bg-[#0e1014] border border-[#23262f] rounded-xl p-4 sm:p-5">
+          <div>
+            <!-- Khung Canvas QR 1000x1000px -->
+            <div class="w-full aspect-square max-w-[320px] mx-auto rounded-xl overflow-hidden border border-[#23262f] bg-white flex items-center justify-center p-2 shadow-inner">
+              <canvas id="qr-canvas" width="1000" height="1000" class="w-full h-full object-contain block rounded-lg"></canvas>
+            </div>
+
+            <!-- Nút tải SVG / PNG / WEBP -->
+            <div class="grid grid-cols-3 gap-2 mt-4">
+              <button
+                type="button"
+                onclick="exportQRAsSVG()"
+                class="py-2.5 px-2 rounded-xl bg-[#161920] hover:bg-[#1f232d] border border-[#23262f] text-white text-xs font-semibold flex items-center justify-center gap-1.5 transition cursor-pointer"
+              >
+                <svg class="w-3.5 h-3.5 text-[#34d399]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="7 10 12 15 17 10"></polyline>
+                  <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+                <span>SVG</span>
+              </button>
+
+              <button
+                type="button"
+                onclick="exportQRAsImage('png')"
+                class="py-2.5 px-2 rounded-xl bg-[#161920] hover:bg-[#1f232d] border border-[#23262f] text-white text-xs font-semibold flex items-center justify-center gap-1.5 transition cursor-pointer"
+              >
+                <svg class="w-3.5 h-3.5 text-[#38bdf8]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="7 10 12 15 17 10"></polyline>
+                  <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+                <span>PNG</span>
+              </button>
+
+              <button
+                type="button"
+                onclick="exportQRAsImage('webp')"
+                class="py-2.5 px-2 rounded-xl bg-[#161920] hover:bg-[#1f232d] border border-[#23262f] text-white text-xs font-semibold flex items-center justify-center gap-1.5 transition cursor-pointer"
+              >
+                <svg class="w-3.5 h-3.5 text-purple-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="7 10 12 15 17 10"></polyline>
+                  <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+                <span>WEBP</span>
+              </button>
+            </div>
+
+            <!-- Sao chép ảnh vào Clipboard -->
+            <button
+              type="button"
+              onclick="copyCanvasImageToClipboard()"
+              class="w-full mt-2.5 py-2.5 px-4 rounded-xl bg-[#161920] hover:bg-[#1f232d] border border-[#23262f] text-gray-200 text-xs font-semibold flex items-center justify-center gap-2 transition cursor-pointer"
+            >
+              <svg class="w-3.5 h-3.5 text-[#34d399]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+              </svg>
+              <span>Sao chép ảnh QR vào Clipboard</span>
+            </button>
+          </div>
+
+          <div class="mt-5 pt-3.5 border-t border-[#23262f]">
+            <p class="text-xs text-gray-400 leading-relaxed">
+              Mã QR được mã hóa trực tiếp trên trình duyệt theo chuẩn ISO/IEC 18004 (UTF-8 nguyên bản).
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- =================================================================== -->
+      <!-- TAB 2: ĐỌC / GIẢI MÃ QR (QR SCANNER / DECODER)                      -->
+      <!-- =================================================================== -->
+      <div id="view-decode" class="hidden grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
+        
+        <!-- Cột trái: Vùng tải ảnh & Canvas nhận diện -->
+        <div class="lg:col-span-6 flex flex-col gap-4">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-semibold uppercase tracking-wider text-gray-400">Tải ảnh chứa mã QR lên</span>
+            <button
+              type="button"
+              id="btn-clear-decoder"
+              onclick="resetDecoderUI()"
+              class="hidden text-xs text-rose-400 hover:text-rose-300 flex items-center gap-1 cursor-pointer"
+            >
+              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="3 6 5 6 21 6"></polyline>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+              </svg>
+              <span>Xóa ảnh</span>
+            </button>
+          </div>
+
+          <!-- Vùng kéo thả / chọn tệp -->
+          <div
+            id="scanner-dropzone"
+            onclick="document.getElementById('scanner-file-input').click()"
+            class="border-2 border-dashed border-[#2b2f3b] hover:border-[#34d399] bg-[#0e1014] hover:bg-[#12161e] rounded-xl p-6 text-center cursor-pointer transition-all flex flex-col items-center justify-center min-h-[290px]"
+          >
+            <input type="file" id="scanner-file-input" accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml,.svg" class="hidden" onchange="handleScannerFileInput(event)" />
+
+            <div id="scanner-placeholder" class="flex flex-col items-center">
+              <div class="w-14 h-14 rounded-2xl bg-[#34d399]/10 text-[#34d399] flex items-center justify-center mb-4">
+                <svg class="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="17 8 12 3 7 8"></polyline>
+                  <line x1="12" y1="3" x2="12" y2="15"></line>
+                </svg>
+              </div>
+              <p class="text-sm sm:text-base font-semibold text-white mb-1">
+                Kéo thả ảnh QR vào đây hoặc <span class="text-[#34d399] underline">chọn file ảnh</span>
+              </p>
+              <p class="text-xs text-gray-400 max-w-xs leading-relaxed mt-1">
+                Hỗ trợ PNG, JPG, WEBP, SVG. Nhấn <kbd class="px-1.5 py-0.5 bg-[#1a1d24] border border-[#2d323e] rounded text-gray-200 font-mono">Ctrl + V</kbd> (hoặc Cmd + V) để dán trực tiếp ảnh chụp màn hình.
+              </p>
+            </div>
+
+            <div id="scanner-preview-wrap" class="hidden w-full flex-col items-center">
+              <canvas id="scanner-preview-canvas" class="max-w-full max-h-[320px] rounded-lg border border-[#23262f] mx-auto shadow-lg"></canvas>
+              <span class="text-[11px] text-gray-400 mt-3">Nhấp vào ảnh để chọn ảnh khác</span>
+            </div>
+          </div>
+
+          <!-- Thông báo trạng thái quét -->
+          <div id="scanner-status-banner" class="hidden rounded-xl px-4 py-3 text-xs flex items-center gap-2.5 border"></div>
+        </div>
+
+        <!-- Cột phải: Kết quả giải mã & Phân tích thông minh -->
+        <div class="lg:col-span-6 bg-[#0e1014] border border-[#23262f] rounded-xl p-4 sm:p-5 flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between pb-3 border-b border-[#23262f]">
+              <span class="text-sm font-semibold text-white">Kết quả giải mã</span>
+              <span id="scanner-format-tag" class="hidden px-2.5 py-0.5 rounded-md bg-[#34d399]/15 text-[#34d399] text-[11px] font-bold uppercase tracking-wider">TEXT</span>
+            </div>
+
+            <!-- Chờ quét -->
+            <div id="scanner-empty-view" class="py-16 text-center flex flex-col items-center justify-center">
+              <div class="w-12 h-12 rounded-full bg-[#161920] text-gray-500 flex items-center justify-center mb-3">
+                <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"></path>
+                </svg>
+              </div>
+              <p class="text-sm font-medium text-gray-400">Chưa có dữ liệu</p>
+              <p class="text-xs text-gray-500 mt-1 max-w-xs">Tải lên hoặc dán ảnh chứa mã QR để giải mã nội dung bên trong.</p>
+            </div>
+
+            <!-- Kết quả -->
+            <div id="scanner-result-view" class="hidden mt-4 space-y-4">
+              
+              <!-- Thẻ phân tích thông minh -->
+              <div id="scanner-smart-card" class="hidden bg-[#13151a] border border-[#34d399]/40 rounded-xl p-4 space-y-2.5"></div>
+
+              <!-- Dữ liệu gốc -->
+              <div>
+                <div class="flex items-center justify-between mb-1.5">
+                  <label class="text-xs font-medium text-gray-400">Dữ liệu gốc (UTF-8 Raw Text)</label>
+                  <span id="scanner-char-count" class="text-[11px] text-gray-500">0 ký tự</span>
+                </div>
+                <textarea id="scanner-raw-textarea" readonly rows="4" class="w-full bg-[#161920] border border-[#23262f] rounded-xl p-3 text-xs sm:text-sm font-mono text-gray-100 focus:outline-none resize-y"></textarea>
+              </div>
+
+              <!-- Các nút hành động -->
+              <div id="scanner-actions-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1"></div>
+            </div>
+          </div>
+
+          <div class="mt-5 pt-3 border-t border-[#23262f]">
+            <p class="text-xs text-gray-400">
+              Hỗ trợ giải mã tiếng Việt UTF-8 đầy đủ dấu, tự động bổ sung vùng đệm trắng và nhận diện mã QR nền tối đảo màu.
+            </p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    // =========================================================================
+    // PHẦN A: BỘ MÃ HÓA QR CODE CHUẨN ISO/IEC 18004 (QRCODE-GENERATOR + UTF-8)
+    // =========================================================================
+    if (typeof qrcode !== 'undefined') {
+      qrcode.stringToBytes = function (s) {
+        if (typeof TextEncoder !== 'undefined') {
+          return Array.from(new TextEncoder().encode(String(s)));
+        }
+        const utf8 = unescape(encodeURIComponent(String(s)));
+        const bytes = [];
+        for (let i = 0; i < utf8.length; i++) {
+          bytes.push(utf8.charCodeAt(i));
+        }
+        return bytes;
+      };
+    }
+
+    const PureQREngine = {
+      encode(text, eccLevel = 'Q') {
+        if (typeof qrcode === 'undefined') {
+          throw new Error('Không tải được thư viện mã hóa QR.');
+        }
+        const qr = qrcode(0, eccLevel);
+        qr.addData(String(text), 'Byte');
+        qr.make();
+
+        const count = qr.getModuleCount();
+        const modules = Array.from({ length: count }, (_, r) =>
+          Array.from({ length: count }, (__, c) => qr.isDark(r, c))
+        );
+
+        return {
+          version: (count - 17) / 4,
+          count,
+          modules
+        };
+      }
+    };
+
+    // =========================================================================
+    // PHẦN B: DỮ LIỆU DANH MỤC (13 LOẠI QR, NGÂN HÀNG VIETQR, 13 LOGO PRESET)
+    // =========================================================================
+    const QR_CATEGORIES = [
+      { id: 'text', label: 'Text', svg: '<svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>' },
+      { id: 'url', label: 'URL', svg: '<svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>' },
+      { id: 'email', label: 'Email', svg: '<svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>' },
+      { id: 'sms', label: 'SMS', svg: '<svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>' },
+      { id: 'call', label: 'Call', svg: '<svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>' },
+      { id: 'wifi', label: 'WiFi', svg: '<svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>' },
+      { id: 'vcard', label: 'vCard', svg: '<svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>' },
+      { id: 'event', label: 'Event', svg: '<svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>' },
+      { id: 'vietqr', label: 'VietQR', svg: '<svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="22" x2="21" y2="22"/><line x1="6" y1="18" x2="6" y2="11"/><line x1="10" y1="18" x2="10" y2="11"/><line x1="14" y1="18" x2="14" y2="11"/><line x1="18" y1="18" x2="18" y2="11"/><polygon points="12 2 20 7 4 7"/></svg>' },
+      { id: 'social', label: 'Zalo / MXH', svg: '<svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>' },
+      { id: 'gps', label: 'Vị trí GPS', svg: '<svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>' },
+      { id: 'app', label: 'App Store', svg: '<svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M9 17V7l7 5-7 5z"/></svg>' },
+      { id: 'crypto', label: 'Ví Crypto', svg: '<svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M9 8h4.5a2 2 0 0 1 0 4H9v4h5a2 2 0 0 0 0-4"/><line x1="11" y1="6" x2="11" y2="18"/></svg>' }
+    ];
+
+    const VN_BANKS = [
+      { bin: '970436', code: 'Vietcombank', name: 'NH Ngoại Thương Việt Nam' },
+      { bin: '970407', code: 'Techcombank', name: 'NH Kỹ Thương Việt Nam' },
+      { bin: '970422', code: 'MB Bank', name: 'NH Quân Đội' },
+      { bin: '970418', code: 'BIDV', name: 'NH Đầu Tư và Phát Triển VN' },
+      { bin: '970415', code: 'VietinBank', name: 'NH Công Thương Việt Nam' },
+      { bin: '970416', code: 'ACB', name: 'NH Á Châu' },
+      { bin: '970432', code: 'VPBank', name: 'NH Việt Nam Thịnh Vượng' },
+      { bin: '970423', code: 'TPBank', name: 'NH Tiên Phong' },
+      { bin: '970403', code: 'Sacombank', name: 'NH Sài Gòn Thương Tín' },
+      { bin: '970405', code: 'Agribank', name: 'NH Nông Nghiệp & PTNT VN' },
+      { bin: '970441', code: 'VIB', name: 'NH Quốc Tế Việt Nam' },
+      { bin: '970437', code: 'HDBank', name: 'NH Phát Triển TP.HCM' },
+      { bin: '970443', code: 'SHB', name: 'NH Sài Gòn - Hà Nội' },
+      { bin: '970426', code: 'MSB', name: 'NH Hàng Hải Việt Nam' },
+      { bin: '970448', code: 'OCB', name: 'NH Phương Đông' },
+      { bin: '971025', code: 'MoMo', name: 'Ví điện tử MoMo (Chuyển khoản NH)' }
+    ];
+
+    const CENTER_LOGO_PRESETS = [
+      {
+        id: 'none',
+        label: 'Không dùng',
+        pillIcon: '<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><line x1="5.6" y1="5.6" x2="18.4" y2="18.4"/></svg>',
+        svgRaw: ''
+      },
+      {
+        id: 'wifi',
+        label: 'WiFi',
+        pillIcon: '<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2.2" stroke-linecap="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><circle cx="12" cy="20" r="1" fill="#38bdf8"/></svg>',
+        svgRaw: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="16" fill="#0ea5e9"/><path d="M13 26c10.5-9.5 27.5-9.5 38 0M20.5 34.5c6.5-5.8 16.5-5.8 23 0M28 43c2.4-2.1 5.6-2.1 8 0" stroke="#fff" stroke-width="5" stroke-linecap="round" fill="none"/><circle cx="32" cy="50" r="3.5" fill="#fff"/></svg>'
+      },
+      {
+        id: 'bank',
+        label: 'Bank',
+        pillIcon: '<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="#34d399" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="21" x2="21" y2="21"/><line x1="6" y1="18" x2="6" y2="10"/><line x1="10" y1="18" x2="10" y2="10"/><line x1="14" y1="18" x2="14" y2="10"/><line x1="18" y1="18" x2="18" y2="10"/><polygon points="12 3 20 8 4 8"/></svg>',
+        svgRaw: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="16" fill="#10b981"/><polygon points="32 13 50 23 14 23" fill="#fff"/><rect x="18" y="27" width="4.5" height="17" rx="1.5" fill="#fff"/><rect x="26" y="27" width="4.5" height="17" rx="1.5" fill="#fff"/><rect x="34" y="27" width="4.5" height="17" rx="1.5" fill="#fff"/><rect x="42" y="27" width="4.5" height="17" rx="1.5" fill="#fff"/><rect x="14" y="47" width="36" height="4.5" rx="2" fill="#fff"/></svg>'
+      },
+      {
+        id: 'chat',
+        label: 'Chat',
+        pillIcon: '<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>',
+        svgRaw: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="16" fill="#3b82f6"/><path d="M48 31c0 8.3-7.2 15-16 15-2.6 0-5.1-.6-7.3-1.7L15 47l2.8-8.2C16.6 36.5 16 33.8 16 31c0-8.3 7.2-15 16-15s16 6.7 16 15z" fill="#fff"/><circle cx="26" cy="31" r="2.3" fill="#3b82f6"/><circle cx="32" cy="31" r="2.3" fill="#3b82f6"/><circle cx="38" cy="31" r="2.3" fill="#3b82f6"/></svg>'
+      },
+      {
+        id: 'map',
+        label: 'Map',
+        pillIcon: '<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="#fb7185" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>',
+        svgRaw: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="16" fill="#f43f5e"/><path d="M32 13c-8.8 0-16 7.2-16 16 0 11.5 16 23 16 23s16-11.5 16-23c0-8.8-7.2-16-16-16zm0 22a6 6 0 1 1 0-12 6 6 0 0 1 0 12z" fill="#fff"/></svg>'
+      },
+      {
+        id: 'zalo',
+        label: 'Zalo',
+        pillIcon: '<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="#0068ff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="5"/><path d="M8 9h8l-8 6h8"/></svg>',
+        svgRaw: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="16" fill="#0068ff"/><text x="32" y="40" font-family="Arial, Helvetica, sans-serif" font-weight="800" font-size="21" fill="#fff" text-anchor="middle">Zalo</text></svg>'
+      },
+      {
+        id: 'facebook',
+        label: 'Facebook',
+        pillIcon: '<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="#1877f2" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>',
+        svgRaw: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="16" fill="#1877f2"/><path d="M36 52V35h5.6l.9-6.6H36v-4.2c0-1.9.5-3.2 3.3-3.2h3.5v-5.9c-.6-.1-2.7-.3-5.1-.3-5 0-8.5 3.1-8.5 8.7v4.9h-5.7V35h5.7v17H36z" fill="#fff"/></svg>'
+      },
+      {
+        id: 'phone',
+        label: 'Phone',
+        pillIcon: '<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>',
+        svgRaw: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="16" fill="#22c55e"/><path d="M47 41.4v4.5a3 3 0 0 1-3.3 3 29.7 29.7 0 0 1-12.9-4.6 29.2 29.2 0 0 1-9-9 29.7 29.7 0 0 1-4.6-13A3 3 0 0 1 20.2 19h4.5a3 3 0 0 1 3 2.6c.2 1.4.5 2.8 1 4.2a3 3 0 0 1-.7 3.2l-1.9 1.9a24 24 0 0 0 9 9l1.9-1.9a3 3 0 0 1 3.2-.7c1.4.5 2.8.8 4.2 1a3 3 0 0 1 2.6 3.1z" fill="#fff"/></svg>'
+      },
+      {
+        id: 'email',
+        label: 'Email',
+        pillIcon: '<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>',
+        svgRaw: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="16" fill="#f59e0b"/><rect x="13" y="19" width="38" height="26" rx="4" fill="#fff"/><path d="M14 21l18 13 18-13" stroke="#f59e0b" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>'
+      },
+      {
+        id: 'web',
+        label: 'Link / Web',
+        pillIcon: '<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="#06b6d4" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>',
+        svgRaw: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="16" fill="#06b6d4"/><circle cx="32" cy="32" r="16" stroke="#fff" stroke-width="3.5" fill="none"/><line x1="16" y1="32" x2="48" y2="32" stroke="#fff" stroke-width="3.2"/><ellipse cx="32" cy="32" rx="7.5" ry="16" stroke="#fff" stroke-width="3.2" fill="none"/></svg>'
+      },
+      {
+        id: 'shop',
+        label: 'Shop / Cart',
+        pillIcon: '<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="#a855f7" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>',
+        svgRaw: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="16" fill="#a855f7"/><path d="M14 17h6l4 20h18l4-14H22" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none"/><circle cx="26" cy="45" r="3.2" fill="#fff"/><circle cx="40" cy="45" r="3.2" fill="#fff"/></svg>'
+      },
+      {
+        id: 'event',
+        label: 'Event / Lịch',
+        pillIcon: '<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>',
+        svgRaw: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="16" fill="#f97316"/><rect x="15" y="18" width="34" height="31" rx="4" fill="#fff"/><rect x="15" y="18" width="34" height="9" rx="2" fill="#ffedd5"/><line x1="24" y1="14" x2="24" y2="21" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/><line x1="40" y1="14" x2="40" y2="21" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/><circle cx="25" cy="34" r="2.2" fill="#f97316"/><circle cx="32" cy="34" r="2.2" fill="#f97316"/><circle cx="39" cy="34" r="2.2" fill="#f97316"/><circle cx="25" cy="41" r="2.2" fill="#f97316"/><circle cx="32" cy="41" r="2.2" fill="#f97316"/></svg>'
+      },
+      {
+        id: 'vip',
+        label: 'VIP / Star',
+        pillIcon: '<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="#eab308" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>',
+        svgRaw: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="16" fill="#eab308"/><polygon points="32 13 37.8 24.8 50.8 26.7 41.4 35.8 43.6 48.8 32 42.7 20.4 48.8 22.6 35.8 13.2 26.7 26.2 24.8 32 13" fill="#fff"/></svg>'
+      }
+    ];
+
+    let activeCategory = 'text';
+    let selectedLogoPresetId = 'none';
+    let currentLogoImage = null;
+    let currentLogoSvgString = null;
+    let cachedMatrixData = null;
+    let lastScannedText = '';
+    let lastScannedType = 'text';
+
+    window.addEventListener('DOMContentLoaded', () => {
+      try {
+        renderCategoryPills();
+        renderLogoPresets();
+        renderFormForCategory('text');
+        updateQRCode();
+        initScannerEvents();
+      } catch (err) {
+        console.error('Lỗi khởi tạo:', err);
+      }
+    });
+
+    function switchMainTab(tab) {
+      const viewGen = document.getElementById('view-generate');
+      const viewDec = document.getElementById('view-decode');
+      const btnGen = document.getElementById('tab-btn-generate');
+      const btnDec = document.getElementById('tab-btn-decode');
+      const statusPill = document.getElementById('header-status-pill');
+
+      if (tab === 'generate') {
+        viewGen.classList.remove('hidden');
+        viewDec.classList.add('hidden');
+        btnGen.className = 'px-4 sm:px-6 py-2.5 rounded-full text-xs sm:text-sm font-bold bg-[#1f232d] text-white shadow-md flex items-center gap-2 transition-all cursor-pointer';
+        btnDec.className = 'px-4 sm:px-6 py-2.5 rounded-full text-xs sm:text-sm font-semibold text-gray-400 hover:text-white flex items-center gap-2 transition-all cursor-pointer';
+        statusPill.innerHTML = '<span class="w-2 h-2 rounded-full bg-[#34d399]"></span><span>13 định dạng QR • Hỗ trợ tiếng Việt UTF-8 & Xuất Vector SVG / PNG</span>';
+      } else {
+        viewGen.classList.add('hidden');
+        viewDec.classList.remove('hidden');
+        btnDec.className = 'px-4 sm:px-6 py-2.5 rounded-full text-xs sm:text-sm font-bold bg-[#1f232d] text-white shadow-md flex items-center gap-2 transition-all cursor-pointer';
+        btnGen.className = 'px-4 sm:px-6 py-2.5 rounded-full text-xs sm:text-sm font-semibold text-gray-400 hover:text-white flex items-center gap-2 transition-all cursor-pointer';
+        statusPill.innerHTML = '<span class="w-2 h-2 rounded-full bg-[#38bdf8]"></span><span>Kéo thả ảnh QR hoặc nhấn Ctrl + V để dán trực tiếp</span>';
+      }
+    }
+
+    function renderCategoryPills() {
+      const container = document.getElementById('category-grid');
+      container.innerHTML = QR_CATEGORIES.map(cat => {
+        const active = cat.id === activeCategory;
+        const cls = active
+          ? 'border-[#34d399] bg-[#14231f] text-white shadow-sm shadow-[#34d399]/10'
+          : 'border-[#23262f] bg-[#0e1014] text-gray-300 hover:bg-[#191c24] hover:text-white';
+        const iconCls = active ? 'text-[#34d399]' : 'text-gray-400';
+
+        return `
+          <button
+            type="button"
+            onclick="selectCategory('${cat.id}')"
+            class="flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs font-medium border transition-all text-left cursor-pointer ${cls}"
+          >
+            <span class="${iconCls}">${cat.svg}</span>
+            <span class="truncate">${cat.label}</span>
+          </button>
+        `;
+      }).join('');
+    }
+
+    function selectCategory(id) {
+      activeCategory = id;
+      renderCategoryPills();
+      renderFormForCategory(id);
+      updateQRCode();
+    }
+
+    function renderFormForCategory(type) {
+      const box = document.getElementById('dynamic-form-box');
+      const inputCls = 'w-full bg-[#161920] border border-[#23262f] rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#34d399] transition';
+      const labelCls = 'block text-xs font-semibold text-gray-200 mb-2';
+
+      let html = '';
+      switch (type) {
+        case 'text':
+          html = `
+            <div>
+              <label class="${labelCls}">Văn bản (Hỗ trợ đầy đủ tiếng Việt có dấu)</label>
+              <textarea id="inp-text" rows="4" oninput="updateQRCode()" placeholder="Nhập văn bản tiếng Việt bất kỳ..." class="${inputCls} resize-y"></textarea>
+            </div>
+          `;
+          break;
+
+        case 'url':
+          html = `
+            <div>
+              <label class="${labelCls}">Liên kết Website (URL)</label>
+              <input type="url" id="inp-url" oninput="updateQRCode()" placeholder="https://example.com" class="${inputCls}" />
+              <p class="text-[11px] text-gray-500 mt-1.5">Tự động thêm https:// nếu bạn nhập tên miền ngắn.</p>
+            </div>
+          `;
+          break;
+
+        case 'email':
+          html = `
+            <div class="space-y-3">
+              <div>
+                <label class="${labelCls}">Email người nhận (To)</label>
+                <input type="email" id="inp-email-to" oninput="updateQRCode()" placeholder="hotro@congty.vn" class="${inputCls}" />
+              </div>
+              <div>
+                <label class="${labelCls}">Tiêu đề (Subject)</label>
+                <input type="text" id="inp-email-sub" oninput="updateQRCode()" placeholder="Liên hệ hợp tác" class="${inputCls}" />
+              </div>
+              <div>
+                <label class="${labelCls}">Nội dung (Body)</label>
+                <textarea id="inp-email-body" rows="2" oninput="updateQRCode()" placeholder="Xin chào..." class="${inputCls}"></textarea>
+              </div>
+            </div>
+          `;
+          break;
+
+        case 'sms':
+          html = `
+            <div class="space-y-3">
+              <div>
+                <label class="${labelCls}">Số điện thoại nhận SMS</label>
+                <input type="tel" id="inp-sms-phone" oninput="updateQRCode()" placeholder="0901234567" class="${inputCls}" />
+              </div>
+              <div>
+                <label class="${labelCls}">Nội dung tin nhắn</label>
+                <textarea id="inp-sms-msg" rows="3" oninput="updateQRCode()" placeholder="Nhập nội dung tin nhắn..." class="${inputCls}"></textarea>
+              </div>
+            </div>
+          `;
+          break;
+
+        case 'call':
+          html = `
+            <div>
+              <label class="${labelCls}">Số điện thoại gọi nhanh</label>
+              <input type="tel" id="inp-call-phone" oninput="updateQRCode()" placeholder="+84 901 234 567" class="${inputCls}" />
+            </div>
+          `;
+          break;
+
+        case 'wifi':
+          html = `
+            <div class="space-y-3">
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label class="${labelCls}">Tên mạng WiFi (SSID)</label>
+                  <input type="text" id="inp-wifi-ssid" oninput="updateQRCode()" placeholder="Ten_WiFi_Nha_Ban" class="${inputCls}" />
+                </div>
+                <div>
+                  <label class="${labelCls}">Chuẩn bảo mật</label>
+                  <select id="inp-wifi-enc" onchange="updateQRCode()" class="${inputCls}">
+                    <option value="WPA">WPA / WPA2 / WPA3</option>
+                    <option value="WEP">WEP</option>
+                    <option value="nopass">Không mật khẩu</option>
+                  </select>
+                </div>
+              </div>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 items-end">
+                <div>
+                  <label class="${labelCls}">Mật khẩu WiFi</label>
+                  <input type="text" id="inp-wifi-pass" oninput="updateQRCode()" placeholder="••••••••" class="${inputCls}" />
+                </div>
+                <label class="flex items-center gap-2 text-xs text-gray-300 pb-3 cursor-pointer">
+                  <input type="checkbox" id="inp-wifi-hidden" onchange="updateQRCode()" class="rounded bg-[#161920] border-[#23262f] accent-[#34d399]" />
+                  <span>Mạng ẩn (Hidden SSID)</span>
+                </label>
+              </div>
+            </div>
+          `;
+          break;
+
+        case 'vcard':
+          html = `
+            <div class="space-y-3">
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label class="${labelCls}">Họ và tên</label>
+                  <input type="text" id="inp-vc-name" oninput="updateQRCode()" placeholder="Nguyễn Văn A" class="${inputCls}" />
+                </div>
+                <div>
+                  <label class="${labelCls}">Số điện thoại</label>
+                  <input type="tel" id="inp-vc-phone" oninput="updateQRCode()" placeholder="0912345678" class="${inputCls}" />
+                </div>
+              </div>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label class="${labelCls}">Email</label>
+                  <input type="email" id="inp-vc-email" oninput="updateQRCode()" placeholder="email@congty.vn" class="${inputCls}" />
+                </div>
+                <div>
+                  <label class="${labelCls}">Công ty</label>
+                  <input type="text" id="inp-vc-org" oninput="updateQRCode()" placeholder="Công ty TNHH ABC" class="${inputCls}" />
+                </div>
+              </div>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label class="${labelCls}">Chức vụ</label>
+                  <input type="text" id="inp-vc-title" oninput="updateQRCode()" placeholder="Giám đốc Sản phẩm" class="${inputCls}" />
+                </div>
+                <div>
+                  <label class="${labelCls}">Website</label>
+                  <input type="url" id="inp-vc-url" oninput="updateQRCode()" placeholder="https://congty.vn" class="${inputCls}" />
+                </div>
+              </div>
+              <div>
+                <label class="${labelCls}">Địa chỉ</label>
+                <input type="text" id="inp-vc-addr" oninput="updateQRCode()" placeholder="Quận Hoàn Kiếm, Hà Nội" class="${inputCls}" />
+              </div>
+            </div>
+          `;
+          break;
+
+        case 'event':
+          html = `
+            <div class="space-y-3">
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label class="${labelCls}">Tên sự kiện</label>
+                  <input type="text" id="inp-ev-title" oninput="updateQRCode()" placeholder="Hội thảo Công nghệ 2026" class="${inputCls}" />
+                </div>
+                <div>
+                  <label class="${labelCls}">Địa điểm</label>
+                  <input type="text" id="inp-ev-loc" oninput="updateQRCode()" placeholder="Hà Nội" class="${inputCls}" />
+                </div>
+              </div>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label class="${labelCls}">Thời gian bắt đầu</label>
+                  <input type="datetime-local" id="inp-ev-start" oninput="updateQRCode()" class="${inputCls}" />
+                </div>
+                <div>
+                  <label class="${labelCls}">Thời gian kết thúc</label>
+                  <input type="datetime-local" id="inp-ev-end" oninput="updateQRCode()" class="${inputCls}" />
+                </div>
+              </div>
+              <div>
+                <label class="${labelCls}">Mô tả sự kiện</label>
+                <textarea id="inp-ev-desc" rows="2" oninput="updateQRCode()" placeholder="Nội dung chi tiết sự kiện..." class="${inputCls}"></textarea>
+              </div>
+            </div>
+          `;
+          break;
+
+        case 'vietqr':
+          const bankOptions = VN_BANKS.map(b => `<option value="${b.bin}">${b.code} - ${b.name}</option>`).join('');
+          html = `
+            <div class="space-y-3">
+              <div class="flex items-center justify-between">
+                <label class="${labelCls} mb-0">Ngân hàng thụ hưởng (Chuẩn EMVCo NAPAS)</label>
+                <span class="text-[10px] px-2 py-0.5 rounded bg-[#34d399]/15 text-[#34d399] font-semibold">Quét được mọi App NH</span>
+              </div>
+              <select id="inp-bank-bin" onchange="updateQRCode()" class="${inputCls}">
+                ${bankOptions}
+              </select>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label class="${labelCls}">Số tài khoản</label>
+                  <input type="text" id="inp-bank-acc" oninput="updateQRCode()" placeholder="VD: 190368686888" class="${inputCls}" />
+                </div>
+                <div>
+                  <label class="${labelCls}">Số tiền (VNĐ - Tùy chọn)</label>
+                  <input type="number" id="inp-bank-amount" oninput="updateQRCode()" placeholder="VD: 200000" class="${inputCls}" />
+                </div>
+              </div>
+              <div>
+                <label class="${labelCls}">Nội dung chuyển khoản (Tự chuẩn hóa không dấu cho App NH)</label>
+                <input type="text" id="inp-bank-memo" oninput="updateQRCode()" placeholder="Thanh toan don hang" class="${inputCls}" />
+              </div>
+            </div>
+          `;
+          break;
+
+        case 'social':
+          html = `
+            <div class="space-y-3">
+              <div>
+                <label class="${labelCls}">Chọn nền tảng Mạng xã hội</label>
+                <select id="inp-soc-plat" onchange="updateQRCode()" class="${inputCls}">
+                  <option value="zalo">Zalo (Số điện thoại)</option>
+                  <option value="facebook">Facebook (Username / Link)</option>
+                  <option value="tiktok">TikTok (@username / Link)</option>
+                  <option value="instagram">Instagram (Username / Link)</option>
+                  <option value="telegram">Telegram (Username / Link)</option>
+                  <option value="youtube">YouTube (Channel / Link)</option>
+                </select>
+              </div>
+              <div>
+                <label class="${labelCls}">Nhập SĐT, Username hoặc Link đầy đủ</label>
+                <input type="text" id="inp-soc-val" oninput="updateQRCode()" placeholder="VD: 0901234567 hoặc username" class="${inputCls}" />
+              </div>
+            </div>
+          `;
+          break;
+
+        case 'gps':
+          html = `
+            <div class="space-y-3">
+              <div>
+                <label class="${labelCls}">Dán link Google Maps để tự trích xuất tọa độ (Tùy chọn)</label>
+                <input type="text" id="inp-gps-link" oninput="parseGoogleMapsLink(this.value)" placeholder="https://www.google.com/maps/@21.028511,105.804817,15z" class="${inputCls}" />
+              </div>
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="${labelCls}">Vĩ độ (Latitude)</label>
+                  <input type="text" id="inp-gps-lat" oninput="updateQRCode()" placeholder="21.028511" class="${inputCls}" />
+                </div>
+                <div>
+                  <label class="${labelCls}">Kinh độ (Longitude)</label>
+                  <input type="text" id="inp-gps-lng" oninput="updateQRCode()" placeholder="105.804817" class="${inputCls}" />
+                </div>
+              </div>
+            </div>
+          `;
+          break;
+
+        case 'app':
+          html = `
+            <div>
+              <label class="${labelCls}">Link iOS App Store / Google Play Store</label>
+              <input type="url" id="inp-app-url" oninput="updateQRCode()" placeholder="https://apps.apple.com/vn/app/..." class="${inputCls}" />
+            </div>
+          `;
+          break;
+
+        case 'crypto':
+          html = `
+            <div class="space-y-3">
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label class="${labelCls}">Loại tiền mã hóa</label>
+                  <select id="inp-cry-coin" onchange="updateQRCode()" class="${inputCls}">
+                    <option value="bitcoin">Bitcoin (BTC)</option>
+                    <option value="ethereum">Ethereum (ETH)</option>
+                    <option value="usdt">USDT (TRC20 / ERC20)</option>
+                    <option value="solana">Solana (SOL)</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="${labelCls}">Số lượng (Tùy chọn)</label>
+                  <input type="number" step="any" id="inp-cry-amt" oninput="updateQRCode()" placeholder="0.05" class="${inputCls}" />
+                </div>
+              </div>
+              <div>
+                <label class="${labelCls}">Địa chỉ ví nhận (Wallet Address)</label>
+                <input type="text" id="inp-cry-addr" oninput="updateQRCode()" placeholder="Nhập địa chỉ ví..." class="${inputCls}" />
+              </div>
+            </div>
+          `;
+          break;
+      }
+
+      box.innerHTML = html;
+    }
+
+    function buildQRPayload() {
+      const val = (id) => {
+        const el = document.getElementById(id);
+        return el ? el.value.trim() : '';
+      };
+
+      switch (activeCategory) {
+        case 'text':
+          return val('inp-text') || 'Xin chào! Tạo QR Codes Hoàn toàn miễn phí.';
+
+        case 'url': {
+          let u = val('inp-url') || 'https://example.com';
+          if (!/^https?:\/\//i.test(u)) u = 'https://' + u;
+          return u;
+        }
+
+        case 'email': {
+          const to = val('inp-email-to') || 'contact@example.com';
+          const sub = encodeURIComponent(val('inp-email-sub'));
+          const body = encodeURIComponent(val('inp-email-body'));
+          return `mailto:${to}?subject=${sub}&body=${body}`;
+        }
+
+        case 'sms': {
+          const phone = val('inp-sms-phone') || '0901234567';
+          const msg = val('inp-sms-msg');
+          return `SMSTO:${phone}:${msg}`;
+        }
+
+        case 'call': {
+          const phone = val('inp-call-phone') || '+84901234567';
+          return `tel:${phone.replace(/\s+/g, '')}`;
+        }
+
+        case 'wifi': {
+          const ssid = val('inp-wifi-ssid') || 'Free_WiFi';
+          const enc = val('inp-wifi-enc') || 'WPA';
+          const pass = val('inp-wifi-pass');
+          const hidden = document.getElementById('inp-wifi-hidden')?.checked ? 'true' : 'false';
+          return `WIFI:T:${enc};S:${ssid};P:${enc === 'nopass' ? '' : pass};H:${hidden};;`;
+        }
+
+        case 'vcard': {
+          const name = val('inp-vc-name') || 'Nguyễn Văn A';
+          const phone = val('inp-vc-phone') || '0912345678';
+          const email = val('inp-vc-email');
+          const org = val('inp-vc-org');
+          const title = val('inp-vc-title');
+          const url = val('inp-vc-url');
+          const addr = val('inp-vc-addr');
+          return [
+            'BEGIN:VCARD',
+            'VERSION:3.0',
+            `FN:${name}`,
+            `N:${name};;;;`,
+            org ? `ORG:${org}` : '',
+            title ? `TITLE:${title}` : '',
+            phone ? `TEL;TYPE=CELL:${phone}` : '',
+            email ? `EMAIL:${email}` : '',
+            url ? `URL:${url}` : '',
+            addr ? `ADR:;;${addr};;;;` : '',
+            'END:VCARD'
+          ].filter(Boolean).join('\n');
+        }
+
+        case 'event': {
+          const title = val('inp-ev-title') || 'Sự kiện mới';
+          const loc = val('inp-ev-loc');
+          const desc = val('inp-ev-desc');
+          const fmt = (dt) => dt ? dt.replace(/[-:]/g, '') + '00' : '20261120T090000';
+          return [
+            'BEGIN:VEVENT',
+            `SUMMARY:${title}`,
+            `DTSTART:${fmt(val('inp-ev-start'))}`,
+            `DTEND:${fmt(val('inp-ev-end'))}`,
+            loc ? `LOCATION:${loc}` : '',
+            desc ? `DESCRIPTION:${desc}` : '',
+            'END:VEVENT'
+          ].filter(Boolean).join('\n');
+        }
+
+        case 'vietqr': {
+          const bin = val('inp-bank-bin') || '970436';
+          const acc = val('inp-bank-acc') || '0123456789';
+          const amount = val('inp-bank-amount');
+          const memo = val('inp-bank-memo');
+          return buildVietQREMVCo(bin, acc, amount, memo);
+        }
+
+        case 'social': {
+          const plat = val('inp-soc-plat') || 'zalo';
+          const raw = val('inp-soc-val') || '0901234567';
+          if (/^https?:\/\//i.test(raw)) return raw;
+          const clean = raw.replace(/^@/, '');
+          const map = {
+            zalo: `https://zalo.me/${clean}`,
+            facebook: `https://facebook.com/${clean}`,
+            tiktok: `https://www.tiktok.com/@${clean}`,
+            instagram: `https://instagram.com/${clean}`,
+            telegram: `https://t.me/${clean}`,
+            youtube: `https://www.youtube.com/@${clean}`
+          };
+          return map[plat] || `https://zalo.me/${clean}`;
+        }
+
+        case 'gps': {
+          const lat = val('inp-gps-lat') || '21.028511';
+          const lng = val('inp-gps-lng') || '105.804817';
+          return `https://maps.google.com/?q=${lat},${lng}`;
+        }
+
+        case 'app':
+          return val('inp-app-url') || 'https://apps.apple.com/vn';
+
+        case 'crypto': {
+          const coin = val('inp-cry-coin') || 'bitcoin';
+          const addr = val('inp-cry-addr') || 'bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh';
+          const amt = val('inp-cry-amt');
+          if (coin === 'usdt') return addr;
+          return amt ? `${coin}:${addr}?amount=${amt}` : `${coin}:${addr}`;
+        }
+
+        default:
+          return 'https://example.com';
+      }
+    }
+
+    function buildVietQREMVCo(bin, accountNo, amount, memo) {
+      const tlv = (tag, value) => `${tag}${String(value.length).padStart(2, '0')}${value}`;
+      const beneficiary = tlv('00', bin) + tlv('01', accountNo);
+      const merchantInfo = tlv('00', 'A000000727') + tlv('01', beneficiary) + tlv('02', 'QRIBFTTA');
+
+      let raw = '';
+      raw += tlv('00', '01');
+      raw += tlv('01', amount && Number(amount) > 0 ? '12' : '11');
+      raw += tlv('38', merchantInfo);
+      raw += tlv('53', '704');
+      if (amount && Number(amount) > 0) {
+        raw += tlv('54', String(Math.round(Number(amount))));
+      }
+      raw += tlv('58', 'VN');
+      if (memo) {
+        const cleanAscii = memo
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '')
+          .replace(/đ/g, 'd')
+          .replace(/Đ/g, 'D')
+          .slice(0, 50);
+        raw += tlv('62', tlv('08', cleanAscii));
+      }
+      raw += '6304';
+      return raw + calcCRC16CCITT(raw);
+    }
+
+    function calcCRC16CCITT(str) {
+      let crc = 0xFFFF;
+      for (let i = 0; i < str.length; i++) {
+        crc ^= str.charCodeAt(i) << 8;
+        for (let j = 0; j < 8; j++) {
+          crc = (crc & 0x8000) !== 0 ? ((crc << 1) ^ 0x1021) : (crc << 1);
+        }
+      }
+      return (crc & 0xFFFF).toString(16).toUpperCase().padStart(4, '0');
+    }
+
+    function parseGoogleMapsLink(url) {
+      const match = url.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/) || url.match(/[?&]q=(-?\d+\.\d+),(-?\d+\.\d+)/);
+      if (match) {
+        document.getElementById('inp-gps-lat').value = match[1];
+        document.getElementById('inp-gps-lng').value = match[2];
+        updateQRCode();
+        showToast('Đã trích xuất tọa độ từ link Google Maps!');
+      }
+    }
+
+    function isEyeModule(r, c, count) {
+      return (r < 7 && c < 7) || (r < 7 && c >= count - 7) || (r >= count - 7 && c < 7);
+    }
+
+    function updateQRCode() {
+      try {
+        const payload = buildQRPayload();
+        const fg = document.getElementById('qr-fg-picker').value || '#000000';
+        const bg = document.getElementById('qr-bg-picker').value || '#FFFFFF';
+        const dotStyle = document.getElementById('qr-dot-style').value;
+        const eyeStyle = document.getElementById('qr-eye-style').value;
+        let ecc = document.getElementById('qr-ecc-level').value;
+
+        if (currentLogoImage && ecc !== 'H') {
+          ecc = 'H';
+          document.getElementById('qr-ecc-level').value = 'H';
+        }
+
+        const encoded = PureQREngine.encode(payload, ecc);
+        cachedMatrixData = { ...encoded, fg, bg, dotStyle, eyeStyle };
+
+        const canvas = document.getElementById('qr-canvas');
+        const ctx = canvas.getContext('2d');
+        const size = 1000;
+        const quiet = 4;
+        const total = encoded.count + quiet * 2;
+        const cell = size / total;
+        const offset = quiet * cell;
+
+        ctx.fillStyle = bg;
+        ctx.fillRect(0, 0, size, size);
+
+        ctx.fillStyle = fg;
+        for (let r = 0; r < encoded.count; r++) {
+          for (let c = 0; c < encoded.count; c++) {
+            if (!encoded.modules[r][c] || isEyeModule(r, c, encoded.count)) continue;
+
+            const x = offset + c * cell;
+            const y = offset + r * cell;
+
+            if (dotStyle === 'dots') {
+              ctx.beginPath();
+              ctx.arc(x + cell / 2, y + cell / 2, cell * 0.42, 0, Math.PI * 2);
+              ctx.fill();
+            } else if (dotStyle === 'rounded') {
+              fillRoundRect(ctx, x + cell * 0.06, y + cell * 0.06, cell * 0.88, cell * 0.88, cell * 0.32);
+            } else {
+              ctx.fillRect(x, y, cell + 0.4, cell + 0.4);
+            }
+          }
+        }
+
+        [
+          { r: 0, c: 0 },
+          { r: 0, c: encoded.count - 7 },
+          { r: encoded.count - 7, c: 0 }
+        ].forEach(p => {
+          renderEyePattern(ctx, offset + p.c * cell, offset + p.r * cell, cell, fg, bg, eyeStyle);
+        });
+
+        if (currentLogoImage) {
+          const pct = Number(document.getElementById('qr-logo-size').value) / 100;
+          const frameShape = document.getElementById('qr-logo-frame').value;
+          const logoSize = size * pct;
+          const lx = (size - logoSize) / 2;
+          const ly = (size - logoSize) / 2;
+          const pad = logoSize * 0.14;
+
+          if (frameShape !== 'none') {
+            ctx.fillStyle = bg;
+            if (frameShape === 'circle') {
+              ctx.beginPath();
+              ctx.arc(size / 2, size / 2, (logoSize + pad * 2) / 2, 0, Math.PI * 2);
+              ctx.fill();
+            } else {
+              fillRoundRect(ctx, lx - pad, ly - pad, logoSize + pad * 2, logoSize + pad * 2, 26);
+            }
+          }
+
+          ctx.save();
+          if (frameShape === 'circle') {
+            ctx.beginPath();
+            ctx.arc(size / 2, size / 2, logoSize / 2, 0, Math.PI * 2);
+            ctx.clip();
+          } else if (frameShape === 'rounded') {
+            traceRoundRect(ctx, lx, ly, logoSize, logoSize, 18);
+            ctx.clip();
+          }
+          ctx.drawImage(currentLogoImage, lx, ly, logoSize, logoSize);
+          ctx.restore();
+        }
+      } catch (err) {
+        console.error('Lỗi tạo QR:', err);
+        showToast('Không thể tạo mã QR: ' + err.message, true);
+      }
+    }
+
+    function renderEyePattern(ctx, x, y, cell, fg, bg, style) {
+      const oS = cell * 7;
+      const mS = cell * 5;
+      const iS = cell * 3;
+
+      if (style === 'circle') {
+        ctx.fillStyle = fg;
+        ctx.beginPath();
+        ctx.arc(x + oS / 2, y + oS / 2, oS / 2, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = bg;
+        ctx.beginPath();
+        ctx.arc(x + oS / 2, y + oS / 2, mS / 2, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = fg;
+        ctx.beginPath();
+        ctx.arc(x + oS / 2, y + oS / 2, iS / 2, 0, Math.PI * 2);
+        ctx.fill();
+      } else if (style === 'rounded') {
+        ctx.fillStyle = fg;
+        fillRoundRect(ctx, x, y, oS, oS, cell * 1.6);
+        ctx.fillStyle = bg;
+        fillRoundRect(ctx, x + cell, y + cell, mS, mS, cell * 1.1);
+        ctx.fillStyle = fg;
+        fillRoundRect(ctx, x + cell * 2, y + cell * 2, iS, iS, cell * 0.7);
+      } else {
+        ctx.fillStyle = fg;
+        ctx.fillRect(x, y, oS, oS);
+        ctx.fillStyle = bg;
+        ctx.fillRect(x + cell, y + cell, mS, mS);
+        ctx.fillStyle = fg;
+        ctx.fillRect(x + cell * 2, y + cell * 2, iS, iS);
+      }
+    }
+
+    function traceRoundRect(ctx, x, y, w, h, r) {
+      const radius = Math.min(r, w / 2, h / 2);
+      ctx.beginPath();
+      ctx.moveTo(x + radius, y);
+      ctx.arcTo(x + w, y, x + w, y + h, radius);
+      ctx.arcTo(x + w, y + h, x, y + h, radius);
+      ctx.arcTo(x, y + h, x, y, radius);
+      ctx.arcTo(x, y, x + w, y, radius);
+      ctx.closePath();
+    }
+
+    function fillRoundRect(ctx, x, y, w, h, r) {
+      traceRoundRect(ctx, x, y, w, h, r);
+      ctx.fill();
+    }
+
+    function exportQRAsSVG() {
+      if (!cachedMatrixData) return;
+      try {
+        const { count, modules, fg, bg, dotStyle, eyeStyle } = cachedMatrixData;
+        const size = 1000;
+        const quiet = 4;
+        const cell = size / (count + quiet * 2);
+        const offset = quiet * cell;
+
+        let svgBody = `<rect width="${size}" height="${size}" fill="${bg}"/>`;
+
+        for (let r = 0; r < count; r++) {
+          for (let c = 0; c < count; c++) {
+            if (!modules[r][c] || isEyeModule(r, c, count)) continue;
+            const x = (offset + c * cell).toFixed(2);
+            const y = (offset + r * cell).toFixed(2);
+            const w = cell.toFixed(2);
+
+            if (dotStyle === 'dots') {
+              const cx = (offset + c * cell + cell / 2).toFixed(2);
+              const cy = (offset + r * cell + cell / 2).toFixed(2);
+              const rad = (cell * 0.42).toFixed(2);
+              svgBody += `<circle cx="${cx}" cy="${cy}" r="${rad}" fill="${fg}"/>`;
+            } else if (dotStyle === 'rounded') {
+              const rx = (cell * 0.32).toFixed(2);
+              svgBody += `<rect x="${x}" y="${y}" width="${w}" height="${w}" rx="${rx}" fill="${fg}"/>`;
+            } else {
+              svgBody += `<rect x="${x}" y="${y}" width="${(cell + 0.3).toFixed(2)}" height="${(cell + 0.3).toFixed(2)}" fill="${fg}"/>`;
+            }
+          }
+        }
+
+        [
+          { r: 0, c: 0 },
+          { r: 0, c: count - 7 },
+          { r: count - 7, c: 0 }
+        ].forEach(p => {
+          const x = offset + p.c * cell;
+          const y = offset + p.r * cell;
+          const oS = cell * 7;
+          const mS = cell * 5;
+          const iS = cell * 3;
+          if (eyeStyle === 'circle') {
+            const cx = (x + oS / 2).toFixed(2);
+            const cy = (y + oS / 2).toFixed(2);
+            svgBody += `<circle cx="${cx}" cy="${cy}" r="${(oS / 2).toFixed(2)}" fill="${fg}"/>`;
+            svgBody += `<circle cx="${cx}" cy="${cy}" r="${(mS / 2).toFixed(2)}" fill="${bg}"/>`;
+            svgBody += `<circle cx="${cx}" cy="${cy}" r="${(iS / 2).toFixed(2)}" fill="${fg}"/>`;
+          } else {
+            const rxO = eyeStyle === 'rounded' ? (cell * 1.6).toFixed(2) : '0';
+            const rxM = eyeStyle === 'rounded' ? (cell * 1.1).toFixed(2) : '0';
+            const rxI = eyeStyle === 'rounded' ? (cell * 0.7).toFixed(2) : '0';
+            svgBody += `<rect x="${x.toFixed(2)}" y="${y.toFixed(2)}" width="${oS.toFixed(2)}" height="${oS.toFixed(2)}" rx="${rxO}" fill="${fg}"/>`;
+            svgBody += `<rect x="${(x + cell).toFixed(2)}" y="${(y + cell).toFixed(2)}" width="${mS.toFixed(2)}" height="${mS.toFixed(2)}" rx="${rxM}" fill="${bg}"/>`;
+            svgBody += `<rect x="${(x + cell * 2).toFixed(2)}" y="${(y + cell * 2).toFixed(2)}" width="${iS.toFixed(2)}" height="${iS.toFixed(2)}" rx="${rxI}" fill="${fg}"/>`;
+          }
+        });
+
+        if (currentLogoImage) {
+          const pct = Number(document.getElementById('qr-logo-size').value) / 100;
+          const frameShape = document.getElementById('qr-logo-frame').value;
+          const logoSize = size * pct;
+          const lx = (size - logoSize) / 2;
+          const ly = (size - logoSize) / 2;
+          const pad = logoSize * 0.14;
+
+          if (frameShape === 'circle') {
+            svgBody += `<circle cx="${size / 2}" cy="${size / 2}" r="${((logoSize + pad * 2) / 2).toFixed(2)}" fill="${bg}"/>`;
+          } else if (frameShape === 'rounded') {
+            svgBody += `<rect x="${(lx - pad).toFixed(2)}" y="${(ly - pad).toFixed(2)}" width="${(logoSize + pad * 2).toFixed(2)}" height="${(logoSize + pad * 2).toFixed(2)}" rx="26" fill="${bg}"/>`;
+          }
+
+          const href = currentLogoSvgString
+            ? 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(currentLogoSvgString)
+            : currentLogoImage.src;
+
+          svgBody += `<defs><clipPath id="qr-center-clip">`;
+          if (frameShape === 'circle') {
+            svgBody += `<circle cx="${size / 2}" cy="${size / 2}" r="${(logoSize / 2).toFixed(2)}"/>`;
+          } else if (frameShape === 'rounded') {
+            svgBody += `<rect x="${lx.toFixed(2)}" y="${ly.toFixed(2)}" width="${logoSize.toFixed(2)}" height="${logoSize.toFixed(2)}" rx="18"/>`;
+          } else {
+            svgBody += `<rect x="${lx.toFixed(2)}" y="${ly.toFixed(2)}" width="${logoSize.toFixed(2)}" height="${logoSize.toFixed(2)}"/>`;
+          }
+          svgBody += `</clipPath></defs>`;
+          svgBody += `<image href="${href}" x="${lx.toFixed(2)}" y="${ly.toFixed(2)}" width="${logoSize.toFixed(2)}" height="${logoSize.toFixed(2)}" clip-path="url(#qr-center-clip)" preserveAspectRatio="xMidYMid slice"/>`;
+        }
+
+        const fullSvg = `<?xml version="1.0" encoding="UTF-8"?>\n<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${size} ${size}" width="${size}" height="${size}">${svgBody}</svg>`;
+        const blob = new Blob([fullSvg], { type: 'image/svg+xml;charset=utf-8' });
+        triggerFileDownload(URL.createObjectURL(blob), `qrcode-${activeCategory}-${Date.now()}.svg`);
+        showToast('Đã tải xuống file vector SVG!');
+      } catch (err) {
+        showToast('Lỗi xuất file SVG: ' + err.message, true);
+      }
+    }
+
+    function exportQRAsImage(ext) {
+      try {
+        const canvas = document.getElementById('qr-canvas');
+        const mime = ext === 'webp' ? 'image/webp' : 'image/png';
+        const url = canvas.toDataURL(mime, 1.0);
+        triggerFileDownload(url, `qrcode-${activeCategory}-${Date.now()}.${ext}`);
+        showToast(`Đã tải xuống ảnh ${ext.toUpperCase()} (1000×1000px)!`);
+      } catch (err) {
+        showToast('Lỗi xuất ảnh: ' + err.message, true);
+      }
+    }
+
+    function triggerFileDownload(url, filename) {
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
+
+    function copyCanvasImageToClipboard() {
+      const canvas = document.getElementById('qr-canvas');
+      canvas.toBlob(async (blob) => {
+        try {
+          if (navigator.clipboard && window.ClipboardItem) {
+            await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+            showToast('Đã sao chép ảnh mã QR vào Clipboard!');
+          } else {
+            showToast('Trình duyệt không hỗ trợ copy ảnh trực tiếp, hãy dùng nút tải PNG.', true);
+          }
+        } catch (err) {
+          showToast('Không thể truy cập Clipboard trên môi trường này.', true);
+        }
+      }, 'image/png');
+    }
+
+    function renderLogoPresets() {
+      const container = document.getElementById('logo-presets-container');
+      container.innerHTML = CENTER_LOGO_PRESETS.map(item => {
+        const active = item.id === selectedLogoPresetId;
+        const cls = active
+          ? 'border-[#34d399] bg-[#14231f] text-white shadow-sm shadow-[#34d399]/15'
+          : 'border-[#23262f] bg-[#161920] hover:bg-[#1e222b] text-gray-200';
+        return `
+          <button
+            type="button"
+            onclick="selectPresetLogo('${item.id}')"
+            class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-medium transition-all cursor-pointer ${cls}"
+          >
+            <span class="flex items-center justify-center shrink-0">${item.pillIcon}</span>
+            <span>${item.label}</span>
+          </button>
+        `;
+      }).join('');
+    }
+
+    function selectPresetLogo(id) {
+      selectedLogoPresetId = id;
+      renderLogoPresets();
+
+      if (id === 'none') {
+        clearCenterLogo(false);
+        return;
+      }
+
+      const preset = CENTER_LOGO_PRESETS.find(p => p.id === id);
+      if (!preset || !preset.svgRaw) return;
+
+      const dataUri = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(preset.svgRaw);
+      const img = new Image();
+      img.onload = () => {
+        currentLogoImage = img;
+        currentLogoSvgString = preset.svgRaw;
+        document.getElementById('custom-logo-name').textContent = `Icon: ${preset.label}`;
+        document.getElementById('btn-clear-logo').classList.remove('hidden');
+        document.getElementById('qr-ecc-level').value = 'H';
+        updateQRCode();
+        showToast(`Đã chèn icon "${preset.label}" vào giữa mã QR!`);
+      };
+      img.src = dataUri;
+    }
+
+    function onCustomLogoUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          currentLogoImage = img;
+          currentLogoSvgString = null;
+          selectedLogoPresetId = '';
+          renderLogoPresets();
+          document.getElementById('custom-logo-name').textContent = file.name;
+          document.getElementById('btn-clear-logo').classList.remove('hidden');
+          document.getElementById('qr-ecc-level').value = 'H';
+          updateQRCode();
+          showToast('Đã chèn logo riêng và nâng mức sửa lỗi lên H (30%)!');
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+      event.target.value = '';
+    }
+
+    function clearCenterLogo(notify) {
+      currentLogoImage = null;
+      currentLogoSvgString = null;
+      selectedLogoPresetId = 'none';
+      renderLogoPresets();
+      document.getElementById('custom-logo-name').textContent = 'Tải ảnh Logo riêng (PNG/JPG/SVG)';
+      document.getElementById('btn-clear-logo').classList.add('hidden');
+      updateQRCode();
+      if (notify) showToast('Đã xóa logo khỏi mã QR');
+    }
+
+    function toggleCustomSection() {
+      const body = document.getElementById('custom-content');
+      const arrow = document.getElementById('custom-chevron');
+      body.classList.toggle('hidden');
+      arrow.classList.toggle('rotate-180');
+    }
+
+    function applyColorSwatch(fg, bg) {
+      document.getElementById('qr-fg-picker').value = fg;
+      document.getElementById('qr-fg-hex').value = fg;
+      document.getElementById('qr-bg-picker').value = bg;
+      document.getElementById('qr-bg-hex').value = bg;
+      updateQRCode();
+    }
+
+    function onColorPickerChange(which, hex) {
+      document.getElementById(`qr-${which}-hex`).value = hex.toUpperCase();
+      updateQRCode();
+    }
+
+    function onColorHexInput(which, val) {
+      if (/^#[0-9A-Fa-f]{6}$/.test(val)) {
+        document.getElementById(`qr-${which}-picker`).value = val;
+        updateQRCode();
+      }
+    }
+
+    function onLogoSizeChange(val) {
+      document.getElementById('logo-size-display').textContent = val + '%';
+      updateQRCode();
+    }
+
+    function onGenerateButtonClick() {
+      updateQRCode();
+      showToast('Đã tạo & cập nhật mã QR sắc nét!');
+    }
+
+    function fillSampleData() {
+      const samples = {
+        text: () => { document.getElementById('inp-text').value = 'Xin chào Việt Nam! Mã QR hỗ trợ đầy đủ dấu tiếng Việt UTF-8.'; },
+        url: () => { document.getElementById('inp-url').value = 'https://vietnam.travel'; },
+        email: () => {
+          document.getElementById('inp-email-to').value = 'lienhe@congty.vn';
+          document.getElementById('inp-email-sub').value = 'Đăng ký tư vấn dịch vụ';
+          document.getElementById('inp-email-body').value = 'Xin chào, tôi cần hỗ trợ thông tin chi tiết.';
+        },
+        sms: () => {
+          document.getElementById('inp-sms-phone').value = '0901234567';
+          document.getElementById('inp-sms-msg').value = 'XACNHAN tham gia su kien';
+        },
+        call: () => { document.getElementById('inp-call-phone').value = '19001234'; },
+        wifi: () => {
+          document.getElementById('inp-wifi-ssid').value = 'Studio_WiFi_5G';
+          document.getElementById('inp-wifi-pass').value = 'matkhau2026';
+        },
+        vcard: () => {
+          document.getElementById('inp-vc-name').value = 'Nguyễn Minh Hoàng';
+          document.getElementById('inp-vc-phone').value = '0988123456';
+          document.getElementById('inp-vc-email').value = 'hoang.nguyen@studio.vn';
+          document.getElementById('inp-vc-org').value = 'QR Code Studio Việt Nam';
+          document.getElementById('inp-vc-title').value = 'Trưởng phòng Thiết kế';
+          document.getElementById('inp-vc-url').value = 'https://studio.vn';
+          document.getElementById('inp-vc-addr').value = 'Quận Hoàn Kiếm, Hà Nội';
+        },
+        event: () => {
+          document.getElementById('inp-ev-title').value = 'Hội thảo Công nghệ Sáng tạo 2026';
+          document.getElementById('inp-ev-loc').value = 'Trung tâm Hội nghị Quốc gia, Hà Nội';
+          document.getElementById('inp-ev-start').value = '2026-11-25T09:00';
+          document.getElementById('inp-ev-end').value = '2026-11-25T11:30';
+          document.getElementById('inp-ev-desc').value = 'Trải nghiệm giải pháp số cùng các chuyên gia.';
+        },
+        vietqr: () => {
+          document.getElementById('inp-bank-bin').value = '970436';
+          document.getElementById('inp-bank-acc').value = '0011001932418';
+          document.getElementById('inp-bank-amount').value = '150000';
+          document.getElementById('inp-bank-memo').value = 'Thanh toan don hang QR';
+        },
+        social: () => {
+          document.getElementById('inp-soc-plat').value = 'zalo';
+          document.getElementById('inp-soc-val').value = '0901234567';
+        },
+        gps: () => {
+          document.getElementById('inp-gps-lat').value = '21.028511';
+          document.getElementById('inp-gps-lng').value = '105.854444';
+        },
+        app: () => {
+          document.getElementById('inp-app-url').value = 'https://apps.apple.com/vn/app/vneid/id1582750372';
+        },
+        crypto: () => {
+          document.getElementById('inp-cry-coin').value = 'bitcoin';
+          document.getElementById('inp-cry-addr').value = 'bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh';
+          document.getElementById('inp-cry-amt').value = '0.01';
+        }
+      };
+
+      if (samples[activeCategory]) {
+        samples[activeCategory]();
+        updateQRCode();
+        showToast('Đã điền dữ liệu mẫu!');
+      }
+    }
+
+    function initScannerEvents() {
+      const dropzone = document.getElementById('scanner-dropzone');
+
+      ['dragenter', 'dragover'].forEach(evt => {
+        dropzone.addEventListener(evt, (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          dropzone.classList.add('border-[#34d399]', 'bg-[#121918]');
+        });
+      });
+
+      ['dragleave', 'drop'].forEach(evt => {
+        dropzone.addEventListener(evt, (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          dropzone.classList.remove('border-[#34d399]', 'bg-[#121918]');
+        });
+      });
+
+      dropzone.addEventListener('drop', (e) => {
+        const files = e.dataTransfer?.files;
+        if (files && files.length > 0) loadFileIntoScanner(files[0]);
+      });
+
+      window.addEventListener('paste', (e) => {
+        const items = e.clipboardData?.items;
+        if (!items) return;
+        for (let i = 0; i < items.length; i++) {
+          if (items[i].type.indexOf('image') !== -1) {
+            const file = items[i].getAsFile();
+            if (file) {
+              switchMainTab('decode');
+              loadFileIntoScanner(file);
+              showToast('Đã nhận ảnh dán từ Clipboard!');
+              break;
+            }
+          }
+        }
+      });
+    }
+
+    function handleScannerFileInput(event) {
+      const file = event.target.files[0];
+      if (file) loadFileIntoScanner(file);
+      event.target.value = '';
+    }
+
+    function loadFileIntoScanner(file) {
+      try {
+        const isSvg = file.type === 'image/svg+xml' || /\.svg$/i.test(file.name || '');
+        if (!file.type.startsWith('image/') && !isSvg) {
+          showScannerBanner('error', 'Vui lòng chọn tệp hình ảnh hợp lệ (PNG, JPG, WEBP, GIF hoặc SVG).');
+          return;
+        }
+
+        const reader = new FileReader();
+        reader.onerror = () => showScannerBanner('error', 'Không thể đọc tệp ảnh từ thiết bị.');
+
+        if (isSvg) {
+          reader.onload = (e) => {
+            const blob = new Blob([e.target.result], { type: 'image/svg+xml;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const img = new Image();
+            img.onload = () => {
+              URL.revokeObjectURL(url);
+              runMultiPassDecoder(img, true);
+            };
+            img.onerror = () => {
+              URL.revokeObjectURL(url);
+              showScannerBanner('error', 'Không thể hiển thị tệp SVG này để quét.');
+            };
+            img.src = url;
+          };
+          reader.readAsText(file);
+        } else {
+          reader.onload = (e) => {
+            const img = new Image();
+            img.onload = () => runMultiPassDecoder(img, false);
+            img.onerror = () => showScannerBanner('error', 'Tệp ảnh bị lỗi hoặc không được trình duyệt hỗ trợ.');
+            img.src = e.target.result;
+          };
+          reader.readAsDataURL(file);
+        }
+      } catch (err) {
+        console.error('Lỗi nạp ảnh quét:', err);
+        showScannerBanner('error', 'Đã xảy ra lỗi khi nạp ảnh vào bộ giải mã.');
+      }
+    }
+
+    function buildPaddedWhiteCanvas(img, targetMaxSide, isSvg) {
+      const natW = isSvg ? 1000 : (img.naturalWidth || img.width || 1000);
+      const natH = isSvg ? 1000 : (img.naturalHeight || img.height || 1000);
+      let drawW = natW;
+      let drawH = natH;
+
+      if (targetMaxSide > 0) {
+        const scale = targetMaxSide / Math.max(natW, natH);
+        drawW = Math.max(150, Math.round(natW * scale));
+        drawH = Math.max(150, Math.round(natH * scale));
+      }
+
+      const pad = 60;
+      const c = document.createElement('canvas');
+      c.width = drawW + pad * 2;
+      c.height = drawH + pad * 2;
+      const ctx = c.getContext('2d', { willReadFrequently: true });
+
+      ctx.fillStyle = '#FFFFFF';
+      ctx.fillRect(0, 0, c.width, c.height);
+      ctx.drawImage(img, pad, pad, drawW, drawH);
+
+      return {
+        canvas: c,
+        imageData: ctx.getImageData(0, 0, c.width, c.height),
+        width: c.width,
+        height: c.height,
+        pad
+      };
+    }
+
+    function decodeUTF8FromJsQR(code) {
+      if (!code) return '';
+      if (code.binaryData && code.binaryData.length > 0 && typeof TextDecoder !== 'undefined') {
+        try {
+          return new TextDecoder('utf-8', { fatal: false }).decode(new Uint8Array(code.binaryData));
+        } catch (e) {
+          console.warn('TextDecoder fallback:', e);
+        }
+      }
+      return code.data || '';
+    }
+
+    async function runMultiPassDecoder(img, isSvg) {
+      try {
+        const previewCanvas = document.getElementById('scanner-preview-canvas');
+        const pCtx = previewCanvas.getContext('2d', { willReadFrequently: true });
+        const natW = isSvg ? 1000 : (img.naturalWidth || img.width || 800);
+        const natH = isSvg ? 1000 : (img.naturalHeight || img.height || 800);
+        const maxDisp = 900;
+        let dW = natW;
+        let dH = natH;
+        if (dW > maxDisp || dH > maxDisp) {
+          const ratio = maxDisp / Math.max(dW, dH);
+          dW = Math.round(dW * ratio);
+          dH = Math.round(dH * ratio);
+        }
+
+        previewCanvas.width = dW;
+        previewCanvas.height = dH;
+        pCtx.fillStyle = '#FFFFFF';
+        pCtx.fillRect(0, 0, dW, dH);
+        pCtx.drawImage(img, 0, 0, dW, dH);
+
+        document.getElementById('scanner-placeholder').classList.add('hidden');
+        document.getElementById('scanner-preview-wrap').classList.remove('hidden');
+        document.getElementById('scanner-preview-wrap').classList.add('flex');
+        document.getElementById('btn-clear-decoder').classList.remove('hidden');
+
+        let decodedString = '';
+        let detectedCorners = null;
+        let usedBuffer = null;
+
+        const primaryBuf = buildPaddedWhiteCanvas(img, 1000, isSvg);
+        if ('BarcodeDetector' in window) {
+          try {
+            const detector = new BarcodeDetector({ formats: ['qr_code'] });
+            const barcodes = await detector.detect(primaryBuf.canvas);
+            if (barcodes && barcodes.length > 0 && barcodes[0].rawValue) {
+              decodedString = barcodes[0].rawValue;
+              if (barcodes[0].cornerPoints && barcodes[0].cornerPoints.length >= 4) {
+                detectedCorners = barcodes[0].cornerPoints;
+                usedBuffer = primaryBuf;
+              }
+            }
+          } catch (bdErr) {
+            console.warn('BarcodeDetector fallback sang jsQR:', bdErr);
+          }
+        }
+
+        if (!decodedString && typeof jsQR !== 'undefined') {
+          const scales = isSvg ? [1000, 600] : [1000, 600, 1400, 0];
+          for (const s of scales) {
+            const buf = s === 1000 ? primaryBuf : buildPaddedWhiteCanvas(img, s, isSvg);
+
+            let code = jsQR(buf.imageData.data, buf.width, buf.height, { inversionAttempts: 'attemptBoth' });
+
+            if (!code) {
+              const bin128 = binarizeImageData(buf.imageData, 128);
+              code = jsQR(bin128.data, buf.width, buf.height, { inversionAttempts: 'attemptBoth' });
+            }
+
+            if (!code) {
+              const bin175 = binarizeImageData(buf.imageData, 175);
+              code = jsQR(bin175.data, buf.width, buf.height, { inversionAttempts: 'attemptBoth' });
+            }
+
+            if (code && (code.data || (code.binaryData && code.binaryData.length))) {
+              decodedString = decodeUTF8FromJsQR(code);
+              if (code.location) {
+                detectedCorners = [
+                  code.location.topLeftCorner,
+                  code.location.topRightCorner,
+                  code.location.bottomRightCorner,
+                  code.location.bottomLeftCorner
+                ];
+                usedBuffer = buf;
+              }
+              break;
+            }
+          }
+        }
+
+        if (decodedString) {
+          if (detectedCorners && usedBuffer) {
+            const scaleX = dW / (usedBuffer.width - usedBuffer.pad * 2);
+            const scaleY = dH / (usedBuffer.height - usedBuffer.pad * 2);
+            const mapped = detectedCorners.map(pt => ({
+              x: (pt.x - usedBuffer.pad) * scaleX,
+              y: (pt.y - usedBuffer.pad) * scaleY
+            }));
+            drawBoundingPolygon(pCtx, mapped);
+          }
+          displayDecodedPayload(decodedString);
+        } else {
+          showScannerBanner('error', 'Không tìm thấy mã QR hợp lệ trong ảnh. Hãy thử ảnh rõ nét hơn.');
+          document.getElementById('scanner-empty-view').classList.remove('hidden');
+          document.getElementById('scanner-result-view').classList.add('hidden');
+          document.getElementById('scanner-format-tag').classList.add('hidden');
+        }
+      } catch (err) {
+        console.error('Lỗi giải mã:', err);
+        showScannerBanner('error', 'Lỗi xử lý ảnh: ' + err.message);
+      }
+    }
+
+    function binarizeImageData(src, threshold) {
+      const out = new Uint8ClampedArray(src.data.length);
+      for (let i = 0; i < src.data.length; i += 4) {
+        const lum = 0.299 * src.data[i] + 0.587 * src.data[i + 1] + 0.114 * src.data[i + 2];
+        const v = lum >= threshold ? 255 : 0;
+        out[i] = v;
+        out[i + 1] = v;
+        out[i + 2] = v;
+        out[i + 3] = 255;
+      }
+      return new ImageData(out, src.width, src.height);
+    }
+
+    function drawBoundingPolygon(ctx, pts) {
+      if (!pts || pts.length < 4) return;
+      ctx.save();
+      ctx.beginPath();
+      ctx.moveTo(pts[0].x, pts[0].y);
+      for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
+      ctx.closePath();
+      ctx.lineWidth = Math.max(4, Math.round(ctx.canvas.width / 110));
+      ctx.strokeStyle = '#34d399';
+      ctx.stroke();
+      ctx.fillStyle = 'rgba(52, 211, 153, 0.15)';
+      ctx.fill();
+      ctx.restore();
+    }
+
+    function showScannerBanner(type, text) {
+      const banner = document.getElementById('scanner-status-banner');
+      banner.classList.remove('hidden');
+      if (type === 'success') {
+        banner.className = 'rounded-xl px-4 py-3 text-xs flex items-center gap-2.5 border bg-emerald-950/40 border-[#34d399]/40 text-emerald-300';
+        banner.innerHTML = `<svg class="w-4 h-4 text-[#34d399] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span>${text}</span>`;
+      } else {
+        banner.className = 'rounded-xl px-4 py-3 text-xs flex items-center gap-2.5 border bg-rose-950/40 border-rose-500/40 text-rose-300';
+        banner.innerHTML = `<svg class="w-4 h-4 text-rose-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><span>${text}</span>`;
+      }
+    }
+
+    function displayDecodedPayload(text) {
+      lastScannedText = text;
+      showScannerBanner('success', 'Đã giải mã thành công nội dung tiếng Việt (UTF-8)!');
+
+      document.getElementById('scanner-empty-view').classList.add('hidden');
+      document.getElementById('scanner-result-view').classList.remove('hidden');
+      document.getElementById('scanner-raw-textarea').value = text;
+      document.getElementById('scanner-char-count').textContent = `${text.length} ký tự`;
+
+      const parsed = analyzeQRPayload(text);
+      lastScannedType = parsed.type;
+
+      const tag = document.getElementById('scanner-format-tag');
+      tag.textContent = parsed.badge;
+      tag.classList.remove('hidden');
+
+      const smartCard = document.getElementById('scanner-smart-card');
+      if (parsed.cardHtml) {
+        smartCard.innerHTML = parsed.cardHtml;
+        smartCard.classList.remove('hidden');
+      } else {
+        smartCard.classList.add('hidden');
+      }
+
+      const actionsGrid = document.getElementById('scanner-actions-grid');
+      let btns = `
+        <button type="button" onclick="copyPlainText(lastScannedText, 'Đã sao chép nội dung giải mã!')" class="py-2.5 px-4 rounded-xl bg-[#34d399] hover:bg-[#2bc48a] text-[#052016] font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition cursor-pointer">
+          <span>Sao chép nội dung</span>
+        </button>
+        <button type="button" onclick="transferDecodedToGenerator()" class="py-2.5 px-4 rounded-xl bg-[#161920] hover:bg-[#1f232d] border border-[#23262f] text-white font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 transition cursor-pointer">
+          <span>Chỉnh sửa & Tạo lại mã QR này</span>
+        </button>
+      `;
+      if (parsed.extraBtnHtml) btns = parsed.extraBtnHtml + btns;
+      actionsGrid.innerHTML = btns;
+    }
+
+    function analyzeQRPayload(text) {
+      const esc = (s) => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+      if (/^https?:\/\//i.test(text)) {
+        const safe = esc(text);
+        return {
+          type: 'url',
+          badge: 'URL / LIÊN KẾT',
+          cardHtml: `
+            <div class="text-[11px] font-bold uppercase text-[#34d399]">Liên kết Website</div>
+            <p class="text-xs sm:text-sm text-white font-medium break-all">${safe}</p>
+          `,
+          extraBtnHtml: `
+            <a href="${safe}" target="_blank" rel="noopener noreferrer" class="sm:col-span-2 py-2.5 px-4 rounded-xl bg-[#38bdf8] hover:bg-sky-300 text-[#041e2e] font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition">
+              <span>Mở liên kết trong tab mới</span>
+            </a>
+          `
+        };
+      }
+
+      if (/^WIFI:/i.test(text)) {
+        const ssid = (text.match(/S:([^;]*)/i) || [])[1] || 'Không rõ';
+        const pass = (text.match(/P:([^;]*)/i) || [])[1] || '';
+        const enc = (text.match(/T:([^;]*)/i) || [])[1] || 'Open';
+        return {
+          type: 'wifi',
+          badge: 'WIFI',
+          cardHtml: `
+            <div class="text-[11px] font-bold uppercase text-[#34d399]">Thông tin kết nối WiFi</div>
+            <div class="grid grid-cols-2 gap-2 text-xs">
+              <div class="bg-[#0e1014] p-2.5 rounded-lg border border-[#23262f]">
+                <span class="text-gray-400 block text-[10px]">Tên mạng (SSID)</span>
+                <span class="text-white font-semibold">${esc(ssid)}</span>
+              </div>
+              <div class="bg-[#0e1014] p-2.5 rounded-lg border border-[#23262f]">
+                <span class="text-gray-400 block text-[10px]">Bảo mật</span>
+                <span class="text-white font-semibold">${esc(enc)}</span>
+              </div>
+            </div>
+            <div class="bg-[#0e1014] p-2.5 rounded-lg border border-[#23262f]">
+              <span class="text-gray-400 block text-[10px]">Mật khẩu WiFi</span>
+              <span class="text-[#34d399] font-mono font-bold text-sm block">${pass ? esc(pass) : '(Không mật khẩu)'}</span>
+            </div>
+          `,
+          extraBtnHtml: pass ? `
+            <button type="button" onclick="copyScannedWifiPass()" class="sm:col-span-2 py-2.5 px-4 rounded-xl bg-[#38bdf8] hover:bg-sky-300 text-[#041e2e] font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition cursor-pointer">
+              <span>Sao chép mật khẩu WiFi</span>
+            </button>
+          ` : ''
+        };
+      }
+
+      if (text.startsWith('000201') && text.includes('A000000727')) {
+        const info = parseVietQRPayload(text);
+        const bank = VN_BANKS.find(b => b.bin === info.bin);
+        const bankName = bank ? `${bank.code} (${bank.name})` : (info.bin || 'Ngân hàng VN');
+        return {
+          type: 'vietqr',
+          badge: 'VIETQR NGÂN HÀNG',
+          cardHtml: `
+            <div class="text-[11px] font-bold uppercase text-[#34d399]">Chuyển khoản Ngân hàng (VietQR EMVCo)</div>
+            <div class="space-y-2 text-xs">
+              <div class="flex justify-between gap-2 bg-[#0e1014] px-3 py-2 rounded-lg border border-[#23262f]">
+                <span class="text-gray-400 shrink-0">Ngân hàng:</span>
+                <span class="text-white font-semibold text-right">${esc(bankName)}</span>
+              </div>
+              <div class="flex justify-between items-center bg-[#0e1014] px-3 py-2 rounded-lg border border-[#23262f]">
+                <span class="text-gray-400">Số tài khoản:</span>
+                <span class="text-[#34d399] font-mono font-bold text-sm">${esc(info.account || 'Không rõ')}</span>
+              </div>
+              ${info.amount ? `
+              <div class="flex justify-between bg-[#0e1014] px-3 py-2 rounded-lg border border-[#23262f]">
+                <span class="text-gray-400">Số tiền:</span>
+                <span class="text-amber-400 font-bold">${Number(info.amount).toLocaleString('vi-VN')} VNĐ</span>
+              </div>` : ''}
+              ${info.memo ? `
+              <div class="flex justify-between bg-[#0e1014] px-3 py-2 rounded-lg border border-[#23262f]">
+                <span class="text-gray-400">Nội dung:</span>
+                <span class="text-white">${esc(info.memo)}</span>
+              </div>` : ''}
+            </div>
+          `,
+          extraBtnHtml: info.account ? `
+            <button type="button" onclick="copyScannedBankAccount()" class="sm:col-span-2 py-2.5 px-4 rounded-xl bg-[#38bdf8] hover:bg-sky-300 text-[#041e2e] font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition cursor-pointer">
+              <span>Sao chép số tài khoản (${esc(info.account)})</span>
+            </button>
+          ` : ''
+        };
+      }
+
+      if (/^BEGIN:VCARD/i.test(text)) {
+        const fn = (text.match(/FN:(.*)/i) || [])[1] || '';
+        const tel = (text.match(/TEL[^:]*:(.*)/i) || [])[1] || '';
+        const email = (text.match(/EMAIL[^:]*:(.*)/i) || [])[1] || '';
+        const org = (text.match(/ORG:(.*)/i) || [])[1] || '';
+        return {
+          type: 'vcard',
+          badge: 'DANH THIẾP VCARD',
+          cardHtml: `
+            <div class="text-[11px] font-bold uppercase text-[#34d399]">Danh thiếp điện tử</div>
+            <div class="bg-[#0e1014] p-3 rounded-lg border border-[#23262f] space-y-1 text-xs">
+              ${fn ? `<div class="text-sm font-bold text-white">${esc(fn)}</div>` : ''}
+              ${org ? `<div class="text-gray-400">${esc(org)}</div>` : ''}
+              ${tel ? `<div class="text-[#38bdf8] font-mono pt-1">SĐT: ${esc(tel)}</div>` : ''}
+              ${email ? `<div class="text-gray-300">Email: ${esc(email)}</div>` : ''}
+            </div>
+          `
+        };
+      }
+
+      if (/^tel:/i.test(text)) {
+        return { type: 'call', badge: 'SỐ ĐIỆN THOẠI', cardHtml: '' };
+      }
+      if (/^mailto:/i.test(text)) {
+        return { type: 'email', badge: 'EMAIL', cardHtml: '' };
+      }
+      if (/^SMSTO:/i.test(text)) {
+        return { type: 'sms', badge: 'TIN NHẮN SMS', cardHtml: '' };
+      }
+
+      return { type: 'text', badge: 'VĂN BẢN THUẦN', cardHtml: '' };
+    }
+
+    function parseVietQRPayload(payload) {
+      const parseTLV = (str) => {
+        const map = {};
+        let i = 0;
+        while (i + 4 <= str.length) {
+          const tag = str.substring(i, i + 2);
+          const len = parseInt(str.substring(i + 2, i + 4), 10);
+          if (isNaN(len) || i + 4 + len > str.length) break;
+          map[tag] = str.substring(i + 4, i + 4 + len);
+          i += 4 + len;
+        }
+        return map;
+      };
+
+      const root = parseTLV(payload);
+      let bin = '';
+      let account = '';
+      let memo = '';
+
+      if (root['38']) {
+        const t38 = parseTLV(root['38']);
+        if (t38['01']) {
+          const sub = parseTLV(t38['01']);
+          bin = sub['00'] || '';
+          account = sub['01'] || '';
+        }
+      }
+      if (root['62']) {
+        const t62 = parseTLV(root['62']);
+        memo = t62['08'] || '';
+      }
+
+      return { bin, account, amount: root['54'] || '', memo };
+    }
+
+    function copyScannedWifiPass() {
+      const pass = (lastScannedText.match(/P:([^;]*)/i) || [])[1] || '';
+      if (pass) copyPlainText(pass, 'Đã sao chép mật khẩu WiFi!');
+    }
+
+    function copyScannedBankAccount() {
+      const info = parseVietQRPayload(lastScannedText);
+      if (info.account) copyPlainText(info.account, 'Đã sao chép số tài khoản ngân hàng!');
+    }
+
+    function transferDecodedToGenerator() {
+      if (!lastScannedText) return;
+      switchMainTab('generate');
+
+      if (lastScannedType === 'url') {
+        selectCategory('url');
+        document.getElementById('inp-url').value = lastScannedText;
+      } else if (lastScannedType === 'call') {
+        selectCategory('call');
+        document.getElementById('inp-call-phone').value = lastScannedText.replace(/^tel:/i, '');
+      } else if (lastScannedType === 'wifi') {
+        selectCategory('wifi');
+        document.getElementById('inp-wifi-ssid').value = (lastScannedText.match(/S:([^;]*)/i) || [])[1] || '';
+        document.getElementById('inp-wifi-pass').value = (lastScannedText.match(/P:([^;]*)/i) || [])[1] || '';
+        document.getElementById('inp-wifi-enc').value = (lastScannedText.match(/T:([^;]*)/i) || [])[1] || 'WPA';
+      } else if (lastScannedType === 'vietqr') {
+        selectCategory('vietqr');
+        const info = parseVietQRPayload(lastScannedText);
+        if (info.bin) document.getElementById('inp-bank-bin').value = info.bin;
+        if (info.account) document.getElementById('inp-bank-acc').value = info.account;
+        if (info.amount) document.getElementById('inp-bank-amount').value = info.amount;
+        if (info.memo) document.getElementById('inp-bank-memo').value = info.memo;
+      } else {
+        selectCategory('text');
+        document.getElementById('inp-text').value = lastScannedText;
+      }
+
+      updateQRCode();
+      showToast('Đã nạp dữ liệu sang trình tạo mã QR!');
+    }
+
+    function resetDecoderUI() {
+      document.getElementById('scanner-file-input').value = '';
+      document.getElementById('scanner-placeholder').classList.remove('hidden');
+      document.getElementById('scanner-preview-wrap').classList.add('hidden');
+      document.getElementById('scanner-preview-wrap').classList.remove('flex');
+      document.getElementById('btn-clear-decoder').classList.add('hidden');
+      document.getElementById('scanner-status-banner').classList.add('hidden');
+      document.getElementById('scanner-empty-view').classList.remove('hidden');
+      document.getElementById('scanner-result-view').classList.add('hidden');
+      document.getElementById('scanner-format-tag').classList.add('hidden');
+      lastScannedText = '';
+    }
+
+    function copyPlainText(text, msg) {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      showToast(msg);
+    }
+
+    let toastTimer = null;
+    function showToast(msg, isError = false) {
+      const toast = document.getElementById('toast');
+      const icon = document.getElementById('toast-icon');
+      document.getElementById('toast-message').textContent = msg;
+
+      if (isError) {
+        icon.className = 'w-6 h-6 rounded-full bg-rose-500/20 text-rose-400 flex items-center justify-center shrink-0';
+      } else {
+        icon.className = 'w-6 h-6 rounded-full bg-[#34d399]/20 text-[#34d399] flex items-center justify-center shrink-0';
+      }
+
+      toast.classList.remove('translate-y-24', 'opacity-0');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        toast.classList.add('translate-y-24', 'opacity-0');
+      }, 2800);
+    }
+  </script>
+</body>
+</html>
