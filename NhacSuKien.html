@@ -1370,7 +1370,13 @@
         let partyVolume = 70;
         let adminMode = false;
 
-        function initAppState() {
+function initAppState() {
+            // 1. Xóa sạch dữ liệu lưu tạm trong localStorage mỗi khi tải/F5/mở lại trang
+            try {
+                localStorage.removeItem('event_music_manager_state_v2');
+            } catch (e) {}
+
+            // 2. Chỉ đọc dữ liệu gốc nhúng trực tiếp trong file HTML (#app-embedded-state)
             let embeddedData = null;
             try {
                 const el = document.getElementById('app-embedded-state');
@@ -1380,34 +1386,24 @@
                 }
             } catch (e) {}
 
-            let localData = null;
-            try {
-                const raw = localStorage.getItem('event_music_manager_state_v2');
-                if (raw) localData = JSON.parse(raw);
-            } catch (e) {}
-
-            const chosen = (embeddedData && (!localData || (embeddedData.savedAt >= (localData.savedAt || 0))))
-                ? embeddedData
-                : localData;
-
-            if (chosen) {
-                if (Array.isArray(chosen.openingPlaylist) && chosen.openingPlaylist.length > 0) {
-                    openingPlaylist = chosen.openingPlaylist;
+            if (embeddedData) {
+                if (Array.isArray(embeddedData.openingPlaylist) && embeddedData.openingPlaylist.length > 0) {
+                    openingPlaylist = embeddedData.openingPlaylist;
                 }
-                if (Array.isArray(chosen.eventTabs) && chosen.eventTabs.length > 0) {
-                    eventTabs = chosen.eventTabs;
+                if (Array.isArray(embeddedData.eventTabs) && embeddedData.eventTabs.length > 0) {
+                    eventTabs = embeddedData.eventTabs;
                 }
-                if (chosen.activeTabId) {
-                    activeTabId = chosen.activeTabId;
+                if (embeddedData.activeTabId) {
+                    activeTabId = embeddedData.activeTabId;
                 }
-                if (Array.isArray(chosen.partyPlaylist) && chosen.partyPlaylist.length > 0) {
-                    partyPlaylist = chosen.partyPlaylist;
+                if (Array.isArray(embeddedData.partyPlaylist) && embeddedData.partyPlaylist.length > 0) {
+                    partyPlaylist = embeddedData.partyPlaylist;
                 }
-                if (typeof chosen.partyVolume === 'number') {
-                    partyVolume = chosen.partyVolume;
+                if (typeof embeddedData.partyVolume === 'number') {
+                    partyVolume = embeddedData.partyVolume;
                 }
-                if (Array.isArray(chosen.customCatalogItems)) {
-                    chosen.customCatalogItems.forEach(item => {
+                if (Array.isArray(embeddedData.customCatalogItems)) {
+                    embeddedData.customCatalogItems.forEach(item => {
                         if (!MUSIC_FOLDER_CATALOG.some(c => c.file.toLowerCase() === item.file.toLowerCase())) {
                             MUSIC_FOLDER_CATALOG.push(item);
                         }
@@ -1447,12 +1443,8 @@
         }
 
         function saveStateToStorage() {
-            const payload = buildCurrentStatePayload();
-            localStorage.setItem('event_music_manager_state_v2', JSON.stringify(payload));
-            const embeddedEl = document.getElementById('app-embedded-state');
-            if (embeddedEl) {
-                embeddedEl.textContent = JSON.stringify(payload);
-            }
+            // Không lưu vào localStorage để F5 hoặc tắt/bật lại luôn reset về dữ liệu gốc HTML
+            // Mọi thay đổi tạm thời chỉ giữ trên RAM cho đến khi bấm nút "Lưu HTML"
         }
 
         // Xuất ra file index.html sạch, lưu toàn bộ Tab, Ô nhạc và Link nhạc
