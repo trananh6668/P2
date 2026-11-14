@@ -2902,7 +2902,7 @@
     /* =========================================================================
        9. ĐIỀU KHIỂN TAB ẢNH & PHONG CÁCH
     ========================================================================= */
-    function bindFileInputs() {
+function bindFileInputs() {
       document.getElementById('input-single-slot').addEventListener('change', (e) => {
         const file = e.target.files[0];
         if (!file) return;
@@ -2966,6 +2966,75 @@
         if (e.target.id === 'workspace') {
           state.selectedOverlayId = null;
           syncTextPaneUI();
+          renderStage();
+        }
+      });
+
+      /* ==========================================================
+         THÊM MỚI: 1. HỖ TRỢ PASTE ẢNH TỪ CLIPBOARD (CTRL+V)
+      ========================================================== */
+      window.addEventListener('paste', (e) => {
+        // Tránh can thiệp khi người dùng đang gõ chữ trong ô input/textarea
+        if (['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
+
+        const items = e.clipboardData?.items;
+        if (!items) return;
+
+        for (const item of items) {
+          if (item.type.startsWith('image/')) {
+            e.preventDefault();
+            const file = item.getAsFile();
+            if (file) {
+              const url = URL.createObjectURL(file);
+              // Xác định ô đích: ưu tiên ô đang chọn, nếu chưa chọn thì tìm ô trống đầu tiên
+              let targetIdx = state.selectedSlot;
+              if (targetIdx === null || targetIdx < 0 || targetIdx >= state.slots.length) {
+                targetIdx = state.slots.findIndex(s => !s.photoUrl);
+                if (targetIdx === -1) targetIdx = 0;
+              }
+              loadPhotoIntoSlot(targetIdx, url);
+              syncSelectedSlotUI();
+              renderStage();
+              saveHistory();
+              showToast(`Đã dán ảnh vào ô #${targetIdx + 1}`);
+            }
+            break;
+          }
+        }
+      });
+
+		/* ==========================================================
+         CẬP NHẬT: XÓA ẢNH & ĐIỀU HƯỚNG Ô BẰNG PHÍM MŨI TÊN
+		========================================================== */
+      window.addEventListener('keydown', (e) => {
+        if (['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
+
+        // 1. Xóa ảnh trong ô bằng phím Delete hoặc Backspace
+        if (e.key === 'Delete' || e.key === 'Backspace') {
+          if (state.selectedSlot !== null && state.slots[state.selectedSlot]?.photoUrl) {
+            e.preventDefault();
+            removeSelectedSlotPhoto();
+            showToast('Đã xóa ảnh khỏi ô');
+          }
+          return;
+        }
+
+        // 2. Di chuyển giữa các ô ảnh bằng phím mũi tên
+        if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
+          if (!state.slots || state.slots.length === 0) return;
+          e.preventDefault();
+
+          let cur = state.selectedSlot !== null ? state.selectedSlot : 0;
+          let total = state.slots.length;
+
+          // Tính toán chuyển ô theo hướng mũi tên (có thể tùy chỉnh theo ý muốn)
+          if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+            cur = (cur + 1) % total; // Tiến tới ô kế tiếp (vòng tròn)
+          } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+            cur = (cur - 1 + total) % total; // Quay lại ô trước đó
+          }
+
+          selectSlot(cur);
           renderStage();
         }
       });
