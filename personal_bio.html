@@ -1,0 +1,1614 @@
+<!DOCTYPE html>
+<html lang="vi"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <title>Personal Bio &amp; Portfolio</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;family=Plus+Jakarta+Sans:wght@600;700;800&amp;display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-page: #f1f5f9;
+            --bg-card: #ffffff;
+            --bg-subtle: #f8fafc;
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --primary-soft: #eff6ff;
+            --text-main: #0f172a;
+            --text-secondary: #475569;
+            --text-muted: #94a3b8;
+            --border: #e2e8f0;
+            --radius-lg: 20px;
+            --radius-md: 14px;
+            --radius-sm: 10px;
+            --shadow-card: 0 10px 30px -5px rgba(15, 23, 42, 0.06);
+            --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            --font-heading: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: var(--font-sans);
+            background-color: var(--bg-page);
+            color: var(--text-main);
+            line-height: 1.6;
+            min-height: 100vh;
+            padding: 24px 16px 80px;
+        }
+
+        /* --- CHẾ ĐỘ CHỈNH SỬA ADMIN --- */
+        body.admin-mode [data-editable] {
+            outline: 1.5px dashed #f59e0b;
+            background-color: rgba(245, 158, 11, 0.08);
+            border-radius: 4px;
+            padding: 1px 4px;
+            cursor: text;
+            transition: all 0.2s;
+        }
+
+        body.admin-mode [data-editable]:focus,
+        body.admin-mode [data-editable]:hover {
+            outline: 2px solid #d97706;
+            background-color: rgba(245, 158, 11, 0.16);
+        }
+
+        .admin-only {
+            display: none !important;
+        }
+
+        body.admin-mode .admin-only {
+            display: inline-flex !important;
+        }
+
+        body.admin-mode .admin-only-block {
+            display: block !important;
+        }
+
+        /* --- KHUNG BIO CHÍNH (CHUẨN FORM BIO CÁ NHÂN) --- */
+        .bio-wrapper {
+            max-width: 680px;
+            margin: 0 auto;
+        }
+
+        /* PROFILE HEADER CARD */
+        .profile-card {
+            background: var(--bg-card);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            box-shadow: var(--shadow-card);
+            border: 1px solid var(--border);
+            margin-bottom: 18px;
+        }
+
+        .cover-wrap {
+            height: 185px;
+            position: relative;
+            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+            overflow: hidden;
+        }
+
+        .cover-wrap img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .cover-edit-btn {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: rgba(15, 23, 42, 0.75);
+            color: #fff;
+            border: 1px solid rgba(255,255,255,0.2);
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 0.78rem;
+            cursor: pointer;
+            backdrop-filter: blur(4px);
+        }
+
+        .profile-body {
+            padding: 0 28px 28px;
+            text-align: center;
+            position: relative;
+        }
+
+        .avatar-wrap {
+            width: 116px;
+            height: 116px;
+            border-radius: 50%;
+            border: 4px solid var(--bg-card);
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+            margin: -58px auto 14px;
+            position: relative;
+            background: #e2e8f0;
+            overflow: hidden;
+        }
+
+        .avatar-wrap img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .avatar-edit-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.55);
+            color: #fff;
+            font-size: 0.75rem;
+            font-weight: 600;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .profile-name-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            margin-bottom: 4px;
+        }
+
+        .profile-name {
+            font-family: var(--font-heading);
+            font-size: 1.55rem;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .verified-badge {
+            width: 20px;
+            height: 20px;
+            background: var(--primary);
+            color: #fff;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.72rem;
+            flex-shrink: 0;
+        }
+
+        .profile-role {
+            font-size: 0.92rem;
+            font-weight: 500;
+            color: var(--primary);
+            margin-bottom: 10px;
+        }
+
+        .profile-bio {
+            font-size: 0.92rem;
+            color: var(--text-secondary);
+            max-width: 520px;
+            margin: 0 auto 18px;
+        }
+
+        .profile-tags {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .tag-pill {
+            background: var(--bg-subtle);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            padding: 5px 12px;
+            border-radius: 20px;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .quick-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn-action {
+            padding: 10px 20px;
+            border-radius: var(--radius-sm);
+            font-size: 0.88rem;
+            font-weight: 600;
+            cursor: pointer;
+            border: 1px solid transparent;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: #fff;
+        }
+        .btn-primary:hover {
+            background: var(--primary-hover);
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: var(--bg-subtle);
+            color: var(--text-main);
+            border-color: var(--border);
+        }
+        .btn-secondary:hover {
+            background: #e2e8f0;
+        }
+
+        /* --- NAVIGATION TABS (THÔNG TIN / WORD / ẢNH) --- */
+        .tabs-bar {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            background: var(--bg-card);
+            padding: 6px;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-card);
+            margin-bottom: 18px;
+            gap: 6px;
+        }
+
+        .tab-btn {
+            padding: 11px 10px;
+            border: none;
+            background: transparent;
+            border-radius: 10px;
+            font-family: var(--font-sans);
+            font-size: 0.88rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .tab-btn:hover {
+            color: var(--text-main);
+            background: var(--bg-subtle);
+        }
+
+        .tab-btn.active {
+            background: var(--primary);
+            color: #fff;
+            box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25);
+        }
+
+        .tab-panel {
+            display: none;
+            animation: fadeIn 0.25s ease;
+        }
+
+        .tab-panel.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* --- TAB 1: THÔNG TIN & BLOCK LINKS --- */
+        .section-card {
+            background: var(--bg-card);
+            border-radius: var(--radius-lg);
+            padding: 22px;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-card);
+            margin-bottom: 16px;
+        }
+
+        .card-header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .card-title {
+            font-family: var(--font-heading);
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        .info-item {
+            background: var(--bg-subtle);
+            padding: 12px 14px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border);
+        }
+
+        .info-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            font-weight: 600;
+            margin-bottom: 3px;
+        }
+
+        .info-value {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text-main);
+        }
+
+        /* Block Links Stack */
+        .links-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 11px;
+        }
+
+        .bio-link-block {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 16px;
+            background: var(--bg-subtle);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            text-decoration: none;
+            color: var(--text-main);
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .bio-link-block:hover {
+            border-color: var(--primary);
+            background: var(--primary-soft);
+            transform: translateY(-2px);
+        }
+
+        .link-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            min-width: 0;
+        }
+
+        .link-icon-box {
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
+            background: #fff;
+            border: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            flex-shrink: 0;
+        }
+
+        .link-text-wrap {
+            min-width: 0;
+        }
+
+        .link-title {
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: var(--text-main);
+        }
+
+        .link-sub {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .link-arrow {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            margin-left: 10px;
+        }
+
+        /* --- TAB 2: WORD / TÀI LIỆU & BÀI VIẾT --- */
+        .docs-list {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .doc-card {
+            background: var(--bg-subtle);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 18px;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .doc-card:hover {
+            border-color: #cbd5e1;
+            background: #fff;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.04);
+        }
+
+        .doc-top {
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+        }
+
+        .doc-badge {
+            padding: 8px 10px;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            flex-shrink: 0;
+        }
+
+        .badge-word { background: #dbeafe; color: #1d4ed8; }
+        .badge-pdf { background: #fee2e2; color: #b91c1c; }
+        .badge-note { background: #fef3c7; color: #b45309; }
+
+        .doc-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .doc-title {
+            font-family: var(--font-heading);
+            font-size: 1.02rem;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 4px;
+        }
+
+        .doc-meta {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+
+        .doc-excerpt {
+            font-size: 0.88rem;
+            color: var(--text-secondary);
+            margin-bottom: 14px;
+        }
+
+        .doc-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .btn-doc {
+            padding: 6px 14px;
+            border-radius: 7px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            border: 1px solid var(--border);
+            background: #fff;
+            color: var(--text-main);
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.2s;
+        }
+
+        .btn-doc:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .btn-doc-primary {
+            background: var(--primary);
+            color: #fff;
+            border-color: var(--primary);
+        }
+        .btn-doc-primary:hover {
+            background: var(--primary-hover);
+            color: #fff;
+        }
+
+        /* --- TAB 3: THƯ VIỆN ẢNH --- */
+        .photo-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        .photo-item {
+            position: relative;
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            aspect-ratio: 4 / 3;
+            background: #e2e8f0;
+            cursor: pointer;
+            border: 1px solid var(--border);
+        }
+
+        .photo-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.35s ease;
+        }
+
+        .photo-item:hover img {
+            transform: scale(1.04);
+        }
+
+        .photo-caption {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 20px 12px 9px;
+            background: linear-gradient(transparent, rgba(15, 23, 42, 0.78));
+            color: #fff;
+            font-size: 0.8rem;
+        }
+
+        /* --- NÚT THÊM / XÓA ITEM TRONG ADMIN --- */
+        .btn-mini-add {
+            background: var(--primary-soft);
+            color: var(--primary);
+            border: 1px dashed var(--primary);
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            align-items: center;
+            gap: 4px;
+        }
+        .btn-mini-add:hover {
+            background: #dbeafe;
+        }
+
+        .btn-item-del {
+            background: #ef4444;
+            color: #fff;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin-left: 6px;
+        }
+
+        .photo-del-btn {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            z-index: 4;
+            background: rgba(220, 38, 38, 0.9);
+            color: #fff;
+            border: none;
+            padding: 5px 9px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .add-photo-dropzone {
+            display: none;
+            margin-top: 14px;
+            border: 2px dashed var(--primary);
+            background: var(--primary-soft);
+            border-radius: var(--radius-md);
+            padding: 22px;
+            text-align: center;
+            cursor: pointer;
+            color: var(--primary);
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        /* --- FOOTER --- */
+        .bio-footer {
+            text-align: center;
+            margin-top: 28px;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .admin-login-trigger {
+            margin-top: 8px;
+            display: inline-block;
+            color: var(--text-muted);
+            text-decoration: underline;
+            cursor: pointer;
+            font-size: 0.76rem;
+        }
+        .admin-login-trigger:hover {
+            color: var(--text-secondary);
+        }
+
+        /* --- ADMIN FLOATING TOOLBAR --- */
+        #admin-toolbar {
+            display: none;
+            position: fixed;
+            bottom: 16px;
+            right: 16px;
+            background: #0f172a;
+            color: #fff;
+            padding: 10px 14px;
+            border-radius: 12px;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+            z-index: 999;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            border: 1px solid #334155;
+        }
+
+        body.admin-mode #admin-toolbar {
+            display: flex;
+        }
+
+        .badge-admin {
+            background: #f59e0b;
+            color: #000;
+            font-weight: 700;
+            font-size: 0.72rem;
+            padding: 4px 8px;
+            border-radius: 6px;
+            text-transform: uppercase;
+        }
+
+        .btn-toolbar {
+            border: none;
+            padding: 8px 12px;
+            border-radius: 7px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            cursor: pointer;
+            color: #fff;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .btn-tb-blue { background: #2563eb; }
+        .btn-tb-green { background: #10b981; }
+        .btn-tb-gray { background: #475569; }
+
+        /* --- MODALS & LIGHTBOX --- */
+        .modal-backdrop {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.65);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 16px;
+        }
+
+        .modal-backdrop.open {
+            display: flex;
+        }
+
+        .modal-box {
+            background: #fff;
+            width: 100%;
+            max-width: 500px;
+            border-radius: 16px;
+            padding: 22px;
+            box-shadow: 0 20px 45px rgba(0, 0, 0, 0.25);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 12px;
+            margin-bottom: 16px;
+        }
+
+        .modal-head h3 {
+            font-family: var(--font-heading);
+            font-size: 1.15rem;
+        }
+
+        .modal-close {
+            border: none;
+            background: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-secondary);
+        }
+
+        .form-group {
+            margin-bottom: 14px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.82rem;
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: var(--text-main);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 9px 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-family: inherit;
+        }
+
+        .hint {
+            font-size: 0.76rem;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        /* Lightbox */
+        .lightbox {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.92);
+            z-index: 1100;
+            justify-content: center;
+            align-items: center;
+            padding: 16px;
+        }
+        .lightbox.open { display: flex; }
+        .lightbox img {
+            max-width: 94%;
+            max-height: 85vh;
+            border-radius: 8px;
+            object-fit: contain;
+        }
+        .lb-btn {
+            position: absolute;
+            background: rgba(255,255,255,0.2);
+            color: #fff;
+            border: none;
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            font-size: 1.4rem;
+            cursor: pointer;
+        }
+        .lb-close { top: 16px; right: 16px; }
+        .lb-prev { left: 14px; }
+        .lb-next { right: 14px; }
+
+        /* --- RESPONSIVE MOBILE --- */
+        @media (max-width: 600px) {
+            body {
+                padding: 12px 10px 80px;
+            }
+            .cover-wrap {
+                height: 145px;
+            }
+            .profile-body {
+                padding: 0 18px 22px;
+            }
+            .avatar-wrap {
+                width: 98px;
+                height: 98px;
+                margin-top: -49px;
+            }
+            .profile-name {
+                font-size: 1.35rem;
+            }
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+            .tab-btn {
+                font-size: 0.8rem;
+                padding: 10px 6px;
+            }
+            .section-card {
+                padding: 16px;
+            }
+            #admin-toolbar {
+                left: 10px;
+                right: 10px;
+                bottom: 10px;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body class="">
+
+    <div class="bio-wrapper">
+        <!-- 1. PROFILE HEADER CARD -->
+        <header class="profile-card">
+            <div class="cover-wrap">
+                <img id="cover-img" src="data:image/svg+xml;utf8,&lt;svg xmlns='http://www.w3.org/2000/svg' width='1200' height='400'&gt;&lt;defs&gt;&lt;linearGradient id='g' x1='0' y1='0' x2='1' y2='1'&gt;&lt;stop offset='0%25' stop-color='%231e293b'/&gt;&lt;stop offset='100%25' stop-color='%232563eb'/&gt;&lt;/linearGradient&gt;&lt;/defs&gt;&lt;rect fill='url(%23g)' width='1200' height='400'/&gt;&lt;/svg&gt;" alt="Ảnh bìa">
+                <button type="button" class="cover-edit-btn admin-only" onclick="openFolderModal('cover')">📷 Đổi ảnh bìa</button>
+            </div>
+
+            <div class="profile-body">
+                <div class="avatar-wrap">
+                    <img id="avatar-img" src="data:image/svg+xml;utf8,&lt;svg xmlns='http://www.w3.org/2000/svg' width='300' height='300'&gt;&lt;rect fill='%23cbd5e1' width='300' height='300'/&gt;&lt;text x='50%25' y='52%25' dominant-baseline='middle' text-anchor='middle' fill='%23475569' font-family='sans-serif' font-size='28' font-weight='bold'&gt;AVATAR&lt;/text&gt;&lt;/svg&gt;" alt="Avatar">
+                    <div class="avatar-edit-overlay admin-only" onclick="openFolderModal('avatar')">Đổi Avatar</div>
+                </div>
+
+                <div class="profile-name-row">
+                    <h1 class="profile-name" id="p-name" data-editable="">Trần Đăng Anh</h1>
+                    <span class="verified-badge" title="Verified">✓</span>
+                </div>
+
+                <div class="profile-role" id="p-role" data-editable="">Software Engineer</div>
+
+                <p class="profile-bio" id="p-bio" data-editable="">
+                    Xin chào!</p>
+
+                <div class="profile-tags">
+                    <span class="tag-pill" data-editable="">📍 Hà Nội, Việt Nam</span>
+                    <span class="tag-pill" data-editable="">💻 Full-stack &amp; AI</span>
+                    <span class="tag-pill" data-editable=""></span>
+                </div>
+
+                <div class="quick-actions">
+                    <a href="mailto:contact@example.com" id="btn-contact-email" class="btn-action btn-primary" data-editable="">✉️ Liên hệ trực tiếp</a>
+                    <button type="button" class="btn-action btn-secondary" onclick="downloadVCard()">📇 Lưu Danh Bạ</button>
+                    <button type="button" class="btn-action btn-secondary" onclick="copyBioUrl()">🔗 Chia sẻ Bio</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- 2. THANH CHUYỂN TABS: THÔNG TIN | WORD | ẢNH -->
+        <nav class="tabs-bar" role="tablist">
+            <button type="button" class="tab-btn active" onclick="switchTab('tab-info', this)">
+                👤 Thông tin
+            </button>
+            <button type="button" class="tab-btn" onclick="switchTab('tab-word', this)">
+                📄 Word &amp; Tài liệu
+            </button>
+            <button type="button" class="tab-btn" onclick="switchTab('tab-photos', this)">
+                🖼️ Thư viện Ảnh
+            </button>
+        </nav>
+
+        <!-- 3. NỘI DUNG TAB 1: THÔNG TIN & BLOCK LINKS -->
+        <main id="tab-info" class="tab-panel active">
+            <!-- Block Giới thiệu chi tiết -->
+            <section class="section-card">
+                <div class="card-header-row">
+                    <h2 class="card-title" data-editable="">📌 Thông tin cơ bản</h2>
+                </div>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <div class="info-label" data-editable="">Công việc hiện tại</div>
+                        <div class="info-value" id="info-work" data-editable="">SDV</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label" data-editable="">Học vấn</div>
+                        <div class="info-value" id="info-edu" data-editable=""><br></div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label" data-editable="">Email</div>
+                        <div class="info-value" id="info-email" data-editable=""><br></div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label" data-editable="">Điện thoại / Zalo</div>
+                        <div class="info-value" id="info-phone" data-editable=""><br></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Block Liên kết mạng xã hội & Kênh cá nhân -->
+            <section class="section-card">
+                <div class="card-header-row">
+                    <h2 class="card-title" data-editable="">🔗 Liên kết &amp; Mạng xã hội</h2>
+                    <button type="button" class="btn-mini-add admin-only" onclick="openAddLinkModal()">+ Thêm Block Link</button>
+                </div>
+
+                <div class="links-stack" id="links-stack">
+                    <a href="https://github.com" target="_blank" rel="noopener" class="bio-link-block" onclick="handleLinkClick(event, this)">
+                        <div class="link-left">
+                            <div class="link-icon-box" data-editable="">💻</div>
+                            <div class="link-text-wrap">
+                                <div class="link-title" data-editable="">GitHub Portfolio</div>
+                                <div class="link-sub" data-editable="">Mã nguồn dự án cá nhân &amp; Open Source</div>
+                            </div>
+                        </div>
+                        <div style="display:flex; align-items:center;">
+                            <button type="button" class="btn-item-del admin-only" onclick="editBlockLink(event, this)">Sửa URL</button>
+                            <button type="button" class="btn-item-del admin-only" onclick="deleteBlockItem(event, this)">Xóa</button>
+                            <span class="link-arrow">↗</span>
+                        </div>
+                    </a>
+
+                    <a href="https://linkedin.com" target="_blank" rel="noopener" class="bio-link-block" onclick="handleLinkClick(event, this)">
+                        <div class="link-left">
+                            <div class="link-icon-box" data-editable="">💼</div>
+                            <div class="link-text-wrap">
+                                <div class="link-title" data-editable="">LinkedIn Profile</div>
+                                <div class="link-sub" data-editable="">Kinh nghiệm làm việc &amp; Kết nối chuyên môn</div>
+                            </div>
+                        </div>
+                        <div style="display:flex; align-items:center;">
+                            <button type="button" class="btn-item-del admin-only" onclick="editBlockLink(event, this)">Sửa URL</button>
+                            <button type="button" class="btn-item-del admin-only" onclick="deleteBlockItem(event, this)">Xóa</button>
+                            <span class="link-arrow">↗</span>
+                        </div>
+                    </a>
+
+                    <a href="https://facebook.com" target="_blank" rel="noopener" class="bio-link-block" onclick="handleLinkClick(event, this)">
+                        <div class="link-left">
+                            <div class="link-icon-box" data-editable="">🌐</div>
+                            <div class="link-text-wrap">
+                                <div class="link-title" data-editable="">Facebook / Messenger</div>
+                                <div class="link-sub" data-editable="">Kết nối và nhắn tin trao đổi nhanh</div>
+                            </div>
+                        </div>
+                        <div style="display:flex; align-items:center;">
+                            <button type="button" class="btn-item-del admin-only" onclick="editBlockLink(event, this)">Sửa URL</button>
+                            <button type="button" class="btn-item-del admin-only" onclick="deleteBlockItem(event, this)">Xóa</button>
+                            <span class="link-arrow">↗</span>
+                        </div>
+                    </a>
+                </div>
+            </section>
+        </main>
+
+        <!-- 4. NỘI DUNG TAB 2: WORD / TÀI LIỆU & BÀI VIẾT -->
+        <section id="tab-word" class="tab-panel">
+            <div class="section-card">
+                <div class="card-header-row">
+                    <h2 class="card-title" data-editable="">📄 Tài liệu Word &amp; Bài viết</h2>
+                    <button type="button" class="btn-mini-add admin-only" onclick="openAddDocModal()">+ Thêm Word / Bài viết</button>
+                </div>
+
+                <div class="docs-list" id="docs-list">
+                    <!-- Tài liệu mẫu 1: File Word / CV -->
+                    <article class="doc-card">
+                        <div class="doc-top">
+                            <span class="doc-badge badge-word" data-editable="">DOCX</span>
+                            <div class="doc-info">
+                                <h3 class="doc-title" data-editable="">Hồ sơ năng lực &amp; CV Chi tiết (Bản Word)</h3>
+                                <div class="doc-meta" data-editable="">Cập nhật: 11/2026 • Định dạng Microsoft Word (.docx)</div>
+                                <p class="doc-excerpt" data-editable="">Tổng hợp quá trình công tác, các dự án phần mềm tiêu biểu, kỹ năng lập trình và chứng chỉ chuyên môn.</p>
+                                <div class="doc-actions">
+                                    <a href="docs/CV-Ca-Nhan.docx" class="btn-doc btn-doc-primary" download="" onclick="checkDocLink(event, this)">⬇️ Tải file Word</a>
+                                    <button type="button" class="btn-doc" onclick="openDocReader(this)">📖 Xem tóm tắt</button>
+                                    <button type="button" class="btn-item-del admin-only" onclick="editDocFileLink(this)">Gắn link file</button>
+                                    <button type="button" class="btn-item-del admin-only" onclick="deleteBlockItem(event, this)">Xóa</button>
+                                </div>
+                                <!-- Nội dung đầy đủ khi bấm Xem tóm tắt -->
+                                <div class="doc-full-content" style="display:none;" data-editable="">
+                                    <p><strong>1. Tóm tắt kinh nghiệm:</strong> Hơn 6 năm kinh nghiệm phát triển hệ thống phần mềm, ứng dụng web, mobile và triển khai các mô hình AI.</p>
+                                    <p><strong>2. Kỹ năng cốt lõi:</strong> Java, Kotlin, Python, C++, JavaScript/HTML/CSS, kiến trúc hệ thống và tối ưu hiệu năng.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </article>
+
+                    <!-- Tài liệu mẫu 2: Bài viết / Ghi chú -->
+                    <article class="doc-card">
+                        <div class="doc-top">
+                            <span class="doc-badge badge-note" data-editable="">BÀI VIẾT</span>
+                            <div class="doc-info">
+                                <h3 class="doc-title" data-editable="">Ghi chú kỹ thuật: Xây dựng hệ thống tối giản</h3>
+                                <div class="doc-meta" data-editable="">Chuyên mục: Công nghệ &amp; Tư duy • 5 phút đọc</div>
+                                <p class="doc-excerpt" data-editable="">Chia sẻ góc nhìn cá nhân về cách thiết kế phần mềm gọn nhẹ, dễ bảo trì và tập trung vào trải nghiệm thực tế của người dùng.</p>
+                                <div class="doc-actions">
+                                    <button type="button" class="btn-doc btn-doc-primary" onclick="openDocReader(this)">📖 Đọc bài viết</button>
+                                    <button type="button" class="btn-item-del admin-only" onclick="deleteBlockItem(event, this)">Xóa</button>
+                                </div>
+                                <div class="doc-full-content" style="display:none;" data-editable="">
+                                    <p>Một hệ thống tốt không phải là hệ thống nhồi nhét nhiều công nghệ phức tạp nhất, mà là hệ thống giải quyết đúng bài toán với độ ổn định cao và chi phí vận hành thấp nhất.</p>
+                                    <p>Khi bắt tay vào bất kỳ dự án nào, hãy luôn ưu tiên cấu trúc dữ liệu rõ ràng và giao diện trực quan trước tiên.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </article>
+                </div>
+            </div>
+        </section>
+
+        <!-- 5. NỘI DUNG TAB 3: THƯ VIỆN ẢNH -->
+        <section id="tab-photos" class="tab-panel">
+            <div class="section-card">
+                <div class="card-header-row">
+                    <h2 class="card-title" data-editable="">🖼️ Khoảnh khắc &amp; Hình ảnh</h2>
+                    <button type="button" class="btn-mini-add admin-only" onclick="openFolderModal('gallery')">+ Nhúng ảnh từ folder</button>
+                </div>
+
+                <div class="photo-grid" id="photo-grid">
+                    <div class="photo-item" onclick="openLightbox(this)">
+                        <button type="button" class="photo-del-btn admin-only" onclick="deletePhotoItem(event, this)">Xóa</button>
+                        <img src="data:image/svg+xml;utf8,&lt;svg xmlns='http://www.w3.org/2000/svg' width='600' height='450'&gt;&lt;rect fill='%23dbeafe' width='600' height='450'/&gt;&lt;text x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%231e40af' font-family='sans-serif' font-size='20'&gt;Workspace / Góc làm việc&lt;/text&gt;&lt;/svg&gt;" alt="Ảnh 1">
+                        <div class="photo-caption" data-editable="">Góc làm việc hàng ngày</div>
+                    </div>
+
+                    <div class="photo-item" onclick="openLightbox(this)">
+                        <button type="button" class="photo-del-btn admin-only" onclick="deletePhotoItem(event, this)">Xóa</button>
+                        <img src="data:image/svg+xml;utf8,&lt;svg xmlns='http://www.w3.org/2000/svg' width='600' height='450'&gt;&lt;rect fill='%23e2e8f0' width='600' height='450'/&gt;&lt;text x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%23334155' font-family='sans-serif' font-size='20'&gt;Chuyến đi &amp; Trải nghiệm&lt;/text&gt;&lt;/svg&gt;" alt="Ảnh 2">
+                        <div class="photo-caption" data-editable="">Hành trình khám phá</div>
+                    </div>
+                </div>
+
+                <!-- Ô bấm thêm nhanh ảnh từ folder (Chỉ hiện khi Admin) -->
+                <div class="add-photo-dropzone admin-only-block" onclick="openFolderModal('gallery')">
+                    + Bấm để chọn &amp; nhúng thêm ảnh từ thư mục của bạn
+                </div>
+            </div>
+        </section>
+
+        <!-- FOOTER -->
+        <footer class="bio-footer">
+            <div data-editable="">© 2026 Personal Bio Card. All rights reserved.</div>
+            <div class="admin-login-trigger" onclick="openLoginModal()">Quản trị viên (Edit)</div>
+        </footer>
+    </div>
+
+    <!-- THANH CÔNG CỤ ADMIN NỔI -->
+    <div id="admin-toolbar">
+        <span class="badge-admin">Chế độ Edit</span>
+        <button type="button" class="btn-toolbar btn-tb-blue" onclick="openFolderModal('gallery')">📁 Nhúng Ảnh Folder</button>
+        <button type="button" class="btn-toolbar btn-tb-green" onclick="exportCleanHTML()">💾 Lưu HTML Sạch</button>
+        <button type="button" class="btn-toolbar btn-tb-gray" onclick="logoutAdmin()">Thoát</button>
+    </div>
+
+    <!-- MODAL 1: ĐĂNG NHẬP ADMIN -->
+    <div class="modal-backdrop" id="login-modal">
+        <div class="modal-box" style="max-width: 360px;">
+            <div class="modal-head">
+                <h3>Đăng nhập Quản trị</h3>
+                <button type="button" class="modal-close" onclick="closeModal('login-modal')">×</button>
+            </div>
+            <form onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label>Tài khoản</label>
+                    <input type="text" id="admin-user" class="form-control" placeholder="admin" required="">
+                </div>
+                <div class="form-group">
+                    <label>Mật khẩu</label>
+                    <input type="password" id="admin-pass" class="form-control" placeholder="•••" required="">
+                </div>
+                <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:18px;">
+                    <button type="button" class="btn-toolbar btn-tb-gray" onclick="closeModal('login-modal')">Hủy</button>
+                    <button type="submit" class="btn-toolbar btn-tb-blue">Đăng nhập</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 2: NHÚNG LINK ẢNH / FILE TỪ FOLDER -->
+    <div class="modal-backdrop" id="folder-modal">
+        <div class="modal-box">
+            <div class="modal-head">
+                <h3>Nhúng Link Ảnh Từ Folder</h3>
+                <button type="button" class="modal-close" onclick="closeModal('folder-modal')">×</button>
+            </div>
+            <div class="form-group">
+                <label>1. Vị trí gắn ảnh</label>
+                <select id="embed-target" class="form-control">
+                    <option value="gallery">Thêm vào Thư viện Ảnh (Chọn nhiều ảnh)</option>
+                    <option value="avatar">Đổi Ảnh Đại Diện (Avatar)</option>
+                    <option value="cover">Đổi Ảnh Bìa (Cover Banner)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>2. Tên thư mục chứa ảnh (cùng cấp file index.html)</label>
+                <input type="text" id="folder-prefix" class="form-control" value="images/" placeholder="Ví dụ: images/">
+                <div class="hint">Để trống nếu ảnh nằm trực tiếp cùng cấp với file index.html.</div>
+            </div>
+            <div class="form-group">
+                <label>3. Chọn file từ máy để tự động ghép tên file</label>
+                <input type="file" id="local-picker" class="form-control" accept="image/*" multiple="" onchange="generatePathsFromFiles(this)">
+            </div>
+            <div class="form-group">
+                <label>4. Danh sách đường dẫn tương đối (Mỗi dòng 1 link)</label>
+                <textarea id="paths-textarea" class="form-control" rows="4" placeholder="images/avatar.jpg"></textarea>
+            </div>
+            <div style="display:flex; justify-content:flex-end; gap:8px;">
+                <button type="button" class="btn-toolbar btn-tb-gray" onclick="closeModal('folder-modal')">Đóng</button>
+                <button type="button" class="btn-toolbar btn-tb-green" onclick="applyFolderImages()">Áp dụng</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 3: THÊM BLOCK LINK MỚI -->
+    <div class="modal-backdrop" id="add-link-modal">
+        <div class="modal-box" style="max-width: 420px;">
+            <div class="modal-head">
+                <h3>Thêm Block Liên Kết Mới</h3>
+                <button type="button" class="modal-close" onclick="closeModal('add-link-modal')">×</button>
+            </div>
+            <form onsubmit="createBlockLink(event)">
+                <div class="form-group">
+                    <label>Biểu tượng (Emoji)</label>
+                    <input type="text" id="new-link-icon" class="form-control" required="">
+                </div>
+                <div class="form-group">
+                    <label>Tiêu đề nút</label>
+                    <input type="text" id="new-link-title" class="form-control" placeholder="Ví dụ: Kênh YouTube / Zalo" required="">
+                </div>
+                <div class="form-group">
+                    <label>Mô tả ngắn</label>
+                    <input type="text" id="new-link-sub" class="form-control" placeholder="Mô tả nội dung đường dẫn...">
+                </div>
+                <div class="form-group">
+                    <label>Đường dẫn (URL)</label>
+                    <input type="url" id="new-link-url" class="form-control" placeholder="https://..." required="">
+                </div>
+                <div style="display:flex; justify-content:flex-end; gap:8px;">
+                    <button type="button" class="btn-toolbar btn-tb-gray" onclick="closeModal('add-link-modal')">Hủy</button>
+                    <button type="submit" class="btn-toolbar btn-tb-blue">Thêm Block</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 4: THÊM TÀI LIỆU WORD / BÀI VIẾT -->
+    <div class="modal-backdrop" id="add-doc-modal">
+        <div class="modal-box">
+            <div class="modal-head">
+                <h3>Thêm Tài Liệu Word / Bài Viết</h3>
+                <button type="button" class="modal-close" onclick="closeModal('add-doc-modal')">×</button>
+            </div>
+            <form onsubmit="createDocCard(event)">
+                <div class="form-group">
+                    <label>Loại thẻ</label>
+                    <select id="new-doc-type" class="form-control">
+                        <option value="word">File Word (.docx)</option>
+                        <option value="pdf">File PDF (.pdf)</option>
+                        <option value="note">Bài viết / Ghi chú văn bản</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Tiêu đề tài liệu / bài viết</label>
+                    <input type="text" id="new-doc-title" class="form-control" placeholder="Ví dụ: Đề cương nghiên cứu / CV 2026" required="">
+                </div>
+                <div class="form-group">
+                    <label>Đường dẫn file trong folder (Nếu có file Word/PDF tải về)</label>
+                    <input type="text" id="new-doc-file" class="form-control" placeholder="docs/ten-tai-lieu.docx">
+                    <div class="hint">Để trống nếu đây là bài viết đọc trực tiếp trên web.</div>
+                </div>
+                <div class="form-group">
+                    <label>Tóm tắt ngắn bên ngoài</label>
+                    <textarea id="new-doc-excerpt" class="form-control" rows="2" required=""></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Nội dung chi tiết khi bấm "Đọc bài viết"</label>
+                    <textarea id="new-doc-content" class="form-control" rows="4" placeholder="Nhập nội dung đầy đủ..."></textarea>
+                </div>
+                <div style="display:flex; justify-content:flex-end; gap:8px;">
+                    <button type="button" class="btn-toolbar btn-tb-gray" onclick="closeModal('add-doc-modal')">Hủy</button>
+                    <button type="submit" class="btn-toolbar btn-tb-blue">Thêm vào Tab Word</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 5: ĐỌC NỘI DUNG BÀI VIẾT / WORD -->
+    <div class="modal-backdrop" id="reader-modal" onclick="if(event.target===this) closeModal('reader-modal')">
+        <div class="modal-box" style="max-width: 600px;">
+            <div class="modal-head">
+                <h3 id="reader-title">Chi tiết tài liệu</h3>
+                <button type="button" class="modal-close" onclick="closeModal('reader-modal')">×</button>
+            </div>
+            <div id="reader-body" style="font-size:0.95rem; color:var(--text-main); line-height:1.75; display:flex; flex-direction:column; gap:12px;"></div>
+        </div>
+    </div>
+
+    <!-- LIGHTBOX XEM ẢNH -->
+    <div class="lightbox" id="lightbox" onclick="closeLightbox(event)">
+        <button type="button" class="lb-btn lb-close" onclick="closeLightbox(event)">×</button>
+        <button type="button" class="lb-btn lb-prev" onclick="stepLightbox(-1, event)">❮</button>
+        <img id="lightbox-img" src="" alt="Preview">
+        <button type="button" class="lb-btn lb-next" onclick="stepLightbox(1, event)">❯</button>
+    </div>
+
+    <script>
+        // --- ĐĂNG NHẬP ADMIN (admin / 123) ---
+        const ADMIN_USER = 'admin';
+        const ADMIN_PASS = '123';
+
+        function openLoginModal() {
+            if (document.body.classList.contains('admin-mode')) return;
+            document.getElementById('login-modal').classList.add('open');
+            document.getElementById('admin-user').focus();
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('open');
+        }
+
+        function handleLogin(e) {
+            e.preventDefault();
+            const u = document.getElementById('admin-user').value.trim();
+            const p = document.getElementById('admin-pass').value.trim();
+            if (u === ADMIN_USER && p === ADMIN_PASS) {
+                document.body.classList.add('admin-mode');
+                document.querySelectorAll('[data-editable]').forEach(el => {
+                    el.setAttribute('contenteditable', 'true');
+                });
+                closeModal('login-modal');
+                document.getElementById('admin-user').value = '';
+                document.getElementById('admin-pass').value = '';
+            } else {
+                alert('Sai tài khoản hoặc mật khẩu!');
+            }
+        }
+
+        function logoutAdmin() {
+            document.body.classList.remove('admin-mode');
+            document.querySelectorAll('[data-editable]').forEach(el => {
+                el.removeAttribute('contenteditable');
+            });
+            try { localStorage.clear(); sessionStorage.clear(); } catch (e) {}
+        }
+
+        // --- CHUYỂN TABS ---
+        function switchTab(tabId, btn) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+            btn.classList.add('active');
+            document.getElementById(tabId).classList.add('active');
+        }
+
+        // --- NHÚNG ẢNH TỪ FOLDER ---
+        function openFolderModal(target = 'gallery') {
+            document.getElementById('embed-target').value = target;
+            document.getElementById('folder-modal').classList.add('open');
+        }
+
+        function generatePathsFromFiles(input) {
+            if (!input.files || input.files.length === 0) return;
+            let prefix = document.getElementById('folder-prefix').value.trim();
+            if (prefix && !prefix.endsWith('/')) prefix += '/';
+            const paths = Array.from(input.files).map(f => prefix + f.name);
+            document.getElementById('paths-textarea').value = paths.join('\n');
+        }
+
+        function applyFolderImages() {
+            const target = document.getElementById('embed-target').value;
+            const raw = document.getElementById('paths-textarea').value.trim();
+            if (!raw) {
+                alert('Vui lòng chọn file hoặc nhập đường dẫn ảnh!');
+                return;
+            }
+            const paths = raw.split('\n').map(s => s.trim()).filter(Boolean);
+
+            if (target === 'avatar') {
+                document.getElementById('avatar-img').src = paths[0];
+            } else if (target === 'cover') {
+                document.getElementById('cover-img').src = paths[0];
+            } else if (target === 'gallery') {
+                const grid = document.getElementById('photo-grid');
+                const isAdmin = document.body.classList.contains('admin-mode');
+                paths.forEach(p => {
+                    const div = document.createElement('div');
+                    div.className = 'photo-item';
+                    div.setAttribute('onclick', 'openLightbox(this)');
+                    div.innerHTML = `
+                        <button type="button" class="photo-del-btn admin-only" onclick="deletePhotoItem(event, this)">Xóa</button>
+                        <img src="${escapeHtml(p)}" alt="Ảnh cá nhân" loading="lazy">
+                        <div class="photo-caption" data-editable ${isAdmin ? 'contenteditable="true"' : ''}>Mô tả ảnh</div>
+                    `;
+                    grid.appendChild(div);
+                });
+            }
+
+            document.getElementById('paths-textarea').value = '';
+            document.getElementById('local-picker').value = '';
+            closeModal('folder-modal');
+        }
+
+        function deletePhotoItem(e, btn) {
+            e.stopPropagation();
+            if (confirm('Xóa ảnh này khỏi thư viện?')) {
+                btn.closest('.photo-item').remove();
+            }
+        }
+
+        // --- QUẢN LÝ BLOCK LINKS ---
+        function handleLinkClick(e, anchor) {
+            if (document.body.classList.contains('admin-mode')) {
+                e.preventDefault(); // Ngăn nhảy trang khi đang bấm sửa chữ trong chế độ Admin
+            }
+        }
+
+        function openAddLinkModal() {
+            document.getElementById('add-link-modal').classList.add('open');
+        }
+
+        function createBlockLink(e) {
+            e.preventDefault();
+            const icon = document.getElementById('new-link-icon').value.trim() || '🔗';
+            const title = document.getElementById('new-link-title').value.trim();
+            const sub = document.getElementById('new-link-sub').value.trim();
+            const url = document.getElementById('new-link-url').value.trim();
+            const isAdmin = document.body.classList.contains('admin-mode');
+
+            const a = document.createElement('a');
+            a.href = url;
+            a.target = '_blank';
+            a.rel = 'noopener';
+            a.className = 'bio-link-block';
+            a.setAttribute('onclick', 'handleLinkClick(event, this)');
+            a.innerHTML = `
+                <div class="link-left">
+                    <div class="link-icon-box" data-editable ${isAdmin ? 'contenteditable="true"' : ''}>${escapeHtml(icon)}</div>
+                    <div class="link-text-wrap">
+                        <div class="link-title" data-editable ${isAdmin ? 'contenteditable="true"' : ''}>${escapeHtml(title)}</div>
+                        <div class="link-sub" data-editable ${isAdmin ? 'contenteditable="true"' : ''}>${escapeHtml(sub)}</div>
+                    </div>
+                </div>
+                <div style="display:flex; align-items:center;">
+                    <button type="button" class="btn-item-del admin-only" onclick="editBlockLink(event, this)">Sửa URL</button>
+                    <button type="button" class="btn-item-del admin-only" onclick="deleteBlockItem(event, this)">Xóa</button>
+                    <span class="link-arrow">↗</span>
+                </div>
+            `;
+            document.getElementById('links-stack').appendChild(a);
+            e.target.reset();
+            closeModal('add-link-modal');
+        }
+
+        function editBlockLink(e, btn) {
+            e.preventDefault();
+            e.stopPropagation();
+            const anchor = btn.closest('.bio-link-block');
+            const newUrl = prompt('Nhập đường dẫn URL mới:', anchor.getAttribute('href'));
+            if (newUrl !== null && newUrl.trim() !== '') {
+                anchor.setAttribute('href', newUrl.trim());
+            }
+        }
+
+        function deleteBlockItem(e, btn) {
+            e.preventDefault();
+            e.stopPropagation();
+            if (confirm('Xóa mục này?')) {
+                const target = btn.closest('.bio-link-block') || btn.closest('.doc-card');
+                if (target) target.remove();
+            }
+        }
+
+        // --- QUẢN LÝ TAB WORD / TÀI LIỆU ---
+        function openAddDocModal() {
+            document.getElementById('add-doc-modal').classList.add('open');
+        }
+
+        function createDocCard(e) {
+            e.preventDefault();
+            const type = document.getElementById('new-doc-type').value;
+            const title = document.getElementById('new-doc-title').value.trim();
+            const filePath = document.getElementById('new-doc-file').value.trim();
+            const excerpt = document.getElementById('new-doc-excerpt').value.trim();
+            const content = document.getElementById('new-doc-content').value.trim();
+            const isAdmin = document.body.classList.contains('admin-mode');
+
+            const badgeMap = {
+                word: { cls: 'badge-word', text: 'DOCX' },
+                pdf: { cls: 'badge-pdf', text: 'PDF' },
+                note: { cls: 'badge-note', text: 'BÀI VIẾT' }
+            };
+
+            const downloadBtnHtml = filePath
+                ? `<a href="${escapeHtml(filePath)}" class="btn-doc btn-doc-primary" download onclick="checkDocLink(event, this)">⬇️ Tải tài liệu</a>`
+                : '';
+
+            const article = document.createElement('article');
+            article.className = 'doc-card';
+            article.innerHTML = `
+                <div class="doc-top">
+                    <span class="doc-badge ${badgeMap[type].cls}" data-editable ${isAdmin ? 'contenteditable="true"' : ''}>${badgeMap[type].text}</span>
+                    <div class="doc-info">
+                        <h3 class="doc-title" data-editable ${isAdmin ? 'contenteditable="true"' : ''}>${escapeHtml(title)}</h3>
+                        <div class="doc-meta" data-editable ${isAdmin ? 'contenteditable="true"' : ''}>Tài liệu cá nhân</div>
+                        <p class="doc-excerpt" data-editable ${isAdmin ? 'contenteditable="true"' : ''}>${escapeHtml(excerpt)}</p>
+                        <div class="doc-actions">
+                            ${downloadBtnHtml}
+                            <button type="button" class="btn-doc" onclick="openDocReader(this)">📖 Xem nội dung</button>
+                            <button type="button" class="btn-item-del admin-only" onclick="editDocFileLink(this)">Gắn link file</button>
+                            <button type="button" class="btn-item-del admin-only" onclick="deleteBlockItem(event, this)">Xóa</button>
+                        </div>
+                        <div class="doc-full-content" style="display:none;" data-editable ${isAdmin ? 'contenteditable="true"' : ''}>
+                            <p>${escapeHtml(content || excerpt)}</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.getElementById('docs-list').prepend(article);
+            e.target.reset();
+            closeModal('add-doc-modal');
+        }
+
+        function editDocFileLink(btn) {
+            const card = btn.closest('.doc-card');
+            let linkEl = card.querySelector('a[download]');
+            const currentHref = linkEl ? linkEl.getAttribute('href') : 'docs/tai-lieu.docx';
+            const newHref = prompt('Nhập đường dẫn tương đối tới file Word/PDF trong folder (vd: docs/CV.docx):', currentHref);
+            if (newHref === null) return;
+
+            if (newHref.trim() === '') {
+                if (linkEl) linkEl.remove();
+            } else {
+                if (!linkEl) {
+                    linkEl = document.createElement('a');
+                    linkEl.className = 'btn-doc btn-doc-primary';
+                    linkEl.setAttribute('download', '');
+                    linkEl.setAttribute('onclick', 'checkDocLink(event, this)');
+                    linkEl.innerText = '⬇️ Tải tài liệu';
+                    card.querySelector('.doc-actions').prepend(linkEl);
+                }
+                linkEl.setAttribute('href', newHref.trim());
+            }
+        }
+
+        function checkDocLink(e, link) {
+            if (document.body.classList.contains('admin-mode')) {
+                e.preventDefault();
+                alert('Đường dẫn file hiện tại: ' + link.getAttribute('href') + '\n(Thoát chế độ Admin hoặc lưu file HTML để tải file trực tiếp)');
+            }
+        }
+
+        function openDocReader(btn) {
+            const card = btn.closest('.doc-card');
+            const title = card.querySelector('.doc-title').innerText;
+            const fullHtml = card.querySelector('.doc-full-content').innerHTML;
+            document.getElementById('reader-title').innerText = title;
+            document.getElementById('reader-body').innerHTML = fullHtml;
+            document.getElementById('reader-modal').classList.add('open');
+        }
+
+        // --- TIỆN ÍCH DANH BẠ & CHIA SẺ ---
+        function downloadVCard() {
+            const name = document.getElementById('p-name').innerText.trim();
+            const role = document.getElementById('p-role').innerText.trim();
+            const email = document.getElementById('info-email').innerText.trim();
+            const phone = document.getElementById('info-phone').innerText.trim();
+
+            const vcard = [
+                'BEGIN:VCARD',
+                'VERSION:3.0',
+                `FN:${name}`,
+                `TITLE:${role}`,
+                `TEL;TYPE=CELL:${phone}`,
+                `EMAIL:${email}`,
+                'END:VCARD'
+            ].join('\n');
+
+            const blob = new Blob([vcard], { type: 'text/vcard;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${name.replace(/\s+/g, '_')}.vcf`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function copyBioUrl() {
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(window.location.href).then(() => {
+                    alert('Đã sao chép liên kết trang Bio!');
+                });
+            } else {
+                alert('Liên kết trang: ' + window.location.href);
+            }
+        }
+
+        // --- LIGHTBOX XEM ẢNH ---
+        let lbIndex = 0;
+        function getGallerySources() {
+            return Array.from(document.querySelectorAll('#photo-grid .photo-item img')).map(img => img.src);
+        }
+
+        function openLightbox(item) {
+            if (document.body.classList.contains('admin-mode') && document.activeElement.hasAttribute('data-editable')) {
+                return;
+            }
+            const sources = getGallerySources();
+            const src = item.querySelector('img').src;
+            lbIndex = Math.max(0, sources.indexOf(src));
+            document.getElementById('lightbox-img').src = sources[lbIndex];
+            document.getElementById('lightbox').classList.add('open');
+        }
+
+        function closeLightbox(e) {
+            if (e.target.id === 'lightbox' || e.target.classList.contains('lb-close')) {
+                document.getElementById('lightbox').classList.remove('open');
+            }
+        }
+
+        function stepLightbox(dir, e) {
+            e.stopPropagation();
+            const sources = getGallerySources();
+            if (!sources.length) return;
+            lbIndex = (lbIndex + dir + sources.length) % sources.length;
+            document.getElementById('lightbox-img').src = sources[lbIndex];
+        }
+
+        // --- XUẤT FILE HTML SẠCH ---
+        function exportCleanHTML() {
+            // Đồng bộ link email trên nút Liên hệ trực tiếp với ô Email trong phần Thông tin
+            const emailVal = document.getElementById('info-email').innerText.trim();
+            if (emailVal.includes('@')) {
+                document.getElementById('btn-contact-email').setAttribute('href', 'mailto:' + emailVal);
+            }
+
+            const cloneDoc = document.documentElement.cloneNode(true);
+            cloneDoc.querySelector('body').classList.remove('admin-mode');
+
+            cloneDoc.querySelectorAll('[data-editable]').forEach(el => {
+                el.removeAttribute('contenteditable');
+            });
+
+            cloneDoc.querySelectorAll('.modal-backdrop, .lightbox').forEach(el => {
+                el.classList.remove('open');
+            });
+
+            cloneDoc.querySelectorAll('input, textarea').forEach(inp => {
+                if (inp.id !== 'folder-prefix') {
+                    inp.value = '';
+                    inp.removeAttribute('value');
+                }
+            });
+
+            const cleanHtml = '<!DOCTYPE html>\n' + cloneDoc.outerHTML;
+            const blob = new Blob([cleanHtml], { type: 'text/html;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'personal_bio.html';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            try { localStorage.clear(); sessionStorage.clear(); } catch (e) {}
+        }
+
+        function escapeHtml(str) {
+            return str.replace(/&/g, "&amp;")
+                      .replace(/</g, "&lt;")
+                      .replace(/>/g, "&gt;")
+                      .replace(/"/g, "&quot;");
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                document.getElementById('lightbox').classList.remove('open');
+                ['login-modal', 'folder-modal', 'add-link-modal', 'add-doc-modal', 'reader-modal'].forEach(closeModal);
+            }
+        });
+    </script>
+
+</body></html>

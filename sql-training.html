@@ -1,0 +1,1167 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SQL Training Pro Studio - Lý Thuyết, ERD & Thực Hành Nâng Cao</title>
+    <script src="https://cdn.jsdelivr.net/npm/alasql@4.4.0/dist/alasql.min.js"></script>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1e40af;
+            --primary-light: #eff6ff;
+            --bg-main: #f1f5f9;
+            --bg-card: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #475569;
+            --border: #cbd5e1;
+            --code-bg: #0f172a;
+            --code-text: #38bdf8;
+            --success: #16a34a;
+            --danger: #dc2626;
+            --warning: #d97706;
+            --purple: #7c3aed;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
+        body { background: var(--bg-main); color: var(--text-main); line-height: 1.6; }
+
+        /* Header */
+        header {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: white;
+            padding: 0.9rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .logo { font-size: 1.3rem; font-weight: 800; display: flex; align-items: center; gap: 10px; letter-spacing: -0.5px; }
+        .logo span { color: var(--code-text); }
+        .logo small { font-size: 0.72rem; background: var(--primary); padding: 2px 8px; border-radius: 12px; font-weight: 600; }
+
+        .nav-tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+        .nav-btn {
+            background: rgba(255,255,255,0.06);
+            color: #cbd5e1;
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+        .nav-btn:hover { background: rgba(255,255,255,0.15); color: white; }
+        .nav-btn.active { background: var(--primary); color: white; border-color: var(--primary); box-shadow: 0 2px 8px rgba(37,99,235,0.4); }
+
+        /* Layout */
+        .container { max-width: 1400px; margin: 20px auto; padding: 0 20px; }
+        .tab-content { display: none; animation: fadeIn 0.25s ease; }
+        .tab-content.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 22px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 6px rgba(15, 23, 42, 0.04);
+        }
+        .card h2 { font-size: 1.25rem; margin-bottom: 14px; color: var(--primary-dark); border-bottom: 2px solid #e2e8f0; padding-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+        .card h3 { font-size: 1.05rem; margin: 16px 0 8px; color: #1e293b; }
+
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+        .grid-5 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
+        @media (max-width: 1100px) { .grid-5 { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 900px) { .grid-2, .grid-3, .grid-5 { grid-template-columns: 1fr; } }
+
+        /* Theory Sub-navigation */
+        .theory-layout { display: grid; grid-template-columns: 260px 1fr; gap: 20px; }
+        @media (max-width: 900px) { .theory-layout { grid-template-columns: 1fr; } }
+        .theory-menu { position: sticky; top: 80px; align-self: start; }
+        .theory-menu-item {
+            display: block;
+            width: 100%;
+            text-align: left;
+            padding: 10px 14px;
+            margin-bottom: 6px;
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            transition: 0.15s;
+        }
+        .theory-menu-item:hover { border-color: var(--primary); color: var(--primary); }
+        .theory-menu-item.active { background: var(--primary); color: white; border-color: var(--primary); }
+
+        /* Badges & Code Boxes */
+        .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 0.78rem; font-weight: 700; font-family: monospace; }
+        .b-blue { background: #dbeafe; color: #1e40af; }
+        .b-green { background: #dcfce7; color: #166534; }
+        .b-amber { background: #fef3c7; color: #92400e; }
+        .b-purple { background: #f3e8ff; color: #6b21a8; }
+        .b-red { background: #fee2e2; color: #991b1b; }
+
+        .syntax-box {
+            background: #0f172a;
+            color: #e2e8f0;
+            border-left: 4px solid var(--code-text);
+            padding: 12px 16px;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 0.88rem;
+            border-radius: 0 8px 8px 0;
+            margin: 10px 0;
+            white-space: pre-wrap;
+            overflow-x: auto;
+        }
+        .kw { color: #38bdf8; font-weight: bold; }
+        .fn { color: #fbbf24; }
+        .str { color: #4ade80; }
+        .cmt { color: #64748b; font-style: italic; }
+
+        /* ERD Diagram Detailed */
+        .erd-canvas {
+            background: #f8fafc;
+            background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
+            background-size: 20px 20px;
+            border: 1px solid #cbd5e1;
+            border-radius: 10px;
+            padding: 25px;
+            overflow-x: auto;
+        }
+        .erd-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(270px, 1fr));
+            gap: 28px;
+            align-items: start;
+            min-width: 880px;
+        }
+        .erd-entity {
+            background: white;
+            border: 2px solid #334155;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 6px 15px rgba(0,0,0,0.06);
+        }
+        .erd-entity.fact-table { border-color: #16a34a; }
+        .erd-entity-header {
+            background: #1e293b;
+            color: white;
+            padding: 8px 12px;
+            font-weight: 700;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.95rem;
+        }
+        .erd-entity.fact-table .erd-entity-header { background: #15803d; }
+        .erd-attr {
+            display: grid;
+            grid-template-columns: 46px 1fr auto;
+            gap: 6px;
+            padding: 6px 10px;
+            border-bottom: 1px solid #f1f5f9;
+            font-size: 0.83rem;
+            align-items: center;
+        }
+        .erd-attr:last-child { border-bottom: none; }
+        .key-badge { font-size: 0.7rem; font-weight: 800; padding: 1px 5px; border-radius: 3px; text-align: center; }
+        .k-pk { background: #fef3c7; color: #b45309; border: 1px solid #f59e0b; }
+        .k-fk { background: #dcfce7; color: #15803d; border: 1px solid #22c55e; }
+        .k-uq { background: #e0e7ff; color: #4338ca; }
+        .attr-type { color: #64748b; font-family: monospace; font-size: 0.78rem; }
+
+        .rel-legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 15px;
+            padding: 12px;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            font-size: 0.85rem;
+        }
+
+        /* Join Cards */
+        .join-card {
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 14px;
+            background: #fff;
+            text-align: center;
+            transition: transform 0.2s;
+        }
+        .join-card:hover { transform: translateY(-3px); border-color: var(--primary); }
+        .join-card code { display: block; margin-top: 8px; background: #f1f5f9; padding: 4px; border-radius: 4px; font-size: 0.78rem; color: #0f172a; }
+
+        /* Practice Workspace */
+.workspace { 
+    display: grid; 
+    grid-template-columns: 340px 1fr; 
+    gap: 20px; 
+    align-items: start; /* Giúp cột trái cố định, không bị kéo dãn theo cột phải */
+}
+        @media (max-width: 1000px) { .workspace { grid-template-columns: 1fr; } }
+
+        .filter-pills { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 10px; }
+        .pill {
+            font-size: 0.75rem;
+            padding: 4px 8px;
+            border-radius: 12px;
+            border: 1px solid #cbd5e1;
+            background: #f8fafc;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        .pill.active { background: var(--primary); color: white; border-color: var(--primary); }
+
+.lesson-list { 
+    list-style: none; 
+    max-height: calc(95vh - 160px); /* Tăng chiều cao tối đa chiếm gần hết chiều dọc màn hình */
+    overflow-y: auto;  /* Giữ nguyên thanh cuộn mượt mà */
+    padding-right: 6px; 
+}
+        .lesson-item {
+            padding: 10px 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: 0.15s;
+            background: white;
+        }
+        .lesson-item:hover { border-color: var(--primary); background: #f8fafc; }
+        .lesson-item.active { border-color: var(--primary); background: #eff6ff; box-shadow: inset 3px 0 0 var(--primary); }
+        .lesson-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 3px; }
+        .lesson-tag { font-size: 0.7rem; color: var(--primary); text-transform: uppercase; font-weight: 700; }
+        .diff-badge { font-size: 0.68rem; padding: 1px 6px; border-radius: 4px; font-weight: 700; }
+        .d-basic { background: #dcfce7; color: #166534; }
+        .d-inter { background: #fef3c7; color: #92400e; }
+        .d-adv { background: #f3e8ff; color: #6b21a8; }
+
+        /* Editor & Controls */
+        .editor-wrapper {
+            background: var(--code-bg);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 12px;
+            border: 1px solid #334155;
+        }
+        .editor-header {
+            background: #1e293b;
+            padding: 6px 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #94a3b8;
+            font-size: 0.8rem;
+            font-family: monospace;
+        }
+        textarea#sqlInput {
+            width: 100%;
+            height: 165px;
+            padding: 14px;
+            background: transparent;
+            color: #f8fafc;
+            border: none;
+            outline: none;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 0.98rem;
+            resize: vertical;
+            line-height: 1.55;
+        }
+
+        .toolbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 14px; }
+        .btn {
+            padding: 8px 14px;
+            border: none;
+            border-radius: 7px;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.86rem;
+            transition: 0.15s;
+        }
+        .btn-run { background: var(--success); color: white; }
+        .btn-run:hover { background: #15803d; }
+        .btn-sample { background: var(--primary); color: white; }
+        .btn-sample:hover { background: var(--primary-dark); }
+        .btn-csv { background: #0284c7; color: white; }
+        .btn-csv:hover { background: #0369a1; }
+        .btn-clear { background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; }
+        .btn-clear:hover { background: #e2e8f0; }
+        .btn-reset { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; margin-left: auto; }
+        .btn-reset:hover { background: #fee2e2; }
+
+        /* Tables */
+        .table-wrapper { overflow-x: auto; border: 1px solid #e2e8f0; border-radius: 8px; margin-top: 8px; background: white; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.88rem; text-align: left; }
+        th { background: #f8fafc; color: #1e293b; font-weight: 700; padding: 9px 12px; border-bottom: 2px solid #cbd5e1; white-space: nowrap; }
+        td { padding: 8px 12px; border-bottom: 1px solid #f1f5f9; }
+        tr:hover td { background: #f1f5f9; }
+
+        .status-msg { padding: 10px 14px; border-radius: 8px; font-size: 0.88rem; margin-bottom: 12px; display: none; font-weight: 500; }
+        .status-success { background: #dcfce7; color: #166534; border: 1px solid #86efac; display: block; }
+        .status-error { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; display: block; }
+
+        .mini-db-preview { margin-top: 18px; padding-top: 16px; border-top: 2px dashed #e2e8f0; }
+        .mini-tabs { display: flex; flex-wrap: wrap; gap: 6px; }
+        .mini-tab { padding: 5px 11px; font-size: 0.8rem; border: 1px solid #cbd5e1; background: #f8fafc; border-radius: 6px; cursor: pointer; font-weight: 600; }
+        .mini-tab.active { background: #1e293b; color: white; border-color: #1e293b; }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="logo">🗄️ <span>SQL</span> Training Studio <small>PRO EDITION</small></div>
+    <nav class="nav-tabs">
+        <button class="nav-btn active" onclick="switchTab('practice', this)">💻 Thực Hành & Biên Dịch (14 Bài)</button>
+        <button class="nav-btn" onclick="switchTab('theory', this)">📚 Hệ Thống Lý Thuyết & Hàm</button>
+        <button class="nav-btn" onclick="switchTab('diagrams', this)">📊 Sơ Đồ ERD & JOIN Trực Quan</button>
+    </nav>
+</header>
+
+<div class="container">
+
+    <!-- ==================== TAB 1: THỰC HÀNH & BIÊN DỊCH ==================== -->
+    <div id="tab-practice" class="tab-content active">
+        <div class="workspace">
+            <!-- Cột trái: Danh sách bài tập -->
+            <div class="card" style="padding: 15px;">
+                <h2 style="font-size: 1.08rem; margin-bottom: 8px;">📝 Lộ Trình Bài Tập SQL</h2>
+                <div class="filter-pills">
+                    <button class="pill active" onclick="filterLessons('ALL', this)">Tất cả (14)</button>
+                    <button class="pill" onclick="filterLessons('basic', this)">Cơ bản</button>
+                    <button class="pill" onclick="filterLessons('inter', this)">Trung cấp</button>
+                    <button class="pill" onclick="filterLessons('adv', this)">Nâng cao</button>
+                </div>
+                <ul class="lesson-list" id="lessonList"></ul>
+            </div>
+
+            <!-- Cột phải: Trình biên dịch & Kết quả -->
+            <div>
+                <div class="card">
+                    <div id="exercisePrompt" style="background: #eff6ff; padding: 14px 16px; border-radius: 8px; margin-bottom: 14px; border-left: 4px solid var(--primary);">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <strong id="exTitle" style="font-size: 1.02rem; color: var(--primary-dark);">Bài 1</strong>
+                            <span id="exHintBadge" class="badge b-blue">SQL Sandbox</span>
+                        </div>
+                        <p id="exDesc" style="font-size: 0.92rem; margin-top: 6px; color: #1e293b;"></p>
+                        <p id="exNote" style="font-size: 0.82rem; margin-top: 6px; color: #475569; font-style: italic;"></p>
+                    </div>
+
+                    <div class="editor-wrapper">
+                        <div class="editor-header">
+                            <span>SQL Query Editor (AlaSQL In-Memory Engine)</span>
+                            <span>Phím tắt: Ctrl + Enter để chạy</span>
+                        </div>
+                        <textarea id="sqlInput" spellcheck="false" placeholder="Gõ câu lệnh SQL tại đây..."></textarea>
+                    </div>
+
+                    <div class="toolbar">
+                        <button class="btn btn-run" onclick="runSQL()">▶ Biên Dịch & Chạy Code</button>
+                        <button class="btn btn-sample" onclick="loadSampleCode()">💡 Xem & Chạy Code Mẫu</button>
+                        <button class="btn btn-csv" onclick="exportResultCSV()">📥 Xuất Bảng CSV</button>
+                        <button class="btn btn-clear" onclick="clearEditor()">🧹 Xóa Trắng</button>
+                        <button class="btn btn-reset" onclick="resetDatabase()">🔄 Reset 5 Bảng Gốc</button>
+                    </div>
+
+                    <div id="statusBox" class="status-msg"></div>
+
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <h3 style="margin: 4px 0;">📋 Kết Quả Thực Thi (Output Table):</h3>
+                        <span id="rowCountLabel" style="font-size: 0.82rem; color: var(--text-muted); font-weight: 600;"></span>
+                    </div>
+                    <div class="table-wrapper" id="resultContainer">
+                        <p style="padding: 15px; color: var(--text-muted);">Nhấn "Biên Dịch & Chạy Code" để xem kết quả...</p>
+                    </div>
+
+                    <!-- Khung xem nhanh 5 bảng dữ liệu trong DB -->
+                    <div class="mini-db-preview">
+                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 8px;">
+                            <strong style="font-size: 0.92rem;">🗄️ Dữ liệu trực tiếp trong 5 bảng hệ thống:</strong>
+                            <div class="mini-tabs">
+                                <button class="mini-tab active" onclick="previewTable('Khoa', this)">1. Khoa</button>
+                                <button class="mini-tab" onclick="previewTable('GiangVien', this)">2. GiangVien</button>
+                                <button class="mini-tab" onclick="previewTable('SinhVien', this)">3. SinhVien</button>
+                                <button class="mini-tab" onclick="previewTable('MonHoc', this)">4. MonHoc</button>
+                                <button class="mini-tab" onclick="previewTable('DangKyHoc', this)">5. DangKyHoc</button>
+                            </div>
+                        </div>
+                        <div class="table-wrapper" id="dbPreviewContainer"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== TAB 2: LÝ THUYẾT CHUYÊN SÂU ==================== -->
+    <div id="tab-theory" class="tab-content">
+        <div class="theory-layout">
+            <!-- Menu điều hướng lý thuyết -->
+            <div class="theory-menu">
+                <button class="theory-menu-item active" onclick="showTheorySection('sec-commands', this)">1. 5 Nhóm Lệnh SQL Chuẩn</button>
+                <button class="theory-menu-item" onclick="showTheorySection('sec-execution', this)">2. Thứ Tự Thực Thi & Toán Tử</button>
+                <button class="theory-menu-item" onclick="showTheorySection('sec-functions', this)">3. Hàm Tổng Hợp, Chuỗi & Ngày</button>
+                <button class="theory-menu-item" onclick="showTheorySection('sec-logic', this)">4. Rẽ Nhánh CASE WHEN & NULL</button>
+                <button class="theory-menu-item" onclick="showTheorySection('sec-advanced', this)">5. Subquery, CTE & Window Func</button>
+                <button class="theory-menu-item" onclick="showTheorySection('sec-constraints', this)">6. Ràng Buộc, Index & Chuẩn Hóa</button>
+            </div>
+
+            <!-- Nội dung lý thuyết chi tiết -->
+            <div>
+                <!-- Mục 1: 5 Nhóm lệnh -->
+                <div id="sec-commands" class="card theory-sec">
+                    <h2>1. Phân Loại 5 Nhóm Lệnh Trong SQL</h2>
+                    <div class="grid-2">
+                        <div>
+                            <h3><span class="badge b-blue">DQL</span> Data Query Language (Truy vấn)</h3>
+                            <p style="font-size:0.9rem;">Lấy dữ liệu từ một hoặc nhiều bảng mà không làm thay đổi trạng thái dữ liệu.</p>
+                            <div class="syntax-box"><span class="kw">SELECT DISTINCT</span> Lop, QueQuan
+<span class="kw">FROM</span> SinhVien
+<span class="kw">WHERE</span> HocBong > <span class="str">0</span>
+<span class="kw">ORDER BY</span> HoTen <span class="kw">ASC</span>;</div>
+                        </div>
+                        <div>
+                            <h3><span class="badge b-green">DML</span> Data Manipulation Language (Thao tác)</h3>
+                            <p style="font-size:0.9rem;">Thêm mới, cập nhật hoặc xóa các bản ghi (dòng dữ liệu) trong bảng.</p>
+                            <div class="syntax-box"><span class="kw">INSERT INTO</span> Khoa <span class="kw">VALUES</span> (<span class="str">'DTVT'</span>, <span class="str">'Điện tử Viễn thông'</span>, <span class="str">'C7'</span>);
+<span class="kw">UPDATE</span> SinhVien <span class="kw">SET</span> HocBong = <span class="str">5000000</span> <span class="kw">WHERE</span> MaSV = <span class="str">101</span>;
+<span class="kw">DELETE FROM</span> DangKyHoc <span class="kw">WHERE</span> Diem <span class="kw">IS NULL</span>;</div>
+                        </div>
+                        <div>
+                            <h3><span class="badge b-amber">DDL</span> Data Definition Language (Định nghĩa)</h3>
+                            <p style="font-size:0.9rem;">Tạo, sửa cấu trúc bảng, xóa bảng hoặc làm rỗng toàn bộ bảng.</p>
+                            <div class="syntax-box"><span class="kw">CREATE TABLE</span> LopHoc (MaLop <span class="kw">VARCHAR</span>(10) <span class="kw">PRIMARY KEY</span>);
+<span class="kw">ALTER TABLE</span> SinhVien <span class="kw">ADD</span> Email <span class="kw">VARCHAR</span>(100);
+<span class="kw">TRUNCATE TABLE</span> TamThoi; <span class="cmt">-- Xóa sạch dòng, giữ cấu trúc</span>
+<span class="kw">DROP TABLE</span> TamThoi;     <span class="cmt">-- Xóa vĩnh viễn cả bảng</span></div>
+                        </div>
+                        <div>
+                            <h3><span class="badge b-purple">DCL & TCL</span> Phân Quyền & Giao Dịch</h3>
+                            <p style="font-size:0.9rem;">Kiểm soát quyền truy cập (DCL) và tính toàn vẹn giao dịch (TCL - ACID).</p>
+                            <div class="syntax-box"><span class="cmt">-- DCL: Cấp và thu hồi quyền</span>
+<span class="kw">GRANT SELECT, INSERT ON</span> SinhVien <span class="kw">TO</span> user_gv;
+<span class="kw">REVOKE INSERT ON</span> SinhVien <span class="kw">FROM</span> user_gv;
+
+<span class="cmt">-- TCL: Quản lý Transaction</span>
+<span class="kw">BEGIN TRANSACTION</span>;
+<span class="kw">UPDATE</span> TaiKhoan <span class="kw">SET</span> SoDu = SoDu - 100 <span class="kw">WHERE</span> ID = 1;
+<span class="kw">COMMIT</span>; <span class="cmt">-- Hoặc ROLLBACK nếu có lỗi xảy ra</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mục 2: Thứ tự thực thi & Toán tử -->
+                <div id="sec-execution" class="card theory-sec" style="display:none;">
+                    <h2>2. Thứ Tự Thực Thi Logic (Order of Execution) & Toán Tử</h2>
+                    <p style="margin-bottom:10px;">Hiểu đúng thứ tự chạy giúp bạn tránh lỗi kinh điển như dùng bí danh (Alias) của <code>SELECT</code> trong mệnh đề <code>WHERE</code>.</p>
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr><th>Bước</th><th>Mệnh đề</th><th>Vai trò xử lý</th><th>Lưu ý quan trọng</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr><td><strong>1</strong></td><td><code>FROM / JOIN</code></td><td>Xác định bảng nguồn & thực hiện tích Đề-các / ghép nối</td><td>Chạy đầu tiên để tạo tập dữ liệu thô</td></tr>
+                                <tr><td><strong>2</strong></td><td><code>WHERE</code></td><td>Lọc từng bản ghi thỏa mãn điều kiện</td><td>Không dùng được hàm tổng hợp (SUM, COUNT) tại đây</td></tr>
+                                <tr><td><strong>3</strong></td><td><code>GROUP BY</code></td><td>Gom các dòng có cùng giá trị thành nhóm</td><td>Mọi cột không nằm trong hàm tổng hợp ở SELECT phải có ở đây</td></tr>
+                                <tr><td><strong>4</strong></td><td><code>HAVING</code></td><td>Lọc trên từng nhóm sau khi đã GROUP BY</td><td>Dùng thay WHERE khi lọc theo SUM(), AVG(), COUNT()</td></tr>
+                                <tr><td><strong>5</strong></td><td><code>SELECT</code></td><td>Tính toán biểu thức, đặt bí danh (AS), loại trùng (DISTINCT)</td><td>Tạo ra các Alias cột</td></tr>
+                                <tr><td><strong>6</strong></td><td><code>ORDER BY</code></td><td>Sắp xếp kết quả đầu ra (ASC / DESC)</td><td>Dùng được Alias đã đặt ở bước SELECT</td></tr>
+                                <tr><td><strong>7</strong></td><td><code>LIMIT / OFFSET</code></td><td>Cắt lấy số lượng dòng cần hiển thị</td><td>Chạy cuối cùng (dùng để phân trang)</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <h3>Bảng Toán Tử Lọc Dữ Liệu Quan Trọng</h3>
+                    <div class="grid-3">
+                        <div class="syntax-box"><span class="cmt">-- Khoảng giá trị (bao gồm 2 đầu)</span>
+<span class="kw">WHERE</span> Diem <span class="kw">BETWEEN</span> 7.0 <span class="kw">AND</span> 9.0</div>
+                        <div class="syntax-box"><span class="cmt">-- Thuộc tập hợp danh sách</span>
+<span class="kw">WHERE</span> MaKhoa <span class="kw">IN</span> (<span class="str">'CNTT'</span>, <span class="str">'KTPM'</span>)</div>
+                        <div class="syntax-box"><span class="cmt">-- Tìm kiếm mẫu chuỗi (% và _)</span>
+<span class="kw">WHERE</span> HoTen <span class="kw">LIKE</span> <span class="str">'Nguyễn%'</span></div>
+                    </div>
+                </div>
+
+                <!-- Mục 3: Các nhóm hàm -->
+                <div id="sec-functions" class="card theory-sec" style="display:none;">
+                    <h2>3. Hệ Thống Các Hàm Xử Lý Trong SQL</h2>
+                    <div class="grid-2">
+                        <div>
+                            <h3>📊 Hàm Tổng Hợp (Aggregate Functions)</h3>
+                            <table>
+                                <thead><tr><th>Hàm</th><th>Mô tả</th><th>Ví dụ</th></tr></thead>
+                                <tbody>
+                                    <tr><td><code>COUNT(*) / COUNT(col)</code></td><td>Đếm tổng số dòng / đếm giá trị khác NULL</td><td><code>COUNT(DISTINCT MaSV)</code></td></tr>
+                                    <tr><td><code>SUM(col)</code></td><td>Tính tổng các giá trị số</td><td><code>SUM(SoTinChi)</code></td></tr>
+                                    <tr><td><code>AVG(col)</code></td><td>Tính trung bình cộng (bỏ qua NULL)</td><td><code>ROUND(AVG(Diem), 2)</code></td></tr>
+                                    <tr><td><code>MAX(col) / MIN(col)</code></td><td>Giá trị lớn nhất / nhỏ nhất</td><td><code>MAX(HocBong)</code></td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div>
+                            <h3>🔤 Hàm Xử Lý Chuỗi & Số Học</h3>
+                            <table>
+                                <thead><tr><th>Hàm</th><th>Mô tả</th><th>Ví dụ</th></tr></thead>
+                                <tbody>
+                                    <tr><td><code>CONCAT(a, b)</code></td><td>Nối nhiều chuỗi lại với nhau</td><td><code>CONCAT(MaSV, ' - ', HoTen)</code></td></tr>
+                                    <tr><td><code>UPPER() / LOWER()</code></td><td>Chuyển chữ HOA / chữ thường</td><td><code>UPPER(MaKhoa)</code></td></tr>
+                                    <tr><td><code>SUBSTRING(s, pos, len)</code></td><td>Cắt chuỗi con từ vị trí pos</td><td><code>SUBSTRING(HoTen, 1, 6)</code></td></tr>
+                                    <tr><td><code>ROUND(num, d)</code></td><td>Làm tròn số tới d chữ số thập phân</td><td><code>ROUND(8.666, 1) -> 8.7</code></td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <h3>📅 Hàm Xử Lý Thời Gian (Date & Time Functions)</h3>
+                    <div class="syntax-box"><span class="fn">YEAR</span>(NgaySinh)   <span class="cmt">-- Trích xuất năm (VD: 2004)</span>
+<span class="fn">MONTH</span>(NgaySinh)  <span class="cmt">-- Trích xuất tháng (1 - 12)</span>
+<span class="fn">DAY</span>(NgaySinh)    <span class="cmt">-- Trích xuất ngày (1 - 31)</span>
+<span class="fn">NOW</span>()            <span class="cmt">-- Lấy ngày giờ hiện tại của hệ thống</span></div>
+                </div>
+
+                <!-- Mục 4: Logic CASE WHEN & NULL -->
+                <div id="sec-logic" class="card theory-sec" style="display:none;">
+                    <h2>4. Biểu Thức Điều Kiện CASE WHEN & Xử Lý NULL</h2>
+                    <p><code>CASE WHEN</code> hoạt động tương tự cấu trúc <code>if - else if - else</code> trong lập trình, cho phép phân loại dữ liệu ngay trong câu truy vấn.</p>
+                    <div class="syntax-box"><span class="kw">SELECT</span> sv.HoTen, dk.Diem,
+    <span class="kw">CASE</span>
+        <span class="kw">WHEN</span> dk.Diem >= <span class="str">8.5</span> <span class="kw">THEN</span> <span class="str">'Giỏi (A)'</span>
+        <span class="kw">WHEN</span> dk.Diem >= <span class="str">7.0</span> <span class="kw">THEN</span> <span class="str">'Khá (B)'</span>
+        <span class="kw">WHEN</span> dk.Diem >= <span class="str">5.0</span> <span class="kw">THEN</span> <span class="str">'Trung bình (C)'</span>
+        <span class="kw">WHEN</span> dk.Diem <span class="kw">IS NULL THEN</span> <span class="str">'Chưa có điểm'</span>
+        <span class="kw">ELSE</span> <span class="str">'Trượt môn (F)'</span>
+    <span class="kw">END AS</span> XepLoai
+<span class="kw">FROM</span> SinhVien sv <span class="kw">LEFT JOIN</span> DangKyHoc dk <span class="kw">ON</span> sv.MaSV = dk.MaSV;</div>
+
+                    <h3>Quy Tắc Vàng Với Giá Trị NULL</h3>
+                    <ul style="margin-left: 20px; font-size:0.92rem;">
+                        <li><code>NULL</code> không phải là số <code>0</code> hay chuỗi rỗng <code>''</code> — nó đại diện cho giá trị <strong>chưa xác định</strong>.</li>
+                        <li>Không bao giờ viết <code>WHERE Diem = NULL</code> (luôn trả về rỗng). Phải dùng <code>WHERE Diem IS NULL</code> hoặc <code>IS NOT NULL</code>.</li>
+                        <li>Dùng <code>COALESCE(Diem, 0)</code> hoặc <code>IFNULL(Diem, 0)</code> để thay thế <code>NULL</code> bằng giá trị mặc định khi tính toán.</li>
+                    </ul>
+                </div>
+
+                <!-- Mục 5: Nâng cao -->
+                <div id="sec-advanced" class="card theory-sec" style="display:none;">
+                    <h2>5. Truy Vấn Nâng Cao: Subquery, CTE & Window Functions</h2>
+                    
+                    <h3>A. Subquery (Truy vấn lồng nhau)</h3>
+                    <p style="font-size:0.9rem;">Câu lệnh SELECT nằm bên trong một câu lệnh SELECT khác (trong WHERE, FROM hoặc SELECT).</p>
+                    <div class="syntax-box"><span class="cmt">-- Tìm sinh viên có điểm cao hơn điểm trung bình toàn trường</span>
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> DangKyHoc
+<span class="kw">WHERE</span> Diem > (<span class="kw">SELECT</span> <span class="fn">AVG</span>(Diem) <span class="kw">FROM</span> DangKyHoc);</div>
+
+                    <h3>B. CTE (Common Table Expression - Bảng tạm WITH)</h3>
+                    <p style="font-size:0.9rem;">Giúp chia nhỏ câu truy vấn phức tạp thành các khối logic dễ đọc và tái sử dụng nhiều lần.</p>
+                    <div class="syntax-box"><span class="kw">WITH</span> ThongKeSV <span class="kw">AS</span> (
+    <span class="kw">SELECT</span> MaSV, <span class="fn">AVG</span>(Diem) <span class="kw">AS</span> DiemTB
+    <span class="kw">FROM</span> DangKyHoc
+    <span class="kw">GROUP BY</span> MaSV
+)
+<span class="kw">SELECT</span> sv.HoTen, tk.DiemTB
+<span class="kw">FROM</span> SinhVien sv <span class="kw">JOIN</span> ThongKeSV tk <span class="kw">ON</span> sv.MaSV = tk.MaSV
+<span class="kw">WHERE</span> tk.DiemTB >= <span class="str">8.0</span>;</div>
+
+                    <h3>C. Window Functions (Hàm Cửa Sổ - Cực kỳ quan trọng trong phân tích dữ liệu)</h3>
+                    <p style="font-size:0.9rem;">Khác với <code>GROUP BY</code> (gộp nhiều dòng thành 1 dòng), <strong>Window Function</strong> giữ nguyên từng dòng chi tiết và tính toán trên một "cửa sổ" phân vùng dữ liệu.</p>
+                    <div class="syntax-box"><span class="kw">SELECT</span> MaSV, MaMH, Diem,
+    <span class="fn">ROW_NUMBER</span>() <span class="kw">OVER</span> (<span class="kw">PARTITION BY</span> MaMH <span class="kw">ORDER BY</span> Diem <span class="kw">DESC</span>) <span class="kw">AS</span> HangTheoMon,
+    <span class="fn">RANK</span>()       <span class="kw">OVER</span> (<span class="kw">PARTITION BY</span> MaMH <span class="kw">ORDER BY</span> Diem <span class="kw">DESC</span>) <span class="kw">AS</span> XepHangDongHang
+<span class="kw">FROM</span> DangKyHoc;</div>
+                </div>
+
+                <!-- Mục 6: Ràng buộc & Thiết kế CSDL -->
+                <div id="sec-constraints" class="card theory-sec" style="display:none;">
+                    <h2>6. Ràng Buộc Toàn Vẹn (Constraints), Index & Chuẩn Hóa</h2>
+                    <div class="grid-2">
+                        <div>
+                            <h3>6 Ràng Buộc Cơ Bản Trong Thiết Kế Bảng</h3>
+                            <table>
+                                <thead><tr><th>Ràng buộc</th><th>Ý nghĩa</th></tr></thead>
+                                <tbody>
+                                    <tr><td><code>PRIMARY KEY</code></td><td>Khóa chính: Định danh duy nhất mỗi dòng, không được NULL.</td></tr>
+                                    <tr><td><code>FOREIGN KEY</code></td><td>Khóa ngoại: Liên kết tới PK bảng khác, đảm bảo toàn vẹn tham chiếu.</td></tr>
+                                    <tr><td><code>UNIQUE</code></td><td>Đảm bảo mọi giá trị trong cột không trùng lặp (VD: Email, CCCD).</td></tr>
+                                    <tr><td><code>NOT NULL</code></td><td>Bắt buộc phải nhập dữ liệu, không được để trống.</td></tr>
+                                    <tr><td><code>CHECK</code></td><td>Kiểm tra điều kiện hợp lệ (VD: <code>CHECK (Diem >= 0 AND Diem <= 10)</code>).</td></tr>
+                                    <tr><td><code>DEFAULT</code></td><td>Gán giá trị mặc định nếu người dùng không nhập.</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div>
+                            <h3>Chỉ Mục (INDEX) & 3 Dạng Chuẩn (Normalization)</h3>
+                            <div class="syntax-box"><span class="cmt">-- Tạo Index giúp tăng tốc độ tìm kiếm SELECT lên hàng trăm lần</span>
+<span class="kw">CREATE INDEX</span> idx_sinhvien_hoten <span class="kw">ON</span> SinhVien(HoTen);</div>
+                            <ul style="margin-left: 18px; font-size:0.88rem; margin-top:8px;">
+                                <li><strong>1NF (Chuẩn 1):</strong> Mỗi ô chỉ chứa một giá trị nguyên tử (không lưu danh sách cách nhau dấu phẩy trong 1 cột).</li>
+                                <li><strong>2NF (Chuẩn 2):</strong> Đạt 1NF và mọi cột không khóa phải phụ thuộc hoàn toàn vào toàn bộ khóa chính.</li>
+                                <li><strong>3NF (Chuẩn 3):</strong> Đạt 2NF và không có phụ thuộc bắc cầu (cột không khóa này phụ thuộc vào cột không khóa khác).</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== TAB 3: SƠ ĐỒ ERD & JOIN ==================== -->
+    <div id="tab-diagrams" class="tab-content">
+        <div class="card">
+            <h2>1. Sơ Đồ Quan Hệ Thực Thể Chi Tiết (ERD - 5 Thực Thể Quản Lý Đào Tạo)</h2>
+            <p style="margin-bottom: 14px; font-size:0.92rem;">Mô hình quan hệ chuẩn hóa 3NF bao gồm đầy đủ khóa chính (<strong>PK</strong>), khóa ngoại (<strong>FK</strong>), kiểu dữ liệu và các loại liên kết <strong>1:N</strong>, <strong>N:N</strong>.</p>
+
+            <div class="erd-canvas">
+                <div class="erd-grid">
+                    <!-- Bảng 1: Khoa -->
+                    <div class="erd-entity">
+                        <div class="erd-entity-header">
+                            <span>🏛️ Khoa (Departments)</span>
+                            <span style="font-size:0.75rem; opacity:0.8;">Master</span>
+                        </div>
+                        <div class="erd-attr"><span class="key-badge k-pk">PK</span><strong>MaKhoa</strong><span class="attr-type">VARCHAR(10)</span></div>
+                        <div class="erd-attr"><span class="key-badge k-uq">UQ</span><span>TenKhoa</span><span class="attr-type">VARCHAR(100)</span></div>
+                        <div class="erd-attr"><span></span><span>VanPhong</span><span class="attr-type">VARCHAR(20)</span></div>
+                        <div class="erd-attr"><span></span><span>NamThanhLap</span><span class="attr-type">INT</span></div>
+                    </div>
+
+                    <!-- Bảng 2: SinhVien -->
+                    <div class="erd-entity">
+                        <div class="erd-entity-header">
+                            <span>🎓 SinhVien (Students)</span>
+                            <span style="font-size:0.75rem; opacity:0.8;">Entity</span>
+                        </div>
+                        <div class="erd-attr"><span class="key-badge k-pk">PK</span><strong>MaSV</strong><span class="attr-type">INT</span></div>
+                        <div class="erd-attr"><span></span><span>HoTen</span><span class="attr-type">VARCHAR(100)</span></div>
+                        <div class="erd-attr"><span></span><span>GioiTinh</span><span class="attr-type">VARCHAR(10)</span></div>
+                        <div class="erd-attr"><span></span><span>NamSinh</span><span class="attr-type">INT</span></div>
+                        <div class="erd-attr"><span></span><span>QueQuan</span><span class="attr-type">VARCHAR(50)</span></div>
+                        <div class="erd-attr"><span></span><span>HocBong</span><span class="attr-type">DECIMAL</span></div>
+                        <div class="erd-attr"><span class="key-badge k-fk">FK</span><strong>MaKhoa</strong><span class="attr-type">VARCHAR(10)</span></div>
+                    </div>
+
+                    <!-- Bảng 3: DangKyHoc (Bảng Trung Gian N-N) -->
+                    <div class="erd-entity fact-table">
+                        <div class="erd-entity-header">
+                            <span>📝 DangKyHoc (Enrollments)</span>
+                            <span style="font-size:0.75rem; background:rgba(255,255,255,0.2); padding:1px 6px; border-radius:4px;">Bảng Trung Gian</span>
+                        </div>
+                        <div class="erd-attr"><span class="key-badge k-pk">PK</span><strong>MaDK</strong><span class="attr-type">INT</span></div>
+                        <div class="erd-attr"><span class="key-badge k-fk">FK</span><strong>MaSV</strong><span class="attr-type">INT</span></div>
+                        <div class="erd-attr"><span class="key-badge k-fk">FK</span><strong>MaMH</strong><span class="attr-type">VARCHAR(10)</span></div>
+                        <div class="erd-attr"><span></span><span>HocKy</span><span class="attr-type">VARCHAR(10)</span></div>
+                        <div class="erd-attr"><span></span><span>DiemQT</span><span class="attr-type">FLOAT</span></div>
+                        <div class="erd-attr"><span></span><span>DiemThi</span><span class="attr-type">FLOAT</span></div>
+                        <div class="erd-attr"><span></span><span>TrangThai</span><span class="attr-type">VARCHAR(20)</span></div>
+                    </div>
+
+                    <!-- Bảng 4: GiangVien -->
+                    <div class="erd-entity">
+                        <div class="erd-entity-header">
+                            <span>👨‍🏫 GiangVien (Lecturers)</span>
+                            <span style="font-size:0.75rem; opacity:0.8;">Entity</span>
+                        </div>
+                        <div class="erd-attr"><span class="key-badge k-pk">PK</span><strong>MaGV</strong><span class="attr-type">VARCHAR(10)</span></div>
+                        <div class="erd-attr"><span></span><span>HoTenGV</span><span class="attr-type">VARCHAR(100)</span></div>
+                        <div class="erd-attr"><span></span><span>HocVi</span><span class="attr-type">VARCHAR(30)</span></div>
+                        <div class="erd-attr"><span></span><span>Luong</span><span class="attr-type">DECIMAL</span></div>
+                        <div class="erd-attr"><span class="key-badge k-fk">FK</span><strong>MaKhoa</strong><span class="attr-type">VARCHAR(10)</span></div>
+                    </div>
+
+                    <!-- Sơ đồ luồng quan hệ trực quan SVG -->
+                    <div style="background:white; border:1px dashed #94a3b8; border-radius:8px; padding:12px; font-size:0.84rem;">
+                        <strong style="color:var(--primary-dark); display:block; margin-bottom:8px;">🔗 Bản Đồ Liên Kết Khóa Ngoại:</strong>
+                        <ul style="margin-left: 16px; line-height: 1.75;">
+                            <li><strong>Khoa (1) ── (N) SinhVien</strong> qua <code>MaKhoa</code></li>
+                            <li><strong>Khoa (1) ── (N) GiangVien</strong> qua <code>MaKhoa</code></li>
+                            <li><strong>GiangVien (1) ── (N) MonHoc</strong> qua <code>MaGV</code></li>
+                            <li><strong>SinhVien (1) ── (N) DangKyHoc</strong> qua <code>MaSV</code></li>
+                            <li><strong>MonHoc (1) ── (N) DangKyHoc</strong> qua <code>MaMH</code></li>
+                        </ul>
+                        <div style="margin-top:8px; padding:6px 8px; background:#fef3c7; border-radius:4px; font-size:0.78rem; color:#92400e;">
+                            💡 Quan hệ <strong>Nhiều - Nhiều (N:N)</strong> giữa <code>SinhVien</code> và <code>MonHoc</code> được tách thành 2 quan hệ <code>1:N</code> thông qua bảng <code>DangKyHoc</code>.
+                        </div>
+                    </div>
+
+                    <!-- Bảng 5: MonHoc -->
+                    <div class="erd-entity">
+                        <div class="erd-entity-header">
+                            <span>📘 MonHoc (Courses)</span>
+                            <span style="font-size:0.75rem; opacity:0.8;">Entity</span>
+                        </div>
+                        <div class="erd-attr"><span class="key-badge k-pk">PK</span><strong>MaMH</strong><span class="attr-type">VARCHAR(10)</span></div>
+                        <div class="erd-attr"><span></span><span>TenMH</span><span class="attr-type">VARCHAR(100)</span></div>
+                        <div class="erd-attr"><span></span><span>SoTinChi</span><span class="attr-type">INT</span></div>
+                        <div class="erd-attr"><span></span><span>LoaiMon</span><span class="attr-type">VARCHAR(20)</span></div>
+                        <div class="erd-attr"><span class="key-badge k-fk">FK</span><strong>MaGV</strong><span class="attr-type">VARCHAR(10)</span></div>
+                    </div>
+                </div>
+
+                <div class="rel-legend">
+                    <span><span class="key-badge k-pk">PK</span> Primary Key (Khóa chính)</span>
+                    <span><span class="key-badge k-fk">FK</span> Foreign Key (Khóa ngoại tham chiếu)</span>
+                    <span><span class="key-badge k-uq">UQ</span> Unique (Giá trị duy nhất)</span>
+                    <span><strong>1 ── N</strong> Quan hệ Một - Nhiều</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Phần 2: Trực quan hóa 5 loại JOIN -->
+        <div class="card">
+            <h2>2. Trực Quan Hóa Đầy Đủ 5 Loại Phép Nối Bảng (SQL JOINS)</h2>
+            <div class="grid-5">
+                <div class="join-card">
+                    <strong>INNER JOIN</strong>
+                    <svg width="130" height="75" viewBox="0 0 130 75" style="display:block; margin: 6px auto;">
+                        <circle cx="46" cy="38" r="27" fill="#e2e8f0" stroke="#64748b" stroke-width="1.5"/>
+                        <circle cx="84" cy="38" r="27" fill="#e2e8f0" stroke="#64748b" stroke-width="1.5"/>
+                        <path d="M 65 18.6 A 27 27 0 0 1 65 57.4 A 27 27 0 0 1 65 18.6" fill="#2563eb"/>
+                    </svg>
+                    <p style="font-size:0.8rem; color:var(--text-muted);">Chỉ lấy phần giao khớp nhau ở <strong>cả 2 bảng</strong>.</p>
+                    <code>A INNER JOIN B ON A.id = B.id</code>
+                </div>
+
+                <div class="join-card">
+                    <strong>LEFT JOIN</strong>
+                    <svg width="130" height="75" viewBox="0 0 130 75" style="display:block; margin: 6px auto;">
+                        <circle cx="84" cy="38" r="27" fill="#e2e8f0" stroke="#64748b" stroke-width="1.5"/>
+                        <circle cx="46" cy="38" r="27" fill="#2563eb" fill-opacity="0.85" stroke="#1d4ed8" stroke-width="1.5"/>
+                    </svg>
+                    <p style="font-size:0.8rem; color:var(--text-muted);">Toàn bộ bảng trái <strong>A</strong> + phần khớp của B (không khớp = NULL).</p>
+                    <code>A LEFT JOIN B ON A.id = B.id</code>
+                </div>
+
+                <div class="join-card">
+                    <strong>RIGHT JOIN</strong>
+                    <svg width="130" height="75" viewBox="0 0 130 75" style="display:block; margin: 6px auto;">
+                        <circle cx="46" cy="38" r="27" fill="#e2e8f0" stroke="#64748b" stroke-width="1.5"/>
+                        <circle cx="84" cy="38" r="27" fill="#2563eb" fill-opacity="0.85" stroke="#1d4ed8" stroke-width="1.5"/>
+                    </svg>
+                    <p style="font-size:0.8rem; color:var(--text-muted);">Toàn bộ bảng phải <strong>B</strong> + phần khớp của A (không khớp = NULL).</p>
+                    <code>A RIGHT JOIN B ON A.id = B.id</code>
+                </div>
+
+                <div class="join-card">
+                    <strong>FULL OUTER JOIN</strong>
+                    <svg width="130" height="75" viewBox="0 0 130 75" style="display:block; margin: 6px auto;">
+                        <circle cx="46" cy="38" r="27" fill="#2563eb" fill-opacity="0.85" stroke="#1d4ed8" stroke-width="1.5"/>
+                        <circle cx="84" cy="38" r="27" fill="#2563eb" fill-opacity="0.85" stroke="#1d4ed8" stroke-width="1.5"/>
+                    </svg>
+                    <p style="font-size:0.8rem; color:var(--text-muted);">Lấy <strong>tất cả</strong> bản ghi từ cả 2 bảng A và B.</p>
+                    <code>A OUTER JOIN B ON A.id = B.id</code>
+                </div>
+
+                <div class="join-card">
+                    <strong>LEFT ANTI JOIN</strong>
+                    <svg width="130" height="75" viewBox="0 0 130 75" style="display:block; margin: 6px auto;">
+                        <circle cx="46" cy="38" r="27" fill="#dc2626" fill-opacity="0.8" stroke="#991b1b" stroke-width="1.5"/>
+                        <circle cx="84" cy="38" r="27" fill="#ffffff" stroke="#64748b" stroke-width="1.5"/>
+                    </svg>
+                    <p style="font-size:0.8rem; color:var(--text-muted);">Chỉ lấy dòng ở <strong>A mà KHÔNG có ở B</strong> (tìm dữ liệu thiếu).</p>
+                    <code>... WHERE B.id IS NULL</code>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    // ==================== 1. BỘ 14 BÀI TẬP TỪ CƠ BẢN ĐẾN NÂNG CAO ====================
+    const lessons = [
+        {
+            level: "basic",
+            tag: "DQL - SELECT",
+            title: "Bài 1: Truy vấn & Bí danh cột (Alias)",
+            desc: "Lấy danh sách sinh viên gồm Mã SV, Họ tên, Quê quán và Học bổng, đặt tên cột tiếng Việt có dấu.",
+            note: "Gợi ý: Dùng từ khóa AS để đặt bí danh cho cột hiển thị đẹp hơn.",
+            sample: "SELECT MaSV AS [Mã SV], HoTen AS [Họ và Tên], QueQuan AS [Quê Quán], HocBong AS [Học Bổng]\nFROM SinhVien;"
+        },
+        {
+            level: "basic",
+            tag: "DQL - WHERE & LIKE",
+            title: "Bài 2: Lọc dữ liệu đa điều kiện",
+            desc: "Tìm các sinh viên thuộc khoa 'CNTT' hoặc 'KTPM', có quê quán ở 'Hà Nội' và học bổng > 0.",
+            note: "Gợi ý: Kết hợp toán tử IN và AND.",
+            sample: "SELECT MaSV, HoTen, MaKhoa, QueQuan, HocBong\nFROM SinhVien\nWHERE MaKhoa IN ('CNTT', 'KTPM')\n  AND QueQuan = 'Hà Nội'\n  AND HocBong > 0;"
+        },
+        {
+            level: "basic",
+            tag: "Hàm Chuỗi & Số",
+            title: "Bài 3: Sử dụng hàm CONCAT, UPPER, ROUND",
+            desc: "Tạo cột định danh dạng '101 - NGUYỄN VĂN AN' và tính điểm tổng kết (30% DiemQT + 70% DiemThi) làm tròn 1 chữ số.",
+            note: "Gợi ý: Dùng CONCAT(), UPPER() và ROUND(bieu_thuc, 1).",
+            sample: "SELECT dk.MaSV,\n       CONCAT(sv.MaSV, ' - ', UPPER(sv.HoTen)) AS DinhDanh,\n       dk.MaMH,\n       ROUND(dk.DiemQT * 0.3 + dk.DiemThi * 0.7, 1) AS DiemTongKet\nFROM DangKyHoc dk\nJOIN SinhVien sv ON dk.MaSV = sv.MaSV;"
+        },
+        {
+            level: "basic",
+            tag: "GROUP BY & HAVING",
+            title: "Bài 4: Thống kê theo nhóm (GROUP BY)",
+            desc: "Thống kê số lượng sinh viên, tổng học bổng và học bổng trung bình theo từng Mã Khoa. Chỉ hiện khoa có từ 2 sinh viên trở lên.",
+            note: "Gợi ý: Nhớ dùng HAVING để lọc sau khi nhóm bằng GROUP BY.",
+            sample: "SELECT MaKhoa,\n       COUNT(*) AS SoSinhVien,\n       SUM(HocBong) AS TongHocBong,\n       ROUND(AVG(HocBong), 0) AS HocBongTB\nFROM SinhVien\nGROUP BY MaKhoa\nHAVING COUNT(*) >= 2;"
+        },
+        {
+            level: "inter",
+            tag: "MULTI-TABLE JOIN",
+            title: "Bài 5: Liên kết 4 bảng (SinhVien - DangKy - MonHoc - GiangVien)",
+            desc: "Hiển thị bảng điểm chi tiết: Tên sinh viên, Tên môn học, Tên giảng viên phụ trách, Số tín chỉ và Điểm thi.",
+            note: "Gợi ý: Nối tuần tự qua các khóa ngoại MaSV -> MaMH -> MaGV.",
+            sample: "SELECT sv.HoTen AS SinhVien,\n       mh.TenMH AS MonHoc,\n       gv.HoTenGV AS GiangVien,\n       mh.SoTinChi,\n       dk.DiemThi\nFROM DangKyHoc dk\nINNER JOIN SinhVien sv ON dk.MaSV = sv.MaSV\nINNER JOIN MonHoc mh ON dk.MaMH = mh.MaMH\nINNER JOIN GiangVien gv ON mh.MaGV = gv.MaGV\nORDER BY sv.HoTen ASC, dk.DiemThi DESC;"
+        },
+        {
+            level: "inter",
+            tag: "LEFT ANTI JOIN",
+            title: "Bài 6: Tìm sinh viên CHƯA đăng ký môn nào",
+            desc: "Sử dụng LEFT JOIN kết hợp kiểm tra IS NULL để tìm những sinh viên chưa có dữ liệu trong bảng DangKyHoc.",
+            note: "Kỹ thuật này cực kỳ phổ biến để tìm dữ liệu bị thiếu/mồ côi giữa 2 bảng.",
+            sample: "SELECT sv.MaSV, sv.HoTen, sv.MaKhoa, sv.QueQuan\nFROM SinhVien sv\nLEFT JOIN DangKyHoc dk ON sv.MaSV = dk.MaSV\nWHERE dk.MaDK IS NULL;"
+        },
+        {
+            level: "inter",
+            tag: "CASE WHEN & COALESCE",
+            title: "Bài 7: Phân loại học lực bằng CASE WHEN",
+            desc: "Tính điểm tổng kết (xử lý NULL bằng COALESCE = 0) và xếp loại: >=8.5 'Giỏi', >=7.0 'Khá', >=5.0 'Trung bình', còn lại 'Học lại'.",
+            note: "Gợi ý: CASE WHEN giúp tạo cột phân loại động ngay trong câu SELECT.",
+            sample: "SELECT sv.HoTen, mh.TenMH,\n       ROUND(COALESCE(dk.DiemQT, 0)*0.3 + COALESCE(dk.DiemThi, 0)*0.7, 2) AS DiemTK,\n       CASE\n           WHEN (COALESCE(dk.DiemQT,0)*0.3 + COALESCE(dk.DiemThi,0)*0.7) >= 8.5 THEN 'Giỏi (A)'\n           WHEN (COALESCE(dk.DiemQT,0)*0.3 + COALESCE(dk.DiemThi,0)*0.7) >= 7.0 THEN 'Khá (B)'\n           WHEN (COALESCE(dk.DiemQT,0)*0.3 + COALESCE(dk.DiemThi,0)*0.7) >= 5.0 THEN 'Trung bình (C)'\n           ELSE 'Học lại (F)'\n       END AS XepLoai\nFROM DangKyHoc dk\nJOIN SinhVien sv ON dk.MaSV = sv.MaSV\nJOIN MonHoc mh ON dk.MaMH = mh.MaMH;"
+        },
+        {
+            level: "inter",
+            tag: "SUBQUERY (WHERE)",
+            title: "Bài 8: Truy vấn lồng (Subquery) tìm điểm vượt trội",
+            desc: "Tìm các lượt thi có DiemThi cao hơn điểm thi trung bình của toàn bộ bảng DangKyHoc.",
+            note: "Câu lệnh SELECT bên trong ngoặc đơn sẽ tính giá trị trung bình trước.",
+            sample: "SELECT sv.HoTen, dk.MaMH, dk.DiemThi\nFROM DangKyHoc dk\nJOIN SinhVien sv ON dk.MaSV = sv.MaSV\nWHERE dk.DiemThi > (\n    SELECT AVG(DiemThi) FROM DangKyHoc WHERE DiemThi IS NOT NULL\n)\nORDER BY dk.DiemThi DESC;"
+        },
+        {
+            level: "adv",
+            tag: "CTE (WITH ... AS)",
+            title: "Bài 9: Bảng tạm CTE tính GPA tích lũy theo tín chỉ",
+            desc: "Dùng CTE tính điểm trung bình có trọng số tín chỉ (GPA) của từng sinh viên, sau đó lọc ra sinh viên đạt GPA >= 8.0.",
+            note: "Công thức GPA = SUM(DiemTK * SoTinChi) / SUM(SoTinChi).",
+            sample: "WITH BangDiemChiTiet AS (\n    SELECT dk.MaSV,\n           (dk.DiemQT * 0.3 + dk.DiemThi * 0.7) AS DiemTK,\n           mh.SoTinChi\n    FROM DangKyHoc dk\n    JOIN MonHoc mh ON dk.MaMH = mh.MaMH\n    WHERE dk.DiemThi IS NOT NULL\n),\nTongHopGPA AS (\n    SELECT MaSV,\n           SUM(SoTinChi) AS TongTC,\n           ROUND(SUM(DiemTK * SoTinChi) / SUM(SoTinChi), 2) AS GPA\n    FROM BangDiemChiTiet\n    GROUP BY MaSV\n)\nSELECT sv.MaSV, sv.HoTen, sv.MaKhoa, g.TongTC, g.GPA\nFROM TongHopGPA g\nJOIN SinhVien sv ON g.MaSV = sv.MaSV\nWHERE g.GPA >= 8.0\nORDER BY g.GPA DESC;"
+        },
+        {
+            level: "adv",
+            tag: "WINDOW FUNCTION",
+            title: "Bài 10: Xếp hạng điểm thi theo từng môn (ROW_NUMBER / RANK)",
+            desc: "Sử dụng Window Function với OVER (PARTITION BY MaMH ORDER BY DiemThi DESC) để xếp hạng sinh viên trong từng môn học.",
+            note: "Quan sát cách dữ liệu được phân vùng theo từng môn mà không làm gộp dòng.",
+            sample: "SELECT dk.MaMH,\n       mh.TenMH,\n       sv.HoTen,\n       dk.DiemThi,\n       ROW_NUMBER() OVER (PARTITION BY dk.MaMH ORDER BY dk.DiemThi DESC) AS HangTheoMon\nFROM DangKyHoc dk\nJOIN SinhVien sv ON dk.MaSV = sv.MaSV\nJOIN MonHoc mh ON dk.MaMH = mh.MaMH\nWHERE dk.DiemThi IS NOT NULL;"
+        },
+        {
+            level: "adv",
+            tag: "SELF JOIN",
+            title: "Bài 11: Tự nối bảng (Self Join) tìm sinh viên cùng quê & cùng khoa",
+            desc: "Tìm các cặp sinh viên khác nhau nhưng học cùng Khoa và ở cùng Quê quán.",
+            note: "Dùng điều kiện a.MaSV < b.MaSV để tránh lặp cặp (A-B và B-A).",
+            sample: "SELECT a.HoTen AS SinhVien1,\n       b.HoTen AS SinhVien2,\n       a.MaKhoa,\n       a.QueQuan\nFROM SinhVien a\nJOIN SinhVien b ON a.MaKhoa = b.MaKhoa \n               AND a.QueQuan = b.QueQuan \n               AND a.MaSV < b.MaSV;"
+        },
+        {
+            level: "adv",
+            tag: "UNION ALL",
+            title: "Bài 12: Gộp danh sách nhân sự toàn trường (UNION ALL)",
+            desc: "Gộp danh sách Giảng viên và Sinh viên vào chung một danh bạ gồm: Mã, Họ tên, Vai trò và Khoa.",
+            note: "UNION ALL giữ tất cả bản ghi và chạy nhanh hơn UNION (vốn phải lọc trùng).",
+            sample: "SELECT MaGV AS MaSo, HoTenGV AS HoTen, 'Giảng viên' AS VaiTro, MaKhoa\nFROM GiangVien\nUNION ALL\nSELECT CAST(MaSV AS STRING) AS MaSo, HoTen, 'Sinh viên' AS VaiTro, MaKhoa\nFROM SinhVien\nORDER BY MaKhoa, VaiTro;"
+        },
+        {
+            level: "basic",
+            tag: "DML - INSERT & UPDATE",
+            title: "Bài 13: Thêm mới & Cập nhật học bổng tự động",
+            desc: "Thêm sinh viên mới (MaSV = 108) và tăng 20% học bổng cho sinh viên quê ở 'Hà Nội'.",
+            note: "Bạn có thể nhấn 'Reset 5 Bảng Gốc' bất cứ lúc nào để khôi phục dữ liệu ban đầu.",
+            sample: "INSERT INTO SinhVien VALUES (108, 'Ngô Gia Bảo', 'Nam', 2004, 'Hà Nội', 3000000, 'CNTT');\nUPDATE SinhVien SET HocBong = HocBong * 1.2 WHERE QueQuan = 'Hà Nội';\nSELECT * FROM SinhVien WHERE QueQuan = 'Hà Nội';"
+        },
+        {
+            level: "inter",
+            tag: "DML - DELETE & Subquery",
+            title: "Bài 14: Xóa bản ghi đăng ký chưa có điểm thi",
+            desc: "Xóa các bản ghi trong DangKyHoc có trạng thái 'Đang học' (DiemThi IS NULL) và kiểm tra lại bảng.",
+            note: "Luôn kiểm tra kỹ điều kiện WHERE trước khi thực thi lệnh DELETE!",
+            sample: "DELETE FROM DangKyHoc WHERE DiemThi IS NULL;\nSELECT * FROM DangKyHoc;"
+        }
+    ];
+
+    let currentLessonIdx = 0;
+    let currentFilter = 'ALL';
+    let currentPreviewTable = 'Khoa';
+    let lastQueryResult = [];
+
+    // ==================== 2. KHỞI TẠO DATABASE 5 BẢNG CHUẨN HÓA ====================
+    function initDatabase() {
+        const tables = ['DangKyHoc', 'MonHoc', 'SinhVien', 'GiangVien', 'Khoa'];
+        tables.forEach(t => alasql(`DROP TABLE IF EXISTS ${t}`));
+
+        // 1. Bảng Khoa
+        alasql(`CREATE TABLE Khoa (MaKhoa STRING, TenKhoa STRING, VanPhong STRING, NamThanhLap INT)`);
+        alasql(`INSERT INTO Khoa VALUES 
+            ('CNTT', 'Công nghệ Thông tin', 'Tòa B1 - P.502', 1995),
+            ('KTPM', 'Kỹ thuật Phần mềm', 'Tòa B1 - P.601', 2005),
+            ('KHMT', 'Khoa học Máy tính', 'Tòa B1 - P.704', 2002),
+            ('ATTT', 'An toàn Thông tin', 'Tòa C7 - P.301', 2012)
+        `);
+
+        // 2. Bảng GiangVien
+        alasql(`CREATE TABLE GiangVien (MaGV STRING, HoTenGV STRING, HocVi STRING, Luong INT, MaKhoa STRING)`);
+        alasql(`INSERT INTO GiangVien VALUES 
+            ('GV01', 'TS. Nguyễn Minh Tuấn', 'Tiến sĩ', 28000000, 'CNTT'),
+            ('GV02', 'PGS.TS. Trần Thu Hà', 'Phó Giáo sư', 36000000, 'KHMT'),
+            ('GV03', 'ThS. Lê Quang Khải', 'Thạc sĩ', 21000000, 'KTPM'),
+            ('GV04', 'TS. Phạm Hoàng Nam', 'Tiến sĩ', 29500000, 'ATTT')
+        `);
+
+        // 3. Bảng SinhVien
+        alasql(`CREATE TABLE SinhVien (MaSV INT, HoTen STRING, GioiTinh STRING, NamSinh INT, QueQuan STRING, HocBong INT, MaKhoa STRING)`);
+        alasql(`INSERT INTO SinhVien VALUES 
+            (101, 'Nguyễn Văn An', 'Nam', 2003, 'Hà Nội', 4000000, 'CNTT'),
+            (102, 'Trần Thị Bình', 'Nữ', 2004, 'Hải Phòng', 5000000, 'CNTT'),
+            (103, 'Lê Hoàng Cường', 'Nam', 2003, 'Hà Nội', 0, 'CNTT'),
+            (104, 'Phạm Thu Dung', 'Nữ', 2004, 'Nam Định', 6000000, 'KTPM'),
+            (105, 'Vũ Đức Em', 'Nam', 2002, 'Nghệ An', 0, 'KTPM'),
+            (106, 'Đỗ Mai Phương', 'Nữ', 2004, 'Hà Nội', 4500000, 'KHMT'),
+            (107, 'Bùi Quốc Khánh', 'Nam', 2003, 'Đà Nẵng', 0, 'ATTT')
+        `);
+
+        // 4. Bảng MonHoc
+        alasql(`CREATE TABLE MonHoc (MaMH STRING, TenMH STRING, SoTinChi INT, LoaiMon STRING, MaGV STRING)`);
+        alasql(`INSERT INTO MonHoc VALUES 
+            ('IT3090', 'Cơ sở dữ liệu', 3, 'Cơ sở ngành', 'GV01'),
+            ('IT3011', 'Cấu trúc dữ liệu & Giải thuật', 4, 'Cơ sở ngành', 'GV02'),
+            ('IT4409', 'Công nghệ Web & Dịch vụ trực tuyến', 3, 'Chuyên ngành', 'GV03'),
+            ('IT4015', 'Nhập môn An toàn thông tin', 3, 'Chuyên ngành', 'GV04'),
+            ('IT4651', 'Trí tuệ nhân tạo', 3, 'Chuyên ngành', 'GV02')
+        `);
+
+        // 5. Bảng DangKyHoc (Lưu ý: SV 107 cố tình chưa đăng ký môn nào để test LEFT JOIN)
+        alasql(`CREATE TABLE DangKyHoc (MaDK INT, MaSV INT, MaMH STRING, HocKy STRING, DiemQT FLOAT, DiemThi FLOAT, TrangThai STRING)`);
+        alasql(`INSERT INTO DangKyHoc VALUES 
+            (1, 101, 'IT3090', '2025.1', 8.5, 9.0, 'Hoàn thành'),
+            (2, 101, 'IT3011', '2025.1', 8.0, 7.5, 'Hoàn thành'),
+            (3, 101, 'IT4409', '2025.2', 9.0, 8.5, 'Hoàn thành'),
+            (4, 102, 'IT3090', '2025.1', 9.5, 9.5, 'Hoàn thành'),
+            (5, 102, 'IT4651', '2025.2', 8.5, 9.0, 'Hoàn thành'),
+            (6, 103, 'IT3090', '2025.1', 6.0, 4.5, 'Trượt môn'),
+            (7, 103, 'IT4409', '2025.2', 7.5, 7.0, 'Hoàn thành'),
+            (8, 104, 'IT4409', '2025.1', 9.0, 9.5, 'Hoàn thành'),
+            (9, 104, 'IT3011', '2025.2', 8.5, 8.0, 'Hoàn thành'),
+            (10, 105, 'IT3011', '2025.2', 7.0, NULL, 'Đang học'),
+            (11, 106, 'IT4651', '2025.2', 9.0, 8.8, 'Hoàn thành')
+        `);
+    }
+
+    // ==================== 3. RENDER DANH SÁCH BÀI TẬP & LỌC ====================
+    function renderLessons() {
+        const listEl = document.getElementById('lessonList');
+        listEl.innerHTML = '';
+
+        const levelLabels = {
+            basic: { text: 'Cơ bản', cls: 'd-basic' },
+            inter: { text: 'Trung cấp', cls: 'd-inter' },
+            adv: { text: 'Nâng cao', cls: 'd-adv' }
+        };
+
+        lessons.forEach((item, idx) => {
+            if (currentFilter !== 'ALL' && item.level !== currentFilter) return;
+
+            const li = document.createElement('li');
+            li.className = `lesson-item ${idx === currentLessonIdx ? 'active' : ''}`;
+            const lvl = levelLabels[item.level];
+            li.innerHTML = `
+                <div class="lesson-meta">
+                    <span class="lesson-tag">${item.tag}</span>
+                    <span class="diff-badge ${lvl.cls}">${lvl.text}</span>
+                </div>
+                <div style="font-size:0.88rem; font-weight:600; color:#1e293b;">${item.title}</div>
+            `;
+            li.onclick = () => selectLesson(idx);
+            listEl.appendChild(li);
+        });
+    }
+
+    function filterLessons(level, btn) {
+        currentFilter = level;
+        document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+        btn.classList.add('active');
+        renderLessons();
+    }
+
+    function selectLesson(idx) {
+        currentLessonIdx = idx;
+        const lesson = lessons[idx];
+        document.getElementById('exTitle').innerText = lesson.title;
+        document.getElementById('exDesc').innerText = lesson.desc;
+        document.getElementById('exNote').innerText = lesson.note || '';
+        document.getElementById('sqlInput').value = lesson.sample;
+        renderLessons();
+        runSQL();
+    }
+
+    function loadSampleCode() {
+        document.getElementById('sqlInput').value = lessons[currentLessonIdx].sample;
+        runSQL();
+    }
+
+    function clearEditor() {
+        document.getElementById('sqlInput').value = '';
+        document.getElementById('sqlInput').focus();
+    }
+
+    function resetDatabase() {
+        initDatabase();
+        previewTable(currentPreviewTable);
+        showStatus('Đã khôi phục toàn bộ 5 bảng dữ liệu gốc (Khoa, GiangVien, SinhVien, MonHoc, DangKyHoc)!', 'success');
+    }
+
+    // ==================== 4. BIÊN DỊCH & THỰC THI SQL ====================
+    function runSQL() {
+        const query = document.getElementById('sqlInput').value.trim();
+        const resultContainer = document.getElementById('resultContainer');
+        const rowCountLabel = document.getElementById('rowCountLabel');
+
+        if (!query) {
+            showStatus('Vui lòng nhập câu lệnh SQL trước khi nhấn chạy.', 'error');
+            return;
+        }
+
+        try {
+            const t0 = performance.now();
+            const res = alasql(query);
+            const dt = (performance.now() - t0).toFixed(2);
+
+            let finalData = res;
+            const statements = query.split(';').filter(s => s.trim().length > 0);
+            if (Array.isArray(res) && statements.length > 1) {
+                const selectResults = res.filter(r => Array.isArray(r));
+                finalData = selectResults.length > 0 ? selectResults[selectResults.length - 1] : res[res.length - 1];
+            }
+
+            if (Array.isArray(finalData)) {
+                lastQueryResult = finalData;
+                showStatus(`Biên dịch & thực thi thành công trong ${dt} ms — Trả về ${finalData.length} bản ghi.`, 'success');
+                rowCountLabel.innerText = `Tổng số dòng: ${finalData.length}`;
+                resultContainer.innerHTML = buildHTMLTable(finalData);
+            } else {
+                lastQueryResult = [];
+                showStatus(`Thực thi thành công trong ${dt} ms — Số dòng dữ liệu bị thay đổi: ${finalData}`, 'success');
+                rowCountLabel.innerText = '';
+                resultContainer.innerHTML = `<p style="padding: 15px; color: #166534;">Thao tác dữ liệu hoàn tất. Hãy dùng lệnh <code>SELECT</code> hoặc xem bảng bên dưới để kiểm tra sự thay đổi.</p>`;
+            }
+
+            previewTable(currentPreviewTable);
+
+        } catch (err) {
+            lastQueryResult = [];
+            rowCountLabel.innerText = '';
+            showStatus(`Lỗi cú pháp / thực thi SQL: ${err.message}`, 'error');
+            resultContainer.innerHTML = `<p style="padding: 15px; color: #991b1b;">Biên dịch thất bại. Vui lòng kiểm tra lại tên bảng, tên cột hoặc cú pháp câu lệnh.</p>`;
+        }
+    }
+
+    function buildHTMLTable(data) {
+        if (!data || data.length === 0) {
+            return `<p style="padding: 15px; color: var(--text-muted); font-size:0.9rem;">Truy vấn hợp lệ nhưng không có bản ghi nào thỏa mãn điều kiện (0 rows).</p>`;
+        }
+        const cols = Object.keys(data[0]);
+        let html = '<table><thead><tr>';
+        cols.forEach(c => html += `<th>${c}</th>`);
+        html += '</tr></thead><tbody>';
+
+        data.forEach(row => {
+            html += '<tr>';
+            cols.forEach(c => {
+                const v = row[c];
+                if (v === null || v === undefined) {
+                    html += `<td><span style="background:#f1f5f9; color:#94a3b8; padding:1px 6px; border-radius:4px; font-size:0.78rem; font-style:italic;">NULL</span></td>`;
+                } else if (typeof v === 'number' && v >= 100000) {
+                    html += `<td>${v.toLocaleString('vi-VN')}</td>`;
+                } else {
+                    html += `<td>${v}</td>`;
+                }
+            });
+            html += '</tr>';
+        });
+        html += '</tbody></table>';
+        return html;
+    }
+
+    function showStatus(msg, type) {
+        const box = document.getElementById('statusBox');
+        box.innerText = msg;
+        box.className = `status-msg status-${type}`;
+    }
+
+    function previewTable(tableName, btnEl) {
+        currentPreviewTable = tableName;
+        if (btnEl) {
+            document.querySelectorAll('.mini-tab').forEach(b => b.classList.remove('active'));
+            btnEl.classList.add('active');
+        }
+        const rows = alasql(`SELECT * FROM ${tableName}`);
+        document.getElementById('dbPreviewContainer').innerHTML = buildHTMLTable(rows);
+    }
+
+    // ==================== 5. XUẤT KẾT QUẢ RA FILE CSV ====================
+    function exportResultCSV() {
+        if (!lastQueryResult || lastQueryResult.length === 0) {
+            showStatus('Không có dữ liệu bảng để xuất CSV. Hãy chạy một câu lệnh SELECT trước!', 'error');
+            return;
+        }
+        const cols = Object.keys(lastQueryResult[0]);
+        const csvLines = [
+            cols.join(','),
+            ...lastQueryResult.map(row => cols.map(c => `"${row[c] ?? ''}"`).join(','))
+        ];
+        const blob = new Blob(["\uFEFF" + csvLines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `sql_result_${Date.now()}.csv`;
+        link.click();
+    }
+
+    // ==================== 6. ĐIỀU HƯỚNG TAB & LÝ THUYẾT ====================
+    function switchTab(tabId, btn) {
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+        document.getElementById(`tab-${tabId}`).classList.add('active');
+        btn.classList.add('active');
+    }
+
+    function showTheorySection(secId, btn) {
+        document.querySelectorAll('.theory-sec').forEach(el => el.style.display = 'none');
+        document.querySelectorAll('.theory-menu-item').forEach(el => el.classList.remove('active'));
+        document.getElementById(secId).style.display = 'block';
+        btn.classList.add('active');
+    }
+
+    // Phím tắt Ctrl + Enter
+    document.getElementById('sqlInput').addEventListener('keydown', function(e) {
+        if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+            e.preventDefault();
+            runSQL();
+        }
+    });
+
+    // Khởi chạy ứng dụng
+    initDatabase();
+    renderLessons();
+    selectLesson(0);
+    previewTable('Khoa');
+</script>
+
+</body>
+</html>
