@@ -1,0 +1,2224 @@
+<!DOCTYPE html>
+<html lang="vi" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Watermark Studio</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Optional JSZip CDN (App has built-in pure-JS ZIP fallback if offline) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Segoe UI', 'Inter', '-apple-system', 'BlinkMacSystemFont', 'Roboto', 'sans-serif'],
+          },
+          colors: {
+            appBg: '#0b0e14',
+            panelBg: '#11161f',
+            cardBg: '#171d28',
+            cardHover: '#1e2634',
+            borderDark: '#232c3d',
+            accentCyan: '#00a8e8',
+            accentBlue: '#0284c7',
+          }
+        }
+      }
+    };
+  </script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      user-select: none;
+    }
+    input[type="text"], input[type="number"], select {
+      user-select: text;
+    }
+    body {
+      background-color: #0b0e14;
+      color: #e2e8f0;
+      font-family: 'Segoe UI', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      overflow: hidden;
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0e131b;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #283347;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #3b4b68;
+    }
+
+    /* Custom Range Sliders */
+    input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 5px;
+      background: #253042;
+      border-radius: 999px;
+      outline: none;
+      cursor: pointer;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 15px;
+      height: 15px;
+      border-radius: 50%;
+      background: #131923;
+      border: 2.5px solid #4c749c;
+      box-shadow: 0 0 0 2px rgba(0, 168, 232, 0.2);
+      cursor: pointer;
+      transition: transform 0.12s ease, border-color 0.12s ease;
+    }
+    input[type="range"]::-webkit-slider-thumb:hover {
+      transform: scale(1.15);
+      border-color: #00a8e8;
+    }
+
+    /* Primary Cyan Gradient Buttons */
+    .btn-primary-cyan {
+      background: linear-gradient(135deg, #00a8e8 0%, #0077b6 100%);
+      box-shadow: 0 2px 10px rgba(0, 168, 232, 0.25);
+      transition: all 0.15s ease;
+    }
+    .btn-primary-cyan:hover {
+      background: linear-gradient(135deg, #14b8f5 0%, #0284c7 100%);
+      box-shadow: 0 4px 14px rgba(0, 168, 232, 0.4);
+    }
+    .btn-primary-cyan:active {
+      transform: translateY(1px);
+    }
+
+    /* Checkerboard pattern for transparent preview */
+    .checkerboard-bg {
+      background-color: #141923;
+      background-image:
+        linear-gradient(45deg, #1b2230 25%, transparent 25%),
+        linear-gradient(-45deg, #1b2230 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #1b2230 75%),
+        linear-gradient(-45deg, transparent 75%, #1b2230 75%);
+      background-size: 16px 16px;
+      background-position: 0 0, 0 8px, 8px -8px, -8px 0;
+    }
+
+    /* Section Header Blue Accent Bar */
+    .section-title-bar {
+      position: relative;
+      padding-left: 10px;
+    }
+    .section-title-bar::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 2px;
+      bottom: 2px;
+      width: 3px;
+      border-radius: 2px;
+      background: #00a8e8;
+    }
+  </style>
+</head>
+<body class="h-screen w-screen flex flex-col bg-appBg text-slate-200 select-none">
+
+  <!-- Hidden File Inputs -->
+  <input type="file" id="imageUploadInput" accept="image/*" multiple class="hidden" />
+  <input type="file" id="logoUploadInput" accept="image/png,image/jpeg,image/webp,image/svg+xml" class="hidden" />
+
+  <!-- ==================== 1. TOP HEADER BAR ==================== -->
+  <header class="h-14 bg-[#0d1118] border-b border-borderDark px-3 sm:px-5 flex items-center justify-between shrink-0 z-30">
+    <!-- Left: Brand & Undo / Redo -->
+    <div class="flex items-center gap-2 sm:gap-3">
+      <div class="flex items-center gap-2 pr-2 border-r border-borderDark">
+        <div class="w-8 h-8 rounded-lg btn-primary-cyan flex items-center justify-center text-white font-bold shadow">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M5 22h14"/><path d="M19.27 13.73A2.5 2.5 0 0 0 17.5 13h-11A2.5 2.5 0 0 0 4 15.5V17a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-1.5c0-.66-.26-1.3-.73-1.77Z"/><path d="M14 13V8.5C14 7 15 7 15 5a3 3 0 0 0-3-3c-1.66 0-3 1-3 3s1 2 1 3.5V13"/>
+          </svg>
+        </div>
+        <span class="hidden md:inline font-bold text-sm tracking-wide text-white">WATERMARK<span class="text-accentCyan"> STUDIO</span></span>
+      </div>
+
+      <div class="flex items-center gap-1">
+        <button id="btnUndo" onclick="undo()" disabled title="Hoàn tác (Ctrl+Z)"
+          class="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-cardHover disabled:opacity-35 disabled:pointer-events-none transition cursor-pointer">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5v0a5.5 5.5 0 0 1-5.5 5.5H11"/>
+          </svg>
+        </button>
+        <button id="btnRedo" onclick="redo()" disabled title="Làm lại (Ctrl+Y)"
+          class="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-cardHover disabled:opacity-35 disabled:pointer-events-none transition cursor-pointer">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m15 14 5-5-5-5"/><path d="M20 9H9.5A5.5 5.5 0 0 0 4 14.5v0A5.5 5.5 0 0 0 9.5 20H13"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Center: Main Action Buttons -->
+    <div class="flex items-center gap-2 sm:gap-2.5">
+      <button onclick="document.getElementById('imageUploadInput').click()"
+        class="btn-primary-cyan text-white font-semibold text-xs sm:text-sm px-3.5 sm:px-4 py-2 rounded-lg flex items-center gap-1.5 cursor-pointer">
+        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+        <span data-i18n="addImages">Thêm ảnh</span>
+      </button>
+
+      <button id="btnExportSelected" onclick="exportImages('selected')"
+        class="bg-[#181f2c] hover:bg-[#222b3c] border border-[#2d384d] text-slate-200 font-medium text-xs sm:text-sm px-3.5 sm:px-4 py-2 rounded-lg transition cursor-pointer">
+        <span data-i18n="exportSelected">Xuất ảnh đã chọn</span>
+      </button>
+
+      <button id="btnExportAll" onclick="exportImages('all')"
+        class="btn-primary-cyan text-white font-semibold text-xs sm:text-sm px-3.5 sm:px-4 py-2 rounded-lg transition cursor-pointer">
+        <span data-i18n="exportAll">Xuất tất cả</span>
+      </button>
+    </div>
+
+    <!-- Right: Language Switcher + Shortcuts + Help -->
+    <div class="flex items-center gap-2">
+      <div class="flex items-center bg-[#141a24] p-0.5 rounded-lg border border-borderDark">
+        <button id="langVN" onclick="setLanguage('vi')"
+          class="px-2.5 py-1 rounded-md text-xs font-bold transition bg-accentCyan text-white cursor-pointer">VN</button>
+        <button id="langEN" onclick="setLanguage('en')"
+          class="px-2.5 py-1 rounded-md text-xs font-bold transition text-slate-400 hover:text-white cursor-pointer">EN</button>
+      </div>
+
+      <button onclick="toggleModal('shortcutsModal', true)" title="Phím tắt"
+        class="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-cardHover transition hidden sm:flex cursor-pointer">
+        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect width="20" height="16" x="2" y="4" rx="2" ry="2"/><path d="M6 8h.001"/><path d="M10 8h.001"/><path d="M14 8h.001"/><path d="M18 8h.001"/><path d="M8 12h.001"/><path d="M12 12h.001"/><path d="M16 12h.001"/><path d="M7 16h10"/>
+        </svg>
+      </button>
+      <button onclick="toggleModal('helpModal', true)" title="Hướng dẫn sử dụng"
+        class="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-cardHover transition cursor-pointer">
+        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- ==================== 2. THREE-COLUMN WORKSPACE ==================== -->
+  <div class="flex-1 flex flex-col lg:flex-row overflow-hidden">
+
+    <!-- ==================== LEFT SIDEBAR: COLLECTION ==================== -->
+    <aside class="w-full lg:w-[270px] xl:w-[290px] bg-panelBg border-b lg:border-b-0 lg:border-r border-borderDark flex flex-col shrink-0 max-h-[34vh] lg:max-h-full">
+      <!-- Header -->
+      <div class="px-4 pt-3.5 pb-2.5 border-b border-borderDark/70">
+        <div class="flex items-center justify-between mb-2.5">
+          <span class="text-xs font-bold tracking-wider uppercase text-slate-300" data-i18n="collectionTitle">BỘ SƯU TẬP</span>
+          <span id="collectionCountBadge" class="bg-[#1e2736] text-slate-300 text-xs font-semibold px-2 py-0.5 rounded-full">0</span>
+        </div>
+
+        <label class="inline-flex items-center gap-2 text-xs text-slate-400 hover:text-slate-200 cursor-pointer">
+          <input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll(this.checked)"
+            class="w-3.5 h-3.5 rounded bg-cardBg border-slate-600 text-accentCyan focus:ring-0 cursor-pointer" />
+          <span data-i18n="selectAll">Chọn hết</span>
+        </label>
+      </div>
+
+      <!-- Scrollable List + Dropzone -->
+      <div id="thumbnailListContainer" class="flex-1 overflow-y-auto p-3 space-y-2.5">
+        <!-- Thumbnails injected dynamically here -->
+        <div id="thumbnailList" class="space-y-2.5"></div>
+
+        <!-- Drag & Drop Zone -->
+        <div id="sidebarDropZone"
+          onclick="document.getElementById('imageUploadInput').click()"
+          class="border border-dashed border-[#2d3a52] hover:border-accentCyan bg-[#131822]/70 hover:bg-[#17202e] rounded-xl p-5 text-center cursor-pointer transition group">
+          <div class="w-10 h-10 mx-auto mb-2.5 rounded-lg bg-[#1b2434] group-hover:bg-accentCyan/20 flex items-center justify-center text-accentCyan transition">
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 10v6"/><path d="M9 13h6"/><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/>
+            </svg>
+          </div>
+          <p class="text-[11px] leading-relaxed text-slate-400 group-hover:text-slate-300" data-i18n="dropzoneHint">
+            Kéo ảnh vào đây để bắt đầu, hoặc nhấn nút "+ Thêm ảnh" ở trên
+          </p>
+        </div>
+      </div>
+
+      <!-- Bottom Clear All -->
+      <div class="px-4 py-2.5 border-t border-borderDark bg-[#0e131b]">
+        <button onclick="clearAllImages()"
+          class="text-xs font-medium text-rose-500 hover:text-rose-400 transition cursor-pointer" data-i18n="clearAll">
+          Bỏ tất cả
+        </button>
+      </div>
+    </aside>
+
+    <!-- ==================== CENTER VIEWPORT: CANVAS STAGE ==================== -->
+    <main class="flex-1 flex flex-col bg-[#161b24] relative overflow-hidden min-h-[300px]">
+      <!-- Viewport Toolbar -->
+      <div class="h-11 bg-[#121721] border-b border-borderDark px-4 flex items-center justify-between shrink-0">
+        <span class="text-xs font-bold tracking-wider uppercase text-slate-400" data-i18n="viewportTitle">KHUNG XEM</span>
+
+        <div class="flex items-center gap-3">
+          <span id="activeImageMeta" class="text-xs text-slate-400 hidden sm:inline font-mono">—</span>
+
+          <div class="flex items-center gap-1 bg-[#18202e] border border-borderDark rounded-lg p-0.5">
+            <button onclick="adjustZoom(0.15)" title="Phóng to"
+              class="p-1.5 text-slate-300 hover:text-white hover:bg-cardHover rounded transition cursor-pointer">
+              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/>
+              </svg>
+            </button>
+            <button onclick="adjustZoom(-0.15)" title="Thu nhỏ"
+              class="p-1.5 text-slate-300 hover:text-white hover:bg-cardHover rounded transition cursor-pointer">
+              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/>
+              </svg>
+            </button>
+            <button onclick="fitCanvasToScreen()"
+              class="px-2.5 py-1 text-xs font-medium text-slate-200 hover:text-white bg-[#232d40] hover:bg-[#2d3a52] rounded transition cursor-pointer"
+              data-i18n="fitScreen">
+              Tự co
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Interactive Canvas Area -->
+      <div id="canvasWrapper" class="flex-1 relative overflow-hidden flex items-center justify-center p-4 sm:p-6 bg-[#181d27]">
+        <canvas id="previewCanvas" class="hidden shadow-2xl rounded-sm cursor-grab active:cursor-grabbing"></canvas>
+
+        <!-- Empty State Overlay -->
+        <div id="emptyViewportState" class="flex flex-col items-center justify-center text-center max-w-sm p-6">
+          <div class="w-16 h-16 rounded-2xl bg-cardBg border border-borderDark flex items-center justify-center text-accentCyan mb-4">
+            <svg class="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7"/><line x1="16" y1="5" x2="22" y2="5"/><line x1="19" y1="2" x2="19" y2="8"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/>
+            </svg>
+          </div>
+          <h3 class="text-base font-semibold text-white mb-1" data-i18n="emptyTitle">Chưa có ảnh nào được chọn</h3>
+          <p class="text-xs text-slate-400 mb-4" data-i18n="emptyDesc">Kéo thả ảnh vào đây hoặc nhấn + Thêm ảnh để bắt đầu.</p>
+          <button onclick="document.getElementById('imageUploadInput').click()"
+            class="btn-primary-cyan text-white text-xs font-semibold px-4 py-2.5 rounded-lg flex items-center gap-1.5 cursor-pointer">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            <span data-i18n="addImages">Thêm ảnh</span>
+          </button>
+        </div>
+
+        <!-- Floating Canvas Hint Pill -->
+        <div id="canvasHintPill" class="hidden absolute bottom-3 left-1/2 -translate-x-1/2 bg-[#0d1118]/85 backdrop-blur border border-borderDark px-3 py-1 rounded-full text-[11px] text-slate-400 pointer-events-none sm:flex items-center gap-2">
+          <span id="zoomPercentBadge" class="text-accentCyan font-semibold">100%</span>
+          <span>•</span>
+          <span data-i18n="canvasDragHint">Kéo trực tiếp watermark trên ảnh để đổi vị trí • Lăn chuột để thu phóng</span>
+        </div>
+      </div>
+    </main>
+
+    <!-- ==================== RIGHT INSPECTOR PANEL ==================== -->
+    <aside class="w-full lg:w-[340px] xl:w-[360px] bg-panelBg border-t lg:border-t-0 lg:border-l border-borderDark overflow-y-auto shrink-0 p-4 space-y-5">
+
+      <!-- SECTION 1: LỚP WATERMARK -->
+      <section class="space-y-3">
+        <div class="flex items-center justify-between">
+          <h2 class="section-title-bar text-xs font-bold tracking-wider uppercase text-white" data-i18n="watermarkLayersTitle">
+            LỚP WATERMARK
+          </h2>
+          <span id="layerCountLabel" class="text-[11px] text-slate-400">0 lớp</span>
+        </div>
+
+        <!-- Layer List -->
+        <div id="layerList" class="space-y-1.5"></div>
+
+        <!-- Add Layer Buttons (+ Logo | + Văn bản) -->
+        <div class="grid grid-cols-2 gap-2">
+          <button onclick="document.getElementById('logoUploadInput').click()"
+            class="btn-primary-cyan text-white text-xs font-semibold py-2 px-3 rounded-lg flex items-center justify-center gap-1.5 cursor-pointer">
+            <span>+ Logo</span>
+          </button>
+          <button onclick="addTextLayer()"
+            class="bg-[#1a212e] hover:bg-[#242e40] border border-[#2b364a] text-slate-200 text-xs font-semibold py-2 px-3 rounded-lg flex items-center justify-center gap-1.5 transition cursor-pointer">
+            <span data-i18n="addTextBtn">+ Văn bản</span>
+          </button>
+        </div>
+
+        <!-- Batch Apply Grid (2x2 + Full Width) -->
+        <div class="pt-1 space-y-2">
+          <div class="grid grid-cols-2 gap-2">
+            <button onclick="applyWatermarksBatch('all')"
+              class="bg-[#181f2c] hover:bg-[#222c3e] border border-[#283347] text-slate-200 text-[11px] font-medium py-2 px-2 rounded-lg transition cursor-pointer"
+              data-i18n="applyAll">
+              Áp lên mọi ảnh
+            </button>
+            <button onclick="applyWatermarksBatch('sameRatio')"
+              class="bg-[#181f2c] hover:bg-[#222c3e] border border-[#283347] text-slate-200 text-[11px] font-medium py-2 px-2 rounded-lg transition cursor-pointer"
+              data-i18n="applySameRatio">
+              Áp ảnh cùng tỷ lệ
+            </button>
+            <button onclick="applyWatermarksBatch('portrait')"
+              class="bg-[#181f2c] hover:bg-[#222c3e] border border-[#283347] text-slate-200 text-[11px] font-medium py-2 px-2 rounded-lg transition cursor-pointer"
+              data-i18n="applyPortrait">
+              Áp ảnh dọc
+            </button>
+            <button onclick="applyWatermarksBatch('landscape')"
+              class="bg-[#181f2c] hover:bg-[#222c3e] border border-[#283347] text-slate-200 text-[11px] font-medium py-2 px-2 rounded-lg transition cursor-pointer"
+              data-i18n="applyLandscape">
+              Áp ảnh ngang
+            </button>
+          </div>
+
+          <button onclick="appendCurrentLayerToAll()"
+            class="w-full bg-[#181f2c] hover:bg-[#222c3e] border border-[#283347] text-slate-200 text-[11px] font-medium py-2 px-3 rounded-lg transition cursor-pointer"
+            data-i18n="appendLayerAll">
+            Cộng lớp này lên mọi ảnh
+          </button>
+        </div>
+      </section>
+
+      <hr class="border-borderDark" />
+
+      <!-- SECTION 2: VĂN BẢN / LOGO PROPERTIES -->
+      <section id="layerPropertiesSection" class="space-y-3.5 opacity-40 pointer-events-none">
+        <h2 id="layerPropsHeader" class="section-title-bar text-xs font-bold tracking-wider uppercase text-white" data-i18n="textSectionTitle">
+          VĂN BẢN
+        </h2>
+
+        <!-- Text-specific Controls -->
+        <div id="textControlsGroup" class="space-y-3">
+          <div>
+            <label class="block text-[11px] text-slate-400 mb-1" data-i18n="textContentLabel">Văn bản</label>
+            <input type="text" id="propTextContent" value="© Your Brand"
+              oninput="updateActiveLayer('text', this.value)"
+              class="w-full bg-[#0d1118] border border-[#2a3548] focus:border-accentCyan rounded-lg px-3 py-2 text-xs text-white outline-none transition" />
+          </div>
+        </div>
+
+        <!-- Logo-specific Controls -->
+        <div id="logoControlsGroup" class="hidden space-y-3">
+          <div class="flex items-center justify-between bg-[#151b26] border border-borderDark rounded-lg p-2.5">
+            <div class="flex items-center gap-2.5">
+              <img id="logoThumbPreview" src="" alt="Logo" class="w-9 h-9 object-contain rounded bg-black/40 p-1" />
+              <div>
+                <div class="text-xs font-medium text-white" data-i18n="logoActiveLabel">Logo đang dùng</div>
+                <div class="text-[10px] text-slate-400">PNG / SVG / WEBP</div>
+              </div>
+            </div>
+            <button onclick="document.getElementById('logoUploadInput').click()"
+              class="text-xs text-accentCyan hover:underline font-medium cursor-pointer" data-i18n="changeLogo">
+              Đổi ảnh
+            </button>
+          </div>
+        </div>
+
+        <!-- Size & Opacity Row -->
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <div class="flex justify-between text-[11px] mb-1.5">
+              <span class="text-slate-400" data-i18n="sizeLabel">Cỡ</span>
+              <span id="valSize" class="text-slate-200 font-medium">5.0%</span>
+            </div>
+            <input type="range" id="propSize" min="1" max="60" step="0.5" value="5"
+              oninput="updateActiveLayer('size', parseFloat(this.value))" />
+          </div>
+
+          <div>
+            <div class="flex justify-between text-[11px] mb-1.5">
+              <span class="text-slate-400" data-i18n="opacityLabel">Độ trong</span>
+              <span id="valOpacity" class="text-slate-200 font-medium">35%</span>
+            </div>
+            <input type="range" id="propOpacity" min="5" max="100" step="1" value="35"
+              oninput="updateActiveLayer('opacity', parseInt(this.value))" />
+          </div>
+        </div>
+
+        <!-- Color & Font Weight (Text Only) -->
+        <div id="textStyleRow1" class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-[11px] text-slate-400 mb-1" data-i18n="colorLabel">Màu sắc</label>
+            <div class="flex items-center gap-2 bg-[#0d1118] border border-[#2a3548] rounded-lg px-2 h-9">
+              <input type="color" id="propColor" value="#ffffff"
+                oninput="updateActiveLayer('color', this.value)"
+                class="w-7 h-6 bg-transparent border-0 cursor-pointer rounded shrink-0" />
+              <span id="valColorHex" class="text-[11px] font-mono text-slate-300 uppercase">#FFFFFF</span>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-[11px] text-slate-400 mb-1" data-i18n="fontWeightLabel">Đậm chữ</label>
+            <select id="propFontWeight" onchange="updateActiveLayer('fontWeight', this.value)"
+              class="w-full h-9 bg-[#0d1118] border border-[#2a3548] focus:border-accentCyan rounded-lg px-2.5 text-xs text-white outline-none">
+              <option value="400">400 (Regular)</option>
+              <option value="500">500 (Medium)</option>
+              <option value="600">600 (SemiBold)</option>
+              <option value="700" selected>700 (Bold)</option>
+              <option value="800">800 (ExtraBold)</option>
+              <option value="900">900 (Black)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Font Family (Text Only) -->
+        <div id="textStyleRow2">
+          <label class="block text-[11px] text-slate-400 mb-1" data-i18n="fontFamilyLabel">Kiểu chữ</label>
+          <select id="propFontFamily" onchange="updateActiveLayer('fontFamily', this.value)"
+            class="w-full h-9 bg-[#0d1118] border border-[#2a3548] focus:border-accentCyan rounded-lg px-2.5 text-xs text-white outline-none">
+            <option value="Segoe UI, sans-serif">Segoe UI</option>
+            <option value="Arial, Helvetica, sans-serif">Arial</option>
+            <option value="Roboto, sans-serif">Roboto</option>
+            <option value="'Times New Roman', Times, serif">Times New Roman</option>
+            <option value="'Courier New', Courier, monospace">Courier New</option>
+            <option value="Georgia, serif">Georgia</option>
+            <option value="Impact, sans-serif">Impact</option>
+          </select>
+        </div>
+
+        <!-- Stroke & Drop Shadow -->
+        <div class="grid grid-cols-12 gap-3 items-center pt-1">
+          <div id="strokeControlCol" class="col-span-8">
+            <div class="flex justify-between text-[11px] mb-1.5">
+              <span class="text-slate-400" data-i18n="strokeLabel">Viền nét</span>
+              <span id="valStroke" class="text-slate-200 font-medium">0.0</span>
+            </div>
+            <input type="range" id="propStroke" min="0" max="8" step="0.5" value="0"
+              oninput="updateActiveLayer('strokeWidth', parseFloat(this.value))" />
+          </div>
+
+          <div class="col-span-4 flex flex-col items-end">
+            <span class="text-[11px] text-slate-400 mb-1.5" data-i18n="shadowLabel">Bóng đổ</span>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" id="propShadow" checked onchange="updateActiveLayer('shadow', this.checked)" class="sr-only peer" />
+              <div class="w-10 h-5 bg-[#253042] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-5 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-accentCyan"></div>
+            </label>
+          </div>
+        </div>
+
+        <!-- 3x3 Anchor Grid + Offset X, Y, Rotation -->
+        <div class="grid grid-cols-12 gap-3 pt-1 items-center">
+          <!-- 3x3 Anchor Matrix -->
+          <div class="col-span-4">
+            <span class="block text-[11px] text-slate-400 mb-1.5" data-i18n="anchorLabel">Điểm neo</span>
+            <div id="anchorGrid" class="grid grid-cols-3 gap-1 w-20 h-20 bg-[#0d1118] p-1.5 rounded-lg border border-[#253042]">
+              <!-- 9 buttons generated via JS -->
+            </div>
+          </div>
+
+          <!-- Sliders: Offset X, Offset Y, Angle -->
+          <div class="col-span-8 space-y-2.5">
+            <div>
+              <div class="flex justify-between text-[11px] mb-1">
+                <span class="text-slate-400" data-i18n="offsetXLabel">Dịch X</span>
+                <span id="valOffsetX" class="text-slate-200 font-medium">0.0%</span>
+              </div>
+              <input type="range" id="propOffsetX" min="-50" max="50" step="0.5" value="0"
+                oninput="updateActiveLayer('offsetX', parseFloat(this.value))" />
+            </div>
+
+            <div>
+              <div class="flex justify-between text-[11px] mb-1">
+                <span class="text-slate-400" data-i18n="offsetYLabel">Dịch Y</span>
+                <span id="valOffsetY" class="text-slate-200 font-medium">0.0%</span>
+              </div>
+              <input type="range" id="propOffsetY" min="-50" max="50" step="0.5" value="0"
+                oninput="updateActiveLayer('offsetY', parseFloat(this.value))" />
+            </div>
+
+            <div>
+              <div class="flex justify-between text-[11px] mb-1">
+                <span class="text-slate-400" data-i18n="rotationLabel">Góc nghiêng</span>
+                <span id="valRotation" class="text-slate-200 font-medium">0°</span>
+              </div>
+              <input type="range" id="propRotation" min="-180" max="180" step="1" value="0"
+                oninput="updateActiveLayer('rotation', parseInt(this.value))" />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 3: LẶP WATERMARK KHẮP ẢNH -->
+      <section class="bg-[#141a24] border border-borderDark rounded-xl p-3.5 space-y-3">
+        <div class="flex items-center justify-between">
+          <h2 class="text-xs font-bold tracking-wider uppercase text-white" data-i18n="tileSectionTitle">
+            LẶP WATERMARK KHẮP ẢNH
+          </h2>
+          <button id="btnToggleTile" onclick="disableTileMode()"
+            class="hidden text-xs font-semibold text-accentCyan hover:text-sky-300 transition cursor-pointer"
+            data-i18n="tileOn">
+            Tắt lặp
+          </button>
+        </div>
+
+        <p class="text-[11px] leading-relaxed text-slate-400" data-i18n="tileDesc">
+          Phủ logo khắp ảnh để chống sao chép. Bấm một mẫu để áp dụng nhanh.
+        </p>
+
+        <!-- Two Visual Preset Cards (Ô vuông & Chéo) -->
+        <div class="grid grid-cols-2 gap-2.5">
+          <!-- Card 1: Ô vuông (Straight 3x3 Orthogonal Grid) -->
+          <button type="button" id="tileTypeGrid" onclick="selectTilePreset('grid')"
+            class="group flex flex-col items-center justify-center gap-2.5 py-4 px-3 rounded-xl bg-[#0d1118] border border-[#253042] hover:border-[#00b4f0]/70 transition cursor-pointer">
+            <svg class="w-9 h-9 text-[#00b4f0] transition-transform group-hover:scale-105" viewBox="0 0 36 36" fill="currentColor">
+              <rect x="4" y="4" width="7.5" height="7.5" rx="1.8" />
+              <rect x="14.25" y="4" width="7.5" height="7.5" rx="1.8" />
+              <rect x="24.5" y="4" width="7.5" height="7.5" rx="1.8" />
+              <rect x="4" y="14.25" width="7.5" height="7.5" rx="1.8" />
+              <rect x="14.25" y="14.25" width="7.5" height="7.5" rx="1.8" />
+              <rect x="24.5" y="14.25" width="7.5" height="7.5" rx="1.8" />
+              <rect x="4" y="24.5" width="7.5" height="7.5" rx="1.8" />
+              <rect x="14.25" y="24.5" width="7.5" height="7.5" rx="1.8" />
+              <rect x="24.5" y="24.5" width="7.5" height="7.5" rx="1.8" />
+            </svg>
+            <span class="text-xs font-bold text-slate-100" data-i18n="tileGrid">Ô vuông</span>
+          </button>
+
+          <!-- Card 2: Chéo (Tilted 3x3 Diagonal Grid) -->
+          <button type="button" id="tileTypeDiagonal" onclick="selectTilePreset('diagonal')"
+            class="group flex flex-col items-center justify-center gap-2.5 py-4 px-3 rounded-xl bg-[#0d1118] border border-[#253042] hover:border-[#00b4f0]/70 transition cursor-pointer">
+            <svg class="w-9 h-9 text-[#00b4f0] -rotate-[28deg] transition-transform group-hover:scale-105" viewBox="0 0 36 36" fill="currentColor">
+              <rect x="4" y="4" width="7.5" height="7.5" rx="1.8" />
+              <rect x="14.25" y="4" width="7.5" height="7.5" rx="1.8" />
+              <rect x="24.5" y="4" width="7.5" height="7.5" rx="1.8" />
+              <rect x="4" y="14.25" width="7.5" height="7.5" rx="1.8" />
+              <rect x="14.25" y="14.25" width="7.5" height="7.5" rx="1.8" />
+              <rect x="24.5" y="14.25" width="7.5" height="7.5" rx="1.8" />
+              <rect x="4" y="24.5" width="7.5" height="7.5" rx="1.8" />
+              <rect x="14.25" y="24.5" width="7.5" height="7.5" rx="1.8" />
+              <rect x="24.5" y="24.5" width="7.5" height="7.5" rx="1.8" />
+            </svg>
+            <span class="text-xs font-bold text-slate-100" data-i18n="tileDiagonal">Chéo</span>
+          </button>
+        </div>
+
+        <!-- Fine-tuning Sliders (Shown when tiling is active) -->
+        <div id="tileControlsBody" class="hidden space-y-3 pt-2 border-t border-borderDark/70">
+          <div>
+            <div class="flex justify-between text-[11px] mb-1.5">
+              <span class="text-slate-400" data-i18n="tileSpacingLabel">Khoảng cách</span>
+              <span id="valTileSpacing" class="text-slate-200 font-medium">80%</span>
+            </div>
+            <input type="range" id="propTileSpacing" min="20" max="200" step="5" value="80"
+              oninput="updateActiveLayer('tileSpacing', parseInt(this.value))" />
+          </div>
+
+          <div>
+            <div class="flex justify-between text-[11px] mb-1.5">
+              <span class="text-slate-400" data-i18n="tileAngleLabel">Góc nghiêng</span>
+              <span id="valTileAngle" class="text-slate-200 font-medium">-30°</span>
+            </div>
+            <input type="range" id="propTileAngle" min="-90" max="90" step="1" value="-30"
+              oninput="updateActiveLayer('tileAngle', parseInt(this.value))" />
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 4: KHUNG XUẤT & CẮT CẢNH -->
+      <section class="space-y-2.5">
+        <h2 class="section-title-bar text-xs font-bold tracking-wider uppercase text-white" data-i18n="cropSectionTitle">
+          KHUNG XUẤT & CẮT CẢNH
+        </h2>
+        <div>
+          <label class="block text-xs font-medium text-slate-300" data-i18n="cropPresetLabel">Khung dựng sẵn</label>
+          <p class="text-[11px] text-slate-400 mb-2" data-i18n="cropPresetHint">Chọn nhanh kích thước cho các nền tảng phổ biến</p>
+          <select id="exportAspectPreset" onchange="updateExportSettings('aspectPreset', this.value)"
+            class="w-full h-10 bg-[#0d1118] border border-[#2a3548] focus:border-accentCyan rounded-lg px-3 text-xs text-white outline-none">
+            <option value="original">Giữ nguyên ảnh gốc</option>
+            <option value="1:1">1:1 (Vuông - Instagram/Avatar)</option>
+            <option value="4:5">4:5 (Dọc - Instagram/Facebook)</option>
+            <option value="16:9">16:9 (Ngang - YouTube/Web)</option>
+            <option value="9:16">9:16 (Story/TikTok/Reels)</option>
+            <option value="3:2">3:2 (Ảnh chụp chuẩn)</option>
+          </select>
+        </div>
+      </section>
+
+      <!-- SECTION 5: THAM SỐ XUẤT -->
+      <section class="space-y-3.5 pb-6">
+        <h2 class="section-title-bar text-xs font-bold tracking-wider uppercase text-white" data-i18n="exportParamsTitle">
+          THAM SỐ XUẤT
+        </h2>
+
+        <!-- Live Output Dimensions Card -->
+        <div class="bg-[#141a24] border border-borderDark rounded-xl p-3.5">
+          <div class="text-[10px] font-bold tracking-wider uppercase text-slate-400 mb-1" data-i18n="outputResolutionTitle">
+            KÍCH CỠ FILE XUẤT
+          </div>
+          <div class="flex items-baseline gap-1.5">
+            <span id="outputResDisplay" class="text-xl font-extrabold text-[#4ea8de] tracking-tight">0 x 0</span>
+            <span class="text-xs text-slate-400">px</span>
+          </div>
+          <div class="text-[11px] text-slate-400 mt-1" data-i18n="outputResolutionSub">
+            Kích thước thực tế sau khi cắt và co giãn
+          </div>
+        </div>
+
+        <!-- File Format -->
+        <div>
+          <label class="block text-xs font-medium text-slate-300 mb-1.5" data-i18n="fileTypeLabel">Loại file</label>
+          <select id="exportFormat" onchange="updateExportSettings('format', this.value)"
+            class="w-full h-10 bg-[#0d1118] border border-[#2a3548] focus:border-accentCyan rounded-lg px-3 text-xs text-white outline-none">
+            <option value="image/jpeg">JPG · gọn nhẹ, phù hợp web</option>
+            <option value="image/png">PNG · giữ nguyên chất lượng, hỗ trợ nền trong</option>
+            <option value="image/webp">WebP · hiện đại, tối ưu dung lượng</option>
+          </select>
+        </div>
+
+        <!-- Compression Quality -->
+        <div id="qualitySliderBox">
+          <div class="flex justify-between text-xs font-medium mb-0.5">
+            <span class="text-slate-200"><span data-i18n="qualityLabel">Chất lượng nén:</span> <span id="valExportQuality" class="text-white">85%</span></span>
+          </div>
+          <p class="text-[11px] text-slate-400 mb-2" data-i18n="qualityHint">Áp dụng cho JPG/WebP. Cao hơn = nét hơn nhưng file lớn hơn</p>
+          <input type="range" id="propExportQuality" min="10" max="100" step="1" value="85"
+            oninput="updateExportSettings('quality', parseInt(this.value))" />
+        </div>
+
+        <!-- Output Scale -->
+        <div>
+          <div class="flex justify-between text-xs font-medium mb-0.5">
+            <span class="text-slate-200"><span data-i18n="scaleLabel">Co giãn:</span> <span id="valExportScale" class="text-white">100%</span></span>
+          </div>
+          <p class="text-[11px] text-slate-400 mb-2" data-i18n="scaleHint">Phóng hoặc thu nhỏ kích thước đầu ra</p>
+          <input type="range" id="propExportScale" min="10" max="200" step="5" value="100"
+            oninput="updateExportSettings('scale', parseInt(this.value))" />
+        </div>
+      </section>
+    </aside>
+  </div>
+
+  <!-- ==================== MODALS & TOAST NOTIFICATION ==================== -->
+
+  <!-- Toast Notification -->
+  <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+  <!-- Batch Export Progress Modal -->
+  <div id="exportProgressModal" class="hidden fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-panelBg border border-borderDark rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl btn-primary-cyan flex items-center justify-center text-white">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/>
+          </svg>
+        </div>
+        <div>
+          <h3 class="text-base font-bold text-white" data-i18n="exportingTitle">Đang xuất ảnh hàng loạt...</h3>
+          <p id="exportProgressText" class="text-xs text-slate-400">Đang xử lý 1 / 5 ảnh...</p>
+        </div>
+      </div>
+
+      <div class="w-full h-2.5 bg-[#0d1118] rounded-full overflow-hidden border border-borderDark">
+        <div id="exportProgressBar" class="h-full btn-primary-cyan transition-all duration-150" style="width: 0%"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Keyboard Shortcuts Modal -->
+  <div id="shortcutsModal" class="hidden fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4" onclick="if(event.target===this) toggleModal('shortcutsModal', false)">
+    <div class="bg-panelBg border border-borderDark rounded-2xl max-w-md w-full p-6 shadow-2xl">
+      <div class="flex items-center justify-between pb-3 border-b border-borderDark mb-4">
+        <h3 class="text-sm font-bold uppercase tracking-wider text-white flex items-center gap-2">
+          <span data-i18n="shortcutsTitle">Phím tắt thao tác nhanh</span>
+        </h3>
+        <button onclick="toggleModal('shortcutsModal', false)" class="text-slate-400 hover:text-white cursor-pointer">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+      <div class="space-y-2.5 text-xs">
+        <div class="flex justify-between py-1.5 border-b border-borderDark/50">
+          <span class="text-slate-300" data-i18n="scUndo">Hoàn tác thay đổi</span>
+          <kbd class="px-2 py-0.5 bg-cardBg border border-borderDark rounded text-slate-200 font-mono">Ctrl + Z</kbd>
+        </div>
+        <div class="flex justify-between py-1.5 border-b border-borderDark/50">
+          <span class="text-slate-300" data-i18n="scRedo">Làm lại thay đổi</span>
+          <kbd class="px-2 py-0.5 bg-cardBg border border-borderDark rounded text-slate-200 font-mono">Ctrl + Y</kbd>
+        </div>
+        <div class="flex justify-between py-1.5 border-b border-borderDark/50">
+          <span class="text-slate-300" data-i18n="scArrows">Di chuyển watermark tinh chỉnh</span>
+          <kbd class="px-2 py-0.5 bg-cardBg border border-borderDark rounded text-slate-200 font-mono">← ↑ ↓ →</kbd>
+        </div>
+        <div class="flex justify-between py-1.5 border-b border-borderDark/50">
+          <span class="text-slate-300" data-i18n="scDelete">Xóa lớp watermark đang chọn</span>
+          <kbd class="px-2 py-0.5 bg-cardBg border border-borderDark rounded text-slate-200 font-mono">Delete</kbd>
+        </div>
+        <div class="flex justify-between py-1.5">
+          <span class="text-slate-300" data-i18n="scFit">Tự co khung xem vừa màn hình</span>
+          <kbd class="px-2 py-0.5 bg-cardBg border border-borderDark rounded text-slate-200 font-mono">0</kbd>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Help Modal -->
+  <div id="helpModal" class="hidden fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4" onclick="if(event.target===this) toggleModal('helpModal', false)">
+    <div class="bg-panelBg border border-borderDark rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4">
+      <div class="flex items-center justify-between pb-3 border-b border-borderDark">
+        <h3 class="text-sm font-bold uppercase tracking-wider text-white flex items-center gap-2">
+          <span data-i18n="helpTitle">Hướng dẫn sử dụng Batch Watermark Studio</span>
+        </h3>
+        <button onclick="toggleModal('helpModal', false)" class="text-slate-400 hover:text-white cursor-pointer">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+      <ul class="space-y-2.5 text-xs text-slate-300 leading-relaxed list-disc pl-4">
+        <li data-i18n="help1"><strong>Tải nhiều ảnh cùng lúc:</strong> Kéo thả hàng loạt ảnh vào cột trái hoặc nhấn nút <b>+ Thêm ảnh</b>. Toàn bộ xử lý diễn ra trực tiếp trên trình duyệt, bảo mật tuyệt đối 100%.</li>
+        <li data-i18n="help2"><strong>Đa lớp Watermark:</strong> Thêm nhiều lớp Chữ (© Your Brand) hoặc Logo PNG/SVG trong suốt. Kéo trực tiếp trên khung xem để căn chỉnh vị trí.</li>
+        <li data-i18n="help3"><strong>Chế độ lặp bảo vệ toàn ảnh:</strong> Chọn <b>Ô vuông</b> (lưới thẳng hàng 0°) hoặc <b>Chéo</b> (lưới nghiêng -30°) để phủ kín watermark toàn khung hình.</li>
+        <li data-i18n="help4"><strong>Áp dụng & Xuất hàng loạt:</strong> Dùng nút <b>Áp lên mọi ảnh</b> (hoặc phân loại ảnh dọc/ngang), sau đó nhấn <b>Xuất tất cả</b> để tải trọn bộ file ZIP chất lượng cao.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ==================== JAVASCRIPT APPLICATION LOGIC ==================== -->
+  <script>
+    // =========================================================================
+    // 1. INTERNATIONALIZATION (VN / EN)
+    // =========================================================================
+    const I18N = {
+      vi: {
+        addImages: "Thêm ảnh",
+        exportSelected: "Xuất ảnh đã chọn",
+        exportAll: "Xuất tất cả",
+        collectionTitle: "BỘ SƯU TẬP",
+        selectAll: "Chọn hết",
+        dropzoneHint: 'Kéo ảnh vào đây để bắt đầu, hoặc nhấn nút "+ Thêm ảnh" ở trên',
+        clearAll: "Bỏ tất cả",
+        viewportTitle: "KHUNG XEM",
+        fitScreen: "Tự co",
+        emptyTitle: "Chưa có ảnh nào được chọn",
+        emptyDesc: "Kéo thả ảnh vào đây hoặc nhấn + Thêm ảnh để bắt đầu.",
+        canvasDragHint: "Kéo trực tiếp watermark trên ảnh để đổi vị trí • Lăn chuột để thu phóng",
+        watermarkLayersTitle: "LỚP WATERMARK",
+        addTextBtn: "+ Văn bản",
+        applyAll: "Áp lên mọi ảnh",
+        applySameRatio: "Áp ảnh cùng tỷ lệ",
+        applyPortrait: "Áp ảnh dọc",
+        applyLandscape: "Áp ảnh ngang",
+        appendLayerAll: "Cộng lớp này lên mọi ảnh",
+        textSectionTitle: "VĂN BẢN",
+        logoSectionTitle: "LOGO HÌNH ẢNH",
+        textContentLabel: "Văn bản",
+        logoActiveLabel: "Logo đang dùng",
+        changeLogo: "Đổi ảnh",
+        sizeLabel: "Cỡ",
+        opacityLabel: "Độ trong",
+        colorLabel: "Màu sắc",
+        fontWeightLabel: "Đậm chữ",
+        fontFamilyLabel: "Kiểu chữ",
+        strokeLabel: "Viền nét",
+        shadowLabel: "Bóng đổ",
+        anchorLabel: "Điểm neo",
+        offsetXLabel: "Dịch X",
+        offsetYLabel: "Dịch Y",
+        rotationLabel: "Góc nghiêng",
+        tileSectionTitle: "LẶP WATERMARK KHẮP ẢNH",
+        tileDesc: "Phủ logo khắp ảnh để chống sao chép. Bấm một mẫu để áp dụng nhanh.",
+        tileGrid: "Ô vuông",
+        tileDiagonal: "Chéo",
+        tileSpacingLabel: "Khoảng cách",
+        tileAngleLabel: "Góc nghiêng",
+        cropSectionTitle: "KHUNG XUẤT & CẮT CẢNH",
+        cropPresetLabel: "Khung dựng sẵn",
+        cropPresetHint: "Chọn nhanh kích thước cho các nền tảng phổ biến",
+        exportParamsTitle: "THAM SỐ XUẤT",
+        outputResolutionTitle: "KÍCH CỠ FILE XUẤT",
+        outputResolutionSub: "Kích thước thực tế sau khi cắt và co giãn",
+        fileTypeLabel: "Loại file",
+        qualityLabel: "Chất lượng nén:",
+        qualityHint: "Áp dụng cho JPG/WebP. Cao hơn = nét hơn nhưng file lớn hơn",
+        scaleLabel: "Co giãn:",
+        scaleHint: "Phóng hoặc thu nhỏ kích thước đầu ra",
+        badgeWatermarked: "ĐÃ WATERMARK",
+        tileOn: "Tắt lặp",
+        exportingTitle: "Đang xuất ảnh hàng loạt...",
+        shortcutsTitle: "Phím tắt thao tác nhanh",
+        helpTitle: "Hướng dẫn sử dụng Batch Watermark Studio",
+        toastApplied: "Đã áp dụng watermark cho {n} ảnh!",
+        toastAppended: "Đã cộng thêm lớp watermark vào {n} ảnh!",
+        toastExportDone: "Xuất ảnh thành công!",
+        toastNoSelection: "Vui lòng chọn ít nhất 1 ảnh để xuất."
+      },
+      en: {
+        addImages: "Add Images",
+        exportSelected: "Export Selected",
+        exportAll: "Export All",
+        collectionTitle: "COLLECTION",
+        selectAll: "Select All",
+        dropzoneHint: 'Drag & drop images here to start, or click "+ Add Images" above',
+        clearAll: "Clear All",
+        viewportTitle: "VIEWPORT",
+        fitScreen: "Fit",
+        emptyTitle: "No image selected",
+        emptyDesc: "Drag & drop images here or click + Add Images to begin.",
+        canvasDragHint: "Drag watermark directly on canvas to move • Scroll wheel to zoom",
+        watermarkLayersTitle: "WATERMARK LAYERS",
+        addTextBtn: "+ Text",
+        applyAll: "Apply to All",
+        applySameRatio: "Same Aspect Ratio",
+        applyPortrait: "Apply Portrait",
+        applyLandscape: "Apply Landscape",
+        appendLayerAll: "Append Layer to All Images",
+        textSectionTitle: "TEXT PROPERTIES",
+        logoSectionTitle: "LOGO PROPERTIES",
+        textContentLabel: "Text Content",
+        logoActiveLabel: "Active Logo",
+        changeLogo: "Change",
+        sizeLabel: "Size",
+        opacityLabel: "Opacity",
+        colorLabel: "Color",
+        fontWeightLabel: "Weight",
+        fontFamilyLabel: "Font Family",
+        strokeLabel: "Stroke",
+        shadowLabel: "Shadow",
+        anchorLabel: "Anchor",
+        offsetXLabel: "Offset X",
+        offsetYLabel: "Offset Y",
+        rotationLabel: "Rotation",
+        tileSectionTitle: "TILE WATERMARK ACROSS IMAGE",
+        tileDesc: "Tile watermark across image to prevent copying. Click a preset to apply quickly.",
+        tileGrid: "Grid",
+        tileDiagonal: "Diagonal",
+        tileSpacingLabel: "Spacing",
+        tileAngleLabel: "Tile Angle",
+        cropSectionTitle: "EXPORT FRAME & CROP",
+        cropPresetLabel: "Aspect Preset",
+        cropPresetHint: "Quickly frame dimensions for popular platforms",
+        exportParamsTitle: "EXPORT PARAMETERS",
+        outputResolutionTitle: "OUTPUT FILE DIMENSIONS",
+        outputResolutionSub: "Actual dimensions after cropping and scaling",
+        fileTypeLabel: "File Format",
+        qualityLabel: "Compression Quality:",
+        qualityHint: "Applies to JPG/WebP. Higher = sharper but larger file size",
+        scaleLabel: "Output Scale:",
+        scaleHint: "Scale output dimensions up or down",
+        badgeWatermarked: "WATERMARKED",
+        tileOn: "Disable repeat",
+        exportingTitle: "Batch Exporting Images...",
+        shortcutsTitle: "Keyboard Shortcuts",
+        helpTitle: "Batch Watermark Studio Guide",
+        toastApplied: "Applied watermark to {n} image(s)!",
+        toastAppended: "Appended layer to {n} image(s)!",
+        toastExportDone: "Export completed successfully!",
+        toastNoSelection: "Please select at least 1 image to export."
+      }
+    };
+
+    let currentLang = 'vi';
+
+    function setLanguage(lang) {
+      currentLang = lang;
+      document.getElementById('langVN').className = lang === 'vi'
+        ? 'px-2.5 py-1 rounded-md text-xs font-bold transition bg-accentCyan text-white cursor-pointer'
+        : 'px-2.5 py-1 rounded-md text-xs font-bold transition text-slate-400 hover:text-white cursor-pointer';
+      document.getElementById('langEN').className = lang === 'en'
+        ? 'px-2.5 py-1 rounded-md text-xs font-bold transition bg-accentCyan text-white cursor-pointer'
+        : 'px-2.5 py-1 rounded-md text-xs font-bold transition text-slate-400 hover:text-white cursor-pointer';
+
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (I18N[lang][key]) {
+          el.textContent = I18N[lang][key];
+        }
+      });
+
+      renderThumbnails();
+      renderLayerList();
+      syncInspectorUI(false);
+    }
+
+    // =========================================================================
+    // 2. APPLICATION STATE & DATA STRUCTURES
+    // =========================================================================
+    function createDefaultTextLayer(overrides = {}) {
+      return {
+        id: 'layer_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7),
+        type: 'text',
+        visible: true,
+        text: '© Your Brand',
+        size: 5.0,
+        opacity: 35,
+        color: '#ffffff',
+        fontWeight: '700',
+        fontFamily: 'Segoe UI, sans-serif',
+        strokeWidth: 0,
+        shadow: true,
+        anchor: 'center',
+        offsetX: 0,
+        offsetY: 0,
+        rotation: 0,
+        tileEnabled: false,
+        tileType: 'diagonal',
+        tileSpacing: 80,
+        tileAngle: -30,
+        logoSrc: null,
+        logoImg: null,
+        ...overrides
+      };
+    }
+
+    function cloneLayers(layers) {
+      return layers.map(l => ({
+        ...l,
+        id: 'layer_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7)
+      }));
+    }
+
+    const state = {
+      images: [], // { id, name, width, height, imgElement, thumbUrl, selected, layers: [] }
+      activeImageId: null,
+      activeLayerId: null,
+      zoom: 1,
+      isAutoFit: true,
+      exportSettings: {
+        aspectPreset: 'original',
+        format: 'image/jpeg',
+        quality: 85,
+        scale: 100
+      },
+      history: [],
+      historyIndex: -1
+    };
+
+    function getActiveImage() {
+      return state.images.find(img => img.id === state.activeImageId) || null;
+    }
+
+    function getActiveLayer() {
+      const img = getActiveImage();
+      if (!img) return null;
+      return img.layers.find(l => l.id === state.activeLayerId) || img.layers[0] || null;
+    }
+
+    // =========================================================================
+    // 3. UNDO / REDO HISTORY ENGINE
+    // =========================================================================
+    function pushHistory() {
+      const snapshot = JSON.stringify(state.images.map(img => ({
+        id: img.id,
+        layers: img.layers.map(l => {
+          const { logoImg, ...serializable } = l;
+          return serializable;
+        })
+      })));
+
+      if (state.historyIndex >= 0 && state.history[state.historyIndex] === snapshot) return;
+
+      state.history = state.history.slice(0, state.historyIndex + 1);
+      state.history.push(snapshot);
+      if (state.history.length > 30) state.history.shift();
+      state.historyIndex = state.history.length - 1;
+      updateUndoRedoButtons();
+    }
+
+    function restoreHistorySnapshot(snapshotStr) {
+      const parsed = JSON.parse(snapshotStr);
+      parsed.forEach(savedImg => {
+        const target = state.images.find(i => i.id === savedImg.id);
+        if (target) {
+          target.layers = savedImg.layers.map(l => {
+            const restored = { ...l };
+            if (restored.type === 'logo' && restored.logoSrc) {
+              const im = new Image();
+              im.src = restored.logoSrc;
+              restored.logoImg = im;
+              im.onload = () => renderCanvas();
+            }
+            return restored;
+          });
+        }
+      });
+
+      const activeImg = getActiveImage();
+      if (activeImg && !activeImg.layers.some(l => l.id === state.activeLayerId)) {
+        state.activeLayerId = activeImg.layers[0]?.id || null;
+      }
+
+      renderThumbnails();
+      renderLayerList();
+      syncInspectorUI();
+      renderCanvas();
+      updateUndoRedoButtons();
+    }
+
+    function undo() {
+      if (state.historyIndex > 0) {
+        state.historyIndex--;
+        restoreHistorySnapshot(state.history[state.historyIndex]);
+      }
+    }
+
+    function redo() {
+      if (state.historyIndex < state.history.length - 1) {
+        state.historyIndex++;
+        restoreHistorySnapshot(state.history[state.historyIndex]);
+      }
+    }
+
+    function updateUndoRedoButtons() {
+      document.getElementById('btnUndo').disabled = state.historyIndex <= 0;
+      document.getElementById('btnRedo').disabled = state.historyIndex >= state.history.length - 1;
+    }
+
+    // =========================================================================
+    // 4. IMAGE UPLOAD & COLLECTION MANAGEMENT
+    // =========================================================================
+    document.getElementById('imageUploadInput').addEventListener('change', (e) => {
+      if (e.target.files && e.target.files.length) {
+        handleImageFiles(Array.from(e.target.files));
+        e.target.value = '';
+      }
+    });
+
+    // Global Drag & Drop Support
+    ['dragenter', 'dragover'].forEach(evtName => {
+      document.body.addEventListener(evtName, (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+      });
+    });
+
+    document.body.addEventListener('drop', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const files = Array.from(e.dataTransfer?.files || []).filter(f => f.type.startsWith('image/'));
+      if (files.length) {
+        handleImageFiles(files);
+      }
+    });
+
+    function handleImageFiles(files) {
+      const templateLayers = getActiveImage()?.layers
+        ? cloneLayers(getActiveImage().layers)
+        : [createDefaultTextLayer()];
+
+      let loadedCount = 0;
+      files.forEach((file) => {
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          const imgObj = new Image();
+          imgObj.onload = () => {
+            const newId = 'img_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7);
+            const item = {
+              id: newId,
+              name: file.name,
+              width: imgObj.naturalWidth,
+              height: imgObj.naturalHeight,
+              imgElement: imgObj,
+              thumbUrl: ev.target.result,
+              selected: true,
+              layers: cloneLayers(templateLayers)
+            };
+
+            state.images.push(item);
+            loadedCount++;
+
+            if (!state.activeImageId || loadedCount === files.length) {
+              selectImage(item.id);
+            }
+
+            if (loadedCount === files.length) {
+              pushHistory();
+              renderThumbnails();
+            }
+          };
+          imgObj.src = ev.target.result;
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    function selectImage(id) {
+      state.activeImageId = id;
+      const img = getActiveImage();
+      if (img) {
+        state.activeLayerId = img.layers[0]?.id || null;
+        document.getElementById('activeImageMeta').textContent = `${img.name} (${img.width}×${img.height})`;
+      } else {
+        state.activeLayerId = null;
+        document.getElementById('activeImageMeta').textContent = '—';
+      }
+
+      renderThumbnails();
+      renderLayerList();
+      syncInspectorUI();
+      fitCanvasToScreen();
+      updateOutputDimensionsDisplay();
+    }
+
+    function toggleImageSelection(id, checked, event) {
+      event.stopPropagation();
+      const img = state.images.find(i => i.id === id);
+      if (img) img.selected = checked;
+      updateSelectAllCheckbox();
+    }
+
+    function toggleSelectAll(checked) {
+      state.images.forEach(img => { img.selected = checked; });
+      renderThumbnails();
+    }
+
+    function updateSelectAllCheckbox() {
+      const cb = document.getElementById('selectAllCheckbox');
+      if (state.images.length === 0) {
+        cb.checked = false;
+        cb.indeterminate = false;
+        return;
+      }
+      const selectedCount = state.images.filter(i => i.selected).length;
+      cb.checked = selectedCount === state.images.length;
+      cb.indeterminate = selectedCount > 0 && selectedCount < state.images.length;
+    }
+
+    function removeImage(id, event) {
+      event.stopPropagation();
+      state.images = state.images.filter(i => i.id !== id);
+      if (state.activeImageId === id) {
+        state.activeImageId = state.images[0]?.id || null;
+      }
+      selectImage(state.activeImageId);
+      pushHistory();
+    }
+
+    function clearAllImages() {
+      state.images = [];
+      state.activeImageId = null;
+      state.activeLayerId = null;
+      state.history = [];
+      state.historyIndex = -1;
+      updateUndoRedoButtons();
+      document.getElementById('activeImageMeta').textContent = '—';
+      renderThumbnails();
+      renderLayerList();
+      syncInspectorUI();
+      renderCanvas();
+      updateOutputDimensionsDisplay();
+    }
+
+    function renderThumbnails() {
+      const container = document.getElementById('thumbnailList');
+      const countBadge = document.getElementById('collectionCountBadge');
+      countBadge.textContent = state.images.length;
+      updateSelectAllCheckbox();
+
+      container.innerHTML = state.images.map(img => {
+        const isActive = img.id === state.activeImageId;
+        const hasWatermark = img.layers.some(l => l.visible);
+
+        return `
+          <div onclick="selectImage('${img.id}')"
+            class="group relative rounded-xl overflow-hidden border transition cursor-pointer ${isActive ? 'border-accentCyan ring-1 ring-accentCyan/50 bg-[#182232]' : 'border-[#253042] bg-[#131822] hover:border-slate-500'}">
+            <!-- Top Badge & Checkbox -->
+            <div class="p-2 pb-0 flex items-center justify-between gap-1">
+              <div class="flex items-center gap-1.5">
+                <input type="checkbox" ${img.selected ? 'checked' : ''}
+                  onclick="toggleImageSelection('${img.id}', this.checked, event)"
+                  class="w-3.5 h-3.5 rounded bg-cardBg border-slate-600 text-accentCyan focus:ring-0 cursor-pointer" />
+                ${hasWatermark ? `<span class="bg-accentCyan text-[#07131d] text-[9px] font-extrabold px-1.5 py-0.5 rounded uppercase tracking-wide">${I18N[currentLang].badgeWatermarked}</span>` : ''}
+              </div>
+              <button onclick="removeImage('${img.id}', event)" title="Xóa ảnh"
+                class="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-rose-500/20 text-slate-400 hover:text-rose-400 transition cursor-pointer">
+                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+              </button>
+            </div>
+
+            <!-- Thumbnail Image Preview -->
+            <div class="p-2">
+              <div class="w-full h-28 rounded-lg checkerboard-bg overflow-hidden flex items-center justify-center">
+                <img src="${img.thumbUrl}" alt="${escapeHtml(img.name)}" class="max-w-full max-h-full object-contain" />
+              </div>
+            </div>
+
+            <!-- Filename & Resolution Footer -->
+            <div class="px-2.5 pb-2 pt-0.5 flex items-center justify-between gap-2 text-[11px]">
+              <span class="truncate font-medium text-slate-200">${escapeHtml(img.name)}</span>
+              <span class="text-[10px] text-slate-400 shrink-0 font-mono">${img.width}×${img.height}</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // =========================================================================
+    // 5. WATERMARK LAYERS MANAGEMENT
+    // =========================================================================
+    function renderLayerList() {
+      const img = getActiveImage();
+      const listEl = document.getElementById('layerList');
+      const countLabel = document.getElementById('layerCountLabel');
+
+      if (!img) {
+        listEl.innerHTML = '';
+        countLabel.textContent = '0';
+        return;
+      }
+
+      countLabel.textContent = `${img.layers.length} ${currentLang === 'vi' ? 'lớp' : 'layer(s)'}`;
+
+      listEl.innerHTML = img.layers.map((layer) => {
+        const isActive = layer.id === state.activeLayerId;
+        const label = layer.type === 'text' ? (layer.text || 'Text') : (layer.logoName || 'Logo');
+
+        return `
+          <div onclick="selectLayer('${layer.id}')"
+            class="flex items-center justify-between gap-2 px-2.5 py-2 rounded-lg border transition cursor-pointer ${isActive ? 'bg-[#1a2536] border-accentCyan/80 text-white' : 'bg-[#0e131b] border-[#222b3b] text-slate-300 hover:border-slate-600'}">
+            <div class="flex items-center gap-2 min-w-0">
+              <button onclick="toggleLayerVisibility('${layer.id}', event)" title="Ẩn / Hiện lớp"
+                class="text-slate-400 hover:text-accentCyan transition shrink-0 cursor-pointer">
+                ${layer.visible
+                  ? `<svg class="w-3.5 h-3.5 text-accentCyan" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>`
+                  : `<svg class="w-3.5 h-3.5 text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" y1="2" x2="22" y2="22"/></svg>`}
+              </button>
+              <span class="text-[11px] font-bold px-1.5 py-0.5 rounded bg-[#222d40] text-accentCyan shrink-0">
+                ${layer.type === 'text' ? 'T' : 'IMG'}
+              </span>
+              <span class="text-xs font-medium truncate">${escapeHtml(label)}</span>
+            </div>
+
+            <div class="flex items-center gap-1 shrink-0">
+              <button onclick="duplicateLayer('${layer.id}', event)" title="Nhân bản lớp"
+                class="p-1 text-slate-400 hover:text-white rounded hover:bg-white/10 transition cursor-pointer">
+                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>
+                </svg>
+              </button>
+              <button onclick="deleteLayer('${layer.id}', event)" title="Xóa lớp"
+                class="p-1 text-slate-400 hover:text-rose-400 rounded hover:bg-rose-500/10 transition cursor-pointer">
+                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function selectLayer(layerId) {
+      state.activeLayerId = layerId;
+      renderLayerList();
+      syncInspectorUI();
+      renderCanvas();
+    }
+
+    function addTextLayer() {
+      const img = getActiveImage();
+      if (!img) {
+        showToast(currentLang === 'vi' ? 'Vui lòng tải ảnh lên trước.' : 'Please upload an image first.', 'info');
+        return;
+      }
+      const newLayer = createDefaultTextLayer({
+        text: '© Your Brand',
+        offsetY: img.layers.length * 8
+      });
+      img.layers.push(newLayer);
+      state.activeLayerId = newLayer.id;
+      pushHistory();
+      renderLayerList();
+      renderThumbnails();
+      syncInspectorUI();
+      renderCanvas();
+    }
+
+    document.getElementById('logoUploadInput').addEventListener('change', (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const logoImg = new Image();
+        logoImg.onload = () => {
+          const img = getActiveImage();
+          if (!img) {
+            showToast(currentLang === 'vi' ? 'Vui lòng tải ảnh nền lên trước.' : 'Please upload a background image first.', 'info');
+            return;
+          }
+
+          const currentLayer = getActiveLayer();
+          if (currentLayer && currentLayer.type === 'logo' && e.target.dataset.replaceMode === 'true') {
+            currentLayer.logoSrc = ev.target.result;
+            currentLayer.logoImg = logoImg;
+            currentLayer.logoName = file.name;
+            e.target.dataset.replaceMode = 'false';
+          } else {
+            const logoLayer = createDefaultTextLayer({
+              type: 'logo',
+              logoName: file.name,
+              logoSrc: ev.target.result,
+              logoImg: logoImg,
+              size: 16,
+              opacity: 85,
+              tileEnabled: false
+            });
+            img.layers.push(logoLayer);
+            state.activeLayerId = logoLayer.id;
+          }
+
+          pushHistory();
+          renderLayerList();
+          renderThumbnails();
+          syncInspectorUI();
+          renderCanvas();
+        };
+        logoImg.src = ev.target.result;
+      };
+      reader.readAsDataURL(file);
+      e.target.value = '';
+    });
+
+    function toggleLayerVisibility(layerId, event) {
+      event.stopPropagation();
+      const img = getActiveImage();
+      const layer = img?.layers.find(l => l.id === layerId);
+      if (!layer) return;
+      layer.visible = !layer.visible;
+      pushHistory();
+      renderLayerList();
+      renderThumbnails();
+      renderCanvas();
+    }
+
+    function duplicateLayer(layerId, event) {
+      event.stopPropagation();
+      const img = getActiveImage();
+      const layer = img?.layers.find(l => l.id === layerId);
+      if (!layer) return;
+      const copy = {
+        ...layer,
+        id: 'layer_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7),
+        offsetX: Math.min(45, layer.offsetX + 5),
+        offsetY: Math.min(45, layer.offsetY + 5)
+      };
+      img.layers.push(copy);
+      state.activeLayerId = copy.id;
+      pushHistory();
+      renderLayerList();
+      renderThumbnails();
+      syncInspectorUI();
+      renderCanvas();
+    }
+
+    function deleteLayer(layerId, event) {
+      event.stopPropagation();
+      const img = getActiveImage();
+      if (!img) return;
+      img.layers = img.layers.filter(l => l.id !== layerId);
+      if (state.activeLayerId === layerId) {
+        state.activeLayerId = img.layers[0]?.id || null;
+      }
+      pushHistory();
+      renderLayerList();
+      renderThumbnails();
+      syncInspectorUI();
+      renderCanvas();
+    }
+
+    // =========================================================================
+    // 6. BATCH APPLY OPERATIONS
+    // =========================================================================
+    function applyWatermarksBatch(mode) {
+      const sourceImg = getActiveImage();
+      if (!sourceImg || state.images.length <= 1) return;
+
+      const sourceRatio = sourceImg.width / sourceImg.height;
+      let count = 0;
+
+      state.images.forEach(target => {
+        if (target.id === sourceImg.id) return;
+
+        let shouldApply = false;
+        if (mode === 'all') shouldApply = true;
+        else if (mode === 'portrait') shouldApply = target.height > target.width;
+        else if (mode === 'landscape') shouldApply = target.width >= target.height;
+        else if (mode === 'sameRatio') {
+          const targetRatio = target.width / target.height;
+          shouldApply = Math.abs(sourceRatio - targetRatio) < 0.08;
+        }
+
+        if (shouldApply) {
+          target.layers = cloneLayers(sourceImg.layers);
+          count++;
+        }
+      });
+
+      pushHistory();
+      renderThumbnails();
+      showToast(I18N[currentLang].toastApplied.replace('{n}', count));
+    }
+
+    function appendCurrentLayerToAll() {
+      const sourceImg = getActiveImage();
+      const activeLayer = getActiveLayer();
+      if (!sourceImg || !activeLayer || state.images.length <= 1) return;
+
+      let count = 0;
+      state.images.forEach(target => {
+        if (target.id === sourceImg.id) return;
+        target.layers.push({
+          ...activeLayer,
+          id: 'layer_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7)
+        });
+        count++;
+      });
+
+      pushHistory();
+      renderThumbnails();
+      showToast(I18N[currentLang].toastAppended.replace('{n}', count));
+    }
+
+    // =========================================================================
+    // 7. INSPECTOR UI & LAYER PROPERTY UPDATES
+    // =========================================================================
+    const ANCHORS = [
+      'top-left', 'top-center', 'top-right',
+      'mid-left', 'center', 'mid-right',
+      'bot-left', 'bot-center', 'bot-right'
+    ];
+
+    function buildAnchorGrid() {
+      const grid = document.getElementById('anchorGrid');
+      grid.innerHTML = ANCHORS.map(pos => `
+        <button type="button" data-anchor="${pos}" onclick="setAnchorPoint('${pos}')"
+          class="rounded bg-[#1a2230] hover:bg-[#28354a] border border-transparent transition flex items-center justify-center cursor-pointer">
+          <span class="w-1.5 h-1.5 rounded-full bg-slate-500 pointer-events-none"></span>
+        </button>
+      `).join('');
+    }
+
+    function setAnchorPoint(anchorPos) {
+      const layer = getActiveLayer();
+      if (!layer) return;
+      layer.anchor = anchorPos;
+      layer.offsetX = 0;
+      layer.offsetY = 0;
+      pushHistory();
+      syncInspectorUI();
+      renderCanvas();
+    }
+
+    function updateActiveLayer(prop, value) {
+      const layer = getActiveLayer();
+      if (!layer) return;
+      layer[prop] = value;
+
+      if (prop === 'text') renderLayerList();
+      syncInspectorUI(false);
+      renderThumbnails();
+      renderCanvas();
+    }
+
+    function selectTilePreset(mode) {
+      const layer = getActiveLayer();
+      if (!layer) return;
+      layer.tileEnabled = true;
+      layer.tileType = mode;
+
+      if (mode === 'grid') {
+        layer.tileAngle = 0;
+      } else if (mode === 'diagonal') {
+        if (layer.tileAngle === 0) {
+          layer.tileAngle = -30;
+        }
+      }
+
+      pushHistory();
+      syncInspectorUI();
+      renderThumbnails();
+      renderCanvas();
+    }
+
+    function disableTileMode() {
+      const layer = getActiveLayer();
+      if (!layer || !layer.tileEnabled) return;
+      layer.tileEnabled = false;
+      pushHistory();
+      syncInspectorUI();
+      renderThumbnails();
+      renderCanvas();
+    }
+
+    function syncInspectorUI(updateInputs = true) {
+      const layer = getActiveLayer();
+      const propsSection = document.getElementById('layerPropertiesSection');
+      if (!layer) {
+        propsSection.classList.add('opacity-40', 'pointer-events-none');
+        return;
+      }
+      propsSection.classList.remove('opacity-40', 'pointer-events-none');
+
+      const isText = layer.type === 'text';
+      document.getElementById('layerPropsHeader').textContent = isText
+        ? I18N[currentLang].textSectionTitle
+        : I18N[currentLang].logoSectionTitle;
+
+      document.getElementById('textControlsGroup').classList.toggle('hidden', !isText);
+      document.getElementById('textStyleRow1').classList.toggle('hidden', !isText);
+      document.getElementById('textStyleRow2').classList.toggle('hidden', !isText);
+      document.getElementById('strokeControlCol').classList.toggle('invisible', !isText);
+      document.getElementById('logoControlsGroup').classList.toggle('hidden', isText);
+
+      if (!isText && layer.logoSrc) {
+        document.getElementById('logoThumbPreview').src = layer.logoSrc;
+      }
+
+      // Live value badges
+      document.getElementById('valSize').textContent = `${layer.size.toFixed(1)}%`;
+      document.getElementById('valOpacity').textContent = `${layer.opacity}%`;
+      document.getElementById('valColorHex').textContent = layer.color.toUpperCase();
+      document.getElementById('valStroke').textContent = `${layer.strokeWidth.toFixed(1)}`;
+      document.getElementById('valOffsetX').textContent = `${layer.offsetX.toFixed(1)}%`;
+      document.getElementById('valOffsetY').textContent = `${layer.offsetY.toFixed(1)}%`;
+      document.getElementById('valRotation').textContent = `${layer.rotation}°`;
+      document.getElementById('valTileSpacing').textContent = `${layer.tileSpacing}%`;
+      document.getElementById('valTileAngle').textContent = `${layer.tileAngle}°`;
+
+      if (updateInputs) {
+        document.getElementById('propTextContent').value = layer.text || '';
+        document.getElementById('propSize').value = layer.size;
+        document.getElementById('propOpacity').value = layer.opacity;
+        document.getElementById('propColor').value = layer.color;
+        document.getElementById('propFontWeight').value = layer.fontWeight;
+        document.getElementById('propFontFamily').value = layer.fontFamily;
+        document.getElementById('propStroke').value = layer.strokeWidth;
+        document.getElementById('propShadow').checked = layer.shadow;
+        document.getElementById('propOffsetX').value = layer.offsetX;
+        document.getElementById('propOffsetY').value = layer.offsetY;
+        document.getElementById('propRotation').value = layer.rotation;
+        document.getElementById('propTileSpacing').value = layer.tileSpacing;
+        document.getElementById('propTileAngle').value = layer.tileAngle;
+      }
+
+      // Highlight Anchor Cell
+      document.querySelectorAll('#anchorGrid button').forEach(btn => {
+        const active = btn.dataset.anchor === layer.anchor;
+        btn.className = active
+          ? 'rounded bg-accentCyan border border-sky-300 shadow-[0_0_8px_rgba(0,168,232,0.6)] flex items-center justify-center cursor-pointer'
+          : 'rounded bg-[#1a2230] hover:bg-[#28354a] border border-transparent flex items-center justify-center cursor-pointer';
+        btn.firstElementChild.className = active
+          ? 'w-2 h-2 rounded-full bg-white pointer-events-none'
+          : 'w-1.5 h-1.5 rounded-full bg-slate-500 pointer-events-none';
+      });
+
+      // Update Tile Section state
+      const btnTile = document.getElementById('btnToggleTile');
+      const tileBody = document.getElementById('tileControlsBody');
+      if (layer.tileEnabled) {
+        btnTile.textContent = I18N[currentLang].tileOn;
+        btnTile.classList.remove('hidden');
+        tileBody.classList.remove('hidden');
+      } else {
+        btnTile.classList.add('hidden');
+        tileBody.classList.add('hidden');
+      }
+
+      const btnGrid = document.getElementById('tileTypeGrid');
+      const btnDiag = document.getElementById('tileTypeDiagonal');
+      const activeCardClass = 'group flex flex-col items-center justify-center gap-2.5 py-4 px-3 rounded-xl bg-[#0f1d2e] border-2 border-[#00b4f0] shadow-[0_0_15px_rgba(0,180,240,0.2)] transition cursor-pointer';
+      const inactiveCardClass = 'group flex flex-col items-center justify-center gap-2.5 py-4 px-3 rounded-xl bg-[#0d1118] border border-[#253042] hover:border-[#00b4f0]/60 transition cursor-pointer';
+
+      btnGrid.className = (layer.tileEnabled && layer.tileType === 'grid') ? activeCardClass : inactiveCardClass;
+      btnDiag.className = (layer.tileEnabled && layer.tileType === 'diagonal') ? activeCardClass : inactiveCardClass;
+    }
+
+    // Commit range slider changes to Undo history on release
+    document.querySelectorAll('input[type="range"]').forEach(slider => {
+      slider.addEventListener('change', () => pushHistory());
+    });
+
+    // =========================================================================
+    // 8. EXPORT SETTINGS & LIVE DIMENSION CALCULATION
+    // =========================================================================
+    function updateExportSettings(key, value) {
+      state.exportSettings[key] = value;
+
+      if (key === 'quality') {
+        document.getElementById('valExportQuality').textContent = `${value}%`;
+      } else if (key === 'scale') {
+        document.getElementById('valExportScale').textContent = `${value}%`;
+      } else if (key === 'format') {
+        const qBox = document.getElementById('qualitySliderBox');
+        qBox.classList.toggle('opacity-40', value === 'image/png');
+        qBox.classList.toggle('pointer-events-none', value === 'image/png');
+      }
+
+      updateOutputDimensionsDisplay();
+      renderCanvas();
+    }
+
+    function computeCroppedAndScaledRect(srcW, srcH) {
+      const preset = state.exportSettings.aspectPreset;
+      const scale = state.exportSettings.scale / 100;
+
+      let cropW = srcW;
+      let cropH = srcH;
+
+      if (preset !== 'original') {
+        const [rw, rh] = preset.split(':').map(Number);
+        const targetRatio = rw / rh;
+        const srcRatio = srcW / srcH;
+
+        if (srcRatio > targetRatio) {
+          cropH = srcH;
+          cropW = Math.round(srcH * targetRatio);
+        } else {
+          cropW = srcW;
+          cropH = Math.round(srcW / targetRatio);
+        }
+      }
+
+      const cropX = Math.round((srcW - cropW) / 2);
+      const cropY = Math.round((srcH - cropH) / 2);
+      const outW = Math.max(1, Math.round(cropW * scale));
+      const outH = Math.max(1, Math.round(cropH * scale));
+
+      return { cropX, cropY, cropW, cropH, outW, outH };
+    }
+
+    function updateOutputDimensionsDisplay() {
+      const img = getActiveImage();
+      const display = document.getElementById('outputResDisplay');
+      if (!img) {
+        display.textContent = '0 x 0';
+        return;
+      }
+      const { outW, outH } = computeCroppedAndScaledRect(img.width, img.height);
+      display.textContent = `${outW} x ${outH}`;
+    }
+
+    // =========================================================================
+    // 9. CORE HTML5 CANVAS WATERMARK RENDERER
+    // =========================================================================
+    function renderImageToCanvas(targetCanvas, imageItem, isExport = false) {
+      const ctx = targetCanvas.getContext('2d');
+      const { cropX, cropY, cropW, cropH, outW, outH } = computeCroppedAndScaledRect(
+        imageItem.width,
+        imageItem.height
+      );
+
+      const renderW = isExport ? outW : cropW;
+      const renderH = isExport ? outH : cropH;
+
+      targetCanvas.width = renderW;
+      targetCanvas.height = renderH;
+
+      ctx.clearRect(0, 0, renderW, renderH);
+      ctx.drawImage(imageItem.imgElement, cropX, cropY, cropW, cropH, 0, 0, renderW, renderH);
+
+      const minDim = Math.min(renderW, renderH);
+
+      imageItem.layers.forEach(layer => {
+        if (!layer.visible) return;
+        ctx.save();
+        ctx.globalAlpha = Math.max(0.01, Math.min(1, layer.opacity / 100));
+
+        const fontSize = Math.max(10, (layer.size / 100) * minDim);
+        if (layer.type === 'text') {
+          ctx.font = `${layer.fontWeight} ${fontSize}px ${layer.fontFamily}`;
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+        }
+
+        if (layer.shadow) {
+          ctx.shadowColor = 'rgba(0, 0, 0, 0.72)';
+          ctx.shadowBlur = Math.max(4, fontSize * 0.16);
+          ctx.shadowOffsetX = Math.max(1, fontSize * 0.05);
+          ctx.shadowOffsetY = Math.max(2, fontSize * 0.07);
+        }
+
+        if (layer.tileEnabled) {
+          renderTiledWatermark(ctx, renderW, renderH, layer, fontSize);
+        } else {
+          renderSingleWatermark(ctx, renderW, renderH, layer, fontSize);
+        }
+
+        ctx.restore();
+      });
+    }
+
+    function getAnchorCoordinates(anchor, canvasW, canvasH, padX, padY) {
+      let x = canvasW / 2;
+      let y = canvasH / 2;
+
+      if (anchor.includes('left')) x = padX;
+      else if (anchor.includes('right')) x = canvasW - padX;
+
+      if (anchor.includes('top')) y = padY;
+      else if (anchor.includes('bot')) y = canvasH - padY;
+
+      return { x, y };
+    }
+
+    function paintWatermarkStamp(ctx, layer, fontSize, canvasW, canvasH) {
+      if (layer.type === 'text') {
+        const text = layer.text || '';
+        if (!text) return;
+
+        if (layer.strokeWidth > 0) {
+          ctx.lineWidth = layer.strokeWidth * (fontSize / 24);
+          ctx.strokeStyle = '#000000';
+          ctx.lineJoin = 'round';
+          ctx.strokeText(text, 0, 0);
+        }
+        ctx.fillStyle = layer.color;
+        ctx.fillText(text, 0, 0);
+      } else if (layer.type === 'logo' && layer.logoImg && layer.logoImg.complete) {
+        const targetW = (layer.size / 100) * canvasW;
+        const aspect = layer.logoImg.naturalHeight / (layer.logoImg.naturalWidth || 1);
+        const targetH = targetW * aspect;
+        ctx.drawImage(layer.logoImg, -targetW / 2, -targetH / 2, targetW, targetH);
+      }
+    }
+
+    function renderSingleWatermark(ctx, canvasW, canvasH, layer, fontSize) {
+      let halfW = 0;
+      let halfH = 0;
+
+      if (layer.type === 'text') {
+        const metrics = ctx.measureText(layer.text || '');
+        halfW = metrics.width / 2;
+        halfH = fontSize * 0.5;
+      } else if (layer.type === 'logo' && layer.logoImg) {
+        const targetW = (layer.size / 100) * canvasW;
+        halfW = targetW / 2;
+        halfH = (targetW * (layer.logoImg.naturalHeight / (layer.logoImg.naturalWidth || 1))) / 2;
+      }
+
+      const margin = Math.max(16, Math.min(canvasW, canvasH) * 0.03);
+      const basePos = getAnchorCoordinates(layer.anchor, canvasW, canvasH, halfW + margin, halfH + margin);
+
+      const posX = basePos.x + (layer.offsetX / 100) * canvasW;
+      const posY = basePos.y + (layer.offsetY / 100) * canvasH;
+
+      ctx.translate(posX, posY);
+      ctx.rotate((layer.rotation * Math.PI) / 180);
+      paintWatermarkStamp(ctx, layer, fontSize, canvasW, canvasH);
+    }
+
+    function renderTiledWatermark(ctx, canvasW, canvasH, layer, fontSize) {
+      let stampW = fontSize * 5;
+      let stampH = fontSize * 1.4;
+
+      if (layer.type === 'text') {
+        const metrics = ctx.measureText(layer.text || '© Your Brand');
+        stampW = Math.max(40, metrics.width);
+        stampH = fontSize * 1.25;
+      } else if (layer.type === 'logo' && layer.logoImg) {
+        stampW = (layer.size / 100) * canvasW;
+        stampH = stampW * (layer.logoImg.naturalHeight / (layer.logoImg.naturalWidth || 1));
+      }
+
+      const isOrthogonalGrid = layer.tileType === 'grid';
+      const spacingFactor = layer.tileSpacing / 100;
+
+      // Orthogonal square grid uses uniform rectangular rows & columns; diagonal uses wider cadence
+      const stepX = isOrthogonalGrid
+        ? stampW + Math.max(24, stampW * 0.4 * spacingFactor)
+        : stampW + Math.max(30, stampW * 0.45 * spacingFactor);
+
+      const stepY = isOrthogonalGrid
+        ? Math.max(stampH * 1.5, stampH + Math.max(24, fontSize * 1.8 * spacingFactor))
+        : stampH + Math.max(40, fontSize * 2.4 * spacingFactor);
+
+      // Full bounding diagonal ensures edges & corners remain 100% covered at any angle
+      const coverExtent = Math.hypot(canvasW, canvasH) * 1.2;
+      const totalAngle = ((layer.tileAngle + layer.rotation) * Math.PI) / 180;
+
+      ctx.save();
+      ctx.translate(
+        canvasW / 2 + (layer.offsetX / 100) * canvasW,
+        canvasH / 2 + (layer.offsetY / 100) * canvasH
+      );
+      ctx.rotate(totalAngle);
+
+      const cols = Math.ceil(coverExtent / stepX) + 2;
+      const rows = Math.ceil(coverExtent / stepY) + 2;
+
+      for (let r = -rows; r <= rows; r++) {
+        // Strict orthogonal alignment for 'grid'; brick-staggered rows only for 'diagonal'
+        const brickShift = (!isOrthogonalGrid && Math.abs(r) % 2 === 1) ? stepX * 0.5 : 0;
+        for (let c = -cols; c <= cols; c++) {
+          const x = c * stepX + brickShift;
+          const y = r * stepY;
+          ctx.save();
+          ctx.translate(x, y);
+          paintWatermarkStamp(ctx, layer, fontSize, canvasW, canvasH);
+          ctx.restore();
+        }
+      }
+      ctx.restore();
+    }
+
+    // =========================================================================
+    // 10. VIEWPORT CANVAS ZOOM, PAN & DIRECT DRAG INTERACTION
+    // =========================================================================
+    const previewCanvas = document.getElementById('previewCanvas');
+    const canvasWrapper = document.getElementById('canvasWrapper');
+
+    function renderCanvas() {
+      const img = getActiveImage();
+      const emptyState = document.getElementById('emptyViewportState');
+      const hintPill = document.getElementById('canvasHintPill');
+
+      if (!img) {
+        previewCanvas.classList.add('hidden');
+        hintPill.classList.add('hidden');
+        emptyState.classList.remove('hidden');
+        return;
+      }
+
+      emptyState.classList.add('hidden');
+      previewCanvas.classList.remove('hidden');
+      hintPill.classList.remove('hidden');
+
+      renderImageToCanvas(previewCanvas, img, false);
+      applyCanvasDisplayScale();
+    }
+
+    function fitCanvasToScreen() {
+      const img = getActiveImage();
+      if (!img) {
+        renderCanvas();
+        return;
+      }
+
+      const { cropW, cropH } = computeCroppedAndScaledRect(img.width, img.height);
+      const wrapRect = canvasWrapper.getBoundingClientRect();
+      const availW = Math.max(100, wrapRect.width - 48);
+      const availH = Math.max(100, wrapRect.height - 56);
+
+      state.zoom = Math.min(availW / cropW, availH / cropH, 1);
+      state.isAutoFit = true;
+      renderCanvas();
+    }
+
+    function adjustZoom(delta) {
+      if (!getActiveImage()) return;
+      state.isAutoFit = false;
+      state.zoom = Math.max(0.1, Math.min(3, state.zoom + delta));
+      applyCanvasDisplayScale();
+    }
+
+    function applyCanvasDisplayScale() {
+      if (!previewCanvas.width) return;
+      previewCanvas.style.width = `${Math.round(previewCanvas.width * state.zoom)}px`;
+      previewCanvas.style.height = `${Math.round(previewCanvas.height * state.zoom)}px`;
+      document.getElementById('zoomPercentBadge').textContent = `${Math.round(state.zoom * 100)}%`;
+    }
+
+    window.addEventListener('resize', () => {
+      if (state.isAutoFit && getActiveImage()) {
+        fitCanvasToScreen();
+      }
+    });
+
+    canvasWrapper.addEventListener('wheel', (e) => {
+      if (!getActiveImage()) return;
+      e.preventDefault();
+      adjustZoom(e.deltaY < 0 ? 0.08 : -0.08);
+    }, { passive: false });
+
+    // Direct Canvas Dragging to move Watermark Offset X / Y
+    let isDraggingCanvas = false;
+    let dragStartX = 0;
+    let dragStartY = 0;
+    let startOffsetX = 0;
+    let startOffsetY = 0;
+
+    function startCanvasDrag(clientX, clientY) {
+      const layer = getActiveLayer();
+      if (!layer || !getActiveImage()) return;
+      isDraggingCanvas = true;
+      dragStartX = clientX;
+      dragStartY = clientY;
+      startOffsetX = layer.offsetX;
+      startOffsetY = layer.offsetY;
+    }
+
+    function moveCanvasDrag(clientX, clientY) {
+      if (!isDraggingCanvas) return;
+      const layer = getActiveLayer();
+      if (!layer) return;
+
+      const rect = previewCanvas.getBoundingClientRect();
+      if (!rect.width || !rect.height) return;
+
+      const dxPercent = ((clientX - dragStartX) / rect.width) * 100;
+      const dyPercent = ((clientY - dragStartY) / rect.height) * 100;
+
+      layer.offsetX = Math.max(-50, Math.min(50, +(startOffsetX + dxPercent).toFixed(1)));
+      layer.offsetY = Math.max(-50, Math.min(50, +(startOffsetY + dyPercent).toFixed(1)));
+
+      syncInspectorUI();
+      renderCanvas();
+    }
+
+    function endCanvasDrag() {
+      if (isDraggingCanvas) {
+        isDraggingCanvas = false;
+        pushHistory();
+      }
+    }
+
+    previewCanvas.addEventListener('mousedown', (e) => startCanvasDrag(e.clientX, e.clientY));
+    window.addEventListener('mousemove', (e) => moveCanvasDrag(e.clientX, e.clientY));
+    window.addEventListener('mouseup', endCanvasDrag);
+
+    previewCanvas.addEventListener('touchstart', (e) => {
+      if (e.touches.length === 1) {
+        startCanvasDrag(e.touches[0].clientX, e.touches[0].clientY);
+      }
+    }, { passive: true });
+    window.addEventListener('touchmove', (e) => {
+      if (isDraggingCanvas && e.touches.length === 1) {
+        moveCanvasDrag(e.touches[0].clientX, e.touches[0].clientY);
+      }
+    }, { passive: true });
+    window.addEventListener('touchend', endCanvasDrag);
+
+    // =========================================================================
+    // 11. BATCH EXPORT ENGINE (SINGLE FILE OR ZIP ARCHIVE WITH OFFLINE FALLBACK)
+    // =========================================================================
+    function createOfflineZipBlob(files) {
+      // Zero-dependency STORE-mode ZIP archive builder when JSZip CDN is offline
+      const encoder = new TextEncoder();
+      const parts = [];
+      const centralDir = [];
+      let offset = 0;
+
+      const crcTable = new Uint32Array(256);
+      for (let i = 0; i < 256; i++) {
+        let c = i;
+        for (let k = 0; k < 8; k++) c = (c & 1) ? (0xedb88320 ^ (c >>> 1)) : (c >>> 1);
+        crcTable[i] = c;
+      }
+      const crc32 = (buf) => {
+        let crc = 0xffffffff;
+        for (let i = 0; i < buf.length; i++) crc = crcTable[(crc ^ buf[i]) & 0xff] ^ (crc >>> 8);
+        return (crc ^ 0xffffffff) >>> 0;
+      };
+
+      files.forEach(({ name, data }) => {
+        const nameBytes = encoder.encode(name);
+        const crc = crc32(data);
+        const size = data.length;
+
+        const localHeader = new Uint8Array(30 + nameBytes.length);
+        const lv = new DataView(localHeader.buffer);
+        lv.setUint32(0, 0x04034b50, true);
+        lv.setUint16(4, 20, true);
+        lv.setUint16(8, 0, true);
+        lv.setUint32(14, crc, true);
+        lv.setUint32(18, size, true);
+        lv.setUint32(22, size, true);
+        lv.setUint16(26, nameBytes.length, true);
+        localHeader.set(nameBytes, 30);
+
+        parts.push(localHeader, data);
+
+        const cdHeader = new Uint8Array(46 + nameBytes.length);
+        const cv = new DataView(cdHeader.buffer);
+        cv.setUint32(0, 0x02014b50, true);
+        cv.setUint16(4, 20, true);
+        cv.setUint16(6, 20, true);
+        cv.setUint32(16, crc, true);
+        cv.setUint32(20, size, true);
+        cv.setUint32(24, size, true);
+        cv.setUint16(28, nameBytes.length, true);
+        cv.setUint32(42, offset, true);
+        cdHeader.set(nameBytes, 46);
+        centralDir.push(cdHeader);
+
+        offset += localHeader.length + size;
+      });
+
+      const cdSize = centralDir.reduce((acc, b) => acc + b.length, 0);
+      const eocd = new Uint8Array(22);
+      const ev = new DataView(eocd.buffer);
+      ev.setUint32(0, 0x06054b50, true);
+      ev.setUint16(8, files.length, true);
+      ev.setUint16(10, files.length, true);
+      ev.setUint32(12, cdSize, true);
+      ev.setUint32(16, offset, true);
+
+      return new Blob([...parts, ...centralDir, eocd], { type: 'application/zip' });
+    }
+
+    async function exportImages(scope) {
+      const targets = scope === 'selected'
+        ? state.images.filter(i => i.selected)
+        : state.images;
+
+      if (!targets.length) {
+        showToast(I18N[currentLang].toastNoSelection, 'error');
+        return;
+      }
+
+      const format = state.exportSettings.format;
+      const quality = state.exportSettings.quality / 100;
+      const ext = format === 'image/png' ? 'png' : (format === 'image/webp' ? 'webp' : 'jpg');
+
+      const offscreenCanvas = document.createElement('canvas');
+
+      // Single image -> direct download
+      if (targets.length === 1) {
+        const item = targets[0];
+        renderImageToCanvas(offscreenCanvas, item, true);
+        const baseName = item.name.replace(/\.[^/.]+$/, '');
+        offscreenCanvas.toBlob((blob) => {
+          triggerDownload(blob, `${baseName}_watermarked.${ext}`);
+          showToast(I18N[currentLang].toastExportDone);
+        }, format, quality);
+        return;
+      }
+
+      // Multiple images -> ZIP batch archive
+      const modal = document.getElementById('exportProgressModal');
+      const progressBar = document.getElementById('exportProgressBar');
+      const progressText = document.getElementById('exportProgressText');
+      modal.classList.remove('hidden');
+
+      const useJSZip = typeof window.JSZip !== 'undefined';
+      const zip = useJSZip ? new window.JSZip() : null;
+      const rawZipFiles = [];
+      const usedNames = new Set();
+
+      for (let i = 0; i < targets.length; i++) {
+        const item = targets[i];
+        const pct = Math.round(((i + 1) / targets.length) * 100);
+        progressBar.style.width = `${pct}%`;
+        progressText.textContent = currentLang === 'vi'
+          ? `Đang xử lý ${i + 1} / ${targets.length} ảnh...`
+          : `Processing ${i + 1} / ${targets.length} images...`;
+
+        await new Promise(r => setTimeout(r, 15));
+
+        renderImageToCanvas(offscreenCanvas, item, true);
+        const blob = await new Promise(resolve => offscreenCanvas.toBlob(resolve, format, quality));
+
+        let baseName = item.name.replace(/\.[^/.]+$/, '');
+        let finalName = `${baseName}_watermarked.${ext}`;
+        let counter = 1;
+        while (usedNames.has(finalName)) {
+          finalName = `${baseName}_watermarked_${counter++}.${ext}`;
+        }
+        usedNames.add(finalName);
+
+        if (useJSZip) {
+          zip.file(finalName, blob);
+        } else {
+          const buf = new Uint8Array(await blob.arrayBuffer());
+          rawZipFiles.push({ name: finalName, data: buf });
+        }
+      }
+
+      progressText.textContent = currentLang === 'vi' ? 'Đang nén file ZIP...' : 'Compressing ZIP archive...';
+      const zipBlob = useJSZip
+        ? await zip.generateAsync({ type: 'blob' })
+        : createOfflineZipBlob(rawZipFiles);
+
+      triggerDownload(zipBlob, `watermarked_batch_${targets.length}_images.zip`);
+
+      modal.classList.add('hidden');
+      progressBar.style.width = '0%';
+      showToast(I18N[currentLang].toastExportDone);
+    }
+
+    function triggerDownload(blob, filename) {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 5000);
+    }
+
+    // =========================================================================
+    // 12. KEYBOARD SHORTCUTS, MODALS & TOASTS
+    // =========================================================================
+    window.addEventListener('keydown', (e) => {
+      if (['INPUT', 'SELECT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
+
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
+        e.preventDefault();
+        if (e.shiftKey) redo();
+        else undo();
+      } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') {
+        e.preventDefault();
+        redo();
+      } else if (e.key === '0') {
+        e.preventDefault();
+        fitCanvasToScreen();
+      } else if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+        const layer = getActiveLayer();
+        if (!layer) return;
+        e.preventDefault();
+        const step = e.shiftKey ? 2.5 : 0.5;
+        if (e.key === 'ArrowLeft') layer.offsetX = Math.max(-50, layer.offsetX - step);
+        if (e.key === 'ArrowRight') layer.offsetX = Math.min(50, layer.offsetX + step);
+        if (e.key === 'ArrowUp') layer.offsetY = Math.max(-50, layer.offsetY - step);
+        if (e.key === 'ArrowDown') layer.offsetY = Math.min(50, layer.offsetY + step);
+        syncInspectorUI();
+        renderCanvas();
+      } else if (e.key === 'Delete' || e.key === 'Backspace') {
+        const layer = getActiveLayer();
+        if (layer) {
+          e.preventDefault();
+          deleteLayer(layer.id, { stopPropagation: () => {} });
+        }
+      }
+    });
+
+    function toggleModal(modalId, show) {
+      document.getElementById(modalId).classList.toggle('hidden', !show);
+    }
+
+    function showToast(message, type = 'success') {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      const borderClass = type === 'error' ? 'border-rose-500/60' : 'border-accentCyan/60';
+      const dotClass = type === 'error' ? 'bg-rose-400' : 'bg-accentCyan';
+      toast.className = `bg-[#121824] border ${borderClass} text-slate-100 text-xs font-medium px-4 py-3 rounded-xl shadow-2xl flex items-center gap-2.5 transition-all duration-200`;
+      toast.innerHTML = `<span class="w-2 h-2 rounded-full ${dotClass}"></span><span>${escapeHtml(message)}</span>`;
+      container.appendChild(toast);
+
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(8px)';
+        setTimeout(() => toast.remove(), 220);
+      }, 2800);
+    }
+
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    // =========================================================================
+    // 13. INITIALIZATION (CLEAN EMPTY STATE)
+    // =========================================================================
+    window.addEventListener('DOMContentLoaded', () => {
+      buildAnchorGrid();
+      renderThumbnails();
+      renderLayerList();
+      syncInspectorUI();
+      renderCanvas();
+      updateOutputDimensionsDisplay();
+    });
+  </script>
+</body>
+</html>

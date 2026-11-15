@@ -1,0 +1,3680 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Diagram Studio</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,400;0,500;0,700;1,400&family=Caveat:wght@500;700&family=Dancing+Script:wght@500;700&family=Inter:ital,wght@0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:ital,wght@0,400;0,700;1,400&family=Lora:ital,wght@0,400;0,700;1,400&family=Mali:ital,wght@0,400;0,700;1,400&family=Merriweather:ital,wght@0,400;0,700;1,400&family=Patrick+Hand&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-canvas: #f8fafc;
+      --grid-color: #cbd5e1;
+      --ui-bg: rgba(255, 255, 255, 0.94);
+      --ui-border: rgba(226, 232, 240, 0.95);
+      --ui-text: #0f172a;
+      --ui-muted: #64748b;
+      --ui-hover: #f1f5f9;
+      --accent: #4f46e5;
+      --accent-soft: #eef2ff;
+    }
+
+    body.dark-ui {
+      --bg-canvas: #0b1120;
+      --grid-color: #1e293b;
+      --ui-bg: rgba(15, 23, 42, 0.94);
+      --ui-border: rgba(51, 65, 85, 0.9);
+      --ui-text: #f8fafc;
+      --ui-muted: #94a3b8;
+      --ui-hover: #1e293b;
+      --accent: #6366f1;
+      --accent-soft: rgba(99, 102, 241, 0.2);
+    }
+
+    * {
+      box-sizing: border-box;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: var(--bg-canvas);
+      color: var(--ui-text);
+      overflow: hidden;
+      width: 100vw;
+      height: 100vh;
+    }
+
+    /* Glassmorphism Floating Panels */
+    .glass-panel {
+      background: var(--ui-bg);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--ui-border);
+      box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.08), 0 4px 10px -2px rgba(15, 23, 42, 0.04);
+      transition: background-color 0.2s, border-color 0.2s;
+    }
+
+    body.dark-ui .glass-panel {
+      box-shadow: 0 12px 30px -5px rgba(0, 0, 0, 0.45);
+    }
+
+    .btn-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 0.5rem;
+      color: var(--ui-text);
+      transition: all 0.15s ease;
+      cursor: pointer;
+    }
+    .btn-icon:hover:not(:disabled) {
+      background-color: var(--ui-hover);
+    }
+    .btn-icon.active {
+      background-color: var(--accent-soft);
+      color: var(--accent);
+    }
+    .btn-icon:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    ::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(148, 163, 184, 0.45);
+      border-radius: 999px;
+    }
+
+    /* Inline Text Editor Overlay */
+    #inline-editor {
+      position: fixed;
+      z-index: 60;
+      outline: none;
+      border: 2px solid #4f46e5;
+      border-radius: 8px;
+      background: #ffffff;
+      color: #0f172a;
+      font-family: 'Inter', sans-serif;
+      text-align: center;
+      resize: none;
+      box-shadow: 0 10px 25px rgba(79, 70, 229, 0.25);
+      padding: 6px 10px;
+      line-height: 1.35;
+      user-select: text;
+      -webkit-user-select: text;
+    }
+
+    @keyframes slideUpFade {
+      from { opacity: 0; transform: translate(-50%, 14px); }
+      to { opacity: 1; transform: translate(-50%, 0); }
+    }
+    .toast-enter {
+      animation: slideUpFade 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    /* SVG Canvas & Interactive States */
+    #workspace-svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+      touch-action: none;
+    }
+    .cursor-grab { cursor: grab; }
+    .cursor-grabbing { cursor: grabbing !important; }
+    .cursor-crosshair { cursor: crosshair !important; }
+    .cursor-note { cursor: cell !important; }
+
+    .node-group, .note-group { cursor: pointer; }
+
+    .anchor-dot {
+      opacity: 0;
+      transition: opacity 0.15s ease, r 0.15s ease;
+      cursor: crosshair;
+    }
+    .node-group:hover .anchor-dot,
+    .node-selected .anchor-dot,
+    .connecting-mode .anchor-dot {
+      opacity: 1;
+    }
+    .anchor-dot:hover {
+      r: 7;
+    }
+
+    /* Sticky Note & Node Resize Handle */
+    .note-resize-handle,
+    .node-resize-handle {
+      opacity: 0;
+      transition: opacity 0.15s ease;
+    }
+    .note-resize-handle {
+      cursor: nwse-resize;
+    }
+    .note-group:hover .note-resize-handle,
+    .note-selected .note-resize-handle,
+    .node-selected .node-resize-handle {
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- MAIN INTERACTIVE INFINITE CANVAS -->
+  <svg id="workspace-svg" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <pattern id="dot-grid-pattern" width="24" height="24" patternUnits="userSpaceOnUse">
+        <circle id="dot-grid-circle" cx="2" cy="2" r="1.25" fill="#cbd5e1" />
+      </pattern>
+      <filter id="node-shadow" x="-20%" y="-20%" width="140%" height="140%">
+        <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#0f172a" flood-opacity="0.08" />
+      </filter>
+      <filter id="node-shadow-selected" x="-25%" y="-25%" width="150%" height="150%">
+        <feDropShadow dx="0" dy="6" stdDeviation="10" flood-color="#4f46e5" flood-opacity="0.24" />
+      </filter>
+      <filter id="note-shadow" x="-20%" y="-20%" width="140%" height="140%">
+        <feDropShadow dx="2" dy="6" stdDeviation="7" flood-color="#0f172a" flood-opacity="0.12" />
+      </filter>
+      <marker id="arrow-end" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <path d="M 0 1.5 L 9 5 L 0 8.5 z" fill="context-stroke" />
+      </marker>
+    </defs>
+
+    <!-- Background Rect with Grid -->
+    <rect id="canvas-bg" x="0" y="0" width="100%" height="100%" fill="#f8fafc" />
+    <rect id="canvas-grid" x="0" y="0" width="100%" height="100%" fill="url(#dot-grid-pattern)" pointer-events="none" />
+
+    <!-- Viewport Transformed Layer -->
+    <g id="viewport-layer">
+      <!-- Edges / Connectors -->
+      <g id="edges-layer"></g>
+      <!-- Temp Drag Connection Line -->
+      <path id="temp-edge" fill="none" stroke="#4f46e5" stroke-width="2.5" stroke-dasharray="6,4" pointer-events="none" display="none" marker-end="url(#arrow-end)" />
+      <!-- Diagram Nodes -->
+      <g id="nodes-layer"></g>
+      <!-- Independent Floating Sticky Notes Layer -->
+      <g id="notes-layer"></g>
+      <!-- Smart Alignment Guides (Rendered on top so always visible) -->
+      <g id="guides-layer" pointer-events="none"></g>
+      <!-- Marquee Selection Box -->
+      <rect id="marquee-box" fill="rgba(79, 70, 229, 0.1)" stroke="#4f46e5" stroke-width="1.5" stroke-dasharray="4,3" rx="4" display="none" pointer-events="none" />
+    </g>
+  </svg>
+
+  <!-- INLINE TEXT EDITING OVERLAY -->
+  <textarea id="inline-editor" class="hidden" rows="1"></textarea>
+
+  <!-- TOP FLOATING BAR -->
+  <header class="fixed top-3 left-3 right-3 z-30 flex flex-wrap items-center justify-between gap-2 pointer-events-none">
+    <!-- Left: Brand, Document Title & File Actions -->
+    <div class="glass-panel rounded-xl px-3 py-1.5 flex items-center gap-2 pointer-events-auto">
+      <div class="flex items-center gap-2 pr-2 border-r border-slate-200/70 dark:border-slate-700/70">
+        <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-600 to-violet-600 flex items-center justify-center text-white shadow-sm">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="7" height="5" rx="1"/><rect x="14" y="16" width="7" height="5" rx="1"/><path d="M10 5.5h4v13h0"/>
+          </svg>
+        </div>
+        <div class="hidden sm:block">
+          <input id="doc-title-input" type="text" value="Sơ đồ Diagram Mới" class="bg-transparent font-semibold text-sm outline-none w-44 md:w-56 truncate rounded px-1 hover:bg-slate-500/10 focus:bg-slate-500/10" title="Nhấp để đổi tên sơ đồ" />
+          <div class="flex items-center gap-1.5 px-1 text-[11px] opacity-65">
+            <span id="autosave-status" class="flex items-center gap-1">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Đã tự động lưu
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <button id="btn-templates" class="btn-icon px-2.5 py-1.5 text-xs font-medium gap-1.5" title="Chọn mẫu sơ đồ có sẵn">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
+        <span class="hidden md:inline">Mẫu sơ đồ</span>
+      </button>
+
+      <button id="btn-clear" class="btn-icon px-2.5 py-1.5 text-xs font-medium gap-1.5" title="Tạo sơ đồ mới trống">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+        <span class="hidden lg:inline">Tạo mới</span>
+      </button>
+    </div>
+
+    <!-- Right: Search, Sketch Mode, Theme, Export/Import -->
+    <div class="glass-panel rounded-xl px-2.5 py-1.5 flex items-center gap-1.5 pointer-events-auto">
+      <button id="btn-search-toggle" class="btn-icon p-1.5" title="Tìm kiếm node & ghi chú (Ctrl+F)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      </button>
+
+      <!-- Global Sketch / Hand-drawn Mode Toggle -->
+      <button id="btn-sketch-toggle" class="btn-icon px-2 py-1.5 text-xs font-medium gap-1" title="Bật/Tắt chế độ Nét vẽ tay (Sketchy) cho toàn bộ sơ đồ">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="M2 2l7.586 7.586"/><circle cx="11" cy="11" r="2"/></svg>
+        <span class="hidden lg:inline">Vẽ tay</span>
+      </button>
+
+      <!-- Theme Selector -->
+      <div class="relative">
+        <button id="btn-theme-menu" class="btn-icon px-2 py-1.5 text-xs font-medium gap-1" title="Chọn chủ đề màu sắc (Theme)">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg>
+          <span class="hidden sm:inline">Theme</span>
+        </button>
+        <div id="theme-dropdown" class="hidden absolute right-0 mt-2 w-52 glass-panel rounded-xl p-1.5 z-50 text-xs">
+          <div class="px-2 py-1 font-semibold opacity-60 uppercase tracking-wider text-[10px]">Chủ đề giao diện</div>
+          <button data-theme="light" class="theme-option w-full text-left px-2.5 py-2 rounded-lg hover:bg-slate-500/10 flex items-center justify-between">
+            <span>☀️ Sáng (Modern Light)</span><span class="w-3 h-3 rounded-full bg-indigo-500"></span>
+          </button>
+          <button data-theme="dark" class="theme-option w-full text-left px-2.5 py-2 rounded-lg hover:bg-slate-500/10 flex items-center justify-between">
+            <span>🌙 Tối (Dark Mode)</span><span class="w-3 h-3 rounded-full bg-slate-800 border border-slate-500"></span>
+          </button>
+          <button data-theme="pastel" class="theme-option w-full text-left px-2.5 py-2 rounded-lg hover:bg-slate-500/10 flex items-center justify-between">
+            <span>🌸 Pastel Dịu Nhẹ</span><span class="w-3 h-3 rounded-full bg-pink-300"></span>
+          </button>
+          <button data-theme="ocean" class="theme-option w-full text-left px-2.5 py-2 rounded-lg hover:bg-slate-500/10 flex items-center justify-between">
+            <span>🌊 Đại Dương (Ocean)</span><span class="w-3 h-3 rounded-full bg-cyan-500"></span>
+          </button>
+          <button data-theme="forest" class="theme-option w-full text-left px-2.5 py-2 rounded-lg hover:bg-slate-500/10 flex items-center justify-between">
+            <span>🌿 Rừng Xanh (Forest)</span><span class="w-3 h-3 rounded-full bg-emerald-500"></span>
+          </button>
+          <button data-theme="monochrome" class="theme-option w-full text-left px-2.5 py-2 rounded-lg hover:bg-slate-500/10 flex items-center justify-between">
+            <span>⚪ Tối Giản (Monochrome)</span><span class="w-3 h-3 rounded-full bg-zinc-700"></span>
+          </button>
+          <button data-theme="sketch" class="theme-option w-full text-left px-2.5 py-2 rounded-lg hover:bg-slate-500/10 flex items-center justify-between border-t border-slate-200/50 dark:border-slate-700/50 mt-1 pt-2">
+            <span>✏️ Giấy Phác Thảo (Sketch)</span><span class="w-3 h-3 rounded-full bg-amber-200 border border-slate-700"></span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Import JSON -->
+      <button id="btn-import-json" class="btn-icon px-2 py-1.5 text-xs font-medium gap-1" title="Nhập dữ liệu từ file JSON">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        <span class="hidden md:inline">Import</span>
+      </button>
+      <input id="file-import-input" type="file" accept=".json,application/json" class="hidden" />
+
+      <!-- Export Menu Button -->
+      <button id="btn-export-modal" class="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-medium flex items-center gap-1.5 shadow-sm transition-colors cursor-pointer" title="Xuất ảnh PNG, JPG, SVG hoặc JSON">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        <span>Export</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- FLOATING SEARCH BAR -->
+  <div id="search-bar" class="hidden fixed top-16 right-4 z-30 glass-panel rounded-xl p-2 flex items-center gap-2 w-72">
+    <svg class="opacity-50 shrink-0 ml-1" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <input id="search-input" type="text" placeholder="Tìm nội dung node hoặc ghi chú..." class="bg-transparent text-xs outline-none flex-1" />
+    <span id="search-count" class="text-[11px] opacity-60">0/0</span>
+    <button id="search-next" class="btn-icon p-1" title="Kết quả tiếp theo">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+    </button>
+    <button id="search-close" class="btn-icon p-1" title="Đóng tìm kiếm">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+
+  <!-- LEFT FLOATING CREATION & HISTORY TOOLBAR -->
+  <aside class="fixed left-3 top-1/2 -translate-y-1/2 z-20 glass-panel rounded-2xl p-1.5 flex flex-col items-center gap-1">
+    <!-- Pointer / Select Tool -->
+    <button id="tool-select" class="btn-icon active w-9 h-9" title="Công cụ Chọn & Di chuyển (V)">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 3 7.07 16.97 2.51-7.39 7.39-2.51L3 3z"/><path d="m13 13 6 6"/></svg>
+    </button>
+    <!-- Hand / Pan Tool -->
+    <button id="tool-hand" class="btn-icon w-9 h-9" title="Công cụ Kéo không gian (H hoặc giữ Space)">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 11V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v0"/><path d="M14 10V4a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v2"/><path d="M10 10.5V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/></svg>
+    </button>
+
+    <div class="w-6 h-px bg-slate-300/60 dark:bg-slate-700 my-0.5"></div>
+
+    <!-- Quick Add Diagram Node Shapes -->
+    <button data-add-shape="rounded" class="btn-add-node btn-icon w-9 h-9" title="Thêm Khối Bo Góc (Tab)">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="6" width="18" height="12" rx="4"/><line x1="12" y1="9" x2="12" y2="15"/><line x1="9" y1="12" x2="15" y2="12"/></svg>
+    </button>
+    <button data-add-shape="rect" class="btn-add-node btn-icon w-9 h-9" title="Thêm Hình Chữ Nhật (Quy trình)">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="1"/></svg>
+    </button>
+    <button data-add-shape="diamond" class="btn-add-node btn-icon w-9 h-9" title="Thêm Hình Thoi (Điều kiện / Quyết định)">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 22 12 12 22 2 12 12 2"/></svg>
+    </button>
+    <button data-add-shape="pill" class="btn-add-node btn-icon w-9 h-9" title="Thêm Hình Elip / Pill (Bắt đầu - Kết thúc)">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="10" rx="5"/></svg>
+    </button>
+
+    <div class="w-6 h-px bg-slate-300/60 dark:bg-slate-700 my-0.5"></div>
+
+    <!-- Independent Floating Sticky Note Button -->
+    <button id="btn-add-note" class="btn-icon w-9 h-9 text-amber-500 hover:bg-amber-500/10" title="Tạo Ô Ghi Chú Độc Lập (Phím N)">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15.5 3H5a2 2 0 0 0-2 2v14c0 1.1.9 2 2 2h14a2 2 0 0 0 2-2V8.5L15.5 3Z"/><path d="M15 3v6h6"/><line x1="7" y1="13" x2="17" y2="13"/><line x1="7" y1="17" x2="13" y2="17"/></svg>
+    </button>
+
+    <div class="w-6 h-px bg-slate-300/60 dark:bg-slate-700 my-0.5"></div>
+
+    <!-- Undo / Redo -->
+    <button id="btn-undo" class="btn-icon w-9 h-9" title="Hoàn tác (Ctrl+Z)" disabled>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></svg>
+    </button>
+    <button id="btn-redo" class="btn-icon w-9 h-9" title="Làm lại (Ctrl+Y)" disabled>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 7v6h-6"/><path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3l3 2.7"/></svg>
+    </button>
+  </aside>
+
+  <!-- RIGHT FLOATING PROPERTIES PANEL (Contextual for Node / Edge / Floating Note) -->
+  <aside id="properties-panel" class="hidden fixed right-3 top-16 z-20 glass-panel rounded-2xl p-3.5 w-68 max-w-[274px] max-h-[calc(100vh-170px)] overflow-y-auto text-xs">
+    <!-- 1. NODE PROPERTIES SECTION -->
+    <div id="node-props-section" class="space-y-3.5">
+      <div class="flex items-center justify-between border-b border-slate-200/70 dark:border-slate-700/70 pb-2">
+        <span class="font-semibold text-xs uppercase tracking-wider opacity-75" id="prop-panel-title">Thuộc tính Node</span>
+        <div class="flex items-center gap-1">
+          <button id="btn-add-child-prop" class="btn-icon px-1.5 py-1 text-[11px] bg-indigo-500/10 text-indigo-600 font-medium" title="Thêm khối nối tiếp (Tab)">+ Nối tiếp</button>
+          <button id="btn-delete-selected" class="btn-icon p-1 text-rose-500 hover:bg-rose-500/10" title="Xóa đối tượng (Delete)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Shape Selector -->
+      <div>
+        <label class="block font-medium mb-1.5 opacity-75">Hình khối</label>
+        <div class="grid grid-cols-4 gap-1.5">
+          <button data-prop-shape="rounded" class="shape-btn btn-icon py-1.5 border border-slate-300/50 dark:border-slate-700" title="Bo góc">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="6" width="18" height="12" rx="4"/></svg>
+          </button>
+          <button data-prop-shape="rect" class="shape-btn btn-icon py-1.5 border border-slate-300/50 dark:border-slate-700" title="Chữ nhật">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="6" width="18" height="12" rx="1"/></svg>
+          </button>
+          <button data-prop-shape="pill" class="shape-btn btn-icon py-1.5 border border-slate-300/50 dark:border-slate-700" title="Elip / Pill">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="10" rx="5"/></svg>
+          </button>
+          <button data-prop-shape="diamond" class="shape-btn btn-icon py-1.5 border border-slate-300/50 dark:border-slate-700" title="Hình thoi">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 3 21 12 12 21 3 12 12 3"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Node Border Style: Standard vs Hand-drawn -->
+      <div>
+        <label class="block font-medium mb-1.5 opacity-75">Kiểu nét vẽ khối</label>
+        <div class="grid grid-cols-2 gap-1.5">
+          <button data-node-sketch="false" class="node-sketch-btn btn-icon py-1.5 border border-slate-300/50 dark:border-slate-700 text-[11px] font-medium">Chuẩn sắc nét</button>
+          <button data-node-sketch="true" class="node-sketch-btn btn-icon py-1.5 border border-slate-300/50 dark:border-slate-700 text-[11px] font-medium">✏️ Nét vẽ tay</button>
+        </div>
+      </div>
+
+      <!-- Fill Colors -->
+      <div>
+        <div class="flex items-center justify-between mb-1.5">
+          <label class="font-medium opacity-75">Màu nền</label>
+          <input id="prop-fill-picker" type="color" class="w-5 h-5 rounded cursor-pointer border-0 bg-transparent" title="Chọn màu nền tùy chỉnh" />
+        </div>
+        <div id="fill-swatches" class="grid grid-cols-7 gap-1.5"></div>
+      </div>
+
+      <!-- Border & Text Colors -->
+      <div class="grid grid-cols-2 gap-2">
+        <div>
+          <div class="flex items-center justify-between mb-1">
+            <label class="font-medium opacity-75">Viền</label>
+            <input id="prop-stroke-picker" type="color" class="w-4 h-4 rounded cursor-pointer border-0 bg-transparent" />
+          </div>
+          <div id="stroke-swatches" class="flex gap-1 flex-wrap"></div>
+        </div>
+        <div>
+          <div class="flex items-center justify-between mb-1">
+            <label class="font-medium opacity-75">Màu chữ</label>
+            <input id="prop-text-picker" type="color" class="w-4 h-4 rounded cursor-pointer border-0 bg-transparent" />
+          </div>
+          <div id="text-swatches" class="flex gap-1 flex-wrap"></div>
+        </div>
+      </div>
+
+      <!-- Typography Controls -->
+      <div class="space-y-2">
+        <label class="block font-medium opacity-75">Font chữ & Định dạng</label>
+        <select id="prop-fontfamily" class="w-full bg-transparent border border-slate-300/50 dark:border-slate-700 rounded-lg px-2 py-1.5 outline-none cursor-pointer">
+          <optgroup label="Sans-Serif Hiện Đại" class="text-slate-900">
+            <option value="'Inter', sans-serif" class="text-slate-900">Inter (Mặc định)</option>
+            <option value="'Be Vietnam Pro', sans-serif" class="text-slate-900">Be Vietnam Pro</option>
+          </optgroup>
+          <optgroup label="Nét Viết Tay (Handwriting)" class="text-slate-900">
+            <option value="'Patrick Hand', cursive" class="text-slate-900">✏️ Patrick Hand (Viết tay tự nhiên)</option>
+            <option value="'Caveat', cursive" class="text-slate-900">✒️ Caveat (Phác thảo phóng khoáng)</option>
+            <option value="'Mali', cursive" class="text-slate-900">🖍️ Mali (Nét bút mềm mại)</option>
+            <option value="'Dancing Script', cursive" class="text-slate-900">🖋️ Dancing Script (Chữ nghệ thuật)</option>
+          </optgroup>
+          <optgroup label="Serif & Kỹ Thuật" class="text-slate-900">
+            <option value="'Lora', serif" class="text-slate-900">Lora (Serif thanh lịch)</option>
+            <option value="'Merriweather', serif" class="text-slate-900">Merriweather (Serif cổ điển)</option>
+            <option value="'JetBrains Mono', monospace" class="text-slate-900">JetBrains Mono (Code)</option>
+          </optgroup>
+        </select>
+
+        <div class="flex items-center gap-1.5">
+          <button id="prop-bold" class="btn-icon px-2.5 py-1.5 border border-slate-300/50 dark:border-slate-700 font-bold" title="In đậm">B</button>
+          <button id="prop-italic" class="btn-icon px-2.5 py-1.5 border border-slate-300/50 dark:border-slate-700 italic" title="In nghiêng">I</button>
+          <select id="prop-fontsize" class="flex-1 bg-transparent border border-slate-300/50 dark:border-slate-700 rounded-lg px-2 py-1.5 outline-none cursor-pointer">
+            <option value="12" class="text-slate-900">12px (Nhỏ)</option>
+            <option value="14" class="text-slate-900">14px (Vừa)</option>
+            <option value="16" class="text-slate-900">16px (Lớn)</option>
+            <option value="20" class="text-slate-900">20px (Tiêu đề)</option>
+            <option value="24" class="text-slate-900">24px (Rất lớn)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Quick Icons / Badges -->
+      <div>
+        <div class="flex items-center justify-between mb-1.5">
+          <label class="font-medium opacity-75">Biểu tượng nhanh</label>
+          <button id="prop-clear-icon" class="text-[11px] text-indigo-500 hover:underline cursor-pointer">Xóa icon</button>
+        </div>
+        <div id="quick-emojis" class="grid grid-cols-6 gap-1"></div>
+      </div>
+    </div>
+
+    <!-- 2. INDEPENDENT FLOATING NOTE PROPERTIES SECTION -->
+    <div id="note-props-section" class="hidden space-y-3.5">
+      <div class="flex items-center justify-between border-b border-slate-200/70 dark:border-slate-700/70 pb-2">
+        <span class="font-semibold text-xs uppercase tracking-wider text-amber-600 dark:text-amber-400">📝 Ô Ghi Chú Độc Lập</span>
+        <div class="flex items-center gap-1">
+          <button id="btn-duplicate-note" class="btn-icon px-1.5 py-1 text-[11px] bg-amber-500/10 text-amber-600 font-medium" title="Nhân bản ô ghi chú">Nhân bản</button>
+          <button id="btn-delete-note" class="btn-icon p-1 text-rose-500 hover:bg-rose-500/10" title="Xóa ô ghi chú (Delete)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <p class="text-[11px] opacity-70 leading-relaxed">
+        Ghi chú tự do đứng độc lập trên canvas. Double-click để sửa nội dung hoặc kéo góc dưới-phải để đổi kích thước.
+      </p>
+
+      <!-- Paper Color Swatches -->
+      <div>
+        <label class="block font-medium mb-1.5 opacity-75">Màu giấy ghi chú</label>
+        <div class="grid grid-cols-6 gap-1.5">
+          <button data-note-bg="#fef08a" data-note-stroke="#eab308" data-note-text="#422006" class="note-color-btn w-7 h-7 rounded-lg border border-amber-400 cursor-pointer hover:scale-110 transition-transform" style="background:#fef08a" title="Vàng cổ điển"></button>
+          <button data-note-bg="#fbcfe8" data-note-stroke="#ec4899" data-note-text="#500724" class="note-color-btn w-7 h-7 rounded-lg border border-pink-400 cursor-pointer hover:scale-110 transition-transform" style="background:#fbcfe8" title="Hồng pastel"></button>
+          <button data-note-bg="#bbf7d0" data-note-stroke="#22c55e" data-note-text="#052e16" class="note-color-btn w-7 h-7 rounded-lg border border-emerald-400 cursor-pointer hover:scale-110 transition-transform" style="background:#bbf7d0" title="Xanh lá"></button>
+          <button data-note-bg="#bae6fd" data-note-stroke="#0ea5e9" data-note-text="#082f49" class="note-color-btn w-7 h-7 rounded-lg border border-sky-400 cursor-pointer hover:scale-110 transition-transform" style="background:#bae6fd" title="Xanh dương"></button>
+          <button data-note-bg="#e9d5ff" data-note-stroke="#a855f7" data-note-text="#3b0764" class="note-color-btn w-7 h-7 rounded-lg border border-purple-400 cursor-pointer hover:scale-110 transition-transform" style="background:#e9d5ff" title="Tím lavender"></button>
+          <button data-note-bg="#ffffff" data-note-stroke="#94a3b8" data-note-text="#0f172a" class="note-color-btn w-7 h-7 rounded-lg border border-slate-300 cursor-pointer hover:scale-110 transition-transform" style="background:#ffffff" title="Trắng tinh"></button>
+        </div>
+      </div>
+
+      <!-- Sketch Style for Note -->
+      <div>
+        <label class="block font-medium mb-1.5 opacity-75">Kiểu viền ô ghi chú</label>
+        <div class="grid grid-cols-2 gap-1.5">
+          <button data-note-sketch="false" class="note-sketch-btn btn-icon py-1.5 border border-slate-300/50 dark:border-slate-700 text-[11px] font-medium">Giấy phẳng</button>
+          <button data-note-sketch="true" class="note-sketch-btn btn-icon py-1.5 border border-slate-300/50 dark:border-slate-700 text-[11px] font-medium">✏️ Phác thảo tay</button>
+        </div>
+      </div>
+
+      <!-- Font & Size for Note -->
+      <div class="space-y-2">
+        <label class="block font-medium opacity-75">Font chữ ghi chú</label>
+        <select id="note-fontfamily" class="w-full bg-transparent border border-slate-300/50 dark:border-slate-700 rounded-lg px-2 py-1.5 outline-none cursor-pointer">
+          <option value="'Patrick Hand', cursive" class="text-slate-900">✏️ Patrick Hand (Viết tay)</option>
+          <option value="'Caveat', cursive" class="text-slate-900">✒️ Caveat (Phác thảo)</option>
+          <option value="'Mali', cursive" class="text-slate-900">🖍️ Mali (Bút mềm)</option>
+          <option value="'Inter', sans-serif" class="text-slate-900">Inter (Hiện đại)</option>
+          <option value="'Be Vietnam Pro', sans-serif" class="text-slate-900">Be Vietnam Pro</option>
+          <option value="'JetBrains Mono', monospace" class="text-slate-900">JetBrains Mono</option>
+        </select>
+
+        <div class="flex items-center gap-1.5">
+          <button id="note-bold" class="btn-icon px-2.5 py-1.5 border border-slate-300/50 dark:border-slate-700 font-bold" title="In đậm">B</button>
+          <button id="note-italic" class="btn-icon px-2.5 py-1.5 border border-slate-300/50 dark:border-slate-700 italic" title="In nghiêng">I</button>
+          <select id="note-fontsize" class="flex-1 bg-transparent border border-slate-300/50 dark:border-slate-700 rounded-lg px-2 py-1.5 outline-none cursor-pointer">
+            <option value="13" class="text-slate-900">13px (Nhỏ)</option>
+            <option value="15" class="text-slate-900">15px (Vừa)</option>
+            <option value="18" class="text-slate-900">18px (Lớn)</option>
+            <option value="22" class="text-slate-900">22px (Rất lớn)</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. EDGE / CONNECTOR PROPERTIES SECTION -->
+    <div id="edge-props-section" class="hidden space-y-3.5">
+      <div class="flex items-center justify-between border-b border-slate-200/70 dark:border-slate-700/70 pb-2">
+        <span id="edge-panel-title" class="font-semibold text-xs uppercase tracking-wider opacity-75">Đường nối</span>
+        <div class="flex items-center gap-1">
+          <button id="btn-select-all-edges" class="btn-icon px-1.5 py-1 text-[11px] bg-indigo-500/10 text-indigo-600 font-medium" title="Chọn tất cả đường nối trên sơ đồ (Ctrl+Shift+E)">Chọn tất cả</button>
+          <button id="btn-delete-edge" class="btn-icon p-1 text-rose-500 hover:bg-rose-500/10" title="Xóa đường nối">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <div>
+        <label class="block font-medium mb-1 opacity-75">Nhãn trên đường nối</label>
+        <input id="edge-label-input" type="text" placeholder="Ví dụ: Có, Không, Tiếp theo..." class="w-full bg-slate-500/10 border border-slate-300/50 dark:border-slate-700 rounded-lg px-2.5 py-1.5 outline-none focus:border-indigo-500" />
+      </div>
+
+      <div>
+        <label class="block font-medium mb-1.5 opacity-75">Kiểu đường đi</label>
+        <div class="grid grid-cols-2 gap-1">
+          <button data-edge-type="bezier" class="edge-type-btn btn-icon py-1.5 border border-slate-300/50 dark:border-slate-700 text-[11px]">Cong mượt</button>
+          <button data-edge-type="orthogonal" class="edge-type-btn btn-icon py-1.5 border border-slate-300/50 dark:border-slate-700 text-[11px]">Vuông góc</button>
+          <button data-edge-type="straight" class="edge-type-btn btn-icon py-1.5 border border-slate-300/50 dark:border-slate-700 text-[11px]">Đường thẳng</button>
+          <button data-edge-type="handdrawn" class="edge-type-btn btn-icon py-1.5 border border-slate-300/50 dark:border-slate-700 text-[11px]">✏️ Nét vẽ tay</button>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-2">
+        <div>
+          <label class="block font-medium mb-1 opacity-75">Nét vẽ</label>
+          <select id="edge-dash-select" class="w-full bg-transparent border border-slate-300/50 dark:border-slate-700 rounded-lg px-2 py-1.5 outline-none">
+            <option value="solid" class="text-slate-900">Nét liền</option>
+            <option value="dashed" class="text-slate-900">Nét đứt</option>
+            <option value="dotted" class="text-slate-900">Chấm bi</option>
+          </select>
+        </div>
+        <div>
+          <label class="block font-medium mb-1 opacity-75">Mũi tên</label>
+          <select id="edge-arrow-select" class="w-full bg-transparent border border-slate-300/50 dark:border-slate-700 rounded-lg px-2 py-1.5 outline-none">
+            <option value="end" class="text-slate-900">1 chiều (→)</option>
+            <option value="both" class="text-slate-900">2 chiều (↔)</option>
+            <option value="none" class="text-slate-900">Không mũi tên</option>
+          </select>
+        </div>
+      </div>
+
+      <div>
+        <div class="flex items-center justify-between mb-1.5">
+          <label class="font-medium opacity-75">Màu đường nối</label>
+          <input id="edge-color-picker" type="color" class="w-5 h-5 rounded cursor-pointer border-0 bg-transparent" />
+        </div>
+        <div id="edge-swatches" class="grid grid-cols-7 gap-1.5"></div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- BOTTOM-LEFT NAVIGATION, GRID & HELP BAR -->
+  <div class="fixed bottom-3 left-3 z-20 glass-panel rounded-xl px-2 py-1.5 flex items-center gap-1 text-xs">
+    <button id="btn-zoom-out" class="btn-icon w-7 h-7" title="Thu nhỏ (-)">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    </button>
+    <button id="btn-zoom-reset" class="btn-icon px-2 h-7 font-medium min-w-[52px]" title="Đặt lại Zoom 100%">100%</button>
+    <button id="btn-zoom-in" class="btn-icon w-7 h-7" title="Phóng to (+)">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    </button>
+    <button id="btn-fit-screen" class="btn-icon px-2 h-7 gap-1" title="Căn giữa toàn bộ sơ đồ (Fit to Screen)">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+      <span class="hidden sm:inline">Vừa màn hình</span>
+    </button>
+
+    <div class="w-px h-4 bg-slate-300/60 dark:bg-slate-700 mx-0.5"></div>
+
+    <button id="btn-toggle-grid" class="btn-icon active px-2 h-7 gap-1" title="Bật/Tắt lưới nền">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg>
+      <span class="hidden md:inline">Lưới</span>
+    </button>
+    <button id="btn-toggle-snap" class="btn-icon active px-2 h-7 gap-1" title="Bật/Tắt bắt dính vào vật thể & đường gióng (Object Snap & Smart Guides)">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 15-4-4 6.75-6.77a7.79 7.79 0 0 1 11 11L13 22l-4-4 6.39-6.36a2.14 2.14 0 0 0-3-3L6 15"/></svg>
+      <span class="hidden md:inline">Snap</span>
+    </button>
+
+    <div class="w-px h-4 bg-slate-300/60 dark:bg-slate-700 mx-0.5"></div>
+
+    <button id="btn-shortcuts" class="btn-icon w-7 h-7 font-bold" title="Hướng dẫn phím tắt (?)">?</button>
+  </div>
+
+  <!-- MODAL: EXPORT DIALOG -->
+  <div id="export-modal" class="hidden fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="glass-panel rounded-2xl max-w-md w-full p-5 shadow-2xl">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-200/70 dark:border-slate-700/70">
+        <h3 class="font-bold text-base flex items-center gap-2">
+          <svg class="text-indigo-600" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Xuất Sơ Đồ (Export)
+        </h3>
+        <button class="close-modal btn-icon p-1">✕</button>
+      </div>
+
+      <div class="py-4 space-y-3 text-xs">
+        <div class="p-3 rounded-xl border border-slate-200/80 dark:border-slate-700/80 space-y-2.5">
+          <div class="flex items-center justify-between gap-2">
+            <div>
+              <div class="font-semibold text-sm">Hình ảnh Chất lượng cao (2x HD)</div>
+              <div class="opacity-65">Bao gồm sơ đồ và các ô ghi chú độc lập</div>
+            </div>
+            <div class="flex items-center gap-1.5 shrink-0">
+              <button id="do-export-png" class="px-3 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-medium cursor-pointer">PNG</button>
+              <button id="do-export-jpg" class="px-3 py-2 rounded-lg bg-sky-600 hover:bg-sky-700 text-white font-medium cursor-pointer">JPG</button>
+            </div>
+          </div>
+          <label class="flex items-center gap-2 cursor-pointer pt-1">
+            <input id="export-transparent-bg" type="checkbox" class="rounded text-indigo-600" />
+            <span>Nền trong suốt (Chỉ áp dụng cho PNG & SVG)</span>
+          </label>
+        </div>
+
+        <div class="p-3 rounded-xl border border-slate-200/80 dark:border-slate-700/80 flex items-center justify-between">
+          <div>
+            <div class="font-semibold text-sm">Đồ họa Vector SVG</div>
+            <div class="opacity-65">Phóng to vô hạn không vỡ nét, dùng cho in ấn</div>
+          </div>
+          <button id="do-export-svg" class="px-3.5 py-2 rounded-lg bg-slate-800 hover:bg-slate-900 dark:bg-slate-700 dark:hover:bg-slate-600 text-white font-medium cursor-pointer">Tải SVG</button>
+        </div>
+
+        <div class="p-3 rounded-xl border border-slate-200/80 dark:border-slate-700/80 flex items-center justify-between">
+          <div>
+            <div class="font-semibold text-sm">Dữ liệu dự án JSON</div>
+            <div class="opacity-65">Lưu trữ toàn bộ cấu trúc để mở lại hoặc chia sẻ</div>
+          </div>
+          <button id="do-export-json" class="px-3.5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-medium cursor-pointer">Tải JSON</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: TEMPLATES GALLERY -->
+  <div id="templates-modal" class="hidden fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="glass-panel rounded-2xl max-w-2xl w-full p-5 shadow-2xl">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-200/70 dark:border-slate-700/70">
+        <h3 class="font-bold text-base">Thư viện Mẫu Sơ Đồ Có Sẵn</h3>
+        <button class="close-modal btn-icon p-1">✕</button>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 py-4 text-xs">
+        <button data-template="flowchart" class="template-card text-left p-4 rounded-xl border border-slate-200/80 dark:border-slate-700/80 hover:border-indigo-500 transition-all group cursor-pointer">
+          <div class="flex items-center justify-between mb-1.5">
+            <span class="px-2 py-0.5 rounded bg-indigo-500/15 text-indigo-600 font-semibold">Sơ đồ khối + Ghi chú</span>
+            <span>⚙️</span>
+          </div>
+          <div class="font-bold text-sm mb-1 group-hover:text-indigo-600">Quy trình Phát triển & Kiểm thử Phần mềm</div>
+          <p class="opacity-70 leading-relaxed">Sơ đồ luồng có hình thoi điều kiện rẽ nhánh (Đạt / Lỗi) kèm ô ghi chú độc lập bên cạnh.</p>
+        </button>
+
+        <button data-template="architecture" class="template-card text-left p-4 rounded-xl border border-slate-200/80 dark:border-slate-700/80 hover:border-sky-500 transition-all group cursor-pointer">
+          <div class="flex items-center justify-between mb-1.5">
+            <span class="px-2 py-0.5 rounded bg-sky-500/15 text-sky-600 font-semibold">Kiến trúc Hệ thống</span>
+            <span>☁️</span>
+          </div>
+          <div class="font-bold text-sm mb-1 group-hover:text-sky-600">Kiến trúc Microservices & API Gateway</div>
+          <p class="opacity-70 leading-relaxed">Mô hình kết nối Client, Gateway, các dịch vụ độc lập và cơ sở dữ liệu phân tán.</p>
+        </button>
+
+        <button data-template="orgchart" class="template-card text-left p-4 rounded-xl border border-slate-200/80 dark:border-slate-700/80 hover:border-cyan-500 transition-all group cursor-pointer">
+          <div class="flex items-center justify-between mb-1.5">
+            <span class="px-2 py-0.5 rounded bg-cyan-500/15 text-cyan-600 font-semibold">Sơ đồ Tổ chức</span>
+            <span>🏢</span>
+          </div>
+          <div class="font-bold text-sm mb-1 group-hover:text-cyan-600">Cơ cấu Tổ chức Đội ngũ Công nghệ</div>
+          <p class="opacity-70 leading-relaxed">Sơ đồ phân cấp từ Ban điều hành xuống các phòng ban Sản phẩm, Kỹ thuật và Vận hành.</p>
+        </button>
+
+        <button data-template="decision" class="template-card text-left p-4 rounded-xl border border-slate-200/80 dark:border-slate-700/80 hover:border-emerald-500 transition-all group cursor-pointer">
+          <div class="flex items-center justify-between mb-1.5">
+            <span class="px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-600 font-semibold">Luồng Xử lý</span>
+            <span>🚀</span>
+          </div>
+          <div class="font-bold text-sm mb-1 group-hover:text-emerald-600">Kế hoạch Triển khai Dự án 2026</div>
+          <p class="opacity-70 leading-relaxed">Các giai đoạn từ Nghiên cứu, Thiết kế UI/UX, Phát triển cho đến Ra mắt thị trường.</p>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: KEYBOARD SHORTCUTS -->
+  <div id="shortcuts-modal" class="hidden fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="glass-panel rounded-2xl max-w-lg w-full p-5 shadow-2xl text-xs">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-200/70 dark:border-slate-700/70">
+        <h3 class="font-bold text-base">Phím tắt & Mẹo sử dụng nhanh</h3>
+        <button class="close-modal btn-icon p-1">✕</button>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2.5 py-4">
+        <div class="flex justify-between items-center"><span class="opacity-80">Tạo khối nối theo hướng</span><kbd class="px-2 py-0.5 rounded bg-slate-500/15 font-mono font-semibold">↑ ↓ ← →</kbd></div>
+        <div class="flex justify-between items-center"><span class="opacity-80">Di chuyển chọn khối</span><kbd class="px-2 py-0.5 rounded bg-slate-500/15 font-mono font-semibold">Alt + Mũi tên</kbd></div>
+        <div class="flex justify-between items-center"><span class="opacity-80">Thêm khối mới</span><kbd class="px-2 py-0.5 rounded bg-slate-500/15 font-mono font-semibold">Tab / Enter</kbd></div>
+        <div class="flex justify-between items-center"><span class="opacity-80">Tạo ô ghi chú độc lập</span><kbd class="px-2 py-0.5 rounded bg-slate-500/15 font-mono font-semibold">N</kbd></div>
+        <div class="flex justify-between items-center"><span class="opacity-80">Sửa nội dung khối/ghi chú</span><kbd class="px-2 py-0.5 rounded bg-slate-500/15 font-mono font-semibold">Double Click / F2</kbd></div>
+        <div class="flex justify-between items-center"><span class="opacity-80">Xóa đối tượng đang chọn</span><kbd class="px-2 py-0.5 rounded bg-slate-500/15 font-mono font-semibold">Delete / Backspace</kbd></div>
+        <div class="flex justify-between items-center"><span class="opacity-80">Hoàn tác / Làm lại</span><kbd class="px-2 py-0.5 rounded bg-slate-500/15 font-mono font-semibold">Ctrl+Z / Ctrl+Y</kbd></div>
+        <div class="flex justify-between items-center"><span class="opacity-80">Kéo không gian (Pan)</span><kbd class="px-2 py-0.5 rounded bg-slate-500/15 font-mono font-semibold">Space + Kéo / Chuột giữa</kbd></div>
+        <div class="flex justify-between items-center"><span class="opacity-80">Nối dây thủ công</span><kbd class="px-2 py-0.5 rounded bg-slate-500/15 font-mono font-semibold">Kéo từ chấm tròn trên khối</kbd></div>
+        <div class="flex justify-between items-center"><span class="opacity-80">Đổi kích thước khối</span><kbd class="px-2 py-0.5 rounded bg-slate-500/15 font-mono font-semibold">Kéo 4 cạnh của khối</kbd></div>
+        <div class="flex justify-between items-center"><span class="opacity-80">Chọn tất cả đường nối</span><kbd class="px-2 py-0.5 rounded bg-slate-500/15 font-mono font-semibold">Ctrl+Shift+E</kbd></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: CONFIRM CLEAR DIALOG -->
+  <div id="confirm-modal" class="hidden fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="glass-panel rounded-2xl max-w-sm w-full p-5 shadow-2xl text-xs">
+      <h3 class="font-bold text-base mb-1.5">Tạo sơ đồ mới trống?</h3>
+      <p class="opacity-75 mb-4 leading-relaxed">Toàn bộ sơ đồ hiện tại sẽ được xóa sạch để tạo không gian trống mới. Bạn có thể nhấn <strong>Ctrl+Z (Hoàn tác)</strong> nếu muốn khôi phục lại.</p>
+      <div class="flex justify-end gap-2">
+        <button class="close-modal px-3.5 py-2 rounded-lg hover:bg-slate-500/10 font-medium cursor-pointer">Hủy</button>
+        <button id="confirm-clear-action" class="px-3.5 py-2 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-medium cursor-pointer">Tạo mới ngay</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION CONTAINER -->
+  <div id="toast-container" class="fixed bottom-16 left-1/2 -translate-x-1/2 z-50 pointer-events-none flex flex-col items-center gap-2"></div>
+
+  <script>
+    /**
+     * =========================================================================
+     * MINDFLOW STUDIO — PURE FREEFORM DIAGRAM ENGINE
+     * =========================================================================
+     */
+
+    const STORAGE_KEY = 'mindflow_studio_diagram_v3';
+    const SVG_NS = 'http://www.w3.org/2000/svg';
+
+    const THEMES = {
+      light: {
+        isDark: false,
+        bg: '#f8fafc',
+        grid: '#cbd5e1',
+        rootFill: '#4f46e5',
+        rootStroke: '#4338ca',
+        rootText: '#ffffff',
+        branchColors: ['#0ea5e9', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6', '#06b6d4'],
+        nodeFill: '#ffffff',
+        nodeText: '#0f172a',
+        edgeColor: '#64748b'
+      },
+      dark: {
+        isDark: true,
+        bg: '#0b1120',
+        grid: '#1e293b',
+        rootFill: '#6366f1',
+        rootStroke: '#818cf8',
+        rootText: '#ffffff',
+        branchColors: ['#38bdf8', '#34d399', '#fbbf24', '#f472b6', '#a78bfa', '#22d3ee'],
+        nodeFill: '#1e293b',
+        nodeText: '#f8fafc',
+        edgeColor: '#64748b'
+      },
+      pastel: {
+        isDark: false,
+        bg: '#fdf8f6',
+        grid: '#e7d8d3',
+        rootFill: '#f472b6',
+        rootStroke: '#db2777',
+        rootText: '#ffffff',
+        branchColors: ['#93c5fd', '#86efac', '#fcd34d', '#f9a8d4', '#c4b5fd', '#5eead4'],
+        nodeFill: '#ffffff',
+        nodeText: '#334155',
+        edgeColor: '#94a3b8'
+      },
+      ocean: {
+        isDark: false,
+        bg: '#f0f9ff',
+        grid: '#bae6fd',
+        rootFill: '#0284c7',
+        rootStroke: '#0369a1',
+        rootText: '#ffffff',
+        branchColors: ['#0ea5e9', '#06b6d4', '#14b8a6', '#3b82f6', '#6366f1', '#2dd4bf'],
+        nodeFill: '#ffffff',
+        nodeText: '#0c4a6e',
+        edgeColor: '#0284c7'
+      },
+      forest: {
+        isDark: false,
+        bg: '#f2fcf5',
+        grid: '#bbf7d0',
+        rootFill: '#15803d',
+        rootStroke: '#166534',
+        rootText: '#ffffff',
+        branchColors: ['#16a34a', '#0d9488', '#65a30d', '#ca8a04', '#059669', '#4d7c0f'],
+        nodeFill: '#ffffff',
+        nodeText: '#14532d',
+        edgeColor: '#16a34a'
+      },
+      monochrome: {
+        isDark: false,
+        bg: '#fafafa',
+        grid: '#d4d4d8',
+        rootFill: '#18181b',
+        rootStroke: '#09090b',
+        rootText: '#ffffff',
+        branchColors: ['#3f3f46', '#52525b', '#71717a', '#27272a', '#52525b', '#3f3f46'],
+        nodeFill: '#ffffff',
+        nodeText: '#18181b',
+        edgeColor: '#52525b'
+      },
+      sketch: {
+        isDark: false,
+        bg: '#fffdf7',
+        grid: '#e5dec9',
+        rootFill: '#fef08a',
+        rootStroke: '#1e293b',
+        rootText: '#1e293b',
+        branchColors: ['#1e293b', '#0369a1', '#15803d', '#b45309', '#be185d', '#4338ca'],
+        nodeFill: '#ffffff',
+        nodeText: '#1e293b',
+        edgeColor: '#334155',
+        isSketchDefault: true
+      }
+    };
+
+    const PRESET_SWATCHES = [
+      '#ffffff', '#f8fafc', '#eef2ff', '#e0f2fe', '#dcfce7', '#fef3c7', '#fce7f3',
+      '#4f46e5', '#0ea5e9', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#1e293b'
+    ];
+
+    const QUICK_EMOJIS = ['⭐', '🔥', '✅', '⚠️', '💡', '🚀', '🎯', '📌', '⏰', '❤️', '❓', '📊'];
+
+    // Application State (Pure Freeform Diagram)
+    let state = {
+      title: 'Quy trình Phát triển & Kiểm thử Phần mềm',
+      theme: 'light',
+      sketchMode: false,
+      showGrid: true,
+      snapToGrid: true,
+      nodes: [],
+      edges: [],
+      notes: []
+    };
+
+    // Ephemeral Interaction State
+    let view = { x: 0, y: 0, zoom: 1 };
+    let selectedNodeIds = new Set();
+    let selectedNoteId = null;
+    let selectedEdgeIds = new Set();
+    let activeTool = 'select'; // 'select' | 'hand'
+    let isSpacePressed = false;
+    let editingTarget = null; // { kind: 'node' | 'note', id: string }
+
+    // Drag & Pointer Tracking
+    let interaction = {
+      type: null, // 'pan' | 'drag-nodes' | 'drag-note' | 'resize-note' | 'resize-node' | 'connect' | 'marquee' | 'drag-edge-label'
+      startX: 0,
+      startY: 0,
+      lastX: 0,
+      lastY: 0,
+      nodeOffsets: new Map(),
+      noteOffset: { dx: 0, dy: 0 },
+      resizeStart: { w: 200, h: 120, x: 0, y: 0, nodeX: 0, nodeY: 0 },
+      resizingNodeId: null,
+      resizeEdge: 'e',
+      connectFromNode: null,
+      connectFromAnchor: null,
+      draggingEdgeId: null,
+      edgeLabelStart: { startX: 0, startY: 0, dx: 0, dy: 0 },
+      hasMoved: false
+    };
+
+    let resizeRafPending = false;
+
+    // Undo / Redo Stacks
+    let historyStack = [];
+    let redoStack = [];
+    const MAX_HISTORY = 40;
+
+    // Search State
+    let searchMatches = [];
+    let searchIndex = 0;
+
+    // DOM References
+    const svgEl = document.getElementById('workspace-svg');
+    const viewportLayer = document.getElementById('viewport-layer');
+    const nodesLayer = document.getElementById('nodes-layer');
+    const notesLayer = document.getElementById('notes-layer');
+    const edgesLayer = document.getElementById('edges-layer');
+    const guidesLayer = document.getElementById('guides-layer');
+    const tempEdgeEl = document.getElementById('temp-edge');
+    const marqueeBoxEl = document.getElementById('marquee-box');
+    const inlineEditor = document.getElementById('inline-editor');
+    const propPanel = document.getElementById('properties-panel');
+
+    /**
+     * =========================================================================
+     * 0. DETERMINISTIC SEEDED RANDOM & HAND-DRAWN (SKETCHY) GEOMETRY
+     * =========================================================================
+     */
+    function createSeededRandom(seedStr) {
+      let h = 2166136261 >>> 0;
+      for (let i = 0; i < seedStr.length; i++) {
+        h ^= seedStr.charCodeAt(i);
+        h = Math.imul(h, 16777619);
+      }
+      return function () {
+        h += 0x6D2B79F5;
+        let t = Math.imul(h ^ (h >>> 15), 1 | h);
+        t ^= t + Math.imul(t ^ (t >>> 7), 61 | t);
+        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+      };
+    }
+
+    function buildSketchyBoxPaths(seedId, w, h, shape = 'rounded') {
+      const rand = createSeededRandom(seedId + '_box');
+      const jitter = (amt) => (rand() - 0.5) * amt;
+
+      if (shape === 'diamond') {
+        const pts = [
+          { x: w / 2, y: 0 },
+          { x: w, y: h / 2 },
+          { x: w / 2, y: h },
+          { x: 0, y: h / 2 }
+        ];
+        const buildPoly = (scaleJ) => {
+          let d = '';
+          for (let i = 0; i < 4; i++) {
+            const p1 = pts[i];
+            const p2 = pts[(i + 1) % 4];
+            const mx = (p1.x + p2.x) / 2 + jitter(4 * scaleJ);
+            const my = (p1.y + p2.y) / 2 + jitter(4 * scaleJ);
+            if (i === 0) d += `M ${p1.x + jitter(2 * scaleJ)} ${p1.y + jitter(2 * scaleJ)} `;
+            d += `Q ${mx} ${my}, ${p2.x + jitter(2 * scaleJ)} ${p2.y + jitter(2 * scaleJ)} `;
+          }
+          return d + 'Z';
+        };
+        return { fillPath: buildPoly(0.7), strokePath1: buildPoly(1), strokePath2: buildPoly(1.1) };
+      }
+
+      if (shape === 'pill') {
+        const rx = Math.min(w / 2, h / 2);
+        const buildPill = (scaleJ) => {
+          const j = (v) => jitter(v * scaleJ);
+          return `M ${rx + j(2)} ${j(2)} ` +
+                 `Q ${w / 2} ${j(3.5)}, ${w - rx + j(2)} ${j(2)} ` +
+                 `C ${w + j(2.5)} ${j(2)}, ${w + j(2.5)} ${h + j(2)}, ${w - rx + j(2)} ${h + j(2)} ` +
+                 `Q ${w / 2} ${h + j(3.5)}, ${rx + j(2)} ${h + j(2)} ` +
+                 `C ${j(2.5)} ${h + j(2)}, ${j(2.5)} ${j(2)}, ${rx + j(2)} ${j(2)} Z`;
+        };
+        return { fillPath: buildPill(0.7), strokePath1: buildPill(1), strokePath2: buildPill(1.1) };
+      }
+
+      const r = (shape === 'rect' || shape === 'note') ? 3 : 11;
+      const buildBox = (scaleJ) => {
+        const j = (v) => jitter(v * scaleJ);
+        return `M ${r + j(2)} ${j(2.2)} ` +
+               `Q ${w * 0.5} ${j(3.6)}, ${w - r + j(2)} ${j(2.2)} ` +
+               `Q ${w + j(2)} ${j(2)}, ${w + j(2.2)} ${r + j(2)} ` +
+               `Q ${w + j(3.6)} ${h * 0.5}, ${w + j(2.2)} ${h - r + j(2)} ` +
+               `Q ${w + j(2)} ${h + j(2)}, ${w - r + j(2)} ${h + j(2.2)} ` +
+               `Q ${w * 0.5} ${h + j(3.6)}, ${r + j(2)} ${h + j(2.2)} ` +
+               `Q ${j(2)} ${h + j(2)}, ${j(2.2)} ${h - r + j(2)} ` +
+               `Q ${j(3.6)} ${h * 0.5}, ${j(2.2)} ${r + j(2)} ` +
+               `Q ${j(2)} ${j(2)}, ${r + j(2)} ${j(2.2)} Z`;
+      };
+      return { fillPath: buildBox(0.6), strokePath1: buildBox(1), strokePath2: buildBox(1.15) };
+    }
+
+    function buildHandDrawnEdgePath(start, end, sDir, tDir, edgeId) {
+      const rand = createSeededRandom((edgeId || 'edge') + '_line');
+      const jitter = (amt) => (rand() - 0.5) * amt;
+      const dist = Math.hypot(end.x - start.x, end.y - start.y);
+      const cpOffset = Math.min(Math.max(dist * 0.38, 30), 130);
+
+      const dirVec = {
+        top: { x: 0, y: -1 },
+        bottom: { x: 0, y: 1 },
+        left: { x: -1, y: 0 },
+        right: { x: 1, y: 0 }
+      };
+      const v1 = dirVec[sDir] || { x: 1, y: 0 };
+      const v2 = dirVec[tDir] || { x: -1, y: 0 };
+
+      const cp1x = start.x + v1.x * cpOffset + jitter(16);
+      const cp1y = start.y + v1.y * cpOffset + jitter(16);
+      const cp2x = end.x + v2.x * cpOffset + jitter(16);
+      const cp2y = end.y + v2.y * cpOffset + jitter(16);
+
+      const midX = 0.125 * start.x + 0.375 * cp1x + 0.375 * cp2x + 0.125 * end.x;
+      const midY = 0.125 * start.y + 0.375 * cp1y + 0.375 * cp2y + 0.125 * end.y;
+
+      const d1 = `M ${start.x + jitter(1.5)} ${start.y + jitter(1.5)} C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${end.x + jitter(1.5)} ${end.y + jitter(1.5)}`;
+      const d2 = `M ${start.x + jitter(2)} ${start.y + jitter(2)} C ${cp1x + jitter(6)} ${cp1y + jitter(6)}, ${cp2x + jitter(6)} ${cp2y + jitter(6)}, ${end.x + jitter(2)} ${end.y + jitter(2)}`;
+
+      return { d: d1, d2, midX, midY };
+    }
+
+    /**
+     * =========================================================================
+     * 1. TEMPLATES & DATA INITIALIZATION
+     * =========================================================================
+     */
+    function getTemplateData(type) {
+      if (type === 'architecture') {
+        return {
+          title: 'Kiến trúc Microservices & API Gateway',
+          theme: 'ocean',
+          sketchMode: false,
+          nodes: [
+            { id: 'a1', text: 'Web & Mobile Client', icon: '📱', x: -340, y: -24, width: 170, height: 48, shape: 'pill', fill: '#0284c7', stroke: '#0369a1', textColor: '#ffffff', fontFamily: "'Inter', sans-serif", fontSize: 14, bold: true, italic: false },
+            { id: 'a2', text: 'API Gateway\n(Auth & Rate Limit)', icon: '🛡️', x: -100, y: -30, width: 180, height: 60, shape: 'rounded', fill: '#ffffff', stroke: '#0ea5e9', textColor: '#0c4a6e', fontFamily: "'Inter', sans-serif", fontSize: 13, bold: true, italic: false },
+            { id: 'a3', text: 'User Service', icon: '👤', x: 160, y: -130, width: 155, height: 44, shape: 'rect', fill: '#ffffff', stroke: '#14b8a6', textColor: '#0c4a6e', fontFamily: "'Inter', sans-serif", fontSize: 13, bold: false, italic: false },
+            { id: 'a4', text: 'Order & Payment', icon: '💳', x: 160, y: -22, width: 155, height: 44, shape: 'rect', fill: '#ffffff', stroke: '#14b8a6', textColor: '#0c4a6e', fontFamily: "'Inter', sans-serif", fontSize: 13, bold: false, italic: false },
+            { id: 'a5', text: 'AI Analytics Engine', icon: '🧠', x: 160, y: 86, width: 155, height: 44, shape: 'rect', fill: '#ffffff', stroke: '#6366f1', textColor: '#0c4a6e', fontFamily: "'Inter', sans-serif", fontSize: 13, bold: false, italic: false },
+            { id: 'a6', text: 'PostgreSQL / Redis', icon: '🗄️', x: 380, y: -22, width: 165, height: 48, shape: 'rounded', fill: '#e0f2fe', stroke: '#0284c7', textColor: '#0c4a6e', fontFamily: "'Inter', sans-serif", fontSize: 13, bold: true, italic: false }
+          ],
+          edges: [
+            { id: 'ae1', source: 'a1', target: 'a2', sourceAnchor: 'right', targetAnchor: 'left', type: 'orthogonal', dash: 'solid', arrow: 'end', color: '#0284c7', label: 'HTTPS / REST' },
+            { id: 'ae2', source: 'a2', target: 'a3', sourceAnchor: 'right', targetAnchor: 'left', type: 'orthogonal', dash: 'solid', arrow: 'end', color: '#14b8a6', label: '' },
+            { id: 'ae3', source: 'a2', target: 'a4', sourceAnchor: 'right', targetAnchor: 'left', type: 'orthogonal', dash: 'solid', arrow: 'end', color: '#14b8a6', label: '' },
+            { id: 'ae4', source: 'a2', target: 'a5', sourceAnchor: 'right', targetAnchor: 'left', type: 'orthogonal', dash: 'solid', arrow: 'end', color: '#6366f1', label: '' },
+            { id: 'ae5', source: 'a3', target: 'a6', sourceAnchor: 'right', targetAnchor: 'left', type: 'orthogonal', dash: 'dashed', arrow: 'both', color: '#0284c7', label: '' },
+            { id: 'ae6', source: 'a4', target: 'a6', sourceAnchor: 'right', targetAnchor: 'left', type: 'orthogonal', dash: 'dashed', arrow: 'both', color: '#0284c7', label: '' }
+          ],
+          notes: []
+        };
+      }
+
+      if (type === 'orgchart') {
+        return {
+          title: 'Cơ cấu Tổ chức Đội ngũ Công nghệ',
+          theme: 'light',
+          sketchMode: false,
+          nodes: [
+            { id: 'o1', text: 'Giám đốc Công nghệ (CTO)', icon: '🎯', x: -108, y: -180, width: 216, height: 52, shape: 'rounded', fill: '#4f46e5', stroke: '#4338ca', textColor: '#ffffff', fontFamily: "'Inter', sans-serif", fontSize: 15, bold: true, italic: false },
+            { id: 'o2', text: 'Trưởng nhóm Sản phẩm', icon: '📊', x: -240, y: -60, width: 180, height: 44, shape: 'rounded', fill: '#ffffff', stroke: '#0ea5e9', textColor: '#0f172a', fontFamily: "'Inter', sans-serif", fontSize: 13, bold: true, italic: false },
+            { id: 'o3', text: 'UI/UX Designer', icon: '', x: -324, y: 48, width: 144, height: 40, shape: 'rect', fill: '#ffffff', stroke: '#0ea5e9', textColor: '#0f172a', fontFamily: "'Inter', sans-serif", fontSize: 13, bold: false, italic: false },
+            { id: 'o4', text: 'Product Owner', icon: '', x: -156, y: 48, width: 144, height: 40, shape: 'rect', fill: '#ffffff', stroke: '#0ea5e9', textColor: '#0f172a', fontFamily: "'Inter', sans-serif", fontSize: 13, bold: false, italic: false },
+            { id: 'o5', text: 'Trưởng nhóm Kỹ thuật', icon: '⚙️', x: 60, y: -60, width: 180, height: 44, shape: 'rounded', fill: '#ffffff', stroke: '#10b981', textColor: '#0f172a', fontFamily: "'Inter', sans-serif", fontSize: 13, bold: true, italic: false },
+            { id: 'o6', text: 'Frontend Team', icon: '', x: 12, y: 48, width: 132, height: 40, shape: 'rect', fill: '#ffffff', stroke: '#10b981', textColor: '#0f172a', fontFamily: "'Inter', sans-serif", fontSize: 13, bold: false, italic: false },
+            { id: 'o7', text: 'Backend & AI', icon: '', x: 168, y: 48, width: 132, height: 40, shape: 'rect', fill: '#ffffff', stroke: '#10b981', textColor: '#0f172a', fontFamily: "'Inter', sans-serif", fontSize: 13, bold: false, italic: false }
+          ],
+          edges: [
+            { id: 'oe1', source: 'o1', target: 'o2', sourceAnchor: 'bottom', targetAnchor: 'top', type: 'orthogonal', dash: 'solid', arrow: 'none', color: '#0ea5e9', label: '' },
+            { id: 'oe2', source: 'o2', target: 'o3', sourceAnchor: 'bottom', targetAnchor: 'top', type: 'orthogonal', dash: 'solid', arrow: 'none', color: '#0ea5e9', label: '' },
+            { id: 'oe3', source: 'o2', target: 'o4', sourceAnchor: 'bottom', targetAnchor: 'top', type: 'orthogonal', dash: 'solid', arrow: 'none', color: '#0ea5e9', label: '' },
+            { id: 'oe4', source: 'o1', target: 'o5', sourceAnchor: 'bottom', targetAnchor: 'top', type: 'orthogonal', dash: 'solid', arrow: 'none', color: '#10b981', label: '' },
+            { id: 'oe5', source: 'o5', target: 'o6', sourceAnchor: 'bottom', targetAnchor: 'top', type: 'orthogonal', dash: 'solid', arrow: 'none', color: '#10b981', label: '' },
+            { id: 'oe6', source: 'o5', target: 'o7', sourceAnchor: 'bottom', targetAnchor: 'top', type: 'orthogonal', dash: 'solid', arrow: 'none', color: '#10b981', label: '' }
+          ],
+          notes: []
+        };
+      }
+
+      if (type === 'decision') {
+        return {
+          title: 'Kế hoạch Triển khai Dự án 2026',
+          theme: 'forest',
+          sketchMode: false,
+          nodes: [
+            { id: 'd1', text: '1. Nghiên cứu Thị trường', icon: '🎯', x: -336, y: -24, width: 180, height: 48, shape: 'rounded', fill: '#15803d', stroke: '#166534', textColor: '#ffffff', fontFamily: "'Inter', sans-serif", fontSize: 14, bold: true, italic: false },
+            { id: 'd2', text: '2. Thiết kế UI/UX', icon: '💡', x: -108, y: -24, width: 168, height: 48, shape: 'rounded', fill: '#ffffff', stroke: '#16a34a', textColor: '#14532d', fontFamily: "'Inter', sans-serif", fontSize: 14, bold: true, italic: false },
+            { id: 'd3', text: '3. Phát triển Sản phẩm', icon: '⚙️', x: 108, y: -24, width: 180, height: 48, shape: 'rounded', fill: '#ffffff', stroke: '#0d9488', textColor: '#14532d', fontFamily: "'Inter', sans-serif", fontSize: 14, bold: true, italic: false },
+            { id: 'd4', text: '4. Ra mắt Thị trường', icon: '🚀', x: 336, y: -24, width: 180, height: 48, shape: 'pill', fill: '#ca8a04', stroke: '#a16207', textColor: '#ffffff', fontFamily: "'Inter', sans-serif", fontSize: 14, bold: true, italic: false }
+          ],
+          edges: [
+            { id: 'de1', source: 'd1', target: 'd2', sourceAnchor: 'right', targetAnchor: 'left', type: 'straight', dash: 'solid', arrow: 'end', color: '#16a34a', label: 'Tuần 1-2' },
+            { id: 'de2', source: 'd2', target: 'd3', sourceAnchor: 'right', targetAnchor: 'left', type: 'straight', dash: 'solid', arrow: 'end', color: '#0d9488', label: 'Tuần 3-4' },
+            { id: 'de3', source: 'd3', target: 'd4', sourceAnchor: 'right', targetAnchor: 'left', type: 'straight', dash: 'solid', arrow: 'end', color: '#ca8a04', label: 'Tuần 5-8' }
+          ],
+          notes: []
+        };
+      }
+
+      // Default: 'flowchart'
+      return {
+        title: 'Quy trình Phát triển & Kiểm thử Phần mềm',
+        theme: 'light',
+        sketchMode: false,
+        nodes: [
+          { id: 'f1', text: 'Bắt đầu Sprint', icon: '🚀', x: -84, y: -228, width: 168, height: 48, shape: 'pill', fill: '#4f46e5', stroke: '#4338ca', textColor: '#ffffff', fontFamily: "'Inter', sans-serif", fontSize: 14, bold: true, italic: false },
+          { id: 'f2', text: 'Phân tích Yêu cầu & Thiết kế UI', icon: '📌', x: -108, y: -120, width: 216, height: 48, shape: 'rect', fill: '#ffffff', stroke: '#0ea5e9', textColor: '#0f172a', fontFamily: "'Inter', sans-serif", fontSize: 14, bold: false, italic: false },
+          { id: 'f3', text: 'Lập trình Tính năng (Dev)', icon: '💻', x: -96, y: -24, width: 192, height: 48, shape: 'rect', fill: '#ffffff', stroke: '#0ea5e9', textColor: '#0f172a', fontFamily: "'Inter', sans-serif", fontSize: 14, bold: false, italic: false },
+          { id: 'f4', text: 'Kiểm thử QA đạt chuẩn?', icon: '❓', x: -84, y: 84, width: 168, height: 84, shape: 'diamond', fill: '#fef3c7', stroke: '#f59e0b', textColor: '#78350f', fontFamily: "'Inter', sans-serif", fontSize: 13, bold: true, italic: false },
+          { id: 'f5', text: 'Triển khai Production', icon: '✅', x: -96, y: 228, width: 192, height: 48, shape: 'pill', fill: '#10b981', stroke: '#059669', textColor: '#ffffff', fontFamily: "'Inter', sans-serif", fontSize: 14, bold: true, italic: false }
+        ],
+        edges: [
+          { id: 'fe1', source: 'f1', target: 'f2', sourceAnchor: 'bottom', targetAnchor: 'top', type: 'orthogonal', dash: 'solid', arrow: 'end', color: '#64748b', label: '' },
+          { id: 'fe2', source: 'f2', target: 'f3', sourceAnchor: 'bottom', targetAnchor: 'top', type: 'orthogonal', dash: 'solid', arrow: 'end', color: '#64748b', label: '' },
+          { id: 'fe3', source: 'f3', target: 'f4', sourceAnchor: 'bottom', targetAnchor: 'top', type: 'orthogonal', dash: 'solid', arrow: 'end', color: '#64748b', label: '' },
+          { id: 'fe4', source: 'f4', target: 'f5', sourceAnchor: 'bottom', targetAnchor: 'top', type: 'orthogonal', dash: 'solid', arrow: 'end', color: '#10b981', label: 'Đạt (Yes)' },
+          { id: 'fe5', source: 'f4', target: 'f3', sourceAnchor: 'left', targetAnchor: 'left', type: 'orthogonal', dash: 'dashed', arrow: 'end', color: '#ef4444', label: 'Lỗi (No)' }
+        ],
+        notes: [
+          { id: 'note_1', text: '📌 Ghi chú Sprint:\n• Bật Snap để căn thẳng hàng & hiện đường gióng\n• Tắt Snap để kéo thả tự do hoàn toàn', x: 168, y: 72, width: 228, height: 120, fill: '#fef08a', stroke: '#eab308', textColor: '#422006', fontFamily: "'Patrick Hand', cursive", fontSize: 15, bold: false, italic: false, handDrawn: false }
+        ]
+      };
+    }
+
+    /**
+     * =========================================================================
+     * 2. RENDERING ENGINE (EDGES, NODES, FLOATING NOTES)
+     * =========================================================================
+     */
+    function updateViewportTransform() {
+      viewportLayer.setAttribute('transform', `translate(${view.x}, ${view.y}) scale(${view.zoom})`);
+      document.getElementById('btn-zoom-reset').textContent = `${Math.round(view.zoom * 100)}%`;
+
+      const dotPat = document.getElementById('dot-grid-pattern');
+      const scaledStep = 24 * view.zoom;
+      if (scaledStep >= 8) {
+        dotPat.setAttribute('width', scaledStep);
+        dotPat.setAttribute('height', scaledStep);
+        dotPat.setAttribute('x', view.x % scaledStep);
+        dotPat.setAttribute('y', view.y % scaledStep);
+        document.getElementById('dot-grid-circle').setAttribute('r', Math.max(0.8, 1.25 * Math.min(view.zoom, 1.4)));
+      }
+    }
+
+    function getAnchorCoords(node, anchor) {
+      const cx = node.x + node.width / 2;
+      const cy = node.y + node.height / 2;
+      switch (anchor) {
+        case 'top': return { x: cx, y: node.y };
+        case 'bottom': return { x: cx, y: node.y + node.height };
+        case 'left': return { x: node.x, y: cy };
+        case 'right': return { x: node.x + node.width, y: cy };
+        default: return { x: cx, y: cy };
+      }
+    }
+
+    function determineBestAnchors(srcNode, tgtNode, edge) {
+      if (edge.sourceAnchor && edge.targetAnchor) {
+        return {
+          start: getAnchorCoords(srcNode, edge.sourceAnchor),
+          end: getAnchorCoords(tgtNode, edge.targetAnchor),
+          sDir: edge.sourceAnchor,
+          tDir: edge.targetAnchor
+        };
+      }
+
+      const sCx = srcNode.x + srcNode.width / 2;
+      const sCy = srcNode.y + srcNode.height / 2;
+      const tCx = tgtNode.x + tgtNode.width / 2;
+      const tCy = tgtNode.y + tgtNode.height / 2;
+      const dx = tCx - sCx;
+      const dy = tCy - sCy;
+
+      let sDir = 'right';
+      let tDir = 'left';
+
+      if (Math.abs(dx) > Math.abs(dy)) {
+        sDir = dx >= 0 ? 'right' : 'left';
+        tDir = dx >= 0 ? 'left' : 'right';
+      } else {
+        sDir = dy >= 0 ? 'bottom' : 'top';
+        tDir = dy >= 0 ? 'top' : 'bottom';
+      }
+
+      return {
+        start: getAnchorCoords(srcNode, sDir),
+        end: getAnchorCoords(tgtNode, tDir),
+        sDir,
+        tDir
+      };
+    }
+
+    function buildEdgePathData(start, end, sDir, tDir, type, edgeId) {
+      if (type === 'handdrawn') {
+        return buildHandDrawnEdgePath(start, end, sDir, tDir, edgeId);
+      }
+
+      if (type === 'straight') {
+        return {
+          d: `M ${start.x} ${start.y} L ${end.x} ${end.y}`,
+          midX: (start.x + end.x) / 2,
+          midY: (start.y + end.y) / 2
+        };
+      }
+
+      if (type === 'orthogonal') {
+        const midX = (start.x + end.x) / 2;
+        const midY = (start.y + end.y) / 2;
+        if (sDir === 'left' || sDir === 'right') {
+          if (sDir === tDir) {
+            const offset = sDir === 'left' ? -45 : 45;
+            const loopX = (sDir === 'left' ? Math.min(start.x, end.x) : Math.max(start.x, end.x)) + offset;
+            return {
+              d: `M ${start.x} ${start.y} L ${loopX} ${start.y} L ${loopX} ${end.y} L ${end.x} ${end.y}`,
+              midX: loopX,
+              midY: midY
+            };
+          }
+          return {
+            d: `M ${start.x} ${start.y} L ${midX} ${start.y} L ${midX} ${end.y} L ${end.x} ${end.y}`,
+            midX: midX,
+            midY: midY
+          };
+        } else {
+          if (sDir === tDir) {
+            const offset = sDir === 'top' ? -45 : 45;
+            const loopY = (sDir === 'top' ? Math.min(start.y, end.y) : Math.max(start.y, end.y)) + offset;
+            return {
+              d: `M ${start.x} ${start.y} L ${start.x} ${loopY} L ${end.x} ${loopY} L ${end.x} ${end.y}`,
+              midX: midX,
+              midY: loopY
+            };
+          }
+          return {
+            d: `M ${start.x} ${start.y} L ${start.x} ${midY} L ${end.x} ${midY} L ${end.x} ${end.y}`,
+            midX: midX,
+            midY: midY
+          };
+        }
+      }
+
+      const dist = Math.hypot(end.x - start.x, end.y - start.y);
+      const cpOffset = Math.min(Math.max(dist * 0.42, 35), 140);
+
+      const dirVec = {
+        top: { x: 0, y: -1 },
+        bottom: { x: 0, y: 1 },
+        left: { x: -1, y: 0 },
+        right: { x: 1, y: 0 }
+      };
+
+      const v1 = dirVec[sDir] || { x: 1, y: 0 };
+      const v2 = dirVec[tDir] || { x: -1, y: 0 };
+
+      const cp1x = start.x + v1.x * cpOffset;
+      const cp1y = start.y + v1.y * cpOffset;
+      const cp2x = end.x + v2.x * cpOffset;
+      const cp2y = end.y + v2.y * cpOffset;
+
+      const midX = 0.125 * start.x + 0.375 * cp1x + 0.375 * cp2x + 0.125 * end.x;
+      const midY = 0.125 * start.y + 0.375 * cp1y + 0.375 * cp2y + 0.125 * end.y;
+
+      return {
+        d: `M ${start.x} ${start.y} C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${end.x} ${end.y}`,
+        midX,
+        midY
+      };
+    }
+
+    function wrapTextLines(text, maxWidth, fontSize) {
+      const paragraphs = (text || '').split(/\r?\n/);
+      const lines = [];
+      const approxCharWidth = fontSize * 0.56;
+      const maxChars = Math.max(8, Math.floor((maxWidth - 24) / approxCharWidth));
+
+      paragraphs.forEach(para => {
+        if (para.trim() === '') {
+          lines.push('');
+          return;
+        }
+        const words = para.split(/\s+/);
+        let currentLine = '';
+        words.forEach(word => {
+          if ((currentLine + ' ' + word).trim().length <= maxChars) {
+            currentLine = (currentLine + ' ' + word).trim();
+          } else {
+            if (currentLine) lines.push(currentLine);
+            currentLine = word;
+          }
+        });
+        if (currentLine) lines.push(currentLine);
+      });
+
+      return lines.length ? lines : [''];
+    }
+
+    function renderAll() {
+      const themeObj = THEMES[state.theme] || THEMES.light;
+
+      document.body.classList.toggle('dark-ui', themeObj.isDark);
+      document.getElementById('canvas-bg').setAttribute('fill', themeObj.bg);
+      document.getElementById('dot-grid-circle').setAttribute('fill', themeObj.grid);
+      document.getElementById('canvas-grid').setAttribute('display', state.showGrid ? 'inline' : 'none');
+
+      // 1. RENDER EDGES
+      edgesLayer.innerHTML = '';
+      state.edges.forEach(edge => {
+        const srcNode = state.nodes.find(n => n.id === edge.source);
+        const tgtNode = state.nodes.find(n => n.id === edge.target);
+        if (!srcNode || !tgtNode) return;
+
+        const { start, end, sDir, tDir } = determineBestAnchors(srcNode, tgtNode, edge);
+        const effectiveEdgeType = (state.sketchMode && (!edge.type || edge.type === 'orthogonal')) ? 'handdrawn' : (edge.type || 'orthogonal');
+        const { d, d2, midX, midY } = buildEdgePathData(start, end, sDir, tDir, effectiveEdgeType, edge.id);
+        const isSelected = selectedEdgeIds.has(edge.id);
+
+        const g = document.createElementNS(SVG_NS, 'g');
+        g.setAttribute('data-edge-id', edge.id);
+        g.style.cursor = 'pointer';
+
+        const hitPath = document.createElementNS(SVG_NS, 'path');
+        hitPath.setAttribute('d', d);
+        hitPath.setAttribute('fill', 'none');
+        hitPath.setAttribute('stroke', 'transparent');
+        hitPath.setAttribute('stroke-width', '14');
+        g.appendChild(hitPath);
+
+        const path = document.createElementNS(SVG_NS, 'path');
+        path.setAttribute('d', d);
+        path.setAttribute('fill', 'none');
+        path.setAttribute('stroke', isSelected ? '#4f46e5' : (edge.color || themeObj.edgeColor));
+        path.setAttribute('stroke-width', isSelected ? '3.2' : '2.2');
+        path.setAttribute('stroke-linecap', 'round');
+
+        if (edge.dash === 'dashed') path.setAttribute('stroke-dasharray', '7,5');
+        else if (edge.dash === 'dotted') path.setAttribute('stroke-dasharray', '2.5,4.5');
+
+        if (edge.arrow === 'end' || edge.arrow === 'both') {
+          path.setAttribute('marker-end', 'url(#arrow-end)');
+        }
+        if (edge.arrow === 'both') {
+          path.setAttribute('marker-start', 'url(#arrow-end)');
+        }
+        g.appendChild(path);
+
+        if (effectiveEdgeType === 'handdrawn' && d2) {
+          const path2 = document.createElementNS(SVG_NS, 'path');
+          path2.setAttribute('d', d2);
+          path2.setAttribute('fill', 'none');
+          path2.setAttribute('stroke', isSelected ? '#4f46e5' : (edge.color || themeObj.edgeColor));
+          path2.setAttribute('stroke-width', '1.15');
+          path2.setAttribute('stroke-opacity', '0.55');
+          path2.setAttribute('stroke-linecap', 'round');
+          g.appendChild(path2);
+        }
+
+        if (edge.label && edge.label.trim() !== '') {
+          const offsetDx = edge.labelOffset?.dx || 0;
+          const offsetDy = edge.labelOffset?.dy || 0;
+          const labelX = midX + offsetDx;
+          const labelY = midY + offsetDy;
+          const labelW = edge.label.length * 7 + 16;
+          const labelH = 22;
+
+          // Vẽ đường nối mảnh (leader line) từ biên nhãn về điểm khởi tạo (midX, midY) trên đường nối khi kéo ra xa
+          const distFromOrigin = Math.hypot(offsetDx, offsetDy);
+          if (distFromOrigin > 14) {
+            const halfW = labelW / 2;
+            const halfH = labelH / 2;
+            const dxToOrigin = midX - labelX;
+            const dyToOrigin = midY - labelY;
+
+            // Tính giao điểm trên biên hình chữ nhật của nhãn hướng về (midX, midY)
+            const scaleX = dxToOrigin !== 0 ? halfW / Math.abs(dxToOrigin) : Infinity;
+            const scaleY = dyToOrigin !== 0 ? halfH / Math.abs(dyToOrigin) : Infinity;
+            const scale = Math.min(scaleX, scaleY, 1);
+            const anchorEdgeX = labelX + dxToOrigin * scale;
+            const anchorEdgeY = labelY + dyToOrigin * scale;
+
+            const leaderLine = document.createElementNS(SVG_NS, 'line');
+            leaderLine.setAttribute('x1', anchorEdgeX);
+            leaderLine.setAttribute('y1', anchorEdgeY);
+            leaderLine.setAttribute('x2', midX);
+            leaderLine.setAttribute('y2', midY);
+            leaderLine.setAttribute('stroke', isSelected ? '#4f46e5' : (edge.color || themeObj.edgeColor));
+            leaderLine.setAttribute('stroke-width', '1.15');
+            leaderLine.setAttribute('stroke-dasharray', '3,3');
+            leaderLine.setAttribute('stroke-opacity', '0.75');
+            leaderLine.setAttribute('pointer-events', 'none');
+            g.appendChild(leaderLine);
+
+            const originDot = document.createElementNS(SVG_NS, 'circle');
+            originDot.setAttribute('cx', midX);
+            originDot.setAttribute('cy', midY);
+            originDot.setAttribute('r', '2.5');
+            originDot.setAttribute('fill', isSelected ? '#4f46e5' : (edge.color || themeObj.edgeColor));
+            originDot.setAttribute('fill-opacity', '0.85');
+            originDot.setAttribute('pointer-events', 'none');
+            g.appendChild(originDot);
+          }
+
+          const labelG = document.createElementNS(SVG_NS, 'g');
+          labelG.setAttribute('class', 'edge-label-group');
+          labelG.setAttribute('data-edge-label-id', edge.id);
+          labelG.style.cursor = 'grab';
+
+          const rect = document.createElementNS(SVG_NS, 'rect');
+          rect.setAttribute('x', labelX - labelW / 2);
+          rect.setAttribute('y', labelY - 11);
+          rect.setAttribute('width', labelW);
+          rect.setAttribute('height', 22);
+          rect.setAttribute('rx', 11);
+          rect.setAttribute('fill', themeObj.isDark ? '#1e293b' : '#ffffff');
+          rect.setAttribute('stroke', isSelected ? '#4f46e5' : (edge.color || themeObj.edgeColor));
+          rect.setAttribute('stroke-width', isSelected ? '1.8' : '1.2');
+          labelG.appendChild(rect);
+
+          const txt = document.createElementNS(SVG_NS, 'text');
+          txt.setAttribute('x', labelX);
+          txt.setAttribute('y', labelY + 4);
+          txt.setAttribute('text-anchor', 'middle');
+          txt.setAttribute('font-size', '11');
+          txt.setAttribute('font-weight', '600');
+          txt.setAttribute('fill', themeObj.isDark ? '#f8fafc' : '#334155');
+          txt.setAttribute('pointer-events', 'none');
+          txt.textContent = edge.label;
+          labelG.appendChild(txt);
+
+          g.appendChild(labelG);
+        }
+
+        edgesLayer.appendChild(g);
+      });
+
+      // 2. RENDER DIAGRAM NODES
+      nodesLayer.innerHTML = '';
+      state.nodes.forEach(node => {
+        const isSelected = selectedNodeIds.has(node.id);
+        const isSearchHighlight = searchMatches.length > 0 && searchMatches[searchIndex]?.id === node.id;
+
+        const g = document.createElementNS(SVG_NS, 'g');
+        g.setAttribute('class', `node-group ${isSelected ? 'node-selected' : ''}`);
+        g.setAttribute('data-node-id', node.id);
+        g.setAttribute('transform', `translate(${node.x}, ${node.y})`);
+
+        const displayLabel = (node.icon ? node.icon + ' ' : '') + (node.text || '');
+        const lines = wrapTextLines(displayLabel, node.width, node.fontSize || 14);
+        const lineHeight = (node.fontSize || 14) * 1.35;
+        const minReqHeight = Math.max(node.shape === 'diamond' ? 76 : 40, lines.length * lineHeight + 20);
+        if (node.height < minReqHeight) {
+          node.height = minReqHeight;
+        }
+
+        const w = node.width;
+        const h = node.height;
+        const isNodeSketchy = node.handDrawn !== undefined ? Boolean(node.handDrawn) : Boolean(state.sketchMode);
+        const strokeColor = isSelected ? '#4f46e5' : (isSearchHighlight ? '#f59e0b' : (node.stroke || '#cbd5e1'));
+        const strokeWidth = isSelected || isSearchHighlight ? '2.6' : '1.9';
+
+        if (isNodeSketchy) {
+          const sketch = buildSketchyBoxPaths(node.id, w, h, node.shape || 'rounded');
+          const fillPathEl = document.createElementNS(SVG_NS, 'path');
+          fillPathEl.setAttribute('d', sketch.fillPath);
+          fillPathEl.setAttribute('fill', node.fill || themeObj.nodeFill);
+          fillPathEl.setAttribute('stroke', 'none');
+          fillPathEl.setAttribute('filter', isSelected ? 'url(#node-shadow-selected)' : 'url(#node-shadow)');
+          g.appendChild(fillPathEl);
+
+          const strokePath1 = document.createElementNS(SVG_NS, 'path');
+          strokePath1.setAttribute('d', sketch.strokePath1);
+          strokePath1.setAttribute('fill', 'none');
+          strokePath1.setAttribute('stroke', strokeColor);
+          strokePath1.setAttribute('stroke-width', strokeWidth);
+          strokePath1.setAttribute('stroke-linecap', 'round');
+          strokePath1.setAttribute('stroke-linejoin', 'round');
+          g.appendChild(strokePath1);
+
+          const strokePath2 = document.createElementNS(SVG_NS, 'path');
+          strokePath2.setAttribute('d', sketch.strokePath2);
+          strokePath2.setAttribute('fill', 'none');
+          strokePath2.setAttribute('stroke', strokeColor);
+          strokePath2.setAttribute('stroke-width', '1.15');
+          strokePath2.setAttribute('stroke-opacity', '0.6');
+          strokePath2.setAttribute('stroke-linecap', 'round');
+          g.appendChild(strokePath2);
+        } else {
+          let shapeEl;
+          if (node.shape === 'diamond') {
+            shapeEl = document.createElementNS(SVG_NS, 'polygon');
+            shapeEl.setAttribute('points', `${w / 2},0 ${w},${h / 2} ${w / 2},${h} 0,${h / 2}`);
+          } else {
+            shapeEl = document.createElementNS(SVG_NS, 'rect');
+            shapeEl.setAttribute('width', w);
+            shapeEl.setAttribute('height', h);
+            const rx = node.shape === 'pill' ? h / 2 : (node.shape === 'rect' ? 4 : 12);
+            shapeEl.setAttribute('rx', rx);
+          }
+
+          shapeEl.setAttribute('fill', node.fill || themeObj.nodeFill);
+          shapeEl.setAttribute('stroke', strokeColor);
+          shapeEl.setAttribute('stroke-width', strokeWidth);
+          shapeEl.setAttribute('filter', isSelected ? 'url(#node-shadow-selected)' : 'url(#node-shadow)');
+          g.appendChild(shapeEl);
+        }
+
+        if (isSelected) {
+          const halo = document.createElementNS(SVG_NS, 'rect');
+          halo.setAttribute('x', -4);
+          halo.setAttribute('y', -4);
+          halo.setAttribute('width', w + 8);
+          halo.setAttribute('height', h + 8);
+          halo.setAttribute('rx', node.shape === 'pill' ? (h + 8) / 2 : 14);
+          halo.setAttribute('fill', 'none');
+          halo.setAttribute('stroke', '#4f46e5');
+          halo.setAttribute('stroke-width', '1.4');
+          halo.setAttribute('stroke-dasharray', '4,3');
+          halo.setAttribute('pointer-events', 'none');
+          g.appendChild(halo);
+        }
+
+        const textEl = document.createElementNS(SVG_NS, 'text');
+        textEl.setAttribute('x', w / 2);
+        textEl.setAttribute('text-anchor', 'middle');
+        textEl.setAttribute('font-size', node.fontSize || 14);
+        textEl.setAttribute('font-family', node.fontFamily || (isNodeSketchy ? "'Patrick Hand', cursive" : "'Inter', sans-serif"));
+        textEl.setAttribute('font-weight', node.bold ? '700' : '500');
+        textEl.setAttribute('font-style', node.italic ? 'italic' : 'normal');
+        textEl.setAttribute('fill', node.textColor || themeObj.nodeText);
+        textEl.setAttribute('pointer-events', 'none');
+
+        const startTextY = (h - lines.length * lineHeight) / 2 + (node.fontSize || 14) * 0.95;
+        lines.forEach((line, i) => {
+          const tspan = document.createElementNS(SVG_NS, 'tspan');
+          tspan.setAttribute('x', w / 2);
+          tspan.setAttribute('y', startTextY + i * lineHeight);
+          tspan.textContent = line;
+          textEl.appendChild(tspan);
+        });
+        g.appendChild(textEl);
+
+        // 4 Connection Anchor Points
+        const anchors = [
+          { name: 'top', cx: w / 2, cy: 0 },
+          { name: 'right', cx: w, cy: h / 2 },
+          { name: 'bottom', cx: w / 2, cy: h },
+          { name: 'left', cx: 0, cy: h / 2 }
+        ];
+        anchors.forEach(anc => {
+          const dot = document.createElementNS(SVG_NS, 'circle');
+          dot.setAttribute('class', 'anchor-dot');
+          dot.setAttribute('data-anchor-node', node.id);
+          dot.setAttribute('data-anchor-pos', anc.name);
+          dot.setAttribute('cx', anc.cx);
+          dot.setAttribute('cy', anc.cy);
+          dot.setAttribute('r', 5);
+          dot.setAttribute('fill', '#ffffff');
+          dot.setAttribute('stroke', '#4f46e5');
+          dot.setAttribute('stroke-width', '2');
+          g.appendChild(dot);
+        });
+
+        // 4 Cạnh Resize tàng hình (Ngang: Trái/Phải - Dọc: Trên/Dưới) khi chọn Node
+        if (isSelected) {
+          const edges = [
+            { pos: 'n', x: 6, y: -5, w: Math.max(10, w - 12), h: 10, cursor: 'ns-resize' },
+            { pos: 's', x: 6, y: h - 5, w: Math.max(10, w - 12), h: 10, cursor: 'ns-resize' },
+            { pos: 'w', x: -5, y: 6, w: 10, h: Math.max(10, h - 12), cursor: 'ew-resize' },
+            { pos: 'e', x: w - 5, y: 6, w: 10, h: Math.max(10, h - 12), cursor: 'ew-resize' }
+          ];
+
+          edges.forEach(edge => {
+            const hitEdge = document.createElementNS(SVG_NS, 'rect');
+            hitEdge.setAttribute('class', 'node-resize-edge');
+            hitEdge.setAttribute('data-resize-node', node.id);
+            hitEdge.setAttribute('data-resize-edge', edge.pos);
+            hitEdge.setAttribute('x', edge.x);
+            hitEdge.setAttribute('y', edge.y);
+            hitEdge.setAttribute('width', edge.w);
+            hitEdge.setAttribute('height', edge.h);
+            hitEdge.setAttribute('fill', 'transparent');
+            hitEdge.style.cursor = edge.cursor;
+            g.appendChild(hitEdge);
+          });
+        }
+
+        nodesLayer.appendChild(g);
+      });
+
+      // 3. RENDER INDEPENDENT FLOATING STICKY NOTES
+      notesLayer.innerHTML = '';
+      (state.notes || []).forEach(note => {
+        const isSelected = selectedNoteId === note.id;
+        const isSearchHighlight = searchMatches.length > 0 && searchMatches[searchIndex]?.id === note.id;
+        const w = note.width || 210;
+        const h = note.height || 120;
+        const isNoteSketchy = note.handDrawn !== undefined ? Boolean(note.handDrawn) : Boolean(state.sketchMode);
+        const strokeColor = isSelected ? '#4f46e5' : (isSearchHighlight ? '#f59e0b' : (note.stroke || '#eab308'));
+
+        const g = document.createElementNS(SVG_NS, 'g');
+        g.setAttribute('class', `note-group ${isSelected ? 'note-selected' : ''}`);
+        g.setAttribute('data-note-id', note.id);
+        g.setAttribute('transform', `translate(${note.x}, ${note.y})`);
+
+        if (isNoteSketchy) {
+          const sketch = buildSketchyBoxPaths(note.id, w, h, 'note');
+          const fillPath = document.createElementNS(SVG_NS, 'path');
+          fillPath.setAttribute('d', sketch.fillPath);
+          fillPath.setAttribute('fill', note.fill || '#fef08a');
+          fillPath.setAttribute('filter', 'url(#note-shadow)');
+          g.appendChild(fillPath);
+
+          const sp1 = document.createElementNS(SVG_NS, 'path');
+          sp1.setAttribute('d', sketch.strokePath1);
+          sp1.setAttribute('fill', 'none');
+          sp1.setAttribute('stroke', strokeColor);
+          sp1.setAttribute('stroke-width', isSelected ? '2.4' : '1.6');
+          g.appendChild(sp1);
+
+          const sp2 = document.createElementNS(SVG_NS, 'path');
+          sp2.setAttribute('d', sketch.strokePath2);
+          sp2.setAttribute('fill', 'none');
+          sp2.setAttribute('stroke', strokeColor);
+          sp2.setAttribute('stroke-width', '1.1');
+          sp2.setAttribute('stroke-opacity', '0.55');
+          g.appendChild(sp2);
+        } else {
+          const paper = document.createElementNS(SVG_NS, 'rect');
+          paper.setAttribute('width', w);
+          paper.setAttribute('height', h);
+          paper.setAttribute('rx', 6);
+          paper.setAttribute('fill', note.fill || '#fef08a');
+          paper.setAttribute('stroke', strokeColor);
+          paper.setAttribute('stroke-width', isSelected ? '2.4' : '1.4');
+          paper.setAttribute('filter', 'url(#note-shadow)');
+          g.appendChild(paper);
+
+          const headerStrip = document.createElementNS(SVG_NS, 'rect');
+          headerStrip.setAttribute('x', 1);
+          headerStrip.setAttribute('y', 1);
+          headerStrip.setAttribute('width', w - 2);
+          headerStrip.setAttribute('height', 12);
+          headerStrip.setAttribute('rx', 5);
+          headerStrip.setAttribute('fill', strokeColor);
+          headerStrip.setAttribute('fill-opacity', '0.18');
+          headerStrip.setAttribute('pointer-events', 'none');
+          g.appendChild(headerStrip);
+        }
+
+        // Multiline left-aligned note text
+        const lines = wrapTextLines(note.text || '', w - 8, note.fontSize || 15);
+        const fontSize = note.fontSize || 15;
+        const lineHeight = fontSize * 1.38;
+        const textEl = document.createElementNS(SVG_NS, 'text');
+        textEl.setAttribute('x', 14);
+        textEl.setAttribute('text-anchor', 'start');
+        textEl.setAttribute('font-size', fontSize);
+        textEl.setAttribute('font-family', note.fontFamily || "'Patrick Hand', cursive");
+        textEl.setAttribute('font-weight', note.bold ? '700' : '400');
+        textEl.setAttribute('font-style', note.italic ? 'italic' : 'normal');
+        textEl.setAttribute('fill', note.textColor || '#422006');
+        textEl.setAttribute('pointer-events', 'none');
+
+        lines.forEach((line, idx) => {
+          const yPos = 28 + idx * lineHeight;
+          if (yPos > h - 10) return;
+          const tspan = document.createElementNS(SVG_NS, 'tspan');
+          tspan.setAttribute('x', 14);
+          tspan.setAttribute('y', yPos);
+          tspan.textContent = line;
+          textEl.appendChild(tspan);
+        });
+        g.appendChild(textEl);
+
+        // Bottom-right Resize Handle
+        const resizeHandle = document.createElementNS(SVG_NS, 'g');
+        resizeHandle.setAttribute('class', 'note-resize-handle');
+        resizeHandle.setAttribute('data-resize-note', note.id);
+
+        const hitZone = document.createElementNS(SVG_NS, 'rect');
+        hitZone.setAttribute('x', w - 18);
+        hitZone.setAttribute('y', h - 18);
+        hitZone.setAttribute('width', 18);
+        hitZone.setAttribute('height', 18);
+        hitZone.setAttribute('fill', 'transparent');
+        resizeHandle.appendChild(hitZone);
+
+        const grip = document.createElementNS(SVG_NS, 'path');
+        grip.setAttribute('d', `M ${w - 11} ${h - 4} L ${w - 4} ${h - 11} M ${w - 7} ${h - 4} L ${w - 4} ${h - 7}`);
+        grip.setAttribute('stroke', strokeColor);
+        grip.setAttribute('stroke-width', '1.8');
+        grip.setAttribute('stroke-linecap', 'round');
+        resizeHandle.appendChild(grip);
+
+        g.appendChild(resizeHandle);
+        notesLayer.appendChild(g);
+      });
+
+      updatePropertiesPanel();
+    }
+
+    /**
+     * =========================================================================
+     * 3. HISTORY (UNDO/REDO) & AUTO-SAVE
+     * =========================================================================
+     */
+    function pushHistory() {
+      const snapshot = JSON.stringify({
+        title: state.title,
+        theme: state.theme,
+        sketchMode: state.sketchMode,
+        nodes: state.nodes,
+        edges: state.edges,
+        notes: state.notes || []
+      });
+      if (historyStack.length > 0 && historyStack[historyStack.length - 1] === snapshot) return;
+      historyStack.push(snapshot);
+      if (historyStack.length > MAX_HISTORY) historyStack.shift();
+      redoStack = [];
+      updateHistoryButtons();
+      saveToLocalStorage();
+    }
+
+    function undo() {
+      if (historyStack.length <= 1) return;
+      const current = historyStack.pop();
+      redoStack.push(current);
+      const prev = JSON.parse(historyStack[historyStack.length - 1]);
+      restoreSnapshot(prev);
+      showToast('Đã hoàn tác thao tác');
+    }
+
+    function redo() {
+      if (redoStack.length === 0) return;
+      const next = redoStack.pop();
+      historyStack.push(next);
+      restoreSnapshot(JSON.parse(next));
+      showToast('Đã làm lại thao tác');
+    }
+
+    function restoreSnapshot(snap) {
+      state.title = snap.title;
+      state.theme = snap.theme;
+      state.sketchMode = Boolean(snap.sketchMode);
+      state.nodes = snap.nodes || [];
+      state.edges = snap.edges || [];
+      state.notes = snap.notes || [];
+      selectedNodeIds.clear();
+      selectedNoteId = null;
+      selectedEdgeIds.clear();
+      syncToolbarUI();
+      renderAll();
+      updateHistoryButtons();
+      saveToLocalStorage();
+    }
+
+    function updateHistoryButtons() {
+      document.getElementById('btn-undo').disabled = historyStack.length <= 1;
+      document.getElementById('btn-redo').disabled = redoStack.length === 0;
+    }
+
+    function saveToLocalStorage() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({
+          title: state.title,
+          theme: state.theme,
+          sketchMode: state.sketchMode,
+          showGrid: state.showGrid,
+          snapToGrid: state.snapToGrid,
+          nodes: state.nodes,
+          edges: state.edges,
+          notes: state.notes || []
+        }));
+        const statusEl = document.getElementById('autosave-status');
+        statusEl.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Đã tự động lưu`;
+      } catch (e) {
+        console.warn('Auto-save failed:', e);
+      }
+    }
+
+    /**
+     * =========================================================================
+     * 4. NODE, EDGE & INDEPENDENT NOTE CRUD OPERATIONS
+     * =========================================================================
+     */
+    function generateId(prefix = 'n') {
+      return `${prefix}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 6)}`;
+    }
+
+    function snapVal(val) {
+      return val;
+    }
+
+    function createFloatingNote(worldX = null, worldY = null) {
+      const cx = worldX !== null ? worldX : (-view.x + window.innerWidth / 2) / view.zoom - 108;
+      const cy = worldY !== null ? worldY : (-view.y + window.innerHeight / 2) / view.zoom - 60;
+
+      const offset = ((state.notes || []).length % 6) * 24;
+      const newNote = {
+        id: generateId('note'),
+        text: 'Ghi chú mới...',
+        x: snapVal(cx + offset),
+        y: snapVal(cy + offset),
+        width: 216,
+        height: 120,
+        fill: '#fef08a',
+        stroke: '#eab308',
+        textColor: '#422006',
+        fontFamily: "'Patrick Hand', cursive",
+        fontSize: 15,
+        bold: false,
+        italic: false,
+        handDrawn: Boolean(state.sketchMode)
+      };
+
+      if (!Array.isArray(state.notes)) state.notes = [];
+      state.notes.push(newNote);
+
+      selectedNodeIds.clear();
+      selectedEdgeIds.clear();
+      selectedNoteId = newNote.id;
+
+      pushHistory();
+      renderAll();
+      startInlineEdit('note', newNote.id);
+    }
+
+    function addDiagramNode(parentId = null, shape = 'rounded', directionHint = null) {
+      const themeObj = THEMES[state.theme] || THEMES.light;
+      let targetParentId = parentId;
+
+      if (!targetParentId && selectedNodeIds.size === 1) {
+        targetParentId = Array.from(selectedNodeIds)[0];
+      }
+
+      const parent = state.nodes.find(n => n.id === targetParentId);
+      const branchColor = themeObj.branchColors[state.nodes.length % themeObj.branchColors.length];
+
+      const safeShape = (shape === 'sticky') ? 'rounded' : shape;
+      const newW = safeShape === 'diamond' ? 168 : 168;
+      const newH = safeShape === 'diamond' ? 84 : 48;
+
+      const stagger = (state.nodes.length % 5) * 24;
+      let posX = parent ? parent.x + parent.width + 72 : (-view.x + window.innerWidth / 2) / view.zoom - newW / 2 + stagger;
+      let posY = parent ? parent.y + (parent.height - newH) / 2 : (-view.y + window.innerHeight / 2) / view.zoom - newH / 2 + stagger;
+      let sourceAnchor = parent ? 'right' : null;
+      let targetAnchor = parent ? 'left' : null;
+
+      if (parent && directionHint) {
+        const gap = 72;
+        if (directionHint === 'right') {
+          posX = parent.x + parent.width + gap;
+          posY = parent.y + (parent.height - newH) / 2;
+          sourceAnchor = 'right';
+          targetAnchor = 'left';
+        } else if (directionHint === 'left') {
+          posX = parent.x - newW - gap;
+          posY = parent.y + (parent.height - newH) / 2;
+          sourceAnchor = 'left';
+          targetAnchor = 'right';
+        } else if (directionHint === 'down') {
+          posX = parent.x + (parent.width - newW) / 2;
+          posY = parent.y + parent.height + gap;
+          sourceAnchor = 'bottom';
+          targetAnchor = 'top';
+        } else if (directionHint === 'up') {
+          posX = parent.x + (parent.width - newW) / 2;
+          posY = parent.y - newH - gap;
+          sourceAnchor = 'top';
+          targetAnchor = 'bottom';
+        }
+
+        let attempts = 0;
+        while (attempts < 12 && state.nodes.some(n => Math.abs(n.x - posX) < 40 && Math.abs(n.y - posY) < 35)) {
+          if (directionHint === 'left' || directionHint === 'right') posY += 60;
+          else posX += 192;
+          attempts++;
+        }
+      }
+
+      posX = snapVal(posX);
+      posY = snapVal(posY);
+
+      const isSketchActive = state.sketchMode || (parent && parent.handDrawn);
+
+      const newNode = {
+        id: generateId('n'),
+        text: 'Khối mới',
+        icon: '',
+        x: posX,
+        y: posY,
+        width: newW,
+        height: newH,
+        shape: safeShape,
+        handDrawn: isSketchActive ? true : undefined,
+        fill: themeObj.nodeFill,
+        stroke: parent ? parent.stroke : branchColor,
+        textColor: themeObj.nodeText,
+        fontFamily: parent?.fontFamily || (isSketchActive ? "'Patrick Hand', cursive" : "'Inter', sans-serif"),
+        fontSize: 14,
+        bold: false,
+        italic: false
+      };
+
+      state.nodes.push(newNode);
+
+      if (parent) {
+        state.edges.push({
+          id: generateId('e'),
+          source: parent.id,
+          target: newNode.id,
+          sourceAnchor,
+          targetAnchor,
+          type: isSketchActive ? 'handdrawn' : 'orthogonal',
+          dash: 'solid',
+          arrow: 'end',
+          color: newNode.stroke,
+          label: ''
+        });
+      }
+
+      selectedNodeIds.clear();
+      selectedNodeIds.add(newNode.id);
+      selectedNoteId = null;
+      selectedEdgeIds.clear();
+
+      pushHistory();
+      renderAll();
+      if (!directionHint) {
+        startInlineEdit('node', newNode.id);
+      }
+    }
+
+    function deleteSelected() {
+      if (selectedNoteId) {
+        state.notes = (state.notes || []).filter(nt => nt.id !== selectedNoteId);
+        selectedNoteId = null;
+        pushHistory();
+        renderAll();
+        showToast('Đã xóa ô ghi chú');
+        return;
+      }
+
+      if (selectedEdgeIds.size > 0) {
+        const count = selectedEdgeIds.size;
+        state.edges = state.edges.filter(e => !selectedEdgeIds.has(e.id));
+        selectedEdgeIds.clear();
+        pushHistory();
+        renderAll();
+        showToast(`Đã xóa ${count} đường nối`);
+        return;
+      }
+
+      if (selectedNodeIds.size === 0) return;
+
+      const count = selectedNodeIds.size;
+      state.nodes = state.nodes.filter(n => !selectedNodeIds.has(n.id));
+      state.edges = state.edges.filter(e => !selectedNodeIds.has(e.source) && !selectedNodeIds.has(e.target));
+      selectedNodeIds.clear();
+
+      pushHistory();
+      renderAll();
+      showToast(`Đã xóa ${count} đối tượng`);
+    }
+
+    function startInlineEdit(kind, id) {
+      const item = kind === 'note'
+        ? (state.notes || []).find(n => n.id === id)
+        : state.nodes.find(n => n.id === id);
+      if (!item) return;
+
+      editingTarget = { kind, id };
+
+      const screenX = item.x * view.zoom + view.x;
+      const screenY = item.y * view.zoom + view.y;
+      const screenW = Math.max(150, item.width * view.zoom);
+      const screenH = Math.max(kind === 'note' ? 95 : 42, item.height * view.zoom);
+
+      inlineEditor.value = item.text || '';
+      inlineEditor.style.left = `${screenX}px`;
+      inlineEditor.style.top = `${screenY}px`;
+      inlineEditor.style.width = `${screenW}px`;
+      inlineEditor.style.minHeight = `${screenH}px`;
+      inlineEditor.style.textAlign = kind === 'note' ? 'left' : 'center';
+      inlineEditor.style.backgroundColor = kind === 'note' ? (item.fill || '#fef08a') : '#ffffff';
+      inlineEditor.style.color = kind === 'note' ? (item.textColor || '#422006') : '#0f172a';
+      inlineEditor.style.fontFamily = item.fontFamily || "'Inter', sans-serif";
+      inlineEditor.style.fontWeight = item.bold ? '700' : '500';
+      inlineEditor.style.fontStyle = item.italic ? 'italic' : 'normal';
+      inlineEditor.style.fontSize = `${Math.max(13, (item.fontSize || 14) * view.zoom)}px`;
+      inlineEditor.classList.remove('hidden');
+
+      requestAnimationFrame(() => {
+        inlineEditor.focus();
+        inlineEditor.select();
+      });
+    }
+
+    function commitInlineEdit() {
+      if (!editingTarget) return;
+      const { kind, id } = editingTarget;
+
+      if (kind === 'note') {
+        const note = (state.notes || []).find(n => n.id === id);
+        if (note) {
+          note.text = inlineEditor.value.trim() || 'Ghi chú trống';
+          pushHistory();
+          renderAll();
+        }
+      } else {
+        const node = state.nodes.find(n => n.id === id);
+        if (node) {
+          const newText = inlineEditor.value.trim();
+          if (newText !== '') {
+            node.text = newText;
+            const idealWidth = Math.min(300, Math.max(132, Math.ceil((newText.length * 8.5 + 48) / 12) * 12));
+            if (node.shape !== 'diamond' && !node.customSize) {
+              node.width = idealWidth;
+            }
+          }
+          pushHistory();
+          renderAll();
+        }
+      }
+
+      editingTarget = null;
+      inlineEditor.classList.add('hidden');
+    }
+
+    /**
+     * =========================================================================
+     * 5. POINTER INTERACTIONS, SNAP & SMART ALIGNMENT GUIDES
+     * =========================================================================
+     */
+    function screenToWorld(clientX, clientY) {
+      return {
+        x: (clientX - view.x) / view.zoom,
+        y: (clientY - view.y) / view.zoom
+      };
+    }
+
+    function zoomAtPoint(factor, clientX, clientY) {
+      const newZoom = Math.min(2.8, Math.max(0.2, view.zoom * factor));
+      const actualFactor = newZoom / view.zoom;
+
+      view.x = clientX - (clientX - view.x) * actualFactor;
+      view.y = clientY - (clientY - view.y) * actualFactor;
+      view.zoom = newZoom;
+      updateViewportTransform();
+    }
+
+    function fitToScreen() {
+      const allItems = [...state.nodes, ...(state.notes || [])];
+      if (allItems.length === 0) {
+        view.x = window.innerWidth / 2;
+        view.y = window.innerHeight / 2;
+        view.zoom = 1;
+        updateViewportTransform();
+        return;
+      }
+
+      const bbox = getDiagramBoundingBox();
+      const padding = 64;
+
+      const scaleX = (window.innerWidth - padding * 2) / bbox.width;
+      const scaleY = (window.innerHeight - padding * 2) / bbox.height;
+      view.zoom = Math.min(1.15, Math.max(0.25, Math.min(scaleX, scaleY)));
+
+      const centerX = bbox.x + bbox.width / 2;
+      const centerY = bbox.y + bbox.height / 2;
+      view.x = window.innerWidth / 2 - centerX * view.zoom;
+      view.y = window.innerHeight / 2 - centerY * view.zoom;
+
+      updateViewportTransform();
+    }
+
+    function drawGuideLine(x1, y1, x2, y2) {
+      const line = document.createElementNS(SVG_NS, 'line');
+      line.setAttribute('x1', x1);
+      line.setAttribute('y1', y1);
+      line.setAttribute('x2', x2);
+      line.setAttribute('y2', y2);
+      line.setAttribute('stroke', '#ec4899');
+      line.setAttribute('stroke-width', '1.4');
+      line.setAttribute('stroke-dasharray', '5,3');
+      guidesLayer.appendChild(line);
+    }
+
+    /**
+     * Smart Guides & Snap Engine:
+     * - Khi state.snapToGrid === true: Bắt dính lưới 12px + căn gióng với các cạnh/tâm của node & note khác và vẽ đường gióng màu hồng.
+     * - Khi state.snapToGrid === false: Xóa đường gióng và để kéo thả tự do hoàn toàn.
+     */
+    function applyDragSnapAndGuides(movingItem, excludeIds) {
+      guidesLayer.innerHTML = '';
+      if (!state.snapToGrid) return;
+
+      const snapThreshold = 8;
+
+      const otherItems = [
+        ...state.nodes.filter(n => !excludeIds.has(n.id)),
+        ...(state.notes || []).filter(nt => !excludeIds.has(nt.id))
+      ];
+
+      const w = movingItem.width || 168;
+      const h = movingItem.height || 48;
+
+      // 1. Giữ nguyên tọa độ tự do, chỉ bắt dính khi căn gióng với vật thể khác
+      let bestX = movingItem.x;
+      let bestY = movingItem.y;
+
+      let bestDistX = snapThreshold + 1;
+      let bestDistY = snapThreshold + 1;
+      let guideXInfo = null;
+      let guideYInfo = null;
+
+      // 2. Kiểm tra căn gióng (Cạnh Trái, Tâm Ngang, Cạnh Phải) với các đối tượng khác
+      const mPointsX = [
+        { offset: 0, val: movingItem.x },
+        { offset: w / 2, val: movingItem.x + w / 2 },
+        { offset: w, val: movingItem.x + w }
+      ];
+
+      for (const other of otherItems) {
+        const ow = other.width || 168;
+        const oPointsX = [other.x, other.x + ow / 2, other.x + ow];
+
+        for (const mp of mPointsX) {
+          for (const ox of oPointsX) {
+            const dist = Math.abs(mp.val - ox);
+            if (dist < bestDistX) {
+              bestDistX = dist;
+              bestX = ox - mp.offset;
+              guideXInfo = { x: ox, other };
+            }
+          }
+        }
+      }
+
+      // 3. Kiểm tra căn gióng (Cạnh Trên, Tâm Dọc, Cạnh Dưới) với các đối tượng khác
+      const mPointsY = [
+        { offset: 0, val: movingItem.y },
+        { offset: h / 2, val: movingItem.y + h / 2 },
+        { offset: h, val: movingItem.y + h }
+      ];
+
+      for (const other of otherItems) {
+        const oh = other.height || 48;
+        const oPointsY = [other.y, other.y + oh / 2, other.y + oh];
+
+        for (const mp of mPointsY) {
+          for (const oy of oPointsY) {
+            const dist = Math.abs(mp.val - oy);
+            if (dist < bestDistY) {
+              bestDistY = dist;
+              bestY = oy - mp.offset;
+              guideYInfo = { y: oy, other };
+            }
+          }
+        }
+      }
+
+      movingItem.x = bestX;
+      movingItem.y = bestY;
+
+      if (guideXInfo) {
+        const oh = guideXInfo.other.height || 48;
+        const y1 = Math.min(movingItem.y, guideXInfo.other.y) - 36;
+        const y2 = Math.max(movingItem.y + h, guideXInfo.other.y + oh) + 36;
+        drawGuideLine(guideXInfo.x, y1, guideXInfo.x, y2);
+      }
+
+      if (guideYInfo) {
+        const ow = guideYInfo.other.width || 168;
+        const x1 = Math.min(movingItem.x, guideYInfo.other.x) - 36;
+        const x2 = Math.max(movingItem.x + w, guideYInfo.other.x + ow) + 36;
+        drawGuideLine(x1, guideYInfo.y, x2, guideYInfo.y);
+      }
+    }
+
+    // SVG Pointer Down
+    svgEl.addEventListener('pointerdown', (e) => {
+      if (editingTarget) {
+        commitInlineEdit();
+      }
+      document.getElementById('theme-dropdown').classList.add('hidden');
+
+      const worldPt = screenToWorld(e.clientX, e.clientY);
+
+      // 1. Check Anchor Dot Click (Manual Connector Drag)
+      const anchorTarget = e.target.closest('.anchor-dot');
+      if (anchorTarget) {
+        e.stopPropagation();
+        const nodeId = anchorTarget.getAttribute('data-anchor-node');
+        const anchorPos = anchorTarget.getAttribute('data-anchor-pos');
+        const srcNode = state.nodes.find(n => n.id === nodeId);
+        if (srcNode) {
+          interaction.type = 'connect';
+          interaction.connectFromNode = srcNode;
+          interaction.connectFromAnchor = anchorPos;
+          const startCoords = getAnchorCoords(srcNode, anchorPos);
+          tempEdgeEl.setAttribute('d', `M ${startCoords.x} ${startCoords.y} L ${worldPt.x} ${worldPt.y}`);
+          tempEdgeEl.setAttribute('display', 'inline');
+          svgEl.classList.add('connecting-mode');
+        }
+        return;
+      }
+
+      // 2. Check Sticky Note Resize Handle
+      const resizeTarget = e.target.closest('[data-resize-note]');
+      if (resizeTarget && e.button === 0) {
+        e.stopPropagation();
+        const noteId = resizeTarget.getAttribute('data-resize-note');
+        const note = (state.notes || []).find(n => n.id === noteId);
+        if (note) {
+          selectedNodeIds.clear();
+          selectedEdgeIds.clear();
+          selectedNoteId = note.id;
+          interaction.type = 'resize-note';
+          interaction.hasMoved = false;
+          interaction.resizeStart = { w: note.width, h: note.height, x: worldPt.x, y: worldPt.y };
+          renderAll();
+        }
+        return;
+      }
+
+      // 3. Check Node Resize Edge (4 cạnh ngang/dọc)
+      const resizeNodeTarget = e.target.closest('[data-resize-node]');
+      if (resizeNodeTarget && e.button === 0) {
+        e.stopPropagation();
+        const nodeId = resizeNodeTarget.getAttribute('data-resize-node');
+        const edgePos = resizeNodeTarget.getAttribute('data-resize-edge') || 'e';
+        const node = state.nodes.find(n => n.id === nodeId);
+        if (node) {
+          interaction.type = 'resize-node';
+          interaction.resizingNodeId = node.id;
+          interaction.resizeEdge = edgePos;
+          interaction.hasMoved = false;
+          interaction.resizeStart = {
+            w: node.width,
+            h: node.height,
+            nodeX: node.x,
+            nodeY: node.y
+          };
+        }
+        return;
+      }
+
+      // 4. Panning (Middle mouse, Hand tool, or Spacebar held)
+      if (e.button === 1 || activeTool === 'hand' || isSpacePressed) {
+        interaction.type = 'pan';
+        interaction.lastX = e.clientX;
+        interaction.lastY = e.clientY;
+        svgEl.classList.add('cursor-grabbing');
+        return;
+      }
+
+      // 5. Check Independent Sticky Note Click
+      const noteGroup = e.target.closest('.note-group');
+      if (noteGroup && e.button === 0) {
+        const noteId = noteGroup.getAttribute('data-note-id');
+        if (e.detail >= 2) {
+          interaction.type = null;
+          startInlineEdit('note', noteId);
+          return;
+        }
+        const note = (state.notes || []).find(n => n.id === noteId);
+        if (note) {
+          const needRender = selectedNoteId !== noteId || selectedNodeIds.size > 0 || selectedEdgeIds.size > 0;
+          selectedNodeIds.clear();
+          selectedEdgeIds.clear();
+          selectedNoteId = noteId;
+          interaction.type = 'drag-note';
+          interaction.hasMoved = false;
+          interaction.noteOffset = { dx: worldPt.x - note.x, dy: worldPt.y - note.y };
+          if (needRender) renderAll();
+        }
+        return;
+      }
+
+      // 6. Check Node Click
+      const nodeGroup = e.target.closest('.node-group');
+      if (nodeGroup && e.button === 0) {
+        const nodeId = nodeGroup.getAttribute('data-node-id');
+        if (e.detail >= 2) {
+          interaction.type = null;
+          startInlineEdit('node', nodeId);
+          return;
+        }
+        const alreadySingleSelected = !e.shiftKey && selectedNodeIds.size === 1 && selectedNodeIds.has(nodeId) && selectedEdgeIds.size === 0 && !selectedNoteId;
+        selectedEdgeIds.clear();
+        selectedNoteId = null;
+
+        if (e.shiftKey) {
+          if (selectedNodeIds.has(nodeId)) selectedNodeIds.delete(nodeId);
+          else selectedNodeIds.add(nodeId);
+        } else if (!selectedNodeIds.has(nodeId)) {
+          selectedNodeIds.clear();
+          selectedNodeIds.add(nodeId);
+        }
+
+        interaction.type = 'drag-nodes';
+        interaction.startX = worldPt.x;
+        interaction.startY = worldPt.y;
+        interaction.hasMoved = false;
+        interaction.nodeOffsets.clear();
+
+        selectedNodeIds.forEach(id => {
+          const n = state.nodes.find(item => item.id === id);
+          if (n) {
+            interaction.nodeOffsets.set(id, { dx: worldPt.x - n.x, dy: worldPt.y - n.y });
+          }
+        });
+
+        if (!alreadySingleSelected) renderAll();
+        return;
+      }
+
+      // 6.5 Check Edge Label Drag
+      const edgeLabelGroup = e.target.closest('.edge-label-group');
+      if (edgeLabelGroup && e.button === 0) {
+        e.stopPropagation();
+        const edgeId = edgeLabelGroup.getAttribute('data-edge-label-id');
+        const edge = state.edges.find(ed => ed.id === edgeId);
+        if (edge) {
+          selectedNodeIds.clear();
+          selectedNoteId = null;
+          selectedEdgeIds.clear();
+          selectedEdgeIds.add(edgeId);
+
+          interaction.type = 'drag-edge-label';
+          interaction.draggingEdgeId = edgeId;
+          interaction.hasMoved = false;
+          interaction.edgeLabelStart = {
+            startX: worldPt.x,
+            startY: worldPt.y,
+            dx: edge.labelOffset?.dx || 0,
+            dy: edge.labelOffset?.dy || 0
+          };
+          svgEl.classList.add('cursor-grabbing');
+          renderAll();
+        }
+        return;
+      }
+
+      // 7. Check Edge Click
+      const edgeGroup = e.target.closest('[data-edge-id]');
+      if (edgeGroup && e.button === 0) {
+        const edgeId = edgeGroup.getAttribute('data-edge-id');
+        selectedNodeIds.clear();
+        selectedNoteId = null;
+        if (e.shiftKey) {
+          if (selectedEdgeIds.has(edgeId)) selectedEdgeIds.delete(edgeId);
+          else selectedEdgeIds.add(edgeId);
+        } else {
+          selectedEdgeIds.clear();
+          selectedEdgeIds.add(edgeId);
+        }
+        renderAll();
+        return;
+      }
+
+      // 8. Empty Canvas Click -> Marquee Selection Box
+      if (e.button === 0) {
+        if (!e.shiftKey) {
+          selectedNodeIds.clear();
+          selectedNoteId = null;
+          selectedEdgeIds.clear();
+        }
+        interaction.type = 'marquee';
+        interaction.startX = worldPt.x;
+        interaction.startY = worldPt.y;
+        marqueeBoxEl.setAttribute('x', worldPt.x);
+        marqueeBoxEl.setAttribute('y', worldPt.y);
+        marqueeBoxEl.setAttribute('width', 0);
+        marqueeBoxEl.setAttribute('height', 0);
+        marqueeBoxEl.setAttribute('display', 'inline');
+        renderAll();
+      }
+    });
+
+    // Window Pointer Move
+    window.addEventListener('pointermove', (e) => {
+      if (!interaction.type) return;
+
+      if (interaction.type === 'pan') {
+        view.x += e.clientX - interaction.lastX;
+        view.y += e.clientY - interaction.lastY;
+        interaction.lastX = e.clientX;
+        interaction.lastY = e.clientY;
+        updateViewportTransform();
+        return;
+      }
+
+      const worldPt = screenToWorld(e.clientX, e.clientY);
+
+      if (interaction.type === 'drag-note' && selectedNoteId) {
+        const note = (state.notes || []).find(n => n.id === selectedNoteId);
+        if (note) {
+          interaction.hasMoved = true;
+          note.x = worldPt.x - interaction.noteOffset.dx;
+          note.y = worldPt.y - interaction.noteOffset.dy;
+          applyDragSnapAndGuides(note, new Set([note.id]));
+          renderAll();
+        }
+        return;
+      }
+
+      if (interaction.type === 'resize-note' && selectedNoteId) {
+        const note = (state.notes || []).find(n => n.id === selectedNoteId);
+        if (note) {
+          interaction.hasMoved = true;
+          const dw = worldPt.x - interaction.resizeStart.x;
+          const dh = worldPt.y - interaction.resizeStart.y;
+          let rawW = Math.max(140, interaction.resizeStart.w + dw);
+          let rawH = Math.max(80, interaction.resizeStart.h + dh);
+
+          guidesLayer.innerHTML = '';
+          if (state.snapToGrid) {
+
+            const rightEdge = note.x + rawW;
+            const bottomEdge = note.y + rawH;
+            const otherItems = [...state.nodes, ...(state.notes || []).filter(nt => nt.id !== note.id)];
+
+            for (const other of otherItems) {
+              const snapX = [other.x, other.x + (other.width || 168)].find(v => Math.abs(rightEdge - v) < 8);
+              if (snapX !== undefined) {
+                rawW = Math.max(140, snapX - note.x);
+                drawGuideLine(snapX, Math.min(note.y, other.y) - 30, snapX, Math.max(note.y + rawH, other.y + (other.height || 48)) + 30);
+                break;
+              }
+            }
+            for (const other of otherItems) {
+              const snapY = [other.y, other.y + (other.height || 48)].find(v => Math.abs(bottomEdge - v) < 8);
+              if (snapY !== undefined) {
+                rawH = Math.max(80, snapY - note.y);
+                drawGuideLine(Math.min(note.x, other.x) - 30, snapY, Math.max(note.x + rawW, other.x + (other.width || 168)) + 30, snapY);
+                break;
+              }
+            }
+          }
+
+          note.width = rawW;
+          note.height = rawH;
+          renderAll();
+        }
+        return;
+      }
+
+      if (interaction.type === 'resize-node' && interaction.resizingNodeId) {
+        const node = state.nodes.find(n => n.id === interaction.resizingNodeId);
+        if (node) {
+          interaction.hasMoved = true;
+          const { w, h, nodeX, nodeY } = interaction.resizeStart;
+          const edgePos = interaction.resizeEdge;
+          const minW = 90;
+          const minH = 36;
+
+          let left = nodeX;
+          let top = nodeY;
+          let right = nodeX + w;
+          let bottom = nodeY + h;
+
+          let targetX = worldPt.x;
+          let targetY = worldPt.y;
+
+          guidesLayer.innerHTML = '';
+          if (state.snapToGrid) {
+            const snapDist = 8;
+            const otherItems = [...state.nodes.filter(o => o.id !== node.id), ...(state.notes || [])];
+            for (const other of otherItems) {
+              const ow = other.width || 168;
+              const oh = other.height || 48;
+              if (edgePos === 'e' || edgePos === 'w') {
+                const snapX = [other.x, other.x + ow].find(v => Math.abs(targetX - v) < snapDist);
+                if (snapX !== undefined) {
+                  targetX = snapX;
+                  drawGuideLine(snapX, Math.min(top, other.y) - 30, snapX, Math.max(bottom, other.y + oh) + 30);
+                  break;
+                }
+              } else {
+                const snapY = [other.y, other.y + oh].find(v => Math.abs(targetY - v) < snapDist);
+                if (snapY !== undefined) {
+                  targetY = snapY;
+                  drawGuideLine(Math.min(left, other.x) - 30, snapY, Math.max(right, other.x + ow) + 30, snapY);
+                  break;
+                }
+              }
+            }
+          }
+
+          if (edgePos === 'e') right = Math.max(left + minW, targetX);
+          if (edgePos === 'w') left = Math.min(right - minW, targetX);
+          if (edgePos === 's') bottom = Math.max(top + minH, targetY);
+          if (edgePos === 'n') top = Math.min(bottom - minH, targetY);
+
+          node.x = left;
+          node.y = top;
+          node.width = right - left;
+          node.height = bottom - top;
+          node.customSize = true;
+
+          if (!resizeRafPending) {
+            resizeRafPending = true;
+            requestAnimationFrame(() => {
+              renderAll();
+              resizeRafPending = false;
+            });
+          }
+        }
+        return;
+      }
+
+      if (interaction.type === 'drag-nodes') {
+        interaction.hasMoved = true;
+        selectedNodeIds.forEach(id => {
+          const n = state.nodes.find(item => item.id === id);
+          const off = interaction.nodeOffsets.get(id);
+          if (n && off) {
+            n.x = worldPt.x - off.dx;
+            n.y = worldPt.y - off.dy;
+          }
+        });
+
+        if (selectedNodeIds.size === 1) {
+          const singleNode = state.nodes.find(n => n.id === Array.from(selectedNodeIds)[0]);
+          if (singleNode) {
+            applyDragSnapAndGuides(singleNode, selectedNodeIds);
+          }
+        } else {
+          guidesLayer.innerHTML = '';
+        }
+
+        renderAll();
+        return;
+      }
+
+      if (interaction.type === 'drag-edge-label' && interaction.draggingEdgeId) {
+        const edge = state.edges.find(ed => ed.id === interaction.draggingEdgeId);
+        if (edge) {
+          interaction.hasMoved = true;
+          const moveDx = worldPt.x - interaction.edgeLabelStart.startX;
+          const moveDy = worldPt.y - interaction.edgeLabelStart.startY;
+          let newDx = interaction.edgeLabelStart.dx + moveDx;
+          let newDy = interaction.edgeLabelStart.dy + moveDy;
+
+          // Tự động bắt dính nhẹ về tâm đường nối (0, 0) khi kéo gần tâm và đang bật Snap
+          if (state.snapToGrid && Math.hypot(newDx, newDy) < 10) {
+            newDx = 0;
+            newDy = 0;
+          }
+
+          edge.labelOffset = { dx: newDx, dy: newDy };
+          renderAll();
+        }
+        return;
+      }
+
+      if (interaction.type === 'connect' && interaction.connectFromNode) {
+        const startCoords = getAnchorCoords(interaction.connectFromNode, interaction.connectFromAnchor);
+        tempEdgeEl.setAttribute('d', `M ${startCoords.x} ${startCoords.y} L ${worldPt.x} ${worldPt.y}`);
+        return;
+      }
+
+      if (interaction.type === 'marquee') {
+        const x = Math.min(interaction.startX, worldPt.x);
+        const y = Math.min(interaction.startY, worldPt.y);
+        const w = Math.abs(worldPt.x - interaction.startX);
+        const h = Math.abs(worldPt.y - interaction.startY);
+
+        marqueeBoxEl.setAttribute('x', x);
+        marqueeBoxEl.setAttribute('y', y);
+        marqueeBoxEl.setAttribute('width', w);
+        marqueeBoxEl.setAttribute('height', h);
+
+        selectedNodeIds.clear();
+        state.nodes.forEach(n => {
+          if (n.x < x + w && n.x + n.width > x && n.y < y + h && n.y + n.height > y) {
+            selectedNodeIds.add(n.id);
+          }
+        });
+        renderAll();
+      }
+    });
+
+    // Window Pointer Up
+    window.addEventListener('pointerup', (e) => {
+      if (!interaction.type) return;
+
+      if (interaction.type === 'pan') {
+        svgEl.classList.remove('cursor-grabbing');
+      }
+
+      if ((interaction.type === 'drag-note' || interaction.type === 'resize-note' || interaction.type === 'resize-node') && interaction.hasMoved) {
+        guidesLayer.innerHTML = '';
+        if (interaction.type === 'resize-node') {
+          renderAll();
+        }
+        pushHistory();
+      }
+
+      if (interaction.type === 'drag-nodes') {
+        guidesLayer.innerHTML = '';
+        if (interaction.hasMoved) {
+          pushHistory();
+        }
+      }
+
+      if (interaction.type === 'connect' && interaction.connectFromNode) {
+        tempEdgeEl.setAttribute('display', 'none');
+        svgEl.classList.remove('connecting-mode');
+
+        const targetNodeGroup = e.target.closest('.node-group');
+        const targetAnchorDot = e.target.closest('.anchor-dot');
+        let targetNodeId = null;
+        let targetAnchor = null;
+
+        if (targetAnchorDot) {
+          targetNodeId = targetAnchorDot.getAttribute('data-anchor-node');
+          targetAnchor = targetAnchorDot.getAttribute('data-anchor-pos');
+        } else if (targetNodeGroup) {
+          targetNodeId = targetNodeGroup.getAttribute('data-node-id');
+        }
+
+        if (targetNodeId && targetNodeId !== interaction.connectFromNode.id) {
+          const exists = state.edges.some(ed => ed.source === interaction.connectFromNode.id && ed.target === targetNodeId);
+          if (!exists) {
+            const themeObj = THEMES[state.theme] || THEMES.light;
+            state.edges.push({
+              id: generateId('e'),
+              source: interaction.connectFromNode.id,
+              target: targetNodeId,
+              sourceAnchor: interaction.connectFromAnchor,
+              targetAnchor: targetAnchor || null,
+              type: state.sketchMode ? 'handdrawn' : 'orthogonal',
+              dash: 'solid',
+              arrow: 'end',
+              color: themeObj.edgeColor,
+              label: ''
+            });
+            pushHistory();
+            renderAll();
+            showToast('Đã nối đường liên kết');
+          }
+        }
+      }
+
+      if (interaction.type === 'drag-edge-label') {
+        svgEl.classList.remove('cursor-grabbing');
+        if (interaction.hasMoved) {
+          pushHistory();
+        }
+        interaction.draggingEdgeId = null;
+      }
+
+      if (interaction.type === 'marquee') {
+        marqueeBoxEl.setAttribute('display', 'none');
+      }
+
+      interaction.type = null;
+      interaction.connectFromNode = null;
+    });
+
+    // Double-click Node, Independent Note, or Edge Label
+    svgEl.addEventListener('dblclick', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      const edgeLabelGroup = e.target.closest('.edge-label-group');
+      if (edgeLabelGroup) {
+        const edgeId = edgeLabelGroup.getAttribute('data-edge-label-id');
+        const edge = state.edges.find(ed => ed.id === edgeId);
+        if (edge) {
+          edge.labelOffset = { dx: 0, dy: 0 };
+          selectedNodeIds.clear();
+          selectedNoteId = null;
+          selectedEdgeIds.clear();
+          selectedEdgeIds.add(edgeId);
+          pushHistory();
+          renderAll();
+          const labelInput = document.getElementById('edge-label-input');
+          if (labelInput) {
+            labelInput.focus();
+            labelInput.select();
+          }
+          showToast('Đã đặt lại nhãn về giữa đường nối');
+        }
+        return;
+      }
+
+      const noteGroup = e.target.closest('.note-group');
+      if (noteGroup) {
+        const noteId = noteGroup.getAttribute('data-note-id');
+        interaction.type = null;
+        selectedNodeIds.clear();
+        selectedEdgeIds.clear();
+        selectedNoteId = noteId;
+        renderAll();
+        startInlineEdit('note', noteId);
+        return;
+      }
+
+      const nodeGroup = e.target.closest('.node-group');
+      if (nodeGroup) {
+        const nodeId = nodeGroup.getAttribute('data-node-id');
+        interaction.type = null;
+        selectedNodeIds.clear();
+        selectedNoteId = null;
+        selectedNodeIds.add(nodeId);
+        renderAll();
+        startInlineEdit('node', nodeId);
+      }
+    });
+
+    // Mouse Wheel Zoom
+    svgEl.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      const factor = e.deltaY < 0 ? 1.09 : 0.91;
+      zoomAtPoint(factor, e.clientX, e.clientY);
+    }, { passive: false });
+
+    /**
+     * =========================================================================
+     * 6. PROPERTIES PANEL & UI BINDINGS
+     * =========================================================================
+     */
+    function initSwatchPickers() {
+      const fillContainer = document.getElementById('fill-swatches');
+      const strokeContainer = document.getElementById('stroke-swatches');
+      const textContainer = document.getElementById('text-swatches');
+      const edgeContainer = document.getElementById('edge-swatches');
+
+      PRESET_SWATCHES.forEach(color => {
+        const btn = document.createElement('button');
+        btn.className = 'w-6 h-6 rounded-md border border-slate-300/80 shadow-2xs cursor-pointer hover:scale-110 transition-transform';
+        btn.style.backgroundColor = color;
+        btn.addEventListener('click', () => updateSelectedNodesProp('fill', color));
+        fillContainer.appendChild(btn);
+
+        const eBtn = btn.cloneNode();
+        eBtn.addEventListener('click', () => updateSelectedEdgeProp('color', color));
+        edgeContainer.appendChild(eBtn);
+      });
+
+      ['#4f46e5', '#0ea5e9', '#10b981', '#f59e0b', '#ef4444', '#64748b'].forEach(color => {
+        const sBtn = document.createElement('button');
+        sBtn.className = 'w-4 h-4 rounded-full border border-slate-300 cursor-pointer hover:scale-110 transition-transform';
+        sBtn.style.backgroundColor = color;
+        sBtn.addEventListener('click', () => updateSelectedNodesProp('stroke', color));
+        strokeContainer.appendChild(sBtn);
+      });
+
+      ['#0f172a', '#ffffff', '#1e3a8a', '#065f46', '#78350f', '#991b1b'].forEach(color => {
+        const tBtn = document.createElement('button');
+        tBtn.className = 'w-4 h-4 rounded-full border border-slate-300 cursor-pointer hover:scale-110 transition-transform';
+        tBtn.style.backgroundColor = color;
+        tBtn.addEventListener('click', () => updateSelectedNodesProp('textColor', color));
+        textContainer.appendChild(tBtn);
+      });
+
+      const emojiContainer = document.getElementById('quick-emojis');
+      QUICK_EMOJIS.forEach(em => {
+        const btn = document.createElement('button');
+        btn.className = 'btn-icon py-1 text-sm border border-slate-300/40 dark:border-slate-700/60';
+        btn.textContent = em;
+        btn.addEventListener('click', () => updateSelectedNodesProp('icon', em));
+        emojiContainer.appendChild(btn);
+      });
+    }
+
+    function updateSelectedNodesProp(key, value) {
+      if (selectedNodeIds.size === 0) return;
+      selectedNodeIds.forEach(id => {
+        const node = state.nodes.find(n => n.id === id);
+        if (node) {
+          if (key === 'toggleBold') node.bold = !node.bold;
+          else if (key === 'toggleItalic') node.italic = !node.italic;
+          else node[key] = value;
+        }
+      });
+      pushHistory();
+      renderAll();
+    }
+
+    function updateSelectedNoteProp(key, value) {
+      if (!selectedNoteId) return;
+      const note = (state.notes || []).find(n => n.id === selectedNoteId);
+      if (!note) return;
+      if (key === 'toggleBold') note.bold = !note.bold;
+      else if (key === 'toggleItalic') note.italic = !note.italic;
+      else note[key] = value;
+      pushHistory();
+      renderAll();
+    }
+
+    function updateSelectedEdgeProp(key, value) {
+      if (selectedEdgeIds.size === 0) return;
+      selectedEdgeIds.forEach(id => {
+        const edge = state.edges.find(e => e.id === id);
+        if (edge) {
+          edge[key] = value;
+        }
+      });
+      pushHistory();
+      renderAll();
+    }
+
+    function selectAllEdges() {
+      if (state.edges.length === 0) {
+        showToast('Chưa có đường nối nào trên sơ đồ', true);
+        return;
+      }
+      selectedNodeIds.clear();
+      selectedNoteId = null;
+      selectedEdgeIds = new Set(state.edges.map(e => e.id));
+      renderAll();
+      showToast(`Đã chọn tất cả ${selectedEdgeIds.size} đường nối`);
+    }
+
+    function updatePropertiesPanel() {
+      const nodeSec = document.getElementById('node-props-section');
+      const noteSec = document.getElementById('note-props-section');
+      const edgeSec = document.getElementById('edge-props-section');
+
+      nodeSec.classList.add('hidden');
+      noteSec.classList.add('hidden');
+      edgeSec.classList.add('hidden');
+
+      if (selectedNoteId) {
+        const note = (state.notes || []).find(n => n.id === selectedNoteId);
+        if (note) {
+          propPanel.classList.remove('hidden');
+          noteSec.classList.remove('hidden');
+
+          document.getElementById('note-fontfamily').value = note.fontFamily || "'Patrick Hand', cursive";
+          document.getElementById('note-fontsize').value = String(note.fontSize || 15);
+          document.getElementById('note-bold').classList.toggle('active', !!note.bold);
+          document.getElementById('note-italic').classList.toggle('active', !!note.italic);
+
+          const isNoteSketchy = note.handDrawn !== undefined ? Boolean(note.handDrawn) : Boolean(state.sketchMode);
+          document.querySelectorAll('.note-sketch-btn').forEach(btn => {
+            btn.classList.toggle('active', (btn.dataset.noteSketch === 'true') === isNoteSketchy);
+          });
+          return;
+        }
+      }
+
+      if (selectedNodeIds.size > 0) {
+        propPanel.classList.remove('hidden');
+        nodeSec.classList.remove('hidden');
+
+        const firstNode = state.nodes.find(n => n.id === Array.from(selectedNodeIds)[0]);
+        if (firstNode) {
+          document.getElementById('prop-panel-title').textContent =
+            selectedNodeIds.size > 1 ? `Đã chọn ${selectedNodeIds.size} Khối` : 'Thuộc tính Khối';
+          document.getElementById('prop-fill-picker').value = firstNode.fill || '#ffffff';
+          document.getElementById('prop-stroke-picker').value = firstNode.stroke || '#4f46e5';
+          document.getElementById('prop-text-picker').value = firstNode.textColor || '#0f172a';
+          document.getElementById('prop-fontfamily').value = firstNode.fontFamily || "'Inter', sans-serif";
+          document.getElementById('prop-fontsize').value = String(firstNode.fontSize || 14);
+          document.getElementById('prop-bold').classList.toggle('active', !!firstNode.bold);
+          document.getElementById('prop-italic').classList.toggle('active', !!firstNode.italic);
+
+          const isNodeSketchy = firstNode.handDrawn !== undefined ? Boolean(firstNode.handDrawn) : Boolean(state.sketchMode);
+          document.querySelectorAll('.node-sketch-btn').forEach(btn => {
+            btn.classList.toggle('active', (btn.dataset.nodeSketch === 'true') === isNodeSketchy);
+          });
+
+          document.querySelectorAll('.shape-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.propShape === firstNode.shape);
+          });
+        }
+        return;
+      }
+
+      if (selectedEdgeIds.size > 0) {
+        propPanel.classList.remove('hidden');
+        edgeSec.classList.remove('hidden');
+
+        const firstEdge = state.edges.find(e => e.id === Array.from(selectedEdgeIds)[0]);
+        if (firstEdge) {
+          const isMulti = selectedEdgeIds.size > 1;
+          document.getElementById('edge-panel-title').textContent = isMulti
+            ? `Đã chọn ${selectedEdgeIds.size} đường nối`
+            : 'Đường nối';
+          const labelInput = document.getElementById('edge-label-input');
+          labelInput.value = isMulti ? '' : (firstEdge.label || '');
+          labelInput.placeholder = isMulti ? 'Nhập nhãn chung cho tất cả...' : 'Ví dụ: Có, Không, Tiếp theo...';
+          document.getElementById('edge-dash-select').value = firstEdge.dash || 'solid';
+          document.getElementById('edge-arrow-select').value = firstEdge.arrow || 'end';
+          document.getElementById('edge-color-picker').value = firstEdge.color || '#94a3b8';
+
+          document.querySelectorAll('.edge-type-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.edgeType === (firstEdge.type || 'orthogonal'));
+          });
+        }
+        return;
+      }
+
+      propPanel.classList.add('hidden');
+    }
+
+    function syncToolbarUI() {
+      document.getElementById('doc-title-input').value = state.title;
+      document.getElementById('btn-toggle-grid').classList.toggle('active', state.showGrid);
+      document.getElementById('btn-toggle-snap').classList.toggle('active', state.snapToGrid);
+      document.getElementById('btn-sketch-toggle').classList.toggle('active', Boolean(state.sketchMode));
+    }
+
+    /**
+     * =========================================================================
+     * 7. EXPORT (PNG 2x RETINA, JPG 2x HD, SVG, JSON) & IMPORT JSON
+     * =========================================================================
+     */
+    function getDiagramBoundingBox() {
+      const allItems = [...state.nodes, ...(state.notes || [])];
+      if (allItems.length === 0 && state.edges.length === 0) {
+        return { x: -200, y: -150, width: 400, height: 300 };
+      }
+
+      let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+
+      // 1. Khung bao của tất cả Nodes và Notes
+      allItems.forEach(n => {
+        minX = Math.min(minX, n.x);
+        minY = Math.min(minY, n.y);
+        maxX = Math.max(maxX, n.x + (n.width || 160));
+        maxY = Math.max(maxY, n.y + (n.height || 40));
+      });
+
+      // 2. Khung bao của tất cả Đường nối (Edges), đường vòng và Nhãn trên đường nối
+      state.edges.forEach(edge => {
+        const srcNode = state.nodes.find(n => n.id === edge.source);
+        const tgtNode = state.nodes.find(n => n.id === edge.target);
+        if (!srcNode || !tgtNode) return;
+
+        const { start, end, sDir, tDir } = determineBestAnchors(srcNode, tgtNode, edge);
+        const effectiveEdgeType = (state.sketchMode && (!edge.type || edge.type === 'orthogonal'))
+          ? 'handdrawn'
+          : (edge.type || 'orthogonal');
+        const { d, midX, midY } = buildEdgePathData(start, end, sDir, tDir, effectiveEdgeType, edge.id);
+
+        // Lấy tất cả cặp tọa độ (x, y) từ chuỗi SVG path (bao gồm cả điểm vòng loopX/loopY và control points)
+        const nums = (d.match(/-?\d+(\.\d+)?/g) || []).map(Number);
+        for (let i = 0; i < nums.length - 1; i += 2) {
+          minX = Math.min(minX, nums[i] - 8);
+          maxX = Math.max(maxX, nums[i] + 8);
+          minY = Math.min(minY, nums[i + 1] - 8);
+          maxY = Math.max(maxY, nums[i + 1] + 8);
+        }
+
+        // Tính thêm kích thước hộp nhãn (pill badge) nếu đường nối có nhãn
+        if (edge.label && edge.label.trim() !== '') {
+          const offsetDx = edge.labelOffset?.dx || 0;
+          const offsetDy = edge.labelOffset?.dy || 0;
+          const labelX = midX + offsetDx;
+          const labelY = midY + offsetDy;
+          const labelW = edge.label.length * 7.5 + 20;
+          const labelH = 24;
+          minX = Math.min(minX, labelX - labelW / 2);
+          maxX = Math.max(maxX, labelX + labelW / 2);
+          minY = Math.min(minY, labelY - labelH / 2);
+          maxY = Math.max(maxY, labelY + labelH / 2);
+        }
+      });
+
+      // 3. Kết hợp đo getBBox() thực tế từ SVG DOM (loại trừ các lớp phụ trợ)
+      try {
+        const prevTemp = tempEdgeEl.getAttribute('display');
+        const prevMarquee = marqueeBoxEl.getAttribute('display');
+        const prevGuides = guidesLayer.innerHTML;
+        tempEdgeEl.setAttribute('display', 'none');
+        marqueeBoxEl.setAttribute('display', 'none');
+        guidesLayer.innerHTML = '';
+
+        const domBox = viewportLayer.getBBox();
+        if (domBox && domBox.width > 0 && domBox.height > 0) {
+          minX = Math.min(minX, domBox.x);
+          minY = Math.min(minY, domBox.y);
+          maxX = Math.max(maxX, domBox.x + domBox.width);
+          maxY = Math.max(maxY, domBox.y + domBox.height);
+        }
+
+        if (prevTemp) tempEdgeEl.setAttribute('display', prevTemp);
+        if (prevMarquee) marqueeBoxEl.setAttribute('display', prevMarquee);
+        guidesLayer.innerHTML = prevGuides;
+      } catch (e) {
+        // Fallback an toàn nếu trình duyệt không hỗ trợ getBBox khi ẩn
+      }
+
+      const pad = 48;
+      return {
+        x: Math.floor(minX - pad),
+        y: Math.floor(minY - pad),
+        width: Math.ceil((maxX - minX) + pad * 2),
+        height: Math.ceil((maxY - minY) + pad * 2)
+      };
+    }
+
+    function buildCleanSVGString(transparentBg = false) {
+      const bbox = getDiagramBoundingBox();
+      const themeObj = THEMES[state.theme] || THEMES.light;
+
+      const cloneSvg = svgEl.cloneNode(true);
+      cloneSvg.setAttribute('xmlns', SVG_NS);
+      cloneSvg.setAttribute('viewBox', `${bbox.x} ${bbox.y} ${bbox.width} ${bbox.height}`);
+      cloneSvg.setAttribute('width', bbox.width);
+      cloneSvg.setAttribute('height', bbox.height);
+
+      const bgRect = cloneSvg.querySelector('#canvas-bg');
+      const gridRect = cloneSvg.querySelector('#canvas-grid');
+      if (gridRect) gridRect.remove();
+      if (bgRect) {
+        if (transparentBg) {
+          bgRect.remove();
+        } else {
+          bgRect.setAttribute('x', bbox.x);
+          bgRect.setAttribute('y', bbox.y);
+          bgRect.setAttribute('width', bbox.width);
+          bgRect.setAttribute('height', bbox.height);
+          bgRect.setAttribute('fill', themeObj.bg);
+        }
+      }
+
+      const clonedViewport = cloneSvg.querySelector('#viewport-layer');
+      if (clonedViewport) clonedViewport.removeAttribute('transform');
+      cloneSvg.querySelectorAll('.anchor-dot, .note-resize-handle, .node-resize-edge, #marquee-box, #temp-edge, #guides-layer').forEach(el => el.remove());
+
+      const styleEl = document.createElementNS(SVG_NS, 'style');
+      styleEl.textContent = `
+        @import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;700&family=Caveat:wght@500;700&family=Dancing+Script:wght@500;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;700&family=Lora:wght@400;700&family=Mali:wght@400;700&family=Merriweather:wght@400;700&family=Patrick+Hand&display=swap');
+        text { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
+      `;
+      cloneSvg.insertBefore(styleEl, cloneSvg.firstChild);
+
+      return {
+        svgString: new XMLSerializer().serializeToString(cloneSvg),
+        width: bbox.width,
+        height: bbox.height
+      };
+    }
+
+    function triggerDownload(url, filename) {
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
+
+    function exportRasterImage(format = 'png') {
+      const isJpg = format === 'jpg';
+      const transparent = !isJpg && document.getElementById('export-transparent-bg').checked;
+      const { svgString, width, height } = buildCleanSVGString(transparent);
+      const scale = 2;
+      const themeObj = THEMES[state.theme] || THEMES.light;
+
+      const img = new Image();
+      const svgBlob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+      const url = URL.createObjectURL(svgBlob);
+
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = width * scale;
+        canvas.height = height * scale;
+        const ctx = canvas.getContext('2d');
+        ctx.scale(scale, scale);
+
+        if (isJpg) {
+          ctx.fillStyle = themeObj.bg || '#ffffff';
+          ctx.fillRect(0, 0, width, height);
+        }
+
+        ctx.drawImage(img, 0, 0);
+        URL.revokeObjectURL(url);
+
+        const mimeType = isJpg ? 'image/jpeg' : 'image/png';
+        const ext = isJpg ? 'jpg' : 'png';
+        canvas.toBlob((blob) => {
+          const outUrl = URL.createObjectURL(blob);
+          const safeName = (state.title || 'mindflow-diagram').replace(/[^a-zA-Z0-9\u00C0-\u1EF9-_]/g, '_');
+          triggerDownload(outUrl, `${safeName}.${ext}`);
+          URL.revokeObjectURL(outUrl);
+          closeAllModals();
+          showToast(`Đã xuất ảnh ${ext.toUpperCase()} độ phân giải cao (2x)!`);
+        }, mimeType, 0.95);
+      };
+      img.src = url;
+    }
+
+    function exportAsPNG() { exportRasterImage('png'); }
+    function exportAsJPG() { exportRasterImage('jpg'); }
+
+    function exportAsSVG() {
+      const transparent = document.getElementById('export-transparent-bg').checked;
+      const { svgString } = buildCleanSVGString(transparent);
+      const blob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const safeName = (state.title || 'mindflow-diagram').replace(/[^a-zA-Z0-9\u00C0-\u1EF9-_]/g, '_');
+      triggerDownload(url, `${safeName}.svg`);
+      URL.revokeObjectURL(url);
+      closeAllModals();
+      showToast('Đã xuất file vector SVG!');
+    }
+
+    function exportAsJSON() {
+      const exportPayload = {
+        app: 'MindFlow Studio',
+        version: '2.0-diagram',
+        exportedAt: new Date().toISOString(),
+        title: state.title,
+        theme: state.theme,
+        sketchMode: state.sketchMode,
+        nodes: state.nodes,
+        edges: state.edges,
+        notes: state.notes || []
+      };
+      const jsonStr = JSON.stringify(exportPayload, null, 2);
+      const blob = new Blob([jsonStr], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const safeName = (state.title || 'mindflow-diagram').replace(/[^a-zA-Z0-9\u00C0-\u1EF9-_]/g, '_');
+      triggerDownload(url, `${safeName}.json`);
+      URL.revokeObjectURL(url);
+      closeAllModals();
+      showToast('Đã xuất dữ liệu JSON thành công!');
+    }
+
+    function handleImportJSON(file) {
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        try {
+          const parsed = JSON.parse(ev.target.result);
+          if (!Array.isArray(parsed.nodes) || !Array.isArray(parsed.edges)) {
+            throw new Error('Cấu trúc JSON không hợp lệ (thiếu danh sách nodes hoặc edges).');
+          }
+          state.title = parsed.title || file.name.replace(/\.json$/i, '');
+          state.theme = THEMES[parsed.theme] ? parsed.theme : 'light';
+          state.sketchMode = Boolean(parsed.sketchMode);
+          state.nodes = parsed.nodes;
+          state.edges = parsed.edges;
+          state.notes = Array.isArray(parsed.notes) ? parsed.notes : [];
+
+          selectedNodeIds.clear();
+          selectedNoteId = null;
+          selectedEdgeIds.clear();
+          syncToolbarUI();
+          renderAll();
+          fitToScreen();
+          pushHistory();
+          showToast(`Đã nhập thành công: "${state.title}"`);
+        } catch (err) {
+          showToast('Lỗi đọc file JSON: ' + err.message, true);
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    /**
+     * =========================================================================
+     * 8. TOASTS, MODALS, SEARCH & KEYBOARD SHORTCUTS
+     * =========================================================================
+     */
+    function showToast(message, isError = false) {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      toast.className = `toast-enter px-4 py-2 rounded-xl text-xs font-medium shadow-lg flex items-center gap-2 ${
+        isError ? 'bg-rose-600 text-white' : 'bg-slate-900 text-white dark:bg-indigo-600'
+      }`;
+      toast.textContent = message;
+      container.appendChild(toast);
+
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transition = 'opacity 0.25s ease';
+        setTimeout(() => toast.remove(), 260);
+      }, 2600);
+    }
+
+    function closeAllModals() {
+      document.getElementById('export-modal').classList.add('hidden');
+      document.getElementById('templates-modal').classList.add('hidden');
+      document.getElementById('shortcuts-modal').classList.add('hidden');
+      document.getElementById('confirm-modal').classList.add('hidden');
+    }
+
+    function performSearch(query) {
+      const q = query.trim().toLowerCase();
+      if (!q) {
+        searchMatches = [];
+        document.getElementById('search-count').textContent = '0/0';
+        renderAll();
+        return;
+      }
+      const nodeHits = state.nodes.filter(n => (n.text || '').toLowerCase().includes(q)).map(n => ({ kind: 'node', item: n, id: n.id }));
+      const noteHits = (state.notes || []).filter(nt => (nt.text || '').toLowerCase().includes(q)).map(nt => ({ kind: 'note', item: nt, id: nt.id }));
+      searchMatches = [...nodeHits, ...noteHits];
+      searchIndex = 0;
+      document.getElementById('search-count').textContent =
+        searchMatches.length > 0 ? `1/${searchMatches.length}` : '0/0';
+
+      if (searchMatches.length > 0) {
+        focusMatch(searchMatches[0]);
+      }
+      renderAll();
+    }
+
+    function focusMatch(match) {
+      const target = match.item;
+      if (match.kind === 'node') {
+        selectedNodeIds.clear();
+        selectedNodeIds.add(target.id);
+        selectedNoteId = null;
+      } else {
+        selectedNodeIds.clear();
+        selectedNoteId = target.id;
+      }
+
+      view.x = window.innerWidth / 2 - (target.x + (target.width || 160) / 2) * view.zoom;
+      view.y = window.innerHeight / 2 - (target.y + (target.height || 40) / 2) * view.zoom;
+      updateViewportTransform();
+    }
+
+    // Global Keyboard Listeners
+    window.addEventListener('keydown', (e) => {
+      if (editingTarget) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          commitInlineEdit();
+        } else if (e.key === 'Escape') {
+          editingTarget = null;
+          inlineEditor.classList.add('hidden');
+        }
+        return;
+      }
+
+      const tag = document.activeElement?.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+
+      if (e.code === 'Space' && !isSpacePressed) {
+        e.preventDefault();
+        isSpacePressed = true;
+        svgEl.classList.add('cursor-grab');
+        return;
+      }
+
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
+        e.preventDefault();
+        if (e.shiftKey) redo();
+        else undo();
+        return;
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') {
+        e.preventDefault();
+        redo();
+        return;
+      }
+
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'e') {
+        e.preventDefault();
+        selectAllEdges();
+        return;
+      }
+
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'f') {
+        e.preventDefault();
+        const sb = document.getElementById('search-bar');
+        sb.classList.remove('hidden');
+        document.getElementById('search-input').focus();
+        return;
+      }
+
+      if (e.key.toLowerCase() === 'n' && !e.ctrlKey && !e.metaKey) {
+        e.preventDefault();
+        createFloatingNote();
+        return;
+      }
+
+      if (e.key === 'Tab' || e.key === 'Enter') {
+        e.preventDefault();
+        addDiagramNode();
+        return;
+      }
+
+      if (e.key === 'F2') {
+        e.preventDefault();
+        if (selectedNoteId) {
+          startInlineEdit('note', selectedNoteId);
+        } else if (selectedNodeIds.size === 1) {
+          startInlineEdit('node', Array.from(selectedNodeIds)[0]);
+        }
+        return;
+      }
+
+      if (e.key === 'Delete' || e.key === 'Backspace') {
+        e.preventDefault();
+        deleteSelected();
+        return;
+      }
+
+      // Arrow Keys: Create new connected node in pressed direction (or Alt+Arrow to navigate)
+      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key) && selectedNodeIds.size === 1) {
+        e.preventDefault();
+        const cur = state.nodes.find(n => n.id === Array.from(selectedNodeIds)[0]);
+        if (!cur) return;
+
+        if (e.altKey) {
+          const candidates = state.nodes.filter(n => n.id !== cur.id);
+          let best = null;
+          let bestScore = Infinity;
+
+          candidates.forEach(cand => {
+            const dx = (cand.x + cand.width / 2) - (cur.x + cur.width / 2);
+            const dy = (cand.y + cand.height / 2) - (cur.y + cur.height / 2);
+            let valid = false;
+            if (e.key === 'ArrowRight' && dx > 20) valid = true;
+            if (e.key === 'ArrowLeft' && dx < -20) valid = true;
+            if (e.key === 'ArrowDown' && dy > 15) valid = true;
+            if (e.key === 'ArrowUp' && dy < -15) valid = true;
+
+            if (valid) {
+              const dist = Math.hypot(dx, dy);
+              if (dist < bestScore) {
+                bestScore = dist;
+                best = cand;
+              }
+            }
+          });
+
+          if (best) {
+            selectedNodeIds.clear();
+            selectedNodeIds.add(best.id);
+            renderAll();
+          }
+          return;
+        }
+
+        const dirMap = {
+          ArrowUp: 'up',
+          ArrowDown: 'down',
+          ArrowLeft: 'left',
+          ArrowRight: 'right'
+        };
+        addDiagramNode(cur.id, cur.shape || 'rounded', dirMap[e.key]);
+      }
+    });
+
+    window.addEventListener('keyup', (e) => {
+      if (e.code === 'Space') {
+        isSpacePressed = false;
+        svgEl.classList.remove('cursor-grab');
+      }
+    });
+
+    inlineEditor.addEventListener('blur', commitInlineEdit);
+
+    /**
+     * =========================================================================
+     * 9. EVENT WIRING & INITIAL BOOTSTRAP
+     * =========================================================================
+     */
+    function bindAllEvents() {
+      document.getElementById('doc-title-input').addEventListener('change', (e) => {
+        state.title = e.target.value.trim() || 'Sơ đồ không tên';
+        pushHistory();
+      });
+
+      // Left Toolbar Tools & Creation Buttons
+      document.getElementById('tool-select').addEventListener('click', () => {
+        activeTool = 'select';
+        document.getElementById('tool-select').classList.add('active');
+        document.getElementById('tool-hand').classList.remove('active');
+        svgEl.classList.remove('cursor-grab');
+      });
+
+      document.getElementById('tool-hand').addEventListener('click', () => {
+        activeTool = 'hand';
+        document.getElementById('tool-hand').classList.add('active');
+        document.getElementById('tool-select').classList.remove('active');
+        svgEl.classList.add('cursor-grab');
+      });
+
+      document.querySelectorAll('.btn-add-node').forEach(btn => {
+        btn.addEventListener('click', () => addDiagramNode(null, btn.dataset.addShape));
+      });
+
+      document.getElementById('btn-add-note').addEventListener('click', () => createFloatingNote());
+
+      document.getElementById('btn-undo').addEventListener('click', undo);
+      document.getElementById('btn-redo').addEventListener('click', redo);
+
+      // Global Sketch Toggle
+      document.getElementById('btn-sketch-toggle').addEventListener('click', () => {
+        state.sketchMode = !state.sketchMode;
+        state.nodes.forEach(n => {
+          n.handDrawn = state.sketchMode;
+          if (state.sketchMode && (!n.fontFamily || n.fontFamily === "'Inter', sans-serif")) {
+            n.fontFamily = "'Patrick Hand', cursive";
+          } else if (!state.sketchMode && n.fontFamily === "'Patrick Hand', cursive") {
+            n.fontFamily = "'Inter', sans-serif";
+          }
+        });
+        state.edges.forEach(ed => {
+          ed.type = state.sketchMode ? 'handdrawn' : 'orthogonal';
+        });
+        (state.notes || []).forEach(nt => {
+          nt.handDrawn = state.sketchMode;
+        });
+        syncToolbarUI();
+        pushHistory();
+        renderAll();
+        showToast(state.sketchMode ? '✏️ Đã bật chế độ Nét vẽ tay (Sketchy)' : 'Đã chuyển về nét vẽ chuẩn sắc nét');
+      });
+
+      // Theme Dropdown
+      document.getElementById('btn-theme-menu').addEventListener('click', (e) => {
+        e.stopPropagation();
+        document.getElementById('theme-dropdown').classList.toggle('hidden');
+      });
+
+      document.querySelectorAll('.theme-option').forEach(opt => {
+        opt.addEventListener('click', () => {
+          const tName = opt.dataset.theme;
+          state.theme = tName;
+          const themeObj = THEMES[tName];
+          const enableSketch = Boolean(themeObj.isSketchDefault);
+          state.sketchMode = enableSketch;
+
+          state.nodes.forEach((n, idx) => {
+            n.handDrawn = enableSketch;
+            if (idx === 0) {
+              n.fill = themeObj.rootFill;
+              n.stroke = themeObj.rootStroke;
+              n.textColor = themeObj.rootText;
+            } else {
+              n.fill = themeObj.nodeFill;
+              n.textColor = themeObj.nodeText;
+            }
+            if (enableSketch) {
+              n.fontFamily = "'Patrick Hand', cursive";
+            }
+          });
+          state.edges.forEach(ed => {
+            if (enableSketch) ed.type = 'handdrawn';
+          });
+          document.getElementById('theme-dropdown').classList.add('hidden');
+          syncToolbarUI();
+          pushHistory();
+          renderAll();
+          showToast(`Đã áp dụng chủ đề: ${tName.toUpperCase()}`);
+        });
+      });
+
+      // Node Properties Panel Inputs
+      document.getElementById('btn-add-child-prop').addEventListener('click', () => addDiagramNode());
+      document.getElementById('btn-delete-selected').addEventListener('click', deleteSelected);
+      document.getElementById('btn-delete-edge').addEventListener('click', deleteSelected);
+      document.getElementById('btn-select-all-edges').addEventListener('click', selectAllEdges);
+
+      document.querySelectorAll('.shape-btn').forEach(btn => {
+        btn.addEventListener('click', () => updateSelectedNodesProp('shape', btn.dataset.propShape));
+      });
+
+      document.querySelectorAll('.node-sketch-btn').forEach(btn => {
+        btn.addEventListener('click', () => updateSelectedNodesProp('handDrawn', btn.dataset.nodeSketch === 'true'));
+      });
+
+      document.getElementById('prop-fill-picker').addEventListener('input', (e) => updateSelectedNodesProp('fill', e.target.value));
+      document.getElementById('prop-stroke-picker').addEventListener('input', (e) => updateSelectedNodesProp('stroke', e.target.value));
+      document.getElementById('prop-text-picker').addEventListener('input', (e) => updateSelectedNodesProp('textColor', e.target.value));
+      document.getElementById('prop-fontfamily').addEventListener('change', (e) => updateSelectedNodesProp('fontFamily', e.target.value));
+      document.getElementById('prop-bold').addEventListener('click', () => updateSelectedNodesProp('toggleBold'));
+      document.getElementById('prop-italic').addEventListener('click', () => updateSelectedNodesProp('toggleItalic'));
+      document.getElementById('prop-fontsize').addEventListener('change', (e) => updateSelectedNodesProp('fontSize', Number(e.target.value)));
+      document.getElementById('prop-clear-icon').addEventListener('click', () => updateSelectedNodesProp('icon', ''));
+
+      // Independent Floating Note Properties Inputs
+      document.getElementById('btn-delete-note').addEventListener('click', deleteSelected);
+      document.getElementById('btn-duplicate-note').addEventListener('click', () => {
+        if (!selectedNoteId) return;
+        const orig = (state.notes || []).find(n => n.id === selectedNoteId);
+        if (!orig) return;
+        const copy = { ...orig, id: generateId('note'), x: orig.x + 24, y: orig.y + 24 };
+        state.notes.push(copy);
+        selectedNoteId = copy.id;
+        pushHistory();
+        renderAll();
+        showToast('Đã nhân bản ô ghi chú');
+      });
+
+      document.querySelectorAll('.note-color-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          if (!selectedNoteId) return;
+          const note = (state.notes || []).find(n => n.id === selectedNoteId);
+          if (note) {
+            note.fill = btn.dataset.noteBg;
+            note.stroke = btn.dataset.noteStroke;
+            note.textColor = btn.dataset.noteText;
+            pushHistory();
+            renderAll();
+          }
+        });
+      });
+
+      document.querySelectorAll('.note-sketch-btn').forEach(btn => {
+        btn.addEventListener('click', () => updateSelectedNoteProp('handDrawn', btn.dataset.noteSketch === 'true'));
+      });
+
+      document.getElementById('note-fontfamily').addEventListener('change', (e) => updateSelectedNoteProp('fontFamily', e.target.value));
+      document.getElementById('note-bold').addEventListener('click', () => updateSelectedNoteProp('toggleBold'));
+      document.getElementById('note-italic').addEventListener('click', () => updateSelectedNoteProp('toggleItalic'));
+      document.getElementById('note-fontsize').addEventListener('change', (e) => updateSelectedNoteProp('fontSize', Number(e.target.value)));
+
+      // Edge Properties Inputs
+      document.getElementById('edge-label-input').addEventListener('input', (e) => updateSelectedEdgeProp('label', e.target.value));
+      document.querySelectorAll('.edge-type-btn').forEach(btn => {
+        btn.addEventListener('click', () => updateSelectedEdgeProp('type', btn.dataset.edgeType));
+      });
+      document.getElementById('edge-dash-select').addEventListener('change', (e) => updateSelectedEdgeProp('dash', e.target.value));
+      document.getElementById('edge-arrow-select').addEventListener('change', (e) => updateSelectedEdgeProp('arrow', e.target.value));
+      document.getElementById('edge-color-picker').addEventListener('input', (e) => updateSelectedEdgeProp('color', e.target.value));
+
+      // Zoom & Grid Controls
+      document.getElementById('btn-zoom-in').addEventListener('click', () => zoomAtPoint(1.18, window.innerWidth / 2, window.innerHeight / 2));
+      document.getElementById('btn-zoom-out').addEventListener('click', () => zoomAtPoint(0.84, window.innerWidth / 2, window.innerHeight / 2));
+      document.getElementById('btn-zoom-reset').addEventListener('click', () => {
+        view.zoom = 1;
+        fitToScreen();
+        view.zoom = 1;
+        updateViewportTransform();
+      });
+      document.getElementById('btn-fit-screen').addEventListener('click', fitToScreen);
+
+      document.getElementById('btn-toggle-grid').addEventListener('click', () => {
+        state.showGrid = !state.showGrid;
+        syncToolbarUI();
+        renderAll();
+        saveToLocalStorage();
+      });
+
+      document.getElementById('btn-toggle-snap').addEventListener('click', () => {
+        state.snapToGrid = !state.snapToGrid;
+        guidesLayer.innerHTML = '';
+        syncToolbarUI();
+        saveToLocalStorage();
+        showToast(state.snapToGrid ? 'Đã bật Snap vào vật thể & Đường gióng' : 'Đã tắt Snap (Kéo thả tự do hoàn toàn)');
+      });
+
+      // Search Controls
+      document.getElementById('btn-search-toggle').addEventListener('click', () => {
+        const sb = document.getElementById('search-bar');
+        sb.classList.toggle('hidden');
+        if (!sb.classList.contains('hidden')) {
+          document.getElementById('search-input').focus();
+        }
+      });
+      document.getElementById('search-input').addEventListener('input', (e) => performSearch(e.target.value));
+      document.getElementById('search-next').addEventListener('click', () => {
+        if (searchMatches.length === 0) return;
+        searchIndex = (searchIndex + 1) % searchMatches.length;
+        document.getElementById('search-count').textContent = `${searchIndex + 1}/${searchMatches.length}`;
+        focusMatch(searchMatches[searchIndex]);
+        renderAll();
+      });
+      document.getElementById('search-close').addEventListener('click', () => {
+        document.getElementById('search-bar').classList.add('hidden');
+        searchMatches = [];
+        renderAll();
+      });
+
+      // Modals & Templates
+      document.getElementById('btn-export-modal').addEventListener('click', () => document.getElementById('export-modal').classList.remove('hidden'));
+      document.getElementById('btn-templates').addEventListener('click', () => document.getElementById('templates-modal').classList.remove('hidden'));
+      document.getElementById('btn-shortcuts').addEventListener('click', () => document.getElementById('shortcuts-modal').classList.remove('hidden'));
+      document.getElementById('btn-clear').addEventListener('click', () => document.getElementById('confirm-modal').classList.remove('hidden'));
+
+      document.querySelectorAll('.close-modal').forEach(btn => btn.addEventListener('click', closeAllModals));
+
+      // Tạo mới trống hoàn toàn: không có nút gốc nào cả
+      document.getElementById('confirm-clear-action').addEventListener('click', () => {
+        state.title = 'Sơ đồ Diagram Mới';
+        state.nodes = [];
+        state.edges = [];
+        state.notes = [];
+        selectedNodeIds.clear();
+        selectedNoteId = null;
+        selectedEdgeIds.clear();
+        guidesLayer.innerHTML = '';
+
+        closeAllModals();
+        syncToolbarUI();
+        pushHistory();
+        renderAll();
+        fitToScreen();
+        showToast('Đã tạo bảng vẽ trống mới!');
+      });
+
+      document.querySelectorAll('.template-card').forEach(card => {
+        card.addEventListener('click', () => {
+          const tpl = getTemplateData(card.dataset.template);
+          state.title = tpl.title;
+          state.theme = tpl.theme;
+          state.sketchMode = Boolean(tpl.sketchMode);
+          state.nodes = tpl.nodes;
+          state.edges = tpl.edges;
+          state.notes = tpl.notes || [];
+          selectedNodeIds.clear();
+          selectedNoteId = null;
+          selectedEdgeIds.clear();
+
+          closeAllModals();
+          syncToolbarUI();
+          pushHistory();
+          renderAll();
+          fitToScreen();
+          showToast(`Đã tải mẫu: ${tpl.title}`);
+        });
+      });
+
+      // Export & Import Handlers
+      document.getElementById('do-export-png').addEventListener('click', exportAsPNG);
+      document.getElementById('do-export-jpg').addEventListener('click', exportAsJPG);
+      document.getElementById('do-export-svg').addEventListener('click', exportAsSVG);
+      document.getElementById('do-export-json').addEventListener('click', exportAsJSON);
+
+      const fileInput = document.getElementById('file-import-input');
+      document.getElementById('btn-import-json').addEventListener('click', () => fileInput.click());
+      fileInput.addEventListener('change', (e) => {
+        if (e.target.files?.[0]) {
+          handleImportJSON(e.target.files[0]);
+          e.target.value = '';
+        }
+      });
+
+      window.addEventListener('resize', updateViewportTransform);
+    }
+
+    // Bootstrap Application
+    window.addEventListener('DOMContentLoaded', () => {
+      initSwatchPickers();
+      bindAllEvents();
+
+      let loadedFromStorage = false;
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed.nodes)) {
+            Object.assign(state, parsed);
+            if (!Array.isArray(state.notes)) state.notes = [];
+            loadedFromStorage = true;
+          }
+        }
+      } catch (e) {
+        console.warn('Could not restore autosave:', e);
+      }
+
+      if (!loadedFromStorage) {
+        const defaultTpl = getTemplateData('flowchart');
+        Object.assign(state, defaultTpl);
+      }
+
+      syncToolbarUI();
+      pushHistory();
+      renderAll();
+      fitToScreen();
+    });
+  </script>
+</body>
+</html>
