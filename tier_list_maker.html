@@ -1,0 +1,1452 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tier List Maker</title>
+    <!-- Tải Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Tải Font Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Tải thư viện html2canvas để xuất ảnh PNG/JPG -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <!-- Tải thư viện heic2any để giải mã ảnh HEIC/HEIF của iPhone/macOS -->
+    <script src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f4f4f6;
+            color: #1f2937;
+            user-select: none;
+        }
+
+        /* Thanh cuộn tinh tế */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #e5e7eb;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #9ca3af;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #6b7280;
+        }
+
+        /* Vùng bảng xếp hạng chuẩn theo mẫu */
+        #tier-board {
+            background-color: #ffffff;
+            border-top: 2px solid #ffffff;
+        }
+
+        .tier-row {
+            display: flex;
+            min-height: 92px;
+            border-bottom: 2px solid #ffffff;
+            position: relative;
+            transition: background-color 0.15s ease;
+        }
+
+        .tier-row:last-child {
+            border-bottom: none;
+        }
+
+        /* Ô nhãn S, A, B, C, D bên trái */
+        .tier-label {
+            width: 96px;
+            min-width: 96px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            font-weight: 700;
+            font-size: 1.25rem;
+            color: #222222;
+            padding: 8px;
+            word-break: break-word;
+            cursor: pointer;
+            border-right: 2px solid #ffffff;
+            transition: filter 0.15s ease;
+        }
+
+        .tier-label:hover {
+            filter: brightness(0.96);
+        }
+
+        @media (min-width: 640px) {
+            .tier-label {
+                width: 112px;
+                min-width: 112px;
+                font-size: 1.35rem;
+            }
+            .tier-row {
+                min-height: 104px;
+            }
+        }
+
+        /* Vùng chứa ảnh bên phải màu xám trung tính #b7b5b8 như hình mẫu */
+        .tier-content {
+            flex: 1;
+            background-color: #b7b5b8;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            align-content: flex-start;
+            gap: 6px;
+            padding: 6px;
+            min-height: 92px;
+            transition: background-color 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        .tier-content.drag-over,
+        #image-pool.drag-over {
+            background-color: #a3a1a5;
+            box-shadow: inset 0 0 0 2px #3b82f6;
+        }
+
+        #image-pool.drag-over {
+            background-color: #e5e7eb;
+        }
+
+        /* Thẻ ảnh item */
+        .tier-item {
+            width: 80px;
+            height: 80px;
+            position: relative;
+            border-radius: 6px;
+            overflow: hidden;
+            background-color: #ffffff;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.18);
+            cursor: grab;
+            transition: transform 0.12s ease, box-shadow 0.12s ease;
+            flex-shrink: 0;
+        }
+
+        @media (min-width: 640px) {
+            .tier-item {
+                width: 90px;
+                height: 90px;
+            }
+        }
+
+        .tier-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+            z-index: 10;
+        }
+
+        .tier-item:active {
+            cursor: grabbing;
+        }
+
+        .tier-item.dragging {
+            opacity: 0.45;
+            transform: scale(0.95);
+        }
+
+        .tier-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            pointer-events: none;
+            display: block;
+        }
+
+        /* Nút xóa nhỏ trên từng ảnh */
+        .delete-item-btn {
+            position: absolute;
+            top: 3px;
+            right: 3px;
+            width: 20px;
+            height: 20px;
+            border-radius: 9999px;
+            background-color: rgba(17, 24, 39, 0.78);
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            line-height: 1;
+            opacity: 0;
+            transition: opacity 0.15s ease, background-color 0.15s ease;
+            cursor: pointer;
+            border: none;
+        }
+
+        .tier-item:hover .delete-item-btn {
+            opacity: 1;
+        }
+
+        .delete-item-btn:hover {
+            background-color: #ef4444;
+        }
+
+        /* Bảng điều khiển nhỏ bên phải mỗi hàng */
+        .row-controls {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background-color: #9f9da0;
+            border-left: 2px solid #ffffff;
+            padding: 4px;
+            gap: 2px;
+        }
+
+        .row-ctrl-btn {
+            width: 26px;
+            height: 26px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #ffffff;
+            background-color: rgba(0, 0, 0, 0.18);
+            transition: background-color 0.15s;
+            cursor: pointer;
+        }
+
+        .row-ctrl-btn:hover {
+            background-color: rgba(0, 0, 0, 0.38);
+        }
+
+        /* Hỗ trợ placeholder tự nhiên cho vùng nhập tiêu đề trên đầu bảng */
+        [contenteditable][data-placeholder]:empty::before {
+            content: attr(data-placeholder);
+            color: #9ca3af;
+            font-weight: 400;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <!-- Thanh tiêu đề website cố định trên cùng -->
+    <header class="bg-[#f8f9fa] border-b border-gray-200 sticky top-0 z-30 shadow-sm">
+        <div class="max-w-6xl mx-auto px-3 sm:px-6 h-16 flex items-center justify-between gap-2">
+            <!-- Góc trên bên trái: Tên website cố định cùng biểu tượng danh sách -->
+            <div class="flex items-center gap-2.5 min-w-0 flex-1">
+                <div class="w-9 h-9 rounded-lg bg-gray-200/80 flex items-center justify-center text-gray-700 flex-shrink-0" title="Tier List Maker">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+                    </svg>
+                </div>
+                <span class="text-lg sm:text-xl font-bold text-gray-800 tracking-tight truncate">Tier List Maker</span>
+            </div>
+
+            <!-- Góc trên bên phải: Các nút công cụ -->
+            <div class="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
+                <!-- Nút Hướng dẫn -->
+                <button id="btn-help" title="Hướng dẫn sử dụng" class="p-2.5 rounded-full text-gray-600 hover:bg-gray-200/80 hover:text-gray-900 transition">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </button>
+
+                <!-- Nút Thêm hàng mới -->
+                <button id="btn-add-row" title="Thêm hàng xếp hạng mới" class="p-2.5 sm:px-3 sm:py-2 rounded-lg text-gray-700 hover:bg-gray-200/80 transition flex items-center gap-1.5 text-sm font-medium">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+                    </svg>
+                    <span class="hidden md:inline">Thêm hàng</span>
+                </button>
+
+                <!-- Nút Reset bảng -->
+                <button id="btn-reset" title="Đặt lại bảng xếp hạng" class="p-2.5 sm:px-3 sm:py-2 rounded-lg text-gray-700 hover:bg-gray-200/80 transition flex items-center gap-1.5 text-sm font-medium">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    <span class="hidden lg:inline">Reset</span>
+                </button>
+
+                <div class="h-6 w-px bg-gray-300 mx-0.5"></div>
+
+                <!-- Nút Export PNG -->
+                <button id="btn-export-png" class="px-3 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs sm:text-sm font-semibold shadow-sm transition flex items-center gap-1.5 cursor-pointer">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                    </svg>
+                    <span>Export PNG</span>
+                </button>
+
+                <!-- Nút Export JPG -->
+                <button id="btn-export-jpg" class="px-3 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 active:scale-95 text-white text-xs sm:text-sm font-semibold shadow-sm transition flex items-center gap-1.5 cursor-pointer">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                    </svg>
+                    <span>Export JPG</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Nội dung chính -->
+    <main class="flex-1 max-w-6xl w-full mx-auto px-3 sm:px-6 py-5 flex flex-col gap-6">
+        
+        <!-- Khu vực bảng xếp hạng (#export-wrapper) -->
+        <div id="export-wrapper" class="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-200">
+            <!-- Phần đầu bảng xếp hạng thu gọn (chỉ giữ tiêu đề trực tiếp ngay trên hàng S) -->
+            <div id="board-header-meta" class="bg-[#f8f9fa] px-3 py-2 sm:px-4 sm:py-2.5 border-b border-gray-200/80">
+                <div 
+                    id="board-title-input" 
+                    contenteditable="true" 
+                    spellcheck="false"
+                    role="textbox"
+                    aria-label="Tên bảng xếp hạng"
+                    data-placeholder="BẢNG XẾP HẠNG TIER LIST"
+                    title="Nhấp để chỉnh sửa tên bảng xếp hạng"
+                    class="text-base sm:text-lg font-extrabold text-gray-900 tracking-tight uppercase outline-none rounded-md px-1.5 -mx-1.5 py-0.5 hover:bg-gray-200/60 focus:bg-white focus:ring-2 focus:ring-blue-500/40 transition select-text break-words leading-snug"
+                >BẢNG XẾP HẠNG TIER LIST</div>
+            </div>
+
+            <!-- Bảng các hàng S, A, B, C, D -->
+            <div id="tier-board" class="w-full">
+                <!-- Các hàng sẽ được render động bằng JavaScript -->
+            </div>
+        </div>
+
+        <!-- Khu vực kho ảnh chờ (Image Pool) -->
+        <section class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 flex flex-col gap-3">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+                <div class="flex items-center gap-2">
+                    <h2 class="text-base font-bold text-gray-800">Kho ảnh chờ xếp hạng</h2>
+                    <span id="pool-count" class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-gray-100 text-gray-600">0 ảnh</span>
+                </div>
+
+                <div class="flex flex-wrap items-center gap-2">
+                    <span class="text-xs text-gray-500 hidden sm:inline">
+                        Mẹo: Click đúp vào vùng kho ảnh bên dưới, nhấn <kbd class="px-1.5 py-0.5 text-xs font-semibold text-gray-700 bg-gray-100 border border-gray-300 rounded">Ctrl + V</kbd> hoặc kéo thả ảnh từ máy tính
+                    </span>
+                    <label for="file-input" class="px-3.5 py-2 rounded-lg bg-gray-800 hover:bg-gray-900 active:scale-95 text-white text-xs sm:text-sm font-semibold cursor-pointer transition flex items-center gap-1.5 shadow-sm">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        <span>Thêm ảnh từ máy</span>
+                    </label>
+                    <input id="file-input" type="file" accept="image/*,.heic,.heif,.avif,.svg,.webp,.bmp,.ico,.tiff,.tif,video/webm,video/mp4,video/quicktime,.webm,.mp4,.mov" multiple class="hidden" />
+                </div>
+            </div>
+
+            <!-- Vùng thả ảnh / Click đúp chọn ảnh / Dán ảnh -->
+            <div 
+                id="image-pool" 
+                data-zone="pool"
+                title="Click đúp chuột để chọn ảnh từ máy tính, hoặc kéo thả / dán ảnh (Ctrl + V) vào đây"
+                class="min-h-[140px] bg-gray-50 border-2 border-dashed border-gray-300 rounded-xl p-3 flex flex-wrap items-start content-start gap-2.5 transition-colors relative cursor-pointer"
+            >
+                <!-- Gợi ý khi kho ảnh trống -->
+                <div id="empty-pool-placeholder" class="w-full h-28 flex flex-col items-center justify-center text-center text-gray-400 pointer-events-none select-none">
+                    <svg class="w-8 h-8 mb-1.5 text-gray-400" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                    </svg>
+                    <p class="text-sm font-medium text-gray-500">Click đúp chuột vào đây, kéo thả ảnh/video từ máy tính hoặc nhấn <span class="font-bold text-gray-700">Ctrl + V</span></p>
+                    <p class="text-xs text-gray-400 mt-0.5">Hỗ trợ PNG, JPG, WebP, HEIC, AVIF, SVG, GIF, WebM, MP4... Tự động nén & tối ưu dung lượng</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Thông báo Toast nổi (thay thế alert) -->
+    <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    <!-- Modal Chỉnh sửa Hàng (Tên nhãn, Màu sắc, Xóa hàng) -->
+    <div id="edit-row-modal" class="fixed inset-0 bg-black/50 backdrop-blur-xs z-50 hidden items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-5 shadow-2xl border border-gray-100 animate-fade-in">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-bold text-gray-800">Tùy chỉnh hàng xếp hạng</h3>
+                <button id="close-edit-modal" class="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">Tên nhãn hàng (VD: S, A, B, God Tier...)</label>
+                    <input id="edit-row-label" type="text" maxlength="25" class="w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none font-semibold text-gray-800" />
+                </div>
+
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Chọn màu nhãn</label>
+                    <div id="color-presets" class="grid grid-cols-7 gap-2 mb-2.5">
+                        <!-- Các màu pastel chuẩn và mở rộng -->
+                    </div>
+                    <div class="flex items-center gap-2.5 mt-2">
+                        <label for="edit-row-color" class="text-xs font-medium text-gray-500">Hoặc chọn màu tùy ý:</label>
+                        <input id="edit-row-color" type="color" class="w-9 h-9 rounded-lg border border-gray-300 cursor-pointer p-0.5 bg-white" />
+                        <span id="edit-row-color-hex" class="text-xs font-mono text-gray-600 uppercase">#ff7f7f</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-6 flex items-center justify-between pt-3 border-t border-gray-100">
+                <button id="btn-delete-row" class="px-3.5 py-2 rounded-xl bg-red-50 hover:bg-red-100 text-red-600 text-sm font-semibold transition flex items-center gap-1.5">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                    <span>Xóa hàng</span>
+                </button>
+
+                <div class="flex items-center gap-2">
+                    <button id="btn-cancel-edit" class="px-4 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-semibold transition">Hủy</button>
+                    <button id="btn-save-edit" class="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold transition shadow-sm">Lưu thay đổi</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Xác nhận Reset -->
+    <div id="reset-modal" class="fixed inset-0 bg-black/50 backdrop-blur-xs z-50 hidden items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-sm w-full p-5 shadow-2xl border border-gray-100">
+            <h3 class="text-lg font-bold text-gray-800 mb-2">Đặt lại bảng xếp hạng</h3>
+            <p class="text-sm text-gray-600 mb-5">Bạn muốn đưa tất cả ảnh trên bảng về lại kho ảnh chờ hay xóa toàn bộ ảnh và đặt lại hàng mặc định?</p>
+            <div class="flex flex-col gap-2">
+                <button id="btn-reset-to-pool" class="w-full py-2.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold transition">
+                    Đưa toàn bộ ảnh về kho chờ
+                </button>
+                <button id="btn-reset-all" class="w-full py-2.5 px-4 rounded-xl bg-red-50 hover:bg-red-100 text-red-600 text-sm font-semibold transition">
+                    Xóa hết ảnh & Khôi phục hàng S-A-B-C-D
+                </button>
+                <button id="btn-close-reset" class="w-full py-2 px-4 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-semibold transition mt-1">
+                    Hủy bỏ
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Hướng dẫn sử dụng -->
+    <div id="help-modal" class="fixed inset-0 bg-black/50 backdrop-blur-xs z-50 hidden items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-gray-100">
+            <div class="flex items-center justify-between mb-3">
+                <h3 class="text-lg font-bold text-gray-800 flex items-center gap-2">
+                    <span class="w-7 h-7 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-sm font-bold">?</span>
+                    Hướng dẫn sử dụng nhanh
+                </h3>
+                <button id="close-help-modal" class="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <ul class="space-y-3 text-sm text-gray-600">
+                <li class="flex items-start gap-2.5">
+                    <span class="font-bold text-blue-600">1.</span>
+                    <span><strong>Thêm ảnh siêu tốc:</strong> Click đúp chuột vào vùng kho ảnh bên dưới để chọn ảnh từ máy, kéo thả nhiều file ảnh/video cùng lúc, hoặc nhấn <kbd class="px-1.5 py-0.5 bg-gray-100 border rounded text-xs font-semibold">Ctrl + V</kbd> để dán ảnh từ clipboard (nếu đang di chuột ở hàng nào sẽ dán thẳng vào hàng đó).</span>
+                </li>
+                <li class="flex items-start gap-2.5">
+                    <span class="font-bold text-blue-600">2.</span>
+                    <span><strong>Sắp xếp & Đổi thứ tự:</strong> Kéo thả các thẻ ảnh qua lại giữa các hàng hoặc đổi vị trí trong cùng một hàng. Di chuột vào ảnh và bấm nút <strong>×</strong> để xóa ảnh.</span>
+                </li>
+                <li class="flex items-start gap-2.5">
+                    <span class="font-bold text-blue-600">3.</span>
+                    <span><strong>Tùy chỉnh Tiêu đề & Hàng:</strong> Nhấp trực tiếp vào dòng tiêu đề <strong>BẢNG XẾP HẠNG TIER LIST</strong> ngay phía trên hàng S để chỉnh sửa tên bảng. Bấm vào các ô màu <strong>S, A, B, C, D</strong> để đổi tên nhãn hoặc đổi màu sắc.</span>
+                </li>
+                <li class="flex items-start gap-2.5">
+                    <span class="font-bold text-blue-600">4.</span>
+                    <span><strong>Xuất ảnh PNG / JPG:</strong> Bấm nút <strong>Export PNG</strong> hoặc <strong>Export JPG</strong> ở góc trên bên phải để chụp nguyên trạng bảng xếp hạng độ nét cao về máy.</span>
+                </li>
+            </ul>
+            <div class="mt-5 flex justify-end">
+                <button id="btn-got-it" class="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold transition">Đã hiểu</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /**
+         * Ứng dụng Tier List Maker
+         * Hỗ trợ bảng màu chuẩn mẫu (S, A, B, C, D), tiêu đề gọn nhẹ trực tiếp ở đầu bảng,
+         * đầy đủ định dạng ảnh/video (PNG, JPG, WebP, HEIC, AVIF, SVG, GIF, WebM, MP4...),
+         * tự động nén & tối ưu dung lượng khi tải lên, click đúp kho ảnh, Ctrl+V dán ảnh, Drag & Drop và Export PNG/JPG.
+         */
+
+        const STORAGE_KEY = 'tier_list_maker_state_v3';
+        const MAX_IMAGE_DIMENSION = 512; // Giới hạn cạnh dài tối đa 512px (sắc nét cho Export 3x và tối ưu RAM)
+        const COMPRESSION_THRESHOLD_BYTES = 350 * 1024; // Tự động nén các file nặng hơn 350KB
+
+        // Cấu hình các hàng mặc định chuẩn theo màu sắc mẫu
+        const DEFAULT_TIERS = [
+            { id: 'tier-s', label: 'S', color: '#ff7f7f' }, // Đỏ san hô pastel
+            { id: 'tier-a', label: 'A', color: '#ffbf7f' }, // Cam đào pastel
+            { id: 'tier-b', label: 'B', color: '#ffdf7f' }, // Vàng cam nhạt pastel
+            { id: 'tier-c', label: 'C', color: '#ffff7f' }, // Vàng chanh pastel
+            { id: 'tier-d', label: 'D', color: '#bfff7f' }  // Xanh lá non pastel
+        ];
+
+        // Bộ màu gợi ý trong modal chỉnh sửa
+        const PRESET_COLORS = [
+            '#ff7f7f', '#ffbf7f', '#ffdf7f', '#ffff7f', '#bfff7f', '#7fff7f', '#7fffff',
+            '#7fbfff', '#7f7fff', '#bf7fff', '#ff7fbf', '#e5e7eb', '#9ca3af', '#fca5a5'
+        ];
+
+        // Trạng thái ứng dụng
+        let tiers = JSON.parse(JSON.stringify(DEFAULT_TIERS));
+        let hoveredDropTarget = null; // Lưu vùng đang di chuột để dán Ctrl+V thông minh
+        let draggedItem = null;       // Lưu phần tử .tier-item đang được kéo
+        let editingTierId = null;     // Lưu ID hàng đang mở modal sửa
+
+        // Tham chiếu DOM
+        const tierBoard = document.getElementById('tier-board');
+        const imagePool = document.getElementById('image-pool');
+        const emptyPoolPlaceholder = document.getElementById('empty-pool-placeholder');
+        const poolCountBadge = document.getElementById('pool-count');
+        const fileInput = document.getElementById('file-input');
+        const boardTitleInput = document.getElementById('board-title-input');
+
+        // Khởi tạo ứng dụng
+        function init() {
+            const restored = loadStateFromStorage();
+            if (!restored) {
+                renderBoard();
+            }
+            setupGlobalEvents();
+            renderColorPresets();
+            updatePoolUI();
+        }
+
+        // Lưu trạng thái bảng xếp hạng vào LocalStorage (bao gồm tiêu đề và danh sách ảnh đã nén)
+        function saveStateToStorage() {
+            try {
+                const state = {
+                    title: boardTitleInput.textContent.trim(),
+                    tiers: tiers.map(tier => {
+                        const rowEl = document.querySelector(`.tier-row[data-tier-id="${tier.id}"] .tier-content`);
+                        const images = rowEl ? Array.from(rowEl.querySelectorAll('.tier-item img')).map(img => img.src) : [];
+                        return {
+                            id: tier.id,
+                            label: tier.label,
+                            color: tier.color,
+                            images
+                        };
+                    }),
+                    poolImages: Array.from(imagePool.querySelectorAll('.tier-item img')).map(img => img.src)
+                };
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+            } catch (err) {
+                console.warn('Không thể lưu vào LocalStorage:', err);
+            }
+        }
+
+        // Khôi phục trạng thái từ LocalStorage (tương thích cả dữ liệu phiên bản cũ)
+        function loadStateFromStorage() {
+            try {
+                const raw = localStorage.getItem(STORAGE_KEY) || localStorage.getItem('tier_list_maker_state_v2');
+                if (!raw) return false;
+                const state = JSON.parse(raw);
+                if (!state || !Array.isArray(state.tiers) || state.tiers.length === 0) return false;
+
+                if (typeof state.title === 'string' && state.title.trim() !== '') {
+                    boardTitleInput.textContent = state.title.trim();
+                }
+
+                tiers = state.tiers.map(t => ({ id: t.id, label: t.label, color: t.color }));
+                renderBoard();
+
+                state.tiers.forEach(t => {
+                    const zone = document.querySelector(`.tier-row[data-tier-id="${t.id}"] .tier-content`);
+                    if (zone && Array.isArray(t.images)) {
+                        t.images.forEach(src => zone.appendChild(createImageItem(src)));
+                    }
+                });
+
+                if (Array.isArray(state.poolImages)) {
+                    state.poolImages.forEach(src => imagePool.appendChild(createImageItem(src)));
+                }
+                return true;
+            } catch (err) {
+                console.warn('Lỗi khôi phục dữ liệu cũ:', err);
+                return false;
+            }
+        }
+
+        // Định dạng dung lượng file dễ đọc (KB / MB)
+        function formatFileSize(bytes) {
+            if (bytes < 1024) return `${bytes} B`;
+            if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
+            return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+        }
+
+        // Hiển thị thông báo Toast góc màn hình
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            
+            const colors = {
+                info: 'bg-gray-800 text-white',
+                success: 'bg-emerald-600 text-white',
+                warning: 'bg-amber-600 text-white',
+                error: 'bg-red-600 text-white'
+            };
+
+            toast.className = `${colors[type] || colors.info} px-4 py-2.5 rounded-xl shadow-lg text-sm font-medium flex items-center gap-2 transition-all duration-300 transform translate-y-2 opacity-0`;
+            toast.textContent = message;
+            container.appendChild(toast);
+
+            requestAnimationFrame(() => {
+                toast.classList.remove('translate-y-2', 'opacity-0');
+            });
+
+            setTimeout(() => {
+                toast.classList.add('translate-y-2', 'opacity-0');
+                setTimeout(() => toast.remove(), 300);
+            }, 3400);
+        }
+
+        // Render toàn bộ các hàng trên bảng xếp hạng (giữ lại ảnh đang có trong từng hàng)
+        function renderBoard() {
+            const existingItemsMap = {};
+            document.querySelectorAll('.tier-row').forEach(row => {
+                const id = row.dataset.tierId;
+                const items = Array.from(row.querySelectorAll('.tier-item'));
+                existingItemsMap[id] = items;
+            });
+
+            tierBoard.innerHTML = '';
+
+            tiers.forEach((tier, index) => {
+                const row = document.createElement('div');
+                row.className = 'tier-row';
+                row.dataset.tierId = tier.id;
+
+                // Ô nhãn bên trái (S, A, B, C, D)
+                const labelBox = document.createElement('div');
+                labelBox.className = 'tier-label';
+                labelBox.style.backgroundColor = tier.color;
+                labelBox.textContent = tier.label;
+                labelBox.title = 'Bấm để đổi tên hoặc màu sắc hàng này';
+                labelBox.addEventListener('click', () => openEditModal(tier.id));
+
+                // Vùng thả và chứa ảnh bên phải (#b7b5b8)
+                const contentZone = document.createElement('div');
+                contentZone.className = 'tier-content';
+                contentZone.dataset.zone = 'tier';
+                contentZone.dataset.tierId = tier.id;
+
+                // Khôi phục lại các ảnh thuộc hàng này nếu có
+                if (existingItemsMap[tier.id]) {
+                    existingItemsMap[tier.id].forEach(item => contentZone.appendChild(item));
+                }
+
+                // Gắn sự kiện kéo thả cho vùng chứa ảnh của hàng
+                attachDropZoneEvents(contentZone);
+
+                // Bảng điều khiển bên phải hàng (lên, sửa, xuống)
+                const controls = document.createElement('div');
+                controls.className = 'row-controls';
+
+                const btnUp = document.createElement('button');
+                btnUp.className = 'row-ctrl-btn';
+                btnUp.title = 'Di chuyển hàng lên';
+                btnUp.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7"/></svg>`;
+                btnUp.disabled = index === 0;
+                if (index === 0) btnUp.classList.add('opacity-30', 'cursor-not-allowed');
+                btnUp.addEventListener('click', () => moveTier(index, -1));
+
+                const btnEdit = document.createElement('button');
+                btnEdit.className = 'row-ctrl-btn';
+                btnEdit.title = 'Cài đặt hàng';
+                btnEdit.innerHTML = `<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>`;
+                btnEdit.addEventListener('click', () => openEditModal(tier.id));
+
+                const btnDown = document.createElement('button');
+                btnDown.className = 'row-ctrl-btn';
+                btnDown.title = 'Di chuyển hàng xuống';
+                btnDown.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>`;
+                btnDown.disabled = index === tiers.length - 1;
+                if (index === tiers.length - 1) btnDown.classList.add('opacity-30', 'cursor-not-allowed');
+                btnDown.addEventListener('click', () => moveTier(index, 1));
+
+                controls.appendChild(btnUp);
+                controls.appendChild(btnEdit);
+                controls.appendChild(btnDown);
+
+                row.appendChild(labelBox);
+                row.appendChild(contentZone);
+                row.appendChild(controls);
+                tierBoard.appendChild(row);
+            });
+            saveStateToStorage();
+        }
+
+        // Di chuyển thứ tự hàng lên hoặc xuống
+        function moveTier(index, direction) {
+            const newIndex = index + direction;
+            if (newIndex < 0 || newIndex >= tiers.length) return;
+            const temp = tiers[index];
+            tiers[index] = tiers[newIndex];
+            tiers[newIndex] = temp;
+            renderBoard();
+        }
+
+        // Tạo phần tử thẻ ảnh (.tier-item) từ nguồn DataURL
+        function createImageItem(src) {
+            const item = document.createElement('div');
+            item.className = 'tier-item';
+            item.draggable = true;
+
+            const img = document.createElement('img');
+            img.src = src;
+            img.alt = 'Tier item';
+
+            // Nút xóa nhỏ ở góc trên bên phải thẻ ảnh
+            const delBtn = document.createElement('button');
+            delBtn.className = 'delete-item-btn';
+            delBtn.title = 'Xóa ảnh này';
+            delBtn.innerHTML = '×';
+            delBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                item.remove();
+                updatePoolUI();
+                saveStateToStorage();
+            });
+
+            item.appendChild(img);
+            item.appendChild(delBtn);
+
+            // Sự kiện bắt đầu / kết thúc kéo thả thẻ ảnh
+            item.addEventListener('dragstart', (e) => {
+                draggedItem = item;
+                item.classList.add('dragging');
+                e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('text/plain', 'tier-item');
+            });
+
+            item.addEventListener('dragend', () => {
+                if (draggedItem) {
+                    draggedItem.classList.remove('dragging');
+                    draggedItem = null;
+                }
+                document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+                updatePoolUI();
+                saveStateToStorage();
+            });
+
+            // Hỗ trợ kéo thả trên màn hình cảm ứng (Mobile/Tablet)
+            setupTouchDrag(item);
+
+            return item;
+        }
+
+        // Hỗ trợ kéo thả mượt mà trên màn hình cảm ứng (Mobile/Tablet)
+        function setupTouchDrag(item) {
+            let touchClone = null;
+            let isDraggingTouch = false;
+
+            item.addEventListener('touchstart', (e) => {
+                if (e.target.classList.contains('delete-item-btn')) return;
+                const touch = e.touches[0];
+                isDraggingTouch = false;
+
+                const startX = touch.clientX;
+                const startY = touch.clientY;
+
+                const onTouchMove = (moveEvent) => {
+                    const currentTouch = moveEvent.touches[0];
+                    const dx = Math.abs(currentTouch.clientX - startX);
+                    const dy = Math.abs(currentTouch.clientY - startY);
+
+                    if (!isDraggingTouch && (dx > 8 || dy > 8)) {
+                        isDraggingTouch = true;
+                        item.classList.add('dragging');
+                        touchClone = item.cloneNode(true);
+                        touchClone.style.position = 'fixed';
+                        touchClone.style.pointerEvents = 'none';
+                        touchClone.style.zIndex = '9999';
+                        touchClone.style.opacity = '0.85';
+                        touchClone.style.transform = 'scale(1.08)';
+                        document.body.appendChild(touchClone);
+                    }
+
+                    if (isDraggingTouch && touchClone) {
+                        moveEvent.preventDefault();
+                        touchClone.style.left = (currentTouch.clientX - 40) + 'px';
+                        touchClone.style.top = (currentTouch.clientY - 40) + 'px';
+
+                        const elemBelow = document.elementFromPoint(currentTouch.clientX, currentTouch.clientY);
+                        const dropZone = elemBelow ? elemBelow.closest('.tier-content, #image-pool') : null;
+
+                        document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+                        if (dropZone) {
+                            dropZone.classList.add('drag-over');
+                            const afterElement = getDragAfterElement(dropZone, currentTouch.clientX, currentTouch.clientY);
+                            if (afterElement == null) {
+                                dropZone.appendChild(item);
+                            } else {
+                                dropZone.insertBefore(item, afterElement);
+                            }
+                            updatePoolUI();
+                        }
+                    }
+                };
+
+                const onTouchEnd = () => {
+                    document.removeEventListener('touchmove', onTouchMove);
+                    document.removeEventListener('touchend', onTouchEnd);
+                    if (touchClone) {
+                        touchClone.remove();
+                        touchClone = null;
+                    }
+                    item.classList.remove('dragging');
+                    document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+                    updatePoolUI();
+                    saveStateToStorage();
+                };
+
+                document.addEventListener('touchmove', onTouchMove, { passive: false });
+                document.addEventListener('touchend', onTouchEnd);
+            }, { passive: true });
+        }
+
+        // Gắn sự kiện kéo thả (cả kéo thẻ ảnh nội bộ lẫn kéo file ảnh từ máy tính) cho vùng chứa
+        function attachDropZoneEvents(zoneElement) {
+            zoneElement.addEventListener('mouseenter', () => {
+                hoveredDropTarget = zoneElement;
+            });
+            zoneElement.addEventListener('mouseleave', () => {
+                if (hoveredDropTarget === zoneElement) {
+                    hoveredDropTarget = null;
+                }
+            });
+
+            zoneElement.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                zoneElement.classList.add('drag-over');
+
+                if (draggedItem) {
+                    const afterElement = getDragAfterElement(zoneElement, e.clientX, e.clientY);
+                    if (afterElement == null) {
+                        zoneElement.appendChild(draggedItem);
+                    } else {
+                        zoneElement.insertBefore(draggedItem, afterElement);
+                    }
+                    updatePoolUI();
+                }
+            });
+
+            zoneElement.addEventListener('dragleave', (e) => {
+                if (!zoneElement.contains(e.relatedTarget)) {
+                    zoneElement.classList.remove('drag-over');
+                }
+            });
+
+            zoneElement.addEventListener('drop', (e) => {
+                e.preventDefault();
+                zoneElement.classList.remove('drag-over');
+
+                // Trường hợp 1: Kéo thả file ảnh từ máy tính vào
+                if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                    handleFiles(e.dataTransfer.files, zoneElement);
+                }
+                // Trường hợp 2: Kéo thả ảnh trực tiếp từ tab trình duyệt khác
+                else if (!draggedItem && e.dataTransfer) {
+                    const imageUrl = e.dataTransfer.getData('text/uri-list') || e.dataTransfer.getData('text/plain');
+                    if (imageUrl && (imageUrl.startsWith('http://') || imageUrl.startsWith('https://') || imageUrl.startsWith('data:image/'))) {
+                        addExternalImageUrl(imageUrl, zoneElement);
+                    }
+                }
+
+                updatePoolUI();
+            });
+        }
+
+        // Tính toán vị trí chèn thẻ ảnh chính xác dựa theo tọa độ chuột
+        function getDragAfterElement(container, x, y) {
+            const draggableElements = [...container.querySelectorAll('.tier-item:not(.dragging)')];
+
+            for (const child of draggableElements) {
+                const box = child.getBoundingClientRect();
+                const inSameRow = y >= box.top - 10 && y <= box.bottom + 10;
+                if (inSameRow && x < box.left + box.width / 2) {
+                    return child;
+                }
+                if (y < box.top - 10) {
+                    return child;
+                }
+            }
+            return null;
+        }
+
+        // Kiểm tra xem định dạng file có được hỗ trợ không
+        function isSupportedMediaFile(file) {
+            const name = (file.name || '').toLowerCase();
+            const type = (file.type || '').toLowerCase();
+
+            if (type.startsWith('image/') || type.startsWith('video/')) {
+                return true;
+            }
+
+            const supportedExtensions = [
+                '.png', '.jpg', '.jpeg', '.webp', '.gif', '.svg', '.bmp', '.ico',
+                '.avif', '.tiff', '.tif', '.heic', '.heif', '.jfif', '.pjpeg', '.pjp',
+                '.webm', '.mp4', '.mov', '.m4v', '.ogv'
+            ];
+            return supportedExtensions.some(ext => name.endsWith(ext));
+        }
+
+        // Kiểm tra file có phải là định dạng HEIC / HEIF của Apple không
+        function isHeicFile(file) {
+            const name = (file.name || '').toLowerCase();
+            const type = (file.type || '').toLowerCase();
+            return type.includes('heic') || type.includes('heif') || name.endsWith('.heic') || name.endsWith('.heif');
+        }
+
+        // Kiểm tra file có phải là video / ảnh động WebM, MP4, MOV không
+        function isVideoFile(file) {
+            const name = (file.name || '').toLowerCase();
+            const type = (file.type || '').toLowerCase();
+            return type.startsWith('video/') || ['.webm', '.mp4', '.mov', '.m4v', '.ogv'].some(ext => name.endsWith(ext));
+        }
+
+        // Kiểm tra ảnh có kênh alpha trong suốt hay không (để giữ nền trong suốt khi nén)
+        function hasTransparency(ctx, width, height) {
+            try {
+                const sampleW = Math.min(width, 64);
+                const sampleH = Math.min(height, 64);
+                const tempCanvas = document.createElement('canvas');
+                tempCanvas.width = sampleW;
+                tempCanvas.height = sampleH;
+                const tempCtx = tempCanvas.getContext('2d');
+                tempCtx.drawImage(ctx.canvas, 0, 0, sampleW, sampleH);
+                const data = tempCtx.getImageData(0, 0, sampleW, sampleH).data;
+                for (let i = 3; i < data.length; i += 4) {
+                    if (data[i] < 250) return true;
+                }
+            } catch (e) {
+                return false;
+            }
+            return false;
+        }
+
+        // Nén và tối ưu kích thước một đối tượng HTMLImageElement hoặc HTMLVideoElement thành DataURL siêu nhẹ
+        function compressMediaElementToDataUrl(sourceEl, sourceWidth, sourceHeight, preferAlpha = false) {
+            let targetW = sourceWidth || 256;
+            let targetH = sourceHeight || 256;
+
+            if (targetW > MAX_IMAGE_DIMENSION || targetH > MAX_IMAGE_DIMENSION) {
+                if (targetW >= targetH) {
+                    targetH = Math.round((targetH * MAX_IMAGE_DIMENSION) / targetW);
+                    targetW = MAX_IMAGE_DIMENSION;
+                } else {
+                    targetW = Math.round((targetW * MAX_IMAGE_DIMENSION) / targetH);
+                    targetH = MAX_IMAGE_DIMENSION;
+                }
+            }
+
+            const canvas = document.createElement('canvas');
+            canvas.width = Math.max(1, targetW);
+            canvas.height = Math.max(1, targetH);
+            const ctx = canvas.getContext('2d');
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = 'high';
+            ctx.drawImage(sourceEl, 0, 0, canvas.width, canvas.height);
+
+            // Giữ nền trong suốt nếu ảnh gốc có alpha (PNG, WebP, SVG, GIF...), ngược lại nén JPEG 0.84
+            const keepAlpha = preferAlpha && hasTransparency(ctx, canvas.width, canvas.height);
+            if (keepAlpha) {
+                const webpUrl = canvas.toDataURL('image/webp', 0.86);
+                if (webpUrl.startsWith('data:image/webp')) {
+                    return webpUrl;
+                }
+                return canvas.toDataURL('image/png');
+            }
+
+            const opaqueCanvas = document.createElement('canvas');
+            opaqueCanvas.width = canvas.width;
+            opaqueCanvas.height = canvas.height;
+            const oCtx = opaqueCanvas.getContext('2d');
+            oCtx.fillStyle = '#ffffff';
+            oCtx.fillRect(0, 0, opaqueCanvas.width, opaqueCanvas.height);
+            oCtx.drawImage(canvas, 0, 0);
+            return opaqueCanvas.toDataURL('image/jpeg', 0.84);
+        }
+
+        // Trích xuất khung hình đầu tiên từ file Video / WebM / MP4 / MOV
+        function extractVideoFrameDataUrl(file) {
+            return new Promise((resolve, reject) => {
+                const videoUrl = URL.createObjectURL(file);
+                const video = document.createElement('video');
+                video.muted = true;
+                video.playsInline = true;
+                video.preload = 'metadata';
+
+                const cleanup = () => URL.revokeObjectURL(videoUrl);
+
+                video.onloadeddata = () => {
+                    video.currentTime = Math.min(0.1, (video.duration || 0) / 2);
+                };
+
+                video.onseeked = () => {
+                    try {
+                        const dataUrl = compressMediaElementToDataUrl(
+                            video,
+                            video.videoWidth || 320,
+                            video.videoHeight || 320,
+                            false
+                        );
+                        cleanup();
+                        resolve(dataUrl);
+                    } catch (err) {
+                        cleanup();
+                        reject(err);
+                    }
+                };
+
+                video.onerror = () => {
+                    cleanup();
+                    reject(new Error('Không thể đọc khung hình từ tệp video/webm này'));
+                };
+
+                video.src = videoUrl;
+            });
+        }
+
+        // Đọc và nén một tệp ảnh / HEIC / SVG / Video bất kỳ thành DataURL tối ưu
+        async function processSingleMediaFile(file) {
+            const originalSize = file.size || 0;
+
+            // 1. Xử lý định dạng Video / WebM / MP4 / MOV
+            if (isVideoFile(file)) {
+                const dataUrl = await extractVideoFrameDataUrl(file);
+                const compressedSize = Math.round((dataUrl.length * 3) / 4);
+                return { dataUrl, originalSize, compressedSize };
+            }
+
+            // 2. Xử lý định dạng HEIC / HEIF của Apple
+            let workingBlob = file;
+            if (isHeicFile(file)) {
+                if (typeof window.heic2any === 'function') {
+                    const converted = await window.heic2any({
+                        blob: file,
+                        toType: 'image/jpeg',
+                        quality: 0.88
+                    });
+                    workingBlob = Array.isArray(converted) ? converted[0] : converted;
+                } else {
+                    throw new Error('Trình giải mã HEIC chưa sẵn sàng');
+                }
+            }
+
+            // 3. Đọc ảnh vào Image object và tự động nén nếu ảnh lớn/nặng
+            return new Promise((resolve, reject) => {
+                const objectUrl = URL.createObjectURL(workingBlob);
+                const img = new Image();
+
+                img.onload = () => {
+                    try {
+                        const w = img.naturalWidth || 256;
+                        const h = img.naturalHeight || 256;
+                        const fileType = (workingBlob.type || file.type || '').toLowerCase();
+                        const fileName = (file.name || '').toLowerCase();
+                        const mightHaveAlpha = ['image/png', 'image/webp', 'image/svg+xml', 'image/gif', 'image/x-icon'].includes(fileType)
+                            || ['.png', '.webp', '.svg', '.gif', '.ico'].some(ext => fileName.endsWith(ext));
+
+                        const isSmallStandard = originalSize > 0
+                            && originalSize < 120 * 1024
+                            && w <= MAX_IMAGE_DIMENSION
+                            && h <= MAX_IMAGE_DIMENSION
+                            && ['image/jpeg', 'image/png', 'image/webp', 'image/gif'].includes(fileType);
+
+                        if (isSmallStandard) {
+                            const reader = new FileReader();
+                            reader.onload = (ev) => {
+                                URL.revokeObjectURL(objectUrl);
+                                resolve({
+                                    dataUrl: ev.target.result,
+                                    originalSize,
+                                    compressedSize: originalSize
+                                });
+                            };
+                            reader.onerror = () => {
+                                URL.revokeObjectURL(objectUrl);
+                                reject(new Error('Lỗi đọc file ảnh'));
+                            };
+                            reader.readAsDataURL(workingBlob);
+                            return;
+                        }
+
+                        const dataUrl = compressMediaElementToDataUrl(img, w, h, mightHaveAlpha);
+                        URL.revokeObjectURL(objectUrl);
+                        const compressedSize = Math.round((dataUrl.length * 3) / 4);
+                        resolve({ dataUrl, originalSize, compressedSize });
+                    } catch (err) {
+                        URL.revokeObjectURL(objectUrl);
+                        reject(err);
+                    }
+                };
+
+                img.onerror = () => {
+                    URL.revokeObjectURL(objectUrl);
+                    reject(new Error(`Không thể giải mã tệp "${file.name}"`));
+                };
+
+                img.src = objectUrl;
+            });
+        }
+
+        // Xử lý danh sách file ảnh/video được chọn, kéo thả hoặc dán từ clipboard
+        async function handleFiles(files, targetZone = imagePool) {
+            const mediaFiles = Array.from(files).filter(isSupportedMediaFile);
+            if (mediaFiles.length === 0) {
+                showToast('Vui lòng chọn tệp ảnh hoặc video hợp lệ (PNG, JPG, WebP, HEIC, AVIF, SVG, GIF, WebM, MP4...)', 'warning');
+                return;
+            }
+
+            if (mediaFiles.length > 1 || mediaFiles[0].size > COMPRESSION_THRESHOLD_BYTES || isHeicFile(mediaFiles[0]) || isVideoFile(mediaFiles[0])) {
+                showToast(`Đang xử lý & tối ưu ${mediaFiles.length} tệp...`, 'info');
+            }
+
+            let successCount = 0;
+            let totalOriginalBytes = 0;
+            let totalCompressedBytes = 0;
+
+            for (const file of mediaFiles) {
+                try {
+                    const result = await processSingleMediaFile(file);
+                    const item = createImageItem(result.dataUrl);
+                    targetZone.appendChild(item);
+                    updatePoolUI();
+
+                    successCount++;
+                    totalOriginalBytes += result.originalSize;
+                    totalCompressedBytes += result.compressedSize;
+                } catch (err) {
+                    console.error('Lỗi xử lý tệp:', file.name, err);
+                    showToast(`Bỏ qua tệp "${file.name}" do định dạng không tương thích`, 'warning');
+                }
+            }
+
+            if (successCount > 0) {
+                saveStateToStorage();
+                const zoneName = targetZone === imagePool ? 'kho ảnh chờ' : 'bảng xếp hạng';
+                if (totalOriginalBytes > totalCompressedBytes * 1.25 && totalOriginalBytes > 250 * 1024) {
+                    showToast(
+                        `Đã thêm ${successCount} ảnh vào ${zoneName} (Nén: ${formatFileSize(totalOriginalBytes)} → ${formatFileSize(totalCompressedBytes)})`,
+                        'success'
+                    );
+                } else {
+                    showToast(`Đã thêm ${successCount} ảnh vào ${zoneName}`, 'success');
+                }
+            }
+        }
+
+        // Hỗ trợ thêm ảnh kéo từ tab web khác
+        function addExternalImageUrl(url, targetZone = imagePool) {
+            const img = new Image();
+            img.crossOrigin = 'Anonymous';
+            img.onload = () => {
+                try {
+                    const dataUrl = compressMediaElementToDataUrl(img, img.naturalWidth || 256, img.naturalHeight || 256, true);
+                    targetZone.appendChild(createImageItem(dataUrl));
+                    updatePoolUI();
+                    saveStateToStorage();
+                    showToast('Đã thêm & tối ưu ảnh từ liên kết', 'success');
+                } catch (err) {
+                    targetZone.appendChild(createImageItem(url));
+                    updatePoolUI();
+                    saveStateToStorage();
+                }
+            };
+            img.onerror = () => {
+                showToast('Trang web nguồn chặn kéo ảnh trực tiếp — hãy chuột phải "Sao chép hình ảnh" và nhấn Ctrl + V!', 'warning');
+            };
+            img.src = url;
+        }
+
+        // Cập nhật giao diện kho ảnh chờ (ẩn/hiện placeholder và đếm số lượng ảnh)
+        function updatePoolUI() {
+            const items = imagePool.querySelectorAll('.tier-item');
+            const count = items.length;
+            poolCountBadge.textContent = `${count} ảnh`;
+
+            if (count > 0) {
+                emptyPoolPlaceholder.classList.add('hidden');
+            } else {
+                emptyPoolPlaceholder.classList.remove('hidden');
+            }
+        }
+
+        // Thiết lập các sự kiện toàn cục
+        function setupGlobalEvents() {
+            // Gắn sự kiện kéo thả cho kho ảnh chờ
+            attachDropZoneEvents(imagePool);
+
+            // Hỗ trợ click đúp chuột vào vùng kho ảnh chờ (#image-pool) để mở hộp thoại chọn ảnh từ máy
+            imagePool.addEventListener('dblclick', (e) => {
+                if (e.target.closest('.tier-item') || e.target.closest('.delete-item-btn')) {
+                    return;
+                }
+                fileInput.click();
+            });
+
+            // Sự kiện dán ảnh trực tiếp bằng Ctrl + V
+            document.addEventListener('paste', (e) => {
+                if (document.activeElement && (
+                    document.activeElement.tagName === 'INPUT' ||
+                    document.activeElement.tagName === 'TEXTAREA' ||
+                    document.activeElement.isContentEditable
+                )) {
+                    return;
+                }
+
+                const clipboardData = e.clipboardData || window.clipboardData;
+                if (!clipboardData) return;
+
+                const items = clipboardData.items;
+                const pastedFiles = [];
+
+                for (let i = 0; i < items.length; i++) {
+                    if (items[i].type.indexOf('image') !== -1) {
+                        const file = items[i].getAsFile();
+                        if (file) pastedFiles.push(file);
+                    }
+                }
+
+                if (pastedFiles.length > 0) {
+                    e.preventDefault();
+                    const destination = hoveredDropTarget || imagePool;
+                    handleFiles(pastedFiles, destination);
+                }
+            });
+
+            // Sự kiện chọn file từ máy tính
+            fileInput.addEventListener('change', (e) => {
+                if (e.target.files && e.target.files.length > 0) {
+                    handleFiles(e.target.files, imagePool);
+                    fileInput.value = '';
+                }
+            });
+
+            // Ngăn trình duyệt mở file ảnh trong tab mới nếu người dùng vô tình thả trượt ra ngoài vùng thả
+            window.addEventListener('dragover', (e) => e.preventDefault());
+            window.addEventListener('drop', (e) => e.preventDefault());
+
+            // Nút thêm hàng mới
+            document.getElementById('btn-add-row').addEventListener('click', () => {
+                const randomColor = PRESET_COLORS[tiers.length % PRESET_COLORS.length];
+                const nextLetters = ['E', 'F', 'G', 'H', 'I', 'J'];
+                const defaultName = nextLetters[tiers.length - 5] || `Hàng ${tiers.length + 1}`;
+                
+                tiers.push({
+                    id: 'tier-' + Date.now(),
+                    label: defaultName,
+                    color: randomColor
+                });
+                renderBoard();
+                showToast(`Đã thêm hàng "${defaultName}"`, 'success');
+            });
+
+            // Tự động lưu Tiêu đề vào LocalStorage khi người dùng nhập
+            boardTitleInput.addEventListener('input', () => {
+                saveStateToStorage();
+            });
+            boardTitleInput.addEventListener('blur', () => {
+                if (!boardTitleInput.textContent.trim()) {
+                    boardTitleInput.textContent = 'BẢNG XẾP HẠNG TIER LIST';
+                }
+                saveStateToStorage();
+            });
+            boardTitleInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    boardTitleInput.blur();
+                }
+            });
+
+            // Nút Export PNG & JPG
+            document.getElementById('btn-export-png').addEventListener('click', () => exportTierList('png'));
+            document.getElementById('btn-export-jpg').addEventListener('click', () => exportTierList('jpeg'));
+
+            // Modal Reset
+            const resetModal = document.getElementById('reset-modal');
+            document.getElementById('btn-reset').addEventListener('click', () => {
+                resetModal.classList.remove('hidden');
+                resetModal.classList.add('flex');
+            });
+            document.getElementById('btn-close-reset').addEventListener('click', () => {
+                resetModal.classList.add('hidden');
+                resetModal.classList.remove('flex');
+            });
+            document.getElementById('btn-reset-to-pool').addEventListener('click', () => {
+                const allBoardItems = tierBoard.querySelectorAll('.tier-item');
+                allBoardItems.forEach(item => imagePool.appendChild(item));
+                updatePoolUI();
+                saveStateToStorage();
+                resetModal.classList.add('hidden');
+                resetModal.classList.remove('flex');
+                showToast('Đã đưa toàn bộ ảnh về kho chờ', 'info');
+            });
+            document.getElementById('btn-reset-all').addEventListener('click', () => {
+                tiers = JSON.parse(JSON.stringify(DEFAULT_TIERS));
+                tierBoard.innerHTML = '';
+                imagePool.querySelectorAll('.tier-item').forEach(el => el.remove());
+                boardTitleInput.textContent = 'BẢNG XẾP HẠNG TIER LIST';
+                localStorage.removeItem(STORAGE_KEY);
+                localStorage.removeItem('tier_list_maker_state_v2');
+                renderBoard();
+                updatePoolUI();
+                resetModal.classList.add('hidden');
+                resetModal.classList.remove('flex');
+                showToast('Đã khôi phục bảng xếp hạng mặc định', 'info');
+            });
+
+            // Modal Hướng dẫn
+            const helpModal = document.getElementById('help-modal');
+            document.getElementById('btn-help').addEventListener('click', () => {
+                helpModal.classList.remove('hidden');
+                helpModal.classList.add('flex');
+            });
+            const closeHelp = () => {
+                helpModal.classList.add('hidden');
+                helpModal.classList.remove('flex');
+            };
+            document.getElementById('close-help-modal').addEventListener('click', closeHelp);
+            document.getElementById('btn-got-it').addEventListener('click', closeHelp);
+
+            // Modal Chỉnh sửa hàng
+            setupEditModalEvents();
+        }
+
+        // Render các ô màu mẫu trong Modal Chỉnh sửa hàng
+        function renderColorPresets() {
+            const container = document.getElementById('color-presets');
+            container.innerHTML = '';
+            PRESET_COLORS.forEach(hex => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'w-8 h-8 rounded-lg border border-gray-300 shadow-xs hover:scale-110 transition cursor-pointer';
+                btn.style.backgroundColor = hex;
+                btn.title = hex;
+                btn.addEventListener('click', () => {
+                    document.getElementById('edit-row-color').value = hex;
+                    document.getElementById('edit-row-color-hex').textContent = hex;
+                });
+                container.appendChild(btn);
+            });
+        }
+
+        // Mở modal chỉnh sửa thông tin hàng S, A, B, C, D
+        function openEditModal(tierId) {
+            const tier = tiers.find(t => t.id === tierId);
+            if (!tier) return;
+
+            editingTierId = tierId;
+            document.getElementById('edit-row-label').value = tier.label;
+            document.getElementById('edit-row-color').value = tier.color;
+            document.getElementById('edit-row-color-hex').textContent = tier.color;
+
+            const modal = document.getElementById('edit-row-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            document.getElementById('edit-row-label').focus();
+        }
+
+        // Sự kiện bên trong Modal Chỉnh sửa hàng
+        function setupEditModalEvents() {
+            const modal = document.getElementById('edit-row-modal');
+            const colorInput = document.getElementById('edit-row-color');
+            const labelInput = document.getElementById('edit-row-label');
+
+            const closeModal = () => {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+                editingTierId = null;
+            };
+
+            colorInput.addEventListener('input', (e) => {
+                document.getElementById('edit-row-color-hex').textContent = e.target.value;
+            });
+
+            document.getElementById('close-edit-modal').addEventListener('click', closeModal);
+            document.getElementById('btn-cancel-edit').addEventListener('click', closeModal);
+
+            // Lưu thay đổi tên và màu nhãn
+            document.getElementById('btn-save-edit').addEventListener('click', () => {
+                if (!editingTierId) return;
+                const tier = tiers.find(t => t.id === editingTierId);
+                if (tier) {
+                    const newLabel = labelInput.value.trim();
+                    tier.label = newLabel || 'Tier';
+                    tier.color = colorInput.value;
+                    renderBoard();
+                    showToast('Đã cập nhật hàng xếp hạng', 'success');
+                }
+                closeModal();
+            });
+
+            // Nhấn Enter để lưu nhanh
+            labelInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    document.getElementById('btn-save-edit').click();
+                }
+            });
+
+            // Xóa hàng (tự động trả ảnh trong hàng đó về lại kho ảnh chờ)
+            document.getElementById('btn-delete-row').addEventListener('click', () => {
+                if (!editingTierId) return;
+                if (tiers.length <= 1) {
+                    showToast('Bảng xếp hạng phải có ít nhất 1 hàng!', 'warning');
+                    return;
+                }
+
+                const rowEl = document.querySelector(`.tier-row[data-tier-id="${editingTierId}"]`);
+                if (rowEl) {
+                    rowEl.querySelectorAll('.tier-item').forEach(item => imagePool.appendChild(item));
+                }
+
+                tiers = tiers.filter(t => t.id !== editingTierId);
+                renderBoard();
+                updatePoolUI();
+                closeModal();
+                showToast('Đã xóa hàng (ảnh đã được chuyển về kho chờ)', 'info');
+            });
+        }
+
+        // Hàm xuất bảng xếp hạng ra file PNG hoặc JPG trực tiếp nguyên trạng khung #export-wrapper
+        async function exportTierList(format = 'png') {
+            const exportWrapper = document.getElementById('export-wrapper');
+            const customTitle = boardTitleInput.textContent.trim() || 'BẢNG XẾP HẠNG TIER LIST';
+
+            showToast(`Đang tạo ảnh ${format.toUpperCase()} chất lượng cao...`, 'info');
+
+            try {
+                const canvas = await html2canvas(exportWrapper, {
+                    scale: 3,
+                    useCORS: true,
+                    backgroundColor: '#ffffff',
+                    logging: false
+                });
+
+                const mimeType = format === 'jpeg' ? 'image/jpeg' : 'image/png';
+                const extension = format === 'jpeg' ? 'jpg' : 'png';
+                const quality = format === 'jpeg' ? 0.95 : 1.0;
+
+                const safeFileName = customTitle
+                    .toLowerCase()
+                    .replace(/[^a-z0-9\u00C0-\u1EF9]+/gi, '-')
+                    .replace(/^-+|-+$/g, '') || 'tier-list';
+
+                const link = document.createElement('a');
+                link.download = `${safeFileName}.${extension}`;
+                link.href = canvas.toDataURL(mimeType, quality);
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+
+                showToast(`Đã tải xuống ${safeFileName}.${extension} thành công!`, 'success');
+            } catch (error) {
+                console.error('Lỗi xuất ảnh:', error);
+                showToast('Có lỗi xảy ra khi xuất ảnh. Vui lòng thử lại!', 'error');
+            }
+        }
+
+        // Khởi chạy sau khi tải xong trang
+        window.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
