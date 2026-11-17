@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Tier List Maker</title>
     <!-- Tải Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -10,7 +10,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <!-- Tải thư viện html2canvas để xuất ảnh PNG/JPG -->
+    <!-- Tải thư viện html2canvas để xuất ảnh JPG -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <!-- Tải thư viện heic2any để giải mã ảnh HEIC/HEIF của iPhone/macOS -->
     <script src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js"></script>
@@ -20,6 +20,8 @@
             background-color: #f4f4f6;
             color: #1f2937;
             user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            overflow-x: hidden;
         }
 
         /* Thanh cuộn tinh tế */
@@ -46,7 +48,7 @@
 
         .tier-row {
             display: flex;
-            min-height: 92px;
+            min-height: 76px;
             border-bottom: 2px solid #ffffff;
             position: relative;
             transition: background-color 0.15s ease;
@@ -58,16 +60,16 @@
 
         /* Ô nhãn S, A, B, C, D bên trái */
         .tier-label {
-            width: 96px;
-            min-width: 96px;
+            width: 64px;
+            min-width: 64px;
             display: flex;
             align-items: center;
             justify-content: center;
             text-align: center;
             font-weight: 700;
-            font-size: 1.25rem;
+            font-size: 1.1rem;
             color: #222222;
-            padding: 8px;
+            padding: 6px;
             word-break: break-word;
             cursor: pointer;
             border-right: 2px solid #ffffff;
@@ -83,6 +85,7 @@
                 width: 112px;
                 min-width: 112px;
                 font-size: 1.35rem;
+                padding: 8px;
             }
             .tier-row {
                 min-height: 104px;
@@ -92,15 +95,24 @@
         /* Vùng chứa ảnh bên phải màu xám trung tính #b7b5b8 như hình mẫu */
         .tier-content {
             flex: 1;
+            min-width: 0;
             background-color: #b7b5b8;
             display: flex;
             flex-wrap: wrap;
             align-items: center;
             align-content: flex-start;
-            gap: 6px;
-            padding: 6px;
-            min-height: 92px;
+            gap: 5px;
+            padding: 5px;
+            min-height: 76px;
             transition: background-color 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        @media (min-width: 640px) {
+            .tier-content {
+                gap: 6px;
+                padding: 6px;
+                min-height: 104px;
+            }
         }
 
         .tier-content.drag-over,
@@ -115,8 +127,8 @@
 
         /* Thẻ ảnh item */
         .tier-item {
-            width: 80px;
-            height: 80px;
+            width: 64px;
+            height: 64px;
             position: relative;
             border-radius: 6px;
             overflow: hidden;
@@ -125,6 +137,7 @@
             cursor: grab;
             transition: transform 0.12s ease, box-shadow 0.12s ease;
             flex-shrink: 0;
+            touch-action: pan-y;
         }
 
         @media (min-width: 640px) {
@@ -160,8 +173,8 @@
         /* Nút xóa nhỏ trên từng ảnh */
         .delete-item-btn {
             position: absolute;
-            top: 3px;
-            right: 3px;
+            top: 2px;
+            right: 2px;
             width: 20px;
             height: 20px;
             border-radius: 9999px;
@@ -176,6 +189,15 @@
             transition: opacity 0.15s ease, background-color 0.15s ease;
             cursor: pointer;
             border: none;
+        }
+
+        /* Trên thiết bị cảm ứng hiển thị nhẹ nút xóa để dễ bấm */
+        @media (hover: none) and (pointer: coarse) {
+            .delete-item-btn {
+                opacity: 0.88;
+                width: 22px;
+                height: 22px;
+            }
         }
 
         .tier-item:hover .delete-item-btn {
@@ -194,13 +216,20 @@
             align-items: center;
             background-color: #9f9da0;
             border-left: 2px solid #ffffff;
-            padding: 4px;
+            padding: 3px;
             gap: 2px;
+            flex-shrink: 0;
+        }
+
+        @media (min-width: 640px) {
+            .row-controls {
+                padding: 4px;
+            }
         }
 
         .row-ctrl-btn {
-            width: 26px;
-            height: 26px;
+            width: 24px;
+            height: 22px;
             border-radius: 4px;
             display: flex;
             align-items: center;
@@ -209,6 +238,13 @@
             background-color: rgba(0, 0, 0, 0.18);
             transition: background-color 0.15s;
             cursor: pointer;
+        }
+
+        @media (min-width: 640px) {
+            .row-ctrl-btn {
+                width: 26px;
+                height: 26px;
+            }
         }
 
         .row-ctrl-btn:hover {
@@ -228,28 +264,28 @@
 
     <!-- Thanh tiêu đề website cố định trên cùng -->
     <header class="bg-[#f8f9fa] border-b border-gray-200 sticky top-0 z-30 shadow-sm">
-        <div class="max-w-6xl mx-auto px-3 sm:px-6 h-16 flex items-center justify-between gap-2">
+        <div class="max-w-6xl mx-auto px-2.5 sm:px-6 h-14 sm:h-16 flex items-center justify-between gap-1.5 sm:gap-2">
             <!-- Góc trên bên trái: Tên website cố định cùng biểu tượng danh sách -->
-            <div class="flex items-center gap-2.5 min-w-0 flex-1">
-                <div class="w-9 h-9 rounded-lg bg-gray-200/80 flex items-center justify-center text-gray-700 flex-shrink-0" title="Tier List Maker">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <div class="flex items-center gap-2 min-w-0 flex-1">
+                <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-gray-200/80 flex items-center justify-center text-gray-700 flex-shrink-0" title="Tier List Maker">
+                    <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
                     </svg>
                 </div>
-                <span class="text-lg sm:text-xl font-bold text-gray-800 tracking-tight truncate">Tier List Maker</span>
+                <span class="text-base sm:text-xl font-bold text-gray-800 tracking-tight truncate">Tier List Maker</span>
             </div>
 
             <!-- Góc trên bên phải: Các nút công cụ -->
-            <div class="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
+            <div class="flex items-center gap-1 sm:gap-2 flex-shrink-0">
                 <!-- Nút Hướng dẫn -->
-                <button id="btn-help" title="Hướng dẫn sử dụng" class="p-2.5 rounded-full text-gray-600 hover:bg-gray-200/80 hover:text-gray-900 transition">
+                <button id="btn-help" title="Hướng dẫn sử dụng" class="p-2 sm:p-2.5 rounded-full text-gray-600 hover:bg-gray-200/80 hover:text-gray-900 transition">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                 </button>
 
                 <!-- Nút Thêm hàng mới -->
-                <button id="btn-add-row" title="Thêm hàng xếp hạng mới" class="p-2.5 sm:px-3 sm:py-2 rounded-lg text-gray-700 hover:bg-gray-200/80 transition flex items-center gap-1.5 text-sm font-medium">
+                <button id="btn-add-row" title="Thêm hàng xếp hạng mới" class="p-2 sm:px-3 sm:py-2 rounded-lg text-gray-700 hover:bg-gray-200/80 transition flex items-center gap-1.5 text-sm font-medium">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
                     </svg>
@@ -257,36 +293,29 @@
                 </button>
 
                 <!-- Nút Reset bảng -->
-                <button id="btn-reset" title="Đặt lại bảng xếp hạng" class="p-2.5 sm:px-3 sm:py-2 rounded-lg text-gray-700 hover:bg-gray-200/80 transition flex items-center gap-1.5 text-sm font-medium">
+                <button id="btn-reset" title="Đặt lại bảng xếp hạng" class="p-2 sm:px-3 sm:py-2 rounded-lg text-gray-700 hover:bg-gray-200/80 transition flex items-center gap-1.5 text-sm font-medium">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                     </svg>
                     <span class="hidden lg:inline">Reset</span>
                 </button>
 
-                <div class="h-6 w-px bg-gray-300 mx-0.5"></div>
+                <div class="h-5 sm:h-6 w-px bg-gray-300 mx-0.5"></div>
 
-                <!-- Nút Export PNG -->
-                <button id="btn-export-png" class="px-3 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs sm:text-sm font-semibold shadow-sm transition flex items-center gap-1.5 cursor-pointer">
+                <!-- Nút Export JPG / Lưu ảnh vào Gallery trên mobile -->
+                <button id="btn-export-jpg" class="px-2.5 sm:px-3.5 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 active:scale-95 text-white text-xs sm:text-sm font-semibold shadow-sm transition flex items-center gap-1.5 cursor-pointer">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                     </svg>
-                    <span>Export PNG</span>
-                </button>
-
-                <!-- Nút Export JPG -->
-                <button id="btn-export-jpg" class="px-3 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 active:scale-95 text-white text-xs sm:text-sm font-semibold shadow-sm transition flex items-center gap-1.5 cursor-pointer">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                    </svg>
-                    <span>Export JPG</span>
+                    <span class="sm:hidden">Lưu ảnh</span>
+                    <span class="hidden sm:inline">Export JPG</span>
                 </button>
             </div>
         </div>
     </header>
 
     <!-- Nội dung chính -->
-    <main class="flex-1 max-w-6xl w-full mx-auto px-3 sm:px-6 py-5 flex flex-col gap-6">
+    <main class="flex-1 max-w-6xl w-full mx-auto px-2.5 sm:px-6 py-3.5 sm:py-5 flex flex-col gap-4 sm:gap-6">
         
         <!-- Khu vực bảng xếp hạng (#export-wrapper) -->
         <div id="export-wrapper" class="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-200">
@@ -300,7 +329,7 @@
                     aria-label="Tên bảng xếp hạng"
                     data-placeholder="BẢNG XẾP HẠNG TIER LIST"
                     title="Nhấp để chỉnh sửa tên bảng xếp hạng"
-                    class="text-base sm:text-lg font-extrabold text-gray-900 tracking-tight uppercase outline-none rounded-md px-1.5 -mx-1.5 py-0.5 hover:bg-gray-200/60 focus:bg-white focus:ring-2 focus:ring-blue-500/40 transition select-text break-words leading-snug"
+                    class="text-sm sm:text-lg font-extrabold text-gray-900 tracking-tight uppercase outline-none rounded-md px-1.5 -mx-1.5 py-0.5 hover:bg-gray-200/60 focus:bg-white focus:ring-2 focus:ring-blue-500/40 transition select-text break-words leading-snug"
                 >BẢNG XẾP HẠNG TIER LIST</div>
             </div>
 
@@ -311,22 +340,22 @@
         </div>
 
         <!-- Khu vực kho ảnh chờ (Image Pool) -->
-        <section class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 flex flex-col gap-3">
+        <section class="bg-white rounded-xl shadow-sm border border-gray-200 p-3 sm:p-4 flex flex-col gap-2.5 sm:gap-3">
             <div class="flex flex-wrap items-center justify-between gap-2">
                 <div class="flex items-center gap-2">
-                    <h2 class="text-base font-bold text-gray-800">Kho ảnh chờ xếp hạng</h2>
-                    <span id="pool-count" class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-gray-100 text-gray-600">0 ảnh</span>
+                    <h2 class="text-sm sm:text-base font-bold text-gray-800">Kho ảnh chờ xếp hạng</h2>
+                    <span id="pool-count" class="text-xs font-semibold px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">0 ảnh</span>
                 </div>
 
                 <div class="flex flex-wrap items-center gap-2">
                     <span class="text-xs text-gray-500 hidden sm:inline">
                         Mẹo: Click đúp vào vùng kho ảnh bên dưới, nhấn <kbd class="px-1.5 py-0.5 text-xs font-semibold text-gray-700 bg-gray-100 border border-gray-300 rounded">Ctrl + V</kbd> hoặc kéo thả ảnh từ máy tính
                     </span>
-                    <label for="file-input" class="px-3.5 py-2 rounded-lg bg-gray-800 hover:bg-gray-900 active:scale-95 text-white text-xs sm:text-sm font-semibold cursor-pointer transition flex items-center gap-1.5 shadow-sm">
+                    <label for="file-input" class="px-3 sm:px-3.5 py-2 rounded-lg bg-gray-800 hover:bg-gray-900 active:scale-95 text-white text-xs sm:text-sm font-semibold cursor-pointer transition flex items-center gap-1.5 shadow-sm">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                         </svg>
-                        <span>Thêm ảnh từ máy</span>
+                        <span>Thêm ảnh</span>
                     </label>
                     <input id="file-input" type="file" accept="image/*,.heic,.heif,.avif,.svg,.webp,.bmp,.ico,.tiff,.tif,video/webm,video/mp4,video/quicktime,.webm,.mp4,.mov" multiple class="hidden" />
                 </div>
@@ -337,28 +366,29 @@
                 id="image-pool" 
                 data-zone="pool"
                 title="Click đúp chuột để chọn ảnh từ máy tính, hoặc kéo thả / dán ảnh (Ctrl + V) vào đây"
-                class="min-h-[140px] bg-gray-50 border-2 border-dashed border-gray-300 rounded-xl p-3 flex flex-wrap items-start content-start gap-2.5 transition-colors relative cursor-pointer"
+                class="min-h-[120px] sm:min-h-[140px] bg-gray-50 border-2 border-dashed border-gray-300 rounded-xl p-2.5 sm:p-3 flex flex-wrap items-start content-start gap-2 sm:gap-2.5 transition-colors relative cursor-pointer"
             >
                 <!-- Gợi ý khi kho ảnh trống -->
-                <div id="empty-pool-placeholder" class="w-full h-28 flex flex-col items-center justify-center text-center text-gray-400 pointer-events-none select-none">
-                    <svg class="w-8 h-8 mb-1.5 text-gray-400" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                <div id="empty-pool-placeholder" class="w-full h-24 sm:h-28 flex flex-col items-center justify-center text-center text-gray-400 pointer-events-none select-none px-2">
+                    <svg class="w-7 h-7 sm:w-8 sm:h-8 mb-1.5 text-gray-400" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                     </svg>
-                    <p class="text-sm font-medium text-gray-500">Click đúp chuột vào đây, kéo thả ảnh/video từ máy tính hoặc nhấn <span class="font-bold text-gray-700">Ctrl + V</span></p>
-                    <p class="text-xs text-gray-400 mt-0.5">Hỗ trợ PNG, JPG, WebP, HEIC, AVIF, SVG, GIF, WebM, MP4... Tự động nén & tối ưu dung lượng</p>
+                    <p class="text-xs sm:text-sm font-medium text-gray-500 hidden sm:block">Click đúp chuột vào đây, kéo thả ảnh/video từ máy tính hoặc nhấn <span class="font-bold text-gray-700">Ctrl + V</span></p>
+                    <p class="text-xs font-medium text-gray-500 sm:hidden">Chạm vào đây để chọn ảnh từ thư viện điện thoại</p>
+                    <p class="text-[11px] sm:text-xs text-gray-400 mt-0.5">Hỗ trợ PNG, JPG, WebP, HEIC, AVIF, SVG, GIF, WebM, MP4... Tự động nén & tối ưu dung lượng</p>
                 </div>
             </div>
         </section>
     </main>
 
     <!-- Thông báo Toast nổi (thay thế alert) -->
-    <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+    <div id="toast-container" class="fixed bottom-4 left-3 right-3 sm:left-auto sm:right-5 sm:bottom-5 z-50 flex flex-col items-center sm:items-end gap-2 pointer-events-none"></div>
 
     <!-- Modal Chỉnh sửa Hàng (Tên nhãn, Màu sắc, Xóa hàng) -->
-    <div id="edit-row-modal" class="fixed inset-0 bg-black/50 backdrop-blur-xs z-50 hidden items-center justify-center p-4">
-        <div class="bg-white rounded-2xl max-w-md w-full p-5 shadow-2xl border border-gray-100 animate-fade-in">
+    <div id="edit-row-modal" class="fixed inset-0 bg-black/50 backdrop-blur-xs z-50 hidden items-center justify-center p-3 sm:p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-4 sm:p-5 shadow-2xl border border-gray-100 animate-fade-in">
             <div class="flex items-center justify-between mb-4">
-                <h3 class="text-lg font-bold text-gray-800">Tùy chỉnh hàng xếp hạng</h3>
+                <h3 class="text-base sm:text-lg font-bold text-gray-800">Tùy chỉnh hàng xếp hạng</h3>
                 <button id="close-edit-modal" class="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -385,8 +415,8 @@
                 </div>
             </div>
 
-            <div class="mt-6 flex items-center justify-between pt-3 border-t border-gray-100">
-                <button id="btn-delete-row" class="px-3.5 py-2 rounded-xl bg-red-50 hover:bg-red-100 text-red-600 text-sm font-semibold transition flex items-center gap-1.5">
+            <div class="mt-6 flex items-center justify-between gap-2 pt-3 border-t border-gray-100">
+                <button id="btn-delete-row" class="px-3 py-2 rounded-xl bg-red-50 hover:bg-red-100 text-red-600 text-xs sm:text-sm font-semibold transition flex items-center gap-1.5">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                     </svg>
@@ -394,18 +424,18 @@
                 </button>
 
                 <div class="flex items-center gap-2">
-                    <button id="btn-cancel-edit" class="px-4 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-semibold transition">Hủy</button>
-                    <button id="btn-save-edit" class="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold transition shadow-sm">Lưu thay đổi</button>
+                    <button id="btn-cancel-edit" class="px-3.5 sm:px-4 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs sm:text-sm font-semibold transition">Hủy</button>
+                    <button id="btn-save-edit" class="px-3.5 sm:px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-semibold transition shadow-sm">Lưu</button>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- Modal Xác nhận Reset -->
-    <div id="reset-modal" class="fixed inset-0 bg-black/50 backdrop-blur-xs z-50 hidden items-center justify-center p-4">
-        <div class="bg-white rounded-2xl max-w-sm w-full p-5 shadow-2xl border border-gray-100">
-            <h3 class="text-lg font-bold text-gray-800 mb-2">Đặt lại bảng xếp hạng</h3>
-            <p class="text-sm text-gray-600 mb-5">Bạn muốn đưa tất cả ảnh trên bảng về lại kho ảnh chờ hay xóa toàn bộ ảnh và đặt lại hàng mặc định?</p>
+    <div id="reset-modal" class="fixed inset-0 bg-black/50 backdrop-blur-xs z-50 hidden items-center justify-center p-3 sm:p-4">
+        <div class="bg-white rounded-2xl max-w-sm w-full p-4 sm:p-5 shadow-2xl border border-gray-100">
+            <h3 class="text-base sm:text-lg font-bold text-gray-800 mb-2">Đặt lại bảng xếp hạng</h3>
+            <p class="text-xs sm:text-sm text-gray-600 mb-5">Bạn muốn đưa tất cả ảnh trên bảng về lại kho ảnh chờ hay xóa toàn bộ ảnh và đặt lại hàng mặc định?</p>
             <div class="flex flex-col gap-2">
                 <button id="btn-reset-to-pool" class="w-full py-2.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold transition">
                     Đưa toàn bộ ảnh về kho chờ
@@ -421,10 +451,10 @@
     </div>
 
     <!-- Modal Hướng dẫn sử dụng -->
-    <div id="help-modal" class="fixed inset-0 bg-black/50 backdrop-blur-xs z-50 hidden items-center justify-center p-4">
-        <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-gray-100">
+    <div id="help-modal" class="fixed inset-0 bg-black/50 backdrop-blur-xs z-50 hidden items-center justify-center p-3 sm:p-4">
+        <div class="bg-white rounded-2xl max-w-lg w-full p-5 sm:p-6 shadow-2xl border border-gray-100 max-h-[85vh] overflow-y-auto">
             <div class="flex items-center justify-between mb-3">
-                <h3 class="text-lg font-bold text-gray-800 flex items-center gap-2">
+                <h3 class="text-base sm:text-lg font-bold text-gray-800 flex items-center gap-2">
                     <span class="w-7 h-7 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-sm font-bold">?</span>
                     Hướng dẫn sử dụng nhanh
                 </h3>
@@ -434,14 +464,14 @@
                     </svg>
                 </button>
             </div>
-            <ul class="space-y-3 text-sm text-gray-600">
+            <ul class="space-y-3 text-xs sm:text-sm text-gray-600">
                 <li class="flex items-start gap-2.5">
                     <span class="font-bold text-blue-600">1.</span>
-                    <span><strong>Thêm ảnh siêu tốc:</strong> Click đúp chuột vào vùng kho ảnh bên dưới để chọn ảnh từ máy, kéo thả nhiều file ảnh/video cùng lúc, hoặc nhấn <kbd class="px-1.5 py-0.5 bg-gray-100 border rounded text-xs font-semibold">Ctrl + V</kbd> để dán ảnh từ clipboard (nếu đang di chuột ở hàng nào sẽ dán thẳng vào hàng đó).</span>
+                    <span><strong>Thêm ảnh siêu tốc:</strong> Bấm <strong>Thêm ảnh</strong> (hoặc chạm vào vùng kho ảnh trên điện thoại / click đúp trên máy tính), kéo thả nhiều file cùng lúc, hoặc nhấn <kbd class="px-1.5 py-0.5 bg-gray-100 border rounded text-xs font-semibold">Ctrl + V</kbd> để dán ảnh từ clipboard.</span>
                 </li>
                 <li class="flex items-start gap-2.5">
                     <span class="font-bold text-blue-600">2.</span>
-                    <span><strong>Sắp xếp & Đổi thứ tự:</strong> Kéo thả các thẻ ảnh qua lại giữa các hàng hoặc đổi vị trí trong cùng một hàng. Di chuột vào ảnh và bấm nút <strong>×</strong> để xóa ảnh.</span>
+                    <span><strong>Sắp xếp & Đổi thứ tự:</strong> Chạm và kéo các thẻ ảnh qua lại giữa các hàng hoặc đổi vị trí trong cùng một hàng. Bấm nút <strong>×</strong> trên góc ảnh để xóa ảnh.</span>
                 </li>
                 <li class="flex items-start gap-2.5">
                     <span class="font-bold text-blue-600">3.</span>
@@ -449,7 +479,7 @@
                 </li>
                 <li class="flex items-start gap-2.5">
                     <span class="font-bold text-blue-600">4.</span>
-                    <span><strong>Xuất ảnh PNG / JPG:</strong> Bấm nút <strong>Export PNG</strong> hoặc <strong>Export JPG</strong> ở góc trên bên phải để chụp nguyên trạng bảng xếp hạng độ nét cao về máy.</span>
+                    <span><strong>Lưu ảnh JPG về máy / Gallery:</strong> Bấm nút <strong>Lưu ảnh</strong> (trên điện thoại) hoặc <strong>Export JPG</strong> (trên máy tính) để lưu nguyên trạng bảng xếp hạng độ nét cao vào thư viện ảnh.</span>
                 </li>
             </ul>
             <div class="mt-5 flex justify-end">
@@ -463,7 +493,7 @@
          * Ứng dụng Tier List Maker
          * Hỗ trợ bảng màu chuẩn mẫu (S, A, B, C, D), tiêu đề gọn nhẹ trực tiếp ở đầu bảng,
          * đầy đủ định dạng ảnh/video (PNG, JPG, WebP, HEIC, AVIF, SVG, GIF, WebM, MP4...),
-         * tự động nén & tối ưu dung lượng khi tải lên, click đúp kho ảnh, Ctrl+V dán ảnh, Drag & Drop và Export PNG/JPG.
+         * tự động nén & tối ưu dung lượng khi tải lên, tương thích thiết bị di động & lưu thẳng vào Gallery.
          */
 
         const STORAGE_KEY = 'tier_list_maker_state_v3';
@@ -584,7 +614,7 @@
                 error: 'bg-red-600 text-white'
             };
 
-            toast.className = `${colors[type] || colors.info} px-4 py-2.5 rounded-xl shadow-lg text-sm font-medium flex items-center gap-2 transition-all duration-300 transform translate-y-2 opacity-0`;
+            toast.className = `${colors[type] || colors.info} px-4 py-2.5 rounded-xl shadow-lg text-xs sm:text-sm font-medium flex items-center gap-2 transition-all duration-300 transform translate-y-2 opacity-0 max-w-full text-center sm:text-left`;
             toast.textContent = message;
             container.appendChild(toast);
 
@@ -751,22 +781,24 @@
                     const dx = Math.abs(currentTouch.clientX - startX);
                     const dy = Math.abs(currentTouch.clientY - startY);
 
-                    if (!isDraggingTouch && (dx > 8 || dy > 8)) {
+                    if (!isDraggingTouch && (dx > 6 || dy > 6)) {
                         isDraggingTouch = true;
                         item.classList.add('dragging');
                         touchClone = item.cloneNode(true);
                         touchClone.style.position = 'fixed';
                         touchClone.style.pointerEvents = 'none';
                         touchClone.style.zIndex = '9999';
-                        touchClone.style.opacity = '0.85';
-                        touchClone.style.transform = 'scale(1.08)';
+                        touchClone.style.opacity = '0.88';
+                        touchClone.style.transform = 'scale(1.1)';
                         document.body.appendChild(touchClone);
                     }
 
                     if (isDraggingTouch && touchClone) {
                         moveEvent.preventDefault();
-                        touchClone.style.left = (currentTouch.clientX - 40) + 'px';
-                        touchClone.style.top = (currentTouch.clientY - 40) + 'px';
+                        const halfW = (item.offsetWidth || 64) / 2;
+                        const halfH = (item.offsetHeight || 64) / 2;
+                        touchClone.style.left = (currentTouch.clientX - halfW) + 'px';
+                        touchClone.style.top = (currentTouch.clientY - halfH) + 'px';
 
                         const elemBelow = document.elementFromPoint(currentTouch.clientX, currentTouch.clientY);
                         const dropZone = elemBelow ? elemBelow.closest('.tier-content, #image-pool') : null;
@@ -855,7 +887,7 @@
             });
         }
 
-        // Tính toán vị trí chèn thẻ ảnh chính xác dựa theo tọa độ chuột
+        // Tính toán vị trí chèn thẻ ảnh chính xác dựa theo tọa độ chuột / ngón tay
         function getDragAfterElement(container, x, y) {
             const draggableElements = [...container.querySelectorAll('.tier-item:not(.dragging)')];
 
@@ -1171,17 +1203,33 @@
             }
         }
 
+        // Nhận diện thiết bị di động (iOS / Android)
+        function isMobileDevice() {
+            return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+                || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+        }
+
         // Thiết lập các sự kiện toàn cục
         function setupGlobalEvents() {
             // Gắn sự kiện kéo thả cho kho ảnh chờ
             attachDropZoneEvents(imagePool);
 
-            // Hỗ trợ click đúp chuột vào vùng kho ảnh chờ (#image-pool) để mở hộp thoại chọn ảnh từ máy
+            // Hỗ trợ click đúp trên máy tính hoặc chạm khi kho ảnh trống trên thiết bị di động để mở bộ chọn ảnh
             imagePool.addEventListener('dblclick', (e) => {
                 if (e.target.closest('.tier-item') || e.target.closest('.delete-item-btn')) {
                     return;
                 }
                 fileInput.click();
+            });
+
+            imagePool.addEventListener('click', (e) => {
+                if (!isMobileDevice()) return;
+                if (e.target.closest('.tier-item') || e.target.closest('.delete-item-btn')) {
+                    return;
+                }
+                if (imagePool.querySelectorAll('.tier-item').length === 0) {
+                    fileInput.click();
+                }
             });
 
             // Sự kiện dán ảnh trực tiếp bằng Ctrl + V
@@ -1214,7 +1262,7 @@
                 }
             });
 
-            // Sự kiện chọn file từ máy tính
+            // Sự kiện chọn file từ máy tính / thư viện ảnh
             fileInput.addEventListener('change', (e) => {
                 if (e.target.files && e.target.files.length > 0) {
                     handleFiles(e.target.files, imagePool);
@@ -1258,8 +1306,7 @@
                 }
             });
 
-            // Nút Export PNG & JPG
-            document.getElementById('btn-export-png').addEventListener('click', () => exportTierList('png'));
+            // Nút Export JPG / Lưu ảnh về Gallery
             document.getElementById('btn-export-jpg').addEventListener('click', () => exportTierList('jpeg'));
 
             // Modal Reset
@@ -1407,12 +1454,12 @@
             });
         }
 
-        // Hàm xuất bảng xếp hạng ra file PNG hoặc JPG trực tiếp nguyên trạng khung #export-wrapper
-        async function exportTierList(format = 'png') {
+        // Hàm xuất bảng xếp hạng ra file JPG và tự động lưu vào Gallery trên thiết bị di động
+        async function exportTierList(format = 'jpeg') {
             const exportWrapper = document.getElementById('export-wrapper');
             const customTitle = boardTitleInput.textContent.trim() || 'BẢNG XẾP HẠNG TIER LIST';
 
-            showToast(`Đang tạo ảnh ${format.toUpperCase()} chất lượng cao...`, 'info');
+            showToast('Đang tạo ảnh JPG chất lượng cao...', 'info');
 
             try {
                 const canvas = await html2canvas(exportWrapper, {
@@ -1422,23 +1469,53 @@
                     logging: false
                 });
 
-                const mimeType = format === 'jpeg' ? 'image/jpeg' : 'image/png';
-                const extension = format === 'jpeg' ? 'jpg' : 'png';
-                const quality = format === 'jpeg' ? 0.95 : 1.0;
+                const mimeType = 'image/jpeg';
+                const extension = 'jpg';
+                const quality = 0.95;
 
                 const safeFileName = customTitle
                     .toLowerCase()
                     .replace(/[^a-z0-9\u00C0-\u1EF9]+/gi, '-')
                     .replace(/^-+|-+$/g, '') || 'tier-list';
+                const fullFileName = `${safeFileName}.${extension}`;
 
+                // Trên thiết bị di động: Ưu tiên Web Share API để lưu thẳng vào Thư viện ảnh (Gallery/Photos)
+                if (isMobileDevice() && navigator.share && navigator.canShare) {
+                    const blob = await new Promise(resolve => canvas.toBlob(resolve, mimeType, quality));
+                    if (blob) {
+                        const file = new File([blob], fullFileName, { type: mimeType });
+                        if (navigator.canShare({ files: [file] })) {
+                            try {
+                                await navigator.share({
+                                    files: [file],
+                                    title: customTitle
+                                });
+                                showToast('Chọn "Lưu hình ảnh" để lưu thẳng vào Thư viện ảnh!', 'success');
+                                return;
+                            } catch (shareErr) {
+                                // Nếu người dùng tự đóng bảng chia sẻ thì không báo lỗi
+                                if (shareErr && shareErr.name === 'AbortError') {
+                                    return;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Tải trực tiếp file JPG (trên Desktop hoặc trình duyệt mobile không hỗ trợ Web Share file)
                 const link = document.createElement('a');
-                link.download = `${safeFileName}.${extension}`;
+                link.download = fullFileName;
                 link.href = canvas.toDataURL(mimeType, quality);
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
 
-                showToast(`Đã tải xuống ${safeFileName}.${extension} thành công!`, 'success');
+                showToast(
+                    isMobileDevice()
+                        ? `Đã lưu ${fullFileName} vào thiết bị / Thư viện ảnh!`
+                        : `Đã tải xuống ${fullFileName} thành công!`,
+                    'success'
+                );
             } catch (error) {
                 console.error('Lỗi xuất ảnh:', error);
                 showToast('Có lỗi xảy ra khi xuất ảnh. Vui lòng thử lại!', 'error');
