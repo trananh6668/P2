@@ -1,0 +1,3046 @@
+<!DOCTYPE html>
+<html lang="vi" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>Pioneer DJ Pro Console</title>
+  <!-- Tailwind CSS for responsive layout & utility styling -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Inter & JetBrains Mono for crisp BPM/Time readouts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    /* ==========================================================================
+       1. PIONEER DJ CLUB HARDWARE THEME & MULTI-TOUCH ERGONOMICS
+       ========================================================================== */
+    :root {
+      --bg-chassis: #0b0d10;
+      --bg-panel: #13161c;
+      --bg-mixer: #101318;
+      --border-metal: #272c36;
+      --deck-a: #00d2ff;
+      --deck-a-glow: rgba(0, 210, 255, 0.45);
+      --deck-b: #ff9500;
+      --deck-b-glow: rgba(255, 149, 0, 0.45);
+      --led-green: #00e676;
+      --led-amber: #ffab00;
+      --led-red: #ff1744;
+      --jog-size: clamp(166px, 14.2vw, 190px);
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      background-color: var(--bg-chassis);
+      color: #e5e7eb;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      overflow-x: hidden;
+      overscroll-behavior: none;
+    }
+
+    /* Prevent iPad Safari pull-to-refresh, pinch-zoom & scroll inside interactive console */
+    .console-touch-lock {
+      touch-action: none;
+    }
+
+    .font-mono-dj {
+      font-family: 'JetBrains Mono', monospace;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Brushed dark aluminum surface texture */
+    .brushed-metal {
+      background:
+        repeating-linear-gradient(
+          90deg,
+          rgba(255, 255, 255, 0.012) 0px,
+          rgba(255, 255, 255, 0.012) 1px,
+          transparent 1px,
+          transparent 3px
+        ),
+        linear-gradient(180deg, #171b22 0%, #101318 100%);
+      border: 1px solid #262b35;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 8px 24px rgba(0, 0, 0, 0.65);
+    }
+
+    .mixer-chassis {
+      background:
+        repeating-linear-gradient(
+          0deg,
+          rgba(255, 255, 255, 0.01) 0px,
+          rgba(255, 255, 255, 0.01) 1px,
+          transparent 1px,
+          transparent 3px
+        ),
+        linear-gradient(180deg, #141820 0%, #0d1015 100%);
+      border: 1px solid #2b313d;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07), 0 10px 30px rgba(0, 0, 0, 0.75);
+    }
+
+    /* Minimum 44x44px tactile hardware button */
+    .dj-btn {
+      min-width: 44px;
+      min-height: 44px;
+      border-radius: 8px;
+      background: linear-gradient(180deg, #252a34 0%, #181c23 100%);
+      border: 1px solid #333a47;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+      color: #cbd5e1;
+      font-weight: 700;
+      font-size: 11px;
+      letter-spacing: 0.04em;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: transform 0.06s ease, box-shadow 0.12s ease, border-color 0.12s ease, background 0.12s ease;
+    }
+
+    .dj-btn:active {
+      transform: translateY(1px) scale(0.97);
+    }
+
+    /* Iconic Pioneer Circular CUE & PLAY/PAUSE Buttons */
+    .transport-btn {
+      width: 56px;
+      height: 56px;
+      min-width: 52px;
+      min-height: 52px;
+      border-radius: 9999px;
+      background: radial-gradient(circle at 35% 30%, #2a303c 0%, #14171d 75%);
+      border: 3px solid #3a4150;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.7), inset 0 2px 3px rgba(255, 255, 255, 0.12);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: transform 0.06s ease, box-shadow 0.12s ease, border-color 0.12s ease;
+    }
+
+    .transport-btn:active {
+      transform: scale(0.95);
+    }
+
+    .cue-btn-active {
+      border-color: #ff9500 !important;
+      box-shadow: 0 0 16px rgba(255, 149, 0, 0.65), inset 0 0 10px rgba(255, 149, 0, 0.35) !important;
+      color: #ffb74d !important;
+    }
+
+    .play-btn-active {
+      border-color: #00e676 !important;
+      box-shadow: 0 0 18px rgba(0, 230, 118, 0.7), inset 0 0 10px rgba(0, 230, 118, 0.35) !important;
+      color: #69f0ae !important;
+    }
+
+    .play-btn-standby {
+      border-color: rgba(0, 230, 118, 0.45);
+      animation: pulse-green 1.4s infinite ease-in-out;
+    }
+
+    @keyframes pulse-green {
+      0%, 100% { box-shadow: 0 0 4px rgba(0, 230, 118, 0.25); }
+      50% { box-shadow: 0 0 14px rgba(0, 230, 118, 0.65); }
+    }
+
+    /* ==========================================================================
+       2. ROTARY KNOBS (MULTI-TOUCH POINTER CAPTURE)
+       ========================================================================== */
+    .knob-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      touch-action: none;
+      cursor: ns-resize;
+      padding: 2px;
+    }
+
+    .knob-cap {
+      width: 38px;
+      height: 38px;
+      border-radius: 9999px;
+      background: conic-gradient(from 180deg, #2d333f, #181c23, #2d333f, #15181f, #2d333f);
+      border: 2px solid #3c4452;
+      box-shadow: 0 3px 6px rgba(0, 0, 0, 0.75), inset 0 1px 2px rgba(255, 255, 255, 0.15);
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .knob-cap::after {
+      content: '';
+      position: absolute;
+      top: 3px;
+      width: 3px;
+      height: 11px;
+      border-radius: 2px;
+      background: var(--knob-accent, #ffffff);
+      box-shadow: 0 0 5px var(--knob-accent, rgba(255,255,255,0.6));
+    }
+
+    /* ==========================================================================
+       3. VERTICAL CHANNEL & TEMPO FADERS + HORIZONTAL CROSSFADER
+       ========================================================================== */
+    .fader-track-v {
+      position: relative;
+      width: 44px; /* Wide touch target for iPad fingers */
+      height: 122px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      touch-action: none;
+      cursor: ns-resize;
+    }
+
+    .fader-slot-v {
+      width: 6px;
+      height: 100%;
+      background: #07090c;
+      border-radius: 999px;
+      border: 1px solid #262b35;
+      box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.9);
+      position: relative;
+    }
+
+    .fader-thumb-v {
+      position: absolute;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 36px;
+      height: 22px;
+      border-radius: 4px;
+      background: linear-gradient(180deg, #3a4150 0%, #1c2028 48%, #12151a 52%, #2f3542 100%);
+      border: 1px solid #525c70;
+      box-shadow: 0 3px 6px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+      pointer-events: none;
+    }
+
+    .fader-thumb-v::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 4px;
+      right: 4px;
+      height: 2px;
+      transform: translateY(-50%);
+      background: #ffffff;
+      box-shadow: 0 0 4px rgba(255, 255, 255, 0.8);
+    }
+
+    /* Crossfader */
+    .crossfader-track {
+      position: relative;
+      width: 100%;
+      height: 46px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      touch-action: none;
+      cursor: ew-resize;
+    }
+
+    .crossfader-slot {
+      width: 100%;
+      height: 8px;
+      background: #07090c;
+      border-radius: 999px;
+      border: 1px solid #2a303c;
+      box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.95);
+    }
+
+    .crossfader-thumb {
+      position: absolute;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      width: 28px;
+      height: 40px;
+      border-radius: 5px;
+      background: linear-gradient(90deg, #3b4252 0%, #1c2028 48%, #111419 52%, #323846 100%);
+      border: 1px solid #5d677d;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.85), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+      pointer-events: none;
+    }
+
+    .crossfader-thumb::after {
+      content: '';
+      position: absolute;
+      left: 50%;
+      top: 5px;
+      bottom: 5px;
+      width: 2px;
+      transform: translateX(-50%);
+      background: #00d2ff;
+      box-shadow: 0 0 5px #00d2ff;
+    }
+
+    /* ==========================================================================
+       4. CDJ-3000 ERGONOMIC JOG WHEEL & CENTER LCD
+       ========================================================================== */
+    .jog-wheel {
+      width: var(--jog-size);
+      height: var(--jog-size);
+      border-radius: 9999px;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      touch-action: none;
+      cursor: grab;
+      background:
+        radial-gradient(circle at 50% 50%, #191d24 58%, #2c3340 60%, #161a20 72%, #2a303c 88%, #12151a 100%);
+      box-shadow:
+        0 10px 24px rgba(0, 0, 0, 0.85),
+        inset 0 2px 4px rgba(255, 255, 255, 0.14);
+      border: 3px solid #2b313d;
+    }
+
+    .jog-wheel:active {
+      cursor: grabbing;
+    }
+
+    .jog-led-ring {
+      position: absolute;
+      inset: 5px;
+      border-radius: 9999px;
+      border: 2.5px solid var(--deck-accent, #00d2ff);
+      box-shadow: 0 0 12px var(--deck-glow, rgba(0, 210, 255, 0.45)), inset 0 0 8px var(--deck-glow, rgba(0, 210, 255, 0.35));
+      pointer-events: none;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .jog-vinyl-plate {
+      width: 72%;
+      height: 72%;
+      border-radius: 9999px;
+      background:
+        repeating-radial-gradient(
+          circle at 50% 50%,
+          #12151b 0px,
+          #12151b 2px,
+          #1c2029 3px,
+          #12151b 4px
+        );
+      border: 2px solid #2f3644;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      box-shadow: inset 0 0 14px rgba(0, 0, 0, 0.9);
+      pointer-events: none;
+    }
+
+    .jog-lcd {
+      width: 64%;
+      height: 64%;
+      border-radius: 9999px;
+      background: radial-gradient(circle at 50% 35%, #111827 0%, #05070b 100%);
+      border: 2px solid #374151;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+      box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.95);
+    }
+
+    .jog-needle {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      width: 3px;
+      height: 50%;
+      margin-left: -1.5px;
+      transform-origin: 50% 100%;
+      background: linear-gradient(180deg, var(--deck-accent, #00d2ff) 0%, transparent 90%);
+      box-shadow: 0 0 6px var(--deck-accent, #00d2ff);
+    }
+
+    /* ==========================================================================
+       5. RGB PERFORMANCE PADS & 12-SEGMENT LED VU METERS
+       ========================================================================== */
+    .perf-pad {
+      min-height: 46px;
+      border-radius: 7px;
+      background: linear-gradient(180deg, #1e232c 0%, #14181f 100%);
+      border: 1.5px solid #323947;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+      font-size: 11px;
+      font-weight: 800;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: transform 0.05s ease, box-shadow 0.1s ease, background 0.1s ease;
+    }
+
+    .perf-pad:active {
+      transform: scale(0.95);
+    }
+
+    .vu-led {
+      width: 100%;
+      height: 6px;
+      border-radius: 1.5px;
+      background: #1b2029;
+      transition: background-color 0.04s linear, box-shadow 0.04s linear;
+    }
+
+    .vu-led.on-green {
+      background: #00e676;
+      box-shadow: 0 0 5px rgba(0, 230, 118, 0.7);
+    }
+
+    .vu-led.on-amber {
+      background: #ffab00;
+      box-shadow: 0 0 6px rgba(255, 171, 0, 0.8);
+    }
+
+    .vu-led.on-red {
+      background: #ff1744;
+      box-shadow: 0 0 7px rgba(255, 23, 68, 0.9);
+    }
+
+    .fx-on-btn-flash {
+      animation: fx-pulse 0.45s infinite alternate ease-in-out;
+    }
+
+    @keyframes fx-pulse {
+      from { box-shadow: 0 0 10px rgba(0, 210, 255, 0.5); }
+      to { box-shadow: 0 0 24px rgba(0, 210, 255, 1), inset 0 0 10px rgba(0, 210, 255, 0.6); }
+    }
+  </style>
+</head>
+<body class="flex flex-col min-h-screen select-none">
+
+  <!-- ========================================================================
+       TOP UTILITY & AUDIO ENGINE BAR
+       ======================================================================== -->
+  <header class="w-full h-11 px-3 bg-[#080a0d] border-b border-[#222731] flex items-center justify-between gap-2 z-30 shrink-0">
+    <!-- Brand & System Status -->
+    <div class="flex items-center gap-2.5">
+      <div class="flex items-center gap-1.5">
+        <span class="w-2.5 h-2.5 rounded-full bg-[#00d2ff] shadow-[0_0_8px_#00d2ff]"></span>
+        <span class="font-extrabold tracking-wider text-xs sm:text-sm text-white">PIONEER <span class="text-[#00d2ff]">DJ</span></span>
+        <span class="hidden md:inline-block text-[10px] font-mono-dj px-1.5 py-0.5 rounded bg-[#161b22] text-slate-400 border border-[#2a313d]">CDJ-3000 ×2 + DJM-A9</span>
+      </div>
+
+      <!-- AudioContext Live Status Badge -->
+      <button id="audioStatusBtn" type="button" class="px-2.5 py-1 rounded-full text-[10px] font-mono-dj font-bold tracking-wider flex items-center gap-1.5 bg-amber-500/15 text-amber-300 border border-amber-500/40 cursor-pointer transition">
+        <span id="audioStatusDot" class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
+        <span id="audioStatusText">TAP TO UNLOCK AUDIO</span>
+      </button>
+    </div>
+
+    <!-- Built-in EDM Track Quick-Load Bar & Utility Controls -->
+    <div class="flex items-center gap-1.5 sm:gap-2">
+      <!-- Built-in EDM Library Selector -->
+      <button id="openLibraryBtn" type="button" class="px-2.5 py-1.5 rounded-lg bg-[#171c24] hover:bg-[#1f2631] border border-[#2f3746] text-[11px] font-bold text-cyan-300 flex items-center gap-1.5 cursor-pointer">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2z"/></svg>
+        <span>EDM TRACKS</span>
+      </button>
+
+      <!-- Live Mix WAV Recorder -->
+      <button id="recMixBtn" type="button" class="px-2.5 py-1.5 rounded-lg bg-[#171c24] hover:bg-[#23171b] border border-[#2f3746] text-[11px] font-mono-dj font-bold text-slate-200 flex items-center gap-1.5 cursor-pointer">
+        <span id="recDot" class="w-2.5 h-2.5 rounded-full bg-rose-600"></span>
+        <span id="recLabel">REC MIX</span>
+      </button>
+
+      <!-- Keyboard Shortcuts Help Modal Trigger -->
+      <button id="shortcutsBtn" type="button" class="px-2.5 py-1.5 rounded-lg bg-[#171c24] hover:bg-[#1f2631] border border-[#2f3746] text-[11px] font-bold text-slate-300 cursor-pointer" title="Keyboard Shortcuts">
+        ? KEYS
+      </button>
+    </div>
+  </header>
+
+  <!-- Toast / Status Notification Banner (Replaces alert()) -->
+  <div id="djToast" class="fixed top-12 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-xl bg-[#11161f]/95 border border-cyan-400/50 text-cyan-200 text-xs font-semibold shadow-2xl pointer-events-none opacity-0 transition-opacity duration-200">
+    System Ready
+  </div>
+
+  <!-- ========================================================================
+       MAIN 3-COLUMN DJ PERFORMANCE CONSOLE (DECK A — DJM-A9 — DECK B)
+       ======================================================================== -->
+  <main id="djConsoleRoot" class="console-touch-lock flex-1 w-full max-w-[1680px] mx-auto p-1.5 sm:p-2 grid grid-cols-1 lg:grid-cols-[1fr_minmax(320px,360px)_1fr] gap-1.5 sm:gap-2 items-stretch">
+
+    <!-- ======================================================================
+         LEFT DECK: CDJ-3000 DECK A (CYAN THEME)
+         ====================================================================== -->
+    <section id="deckA-panel" class="brushed-metal rounded-xl p-2 flex flex-col justify-between gap-1.5" style="--deck-accent: #00d2ff; --deck-glow: rgba(0, 210, 255, 0.45);">
+      <!-- Deck A Top Bar: Badge, Track Info, Load Button -->
+      <div class="flex items-center justify-between gap-1.5 bg-[#0a0d12] rounded-lg px-2 py-1 border border-[#222834]">
+        <div class="flex items-center gap-2 min-w-0">
+          <span class="px-2 py-0.5 rounded bg-[#00d2ff]/20 border border-[#00d2ff] text-[#00d2ff] font-extrabold text-xs shrink-0">DECK A</span>
+          <div class="min-w-0">
+            <div id="deckA-title" class="text-xs font-bold text-white truncate">SOLARIS ANTHEM — Progressive House</div>
+            <div class="flex items-center gap-2 text-[10px] font-mono-dj text-slate-400">
+              <span id="deckA-timeElapsed">00:00.0</span>
+              <span>/</span>
+              <span id="deckA-timeRemain">-00:60.0</span>
+              <span id="deckA-loopBadge" class="hidden px-1 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">LOOP 4</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-1 shrink-0">
+          <label for="deckA-fileInput" class="dj-btn px-2.5 text-[10px] text-cyan-300 border-cyan-500/40 hover:border-cyan-400 cursor-pointer">
+            LOAD TRACK
+          </label>
+          <input id="deckA-fileInput" type="file" accept="audio/*,.mp3,.wav,.ogg,.m4a" class="hidden" />
+        </div>
+      </div>
+
+      <!-- Deck A Waveform & HUD Display Screen -->
+      <div class="bg-[#06080b] rounded-lg border border-[#262d3a] p-1.5 flex flex-col gap-1 shadow-inner">
+        <!-- Phase Meter + BPM / Pitch / Sync / Master Row -->
+        <div class="flex items-center justify-between gap-1.5">
+          <!-- 4-Beat Visual Phase Meter -->
+          <div class="flex flex-col gap-0.5 flex-1">
+            <div class="flex justify-between text-[9px] font-mono-dj text-slate-500">
+              <span>PHASE METER</span>
+              <span id="deckA-keyLockLabel" class="text-cyan-400">MT: ON</span>
+            </div>
+            <div id="deckA-phaseBar" class="grid grid-cols-4 gap-1 h-2.5">
+              <div class="rounded-sm bg-[#161b24] border border-[#28303e]"></div>
+              <div class="rounded-sm bg-[#161b24] border border-[#28303e]"></div>
+              <div class="rounded-sm bg-[#161b24] border border-[#28303e]"></div>
+              <div class="rounded-sm bg-[#161b24] border border-[#28303e]"></div>
+            </div>
+          </div>
+
+          <!-- Real-Time BPM & Pitch Readout -->
+          <div class="bg-[#0d1117] border border-[#252c38] rounded px-2 py-0.5 text-right shrink-0">
+            <div class="text-[9px] font-mono-dj text-slate-400 leading-none">BPM <span id="deckA-pitchReadout" class="text-cyan-300">+0.00%</span></div>
+            <div id="deckA-bpmReadout" class="text-base sm:text-lg font-mono-dj font-extrabold text-white leading-tight">128.00</div>
+          </div>
+        </div>
+
+        <!-- Zoomed Scrolling RGB Waveform Canvas -->
+        <div class="relative w-full h-[68px] sm:h-[76px] rounded overflow-hidden bg-[#040608] border border-[#1d232e]">
+          <canvas id="deckA-zoomCanvas" class="w-full h-full block"></canvas>
+        </div>
+
+        <!-- Full-Track Overview Strip Canvas (Touch/Click Scrubbing) -->
+        <div class="relative w-full h-[22px] rounded overflow-hidden bg-[#090c10] border border-[#1d232e] cursor-pointer">
+          <canvas id="deckA-overviewCanvas" class="w-full h-full block"></canvas>
+        </div>
+      </div>
+
+      <!-- Deck A Sync / Master / KeyLock / Pitch Bend Row -->
+      <div class="grid grid-cols-5 gap-1">
+        <button id="deckA-syncBtn" type="button" class="dj-btn text-[10px]">SYNC</button>
+        <button id="deckA-masterBtn" type="button" class="dj-btn text-[10px] border-cyan-400 text-cyan-300 bg-cyan-950/40">MASTER</button>
+        <button id="deckA-keyLockBtn" type="button" class="dj-btn text-[10px] border-cyan-400/70 text-cyan-300">KEY LOCK</button>
+        <button id="deckA-bendDownBtn" type="button" class="dj-btn text-xs font-mono-dj">BEND -</button>
+        <button id="deckA-bendUpBtn" type="button" class="dj-btn text-xs font-mono-dj">BEND +</button>
+      </div>
+
+      <!-- Deck A Center Ergonomic Zone: Transport + Jog Wheel + Tempo Fader -->
+      <div class="flex items-center justify-between gap-2 my-auto py-0.5">
+        <!-- Left Column: CUE & PLAY/PAUSE Large Circular Buttons -->
+        <div class="flex flex-col items-center justify-center gap-3 pl-0.5">
+          <button id="deckA-cueBtn" type="button" class="transport-btn text-amber-400" title="CUE (W)">
+            <span class="text-[11px] font-extrabold tracking-wider">CUE</span>
+          </button>
+          <button id="deckA-playBtn" type="button" class="transport-btn play-btn-standby text-emerald-400" title="PLAY / PAUSE (Q)">
+            <span class="text-[10px] font-extrabold tracking-tight leading-none">PLAY</span>
+            <span class="text-[8px] opacity-80 leading-none mt-0.5">PAUSE</span>
+          </button>
+        </div>
+
+        <!-- Center: Ergonomic CDJ-3000 Jog Wheel (166px-190px) -->
+        <div class="flex flex-col items-center justify-center">
+          <div id="deckA-jog" class="jog-wheel">
+            <div id="deckA-jogRing" class="jog-led-ring"></div>
+            <div class="jog-vinyl-plate">
+              <div class="jog-lcd">
+                <div id="deckA-jogNeedle" class="jog-needle"></div>
+                <span class="text-[8px] font-mono-dj text-cyan-400 tracking-widest mt-3">VINYL</span>
+                <span id="deckA-jogBpm" class="text-[11px] font-mono-dj font-bold text-white">128.0</span>
+                <span id="deckA-jogState" class="text-[8px] font-mono-dj text-slate-400">READY</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Column: Tempo Range & Vertical Pitch Fader -->
+        <div class="flex flex-col items-center justify-between gap-1 pr-0.5">
+          <button id="deckA-rangeBtn" type="button" class="dj-btn px-2 text-[10px] font-mono-dj text-cyan-300">±10%</button>
+          <div id="deckA-tempoTrack" class="fader-track-v" title="Double-tap to reset 0.0%">
+            <div class="fader-slot-v">
+              <!-- Center 0% detent tick -->
+              <div class="absolute top-1/2 -left-2 -right-2 h-[1.5px] bg-cyan-400/60 -translate-y-1/2"></div>
+            </div>
+            <div id="deckA-tempoThumb" class="fader-thumb-v" style="top: 50%;"></div>
+          </div>
+          <span class="text-[9px] font-mono-dj text-slate-400">TEMPO</span>
+        </div>
+      </div>
+
+      <!-- Deck A Performance Pads Section (3 Modes + 8 RGB Pads) -->
+      <div class="flex flex-col gap-1 bg-[#0b0e13] p-1.5 rounded-lg border border-[#222834]">
+        <div class="grid grid-cols-4 gap-1">
+          <button id="deckA-modeHotCue" type="button" class="dj-btn min-h-[36px] text-[10px] border-cyan-400 bg-cyan-950/40 text-cyan-200">HOT CUE</button>
+          <button id="deckA-modeLoop" type="button" class="dj-btn min-h-[36px] text-[10px]">BEAT LOOP</button>
+          <button id="deckA-modeJump" type="button" class="dj-btn min-h-[36px] text-[10px]">BEAT JUMP</button>
+          <button id="deckA-delCueBtn" type="button" class="dj-btn min-h-[36px] text-[10px] text-rose-300 border-rose-500/30">DEL CUE</button>
+        </div>
+        <div id="deckA-padsGrid" class="grid grid-cols-4 gap-1.5">
+          <!-- 8 RGB Pads injected & managed by JS -->
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================================================================
+         CENTER MIXER: PIONEER DJM-A9 CLUB MIXER
+         ====================================================================== -->
+    <section id="mixer-panel" class="mixer-chassis rounded-xl p-2 flex flex-col justify-between gap-1.5">
+      <!-- Mixer Top Brand & Sound Color FX Selector -->
+      <div class="bg-[#090c10] rounded-lg p-1.5 border border-[#232936]">
+        <div class="flex items-center justify-between mb-1">
+          <span class="text-[10px] font-extrabold tracking-widest text-slate-300">DJM-A9 <span class="text-slate-500">MIXER</span></span>
+          <span class="text-[9px] font-mono-dj text-cyan-400">SOUND COLOR FX</span>
+        </div>
+        <div class="grid grid-cols-4 gap-1" id="colorFxButtons">
+          <button type="button" data-cfx="FILTER" class="dj-btn min-h-[36px] text-[10px] border-cyan-400 bg-cyan-950/50 text-cyan-200">FILTER</button>
+          <button type="button" data-cfx="SPACE" class="dj-btn min-h-[36px] text-[10px]">SPACE</button>
+          <button type="button" data-cfx="ECHO" class="dj-btn min-h-[36px] text-[10px]">DUB ECHO</button>
+          <button type="button" data-cfx="CRUSH" class="dj-btn min-h-[36px] text-[10px]">CRUSH</button>
+        </div>
+      </div>
+
+      <!-- Mixer Channel Strips (CH1 Left | 12-Seg VU Meters Center | CH2 Right) -->
+      <div class="grid grid-cols-[1fr_76px_1fr] gap-1 items-stretch flex-1">
+
+        <!-- CHANNEL 1 (DECK A) STRIP -->
+        <div class="bg-[#11151c] rounded-lg border border-[#232936] p-1 flex flex-col items-center justify-between">
+          <span class="text-[10px] font-extrabold text-[#00d2ff] tracking-wider">CH 1</span>
+
+          <!-- TRIM -->
+          <div class="knob-wrapper" data-knob="ch1-trim" data-min="0" data-max="2" data-default="1" style="--knob-accent: #e2e8f0;">
+            <div class="knob-cap"></div>
+            <span class="text-[9px] font-bold text-slate-400 mt-0.5">TRIM</span>
+          </div>
+
+          <!-- EQ HI -->
+          <div class="knob-wrapper" data-knob="ch1-eqHi" data-min="-1" data-max="1" data-default="0" style="--knob-accent: #00d2ff;">
+            <div class="knob-cap"></div>
+            <span class="text-[9px] font-bold text-slate-300 mt-0.5">HI</span>
+          </div>
+
+          <!-- EQ MID -->
+          <div class="knob-wrapper" data-knob="ch1-eqMid" data-min="-1" data-max="1" data-default="0" style="--knob-accent: #00d2ff;">
+            <div class="knob-cap"></div>
+            <span class="text-[9px] font-bold text-slate-300 mt-0.5">MID</span>
+          </div>
+
+          <!-- EQ LOW -->
+          <div class="knob-wrapper" data-knob="ch1-eqLow" data-min="-1" data-max="1" data-default="0" style="--knob-accent: #00d2ff;">
+            <div class="knob-cap"></div>
+            <span class="text-[9px] font-bold text-slate-300 mt-0.5">LOW</span>
+          </div>
+
+          <!-- SOUND COLOR FX KNOB -->
+          <div class="knob-wrapper" data-knob="ch1-colorFx" data-min="-1" data-max="1" data-default="0" style="--knob-accent: #38bdf8;">
+            <div class="knob-cap"></div>
+            <span class="text-[9px] font-bold text-cyan-300 mt-0.5">COLOR</span>
+          </div>
+
+          <!-- HEADPHONE CUE CH1 -->
+          <button id="ch1-hpCueBtn" type="button" class="dj-btn w-full min-h-[38px] text-[10px] my-0.5">CUE 1</button>
+
+          <!-- CHANNEL 1 VOLUME FADER -->
+          <div id="ch1-faderTrack" class="fader-track-v h-[105px]">
+            <div class="fader-slot-v"></div>
+            <div id="ch1-faderThumb" class="fader-thumb-v" style="top: 0%;"></div>
+          </div>
+        </div>
+
+        <!-- CENTER: 12-SEGMENT LED VU METERS (CH1 | MASTER L/R | CH2) & MASTER LEVEL -->
+        <div class="bg-[#090c10] rounded-lg border border-[#232936] p-1 flex flex-col items-center justify-between">
+          <!-- Master Level Knob -->
+          <div class="knob-wrapper" data-knob="master-vol" data-min="0" data-max="1.4" data-default="1" style="--knob-accent: #ff1744;">
+            <div class="knob-cap w-[34px] h-[34px]"></div>
+            <span class="text-[8px] font-extrabold text-rose-400 mt-0.5">MASTER</span>
+          </div>
+
+          <!-- 12-LED Stereo & Channel VU Bank -->
+          <div class="w-full flex-1 flex flex-col justify-center my-1">
+            <div class="grid grid-cols-4 gap-1 px-0.5">
+              <div id="vu-ch1" class="flex flex-col-reverse gap-[2.5px]"></div>
+              <div id="vu-mstL" class="flex flex-col-reverse gap-[2.5px]"></div>
+              <div id="vu-mstR" class="flex flex-col-reverse gap-[2.5px]"></div>
+              <div id="vu-ch2" class="flex flex-col-reverse gap-[2.5px]"></div>
+            </div>
+            <div class="grid grid-cols-4 gap-0.5 text-[7px] font-mono-dj text-center text-slate-400 mt-1">
+              <span>1</span>
+              <span>L</span>
+              <span>R</span>
+              <span>2</span>
+            </div>
+          </div>
+
+          <!-- Crossfader Curve Selector -->
+          <button id="xfadeCurveBtn" type="button" class="dj-btn w-full min-h-[36px] px-1 text-[9px] leading-tight text-center">
+            CURVE<br><span id="xfadeCurveLabel" class="text-cyan-300">MIX</span>
+          </button>
+        </div>
+
+        <!-- CHANNEL 2 (DECK B) STRIP -->
+        <div class="bg-[#11151c] rounded-lg border border-[#232936] p-1 flex flex-col items-center justify-between">
+          <span class="text-[10px] font-extrabold text-[#ff9500] tracking-wider">CH 2</span>
+
+          <!-- TRIM -->
+          <div class="knob-wrapper" data-knob="ch2-trim" data-min="0" data-max="2" data-default="1" style="--knob-accent: #e2e8f0;">
+            <div class="knob-cap"></div>
+            <span class="text-[9px] font-bold text-slate-400 mt-0.5">TRIM</span>
+          </div>
+
+          <!-- EQ HI -->
+          <div class="knob-wrapper" data-knob="ch2-eqHi" data-min="-1" data-max="1" data-default="0" style="--knob-accent: #ff9500;">
+            <div class="knob-cap"></div>
+            <span class="text-[9px] font-bold text-slate-300 mt-0.5">HI</span>
+          </div>
+
+          <!-- EQ MID -->
+          <div class="knob-wrapper" data-knob="ch2-eqMid" data-min="-1" data-max="1" data-default="0" style="--knob-accent: #ff9500;">
+            <div class="knob-cap"></div>
+            <span class="text-[9px] font-bold text-slate-300 mt-0.5">MID</span>
+          </div>
+
+          <!-- EQ LOW -->
+          <div class="knob-wrapper" data-knob="ch2-eqLow" data-min="-1" data-max="1" data-default="0" style="--knob-accent: #ff9500;">
+            <div class="knob-cap"></div>
+            <span class="text-[9px] font-bold text-slate-300 mt-0.5">LOW</span>
+          </div>
+
+          <!-- SOUND COLOR FX KNOB -->
+          <div class="knob-wrapper" data-knob="ch2-colorFx" data-min="-1" data-max="1" data-default="0" style="--knob-accent: #fbbf24;">
+            <div class="knob-cap"></div>
+            <span class="text-[9px] font-bold text-amber-300 mt-0.5">COLOR</span>
+          </div>
+
+          <!-- HEADPHONE CUE CH2 -->
+          <button id="ch2-hpCueBtn" type="button" class="dj-btn w-full min-h-[38px] text-[10px] my-0.5">CUE 2</button>
+
+          <!-- CHANNEL 2 VOLUME FADER -->
+          <div id="ch2-faderTrack" class="fader-track-v h-[105px]">
+            <div class="fader-slot-v"></div>
+            <div id="ch2-faderThumb" class="fader-thumb-v" style="top: 0%;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- BEAT FX ENGINE SECTION -->
+      <div class="bg-[#0b0e14] rounded-lg p-1.5 border border-[#262d3b] flex flex-col gap-1.5">
+        <div class="flex items-center justify-between gap-1">
+          <span class="text-[10px] font-extrabold tracking-wider text-cyan-300">BEAT FX</span>
+          <!-- Beat Division Buttons -->
+          <div class="flex items-center gap-0.5" id="beatFxDivButtons">
+            <button type="button" data-div="0.25" class="px-1.5 py-0.5 rounded bg-[#181d26] border border-[#2d3545] text-[9px] font-mono-dj">1/4</button>
+            <button type="button" data-div="0.5" class="px-1.5 py-0.5 rounded bg-cyan-950 border border-cyan-400 text-cyan-200 text-[9px] font-mono-dj">1/2</button>
+            <button type="button" data-div="0.75" class="px-1.5 py-0.5 rounded bg-[#181d26] border border-[#2d3545] text-[9px] font-mono-dj">3/4</button>
+            <button type="button" data-div="1" class="px-1.5 py-0.5 rounded bg-[#181d26] border border-[#2d3545] text-[9px] font-mono-dj">1</button>
+            <button type="button" data-div="2" class="px-1.5 py-0.5 rounded bg-[#181d26] border border-[#2d3545] text-[9px] font-mono-dj">2</button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-[1fr_auto_auto_auto] items-center gap-1.5">
+          <!-- FX Type Selector -->
+          <select id="beatFxTypeSelect" class="h-[44px] bg-[#161b24] border border-[#313949] rounded-lg px-2 text-xs font-bold text-white focus:outline-none focus:border-cyan-400">
+            <option value="ECHO">ECHO</option>
+            <option value="DELAY">PING DELAY</option>
+            <option value="REVERB">HALL REVERB</option>
+            <option value="FLANGER">FLANGER</option>
+            <option value="PHASER">PHASER</option>
+            <option value="TRANS">TRANS GATE</option>
+          </select>
+
+          <!-- FX Channel Assign -->
+          <button id="beatFxAssignBtn" type="button" class="dj-btn px-2 text-[10px] font-mono-dj text-amber-300 border-amber-500/40">MST</button>
+
+          <!-- FX Level/Depth Knob -->
+          <div class="knob-wrapper" data-knob="beatfx-depth" data-min="0" data-max="1" data-default="0.55" style="--knob-accent: #00d2ff;">
+            <div class="knob-cap w-[36px] h-[36px]"></div>
+            <span class="text-[8px] font-bold text-slate-300">DEPTH</span>
+          </div>
+
+          <!-- Big Glowing FX ON/OFF Button -->
+          <button id="beatFxOnBtn" type="button" class="dj-btn min-w-[54px] min-h-[46px] text-xs font-extrabold border-cyan-500/50 text-cyan-200">
+            FX ON
+          </button>
+        </div>
+      </div>
+
+      <!-- BOTTOM CROSSFADER -->
+      <div class="bg-[#090c10] rounded-lg px-2.5 py-1 border border-[#232936]">
+        <div class="flex justify-between text-[9px] font-mono-dj font-bold mb-0.5">
+          <span class="text-[#00d2ff]">&lt; A</span>
+          <span class="text-slate-400">CROSSFADER</span>
+          <span class="text-[#ff9500]">B &gt;</span>
+        </div>
+        <div id="crossfaderTrack" class="crossfader-track" title="Double-tap to center">
+          <div class="crossfader-slot"></div>
+          <div id="crossfaderThumb" class="crossfader-thumb" style="left: 50%;"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================================================================
+         RIGHT DECK: CDJ-3000 DECK B (AMBER THEME)
+         ====================================================================== -->
+    <section id="deckB-panel" class="brushed-metal rounded-xl p-2 flex flex-col justify-between gap-1.5" style="--deck-accent: #ff9500; --deck-glow: rgba(255, 149, 0, 0.45);">
+      <!-- Deck B Top Bar -->
+      <div class="flex items-center justify-between gap-1.5 bg-[#0a0d12] rounded-lg px-2 py-1 border border-[#222834]">
+        <div class="flex items-center gap-2 min-w-0">
+          <span class="px-2 py-0.5 rounded bg-[#ff9500]/20 border border-[#ff9500] text-[#ff9500] font-extrabold text-xs shrink-0">DECK B</span>
+          <div class="min-w-0">
+            <div id="deckB-title" class="text-xs font-bold text-white truncate">APEX PROTOCOL — Big Room Festival</div>
+            <div class="flex items-center gap-2 text-[10px] font-mono-dj text-slate-400">
+              <span id="deckB-timeElapsed">00:00.0</span>
+              <span>/</span>
+              <span id="deckB-timeRemain">-00:59.1</span>
+              <span id="deckB-loopBadge" class="hidden px-1 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">LOOP 4</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-1 shrink-0">
+          <label for="deckB-fileInput" class="dj-btn px-2.5 text-[10px] text-amber-300 border-amber-500/40 hover:border-amber-400 cursor-pointer">
+            LOAD TRACK
+          </label>
+          <input id="deckB-fileInput" type="file" accept="audio/*,.mp3,.wav,.ogg,.m4a" class="hidden" />
+        </div>
+      </div>
+
+      <!-- Deck B Waveform & HUD Display Screen -->
+      <div class="bg-[#06080b] rounded-lg border border-[#262d3a] p-1.5 flex flex-col gap-1 shadow-inner">
+        <div class="flex items-center justify-between gap-1.5">
+          <!-- 4-Beat Visual Phase Meter -->
+          <div class="flex flex-col gap-0.5 flex-1">
+            <div class="flex justify-between text-[9px] font-mono-dj text-slate-500">
+              <span>PHASE METER</span>
+              <span id="deckB-keyLockLabel" class="text-amber-400">MT: ON</span>
+            </div>
+            <div id="deckB-phaseBar" class="grid grid-cols-4 gap-1 h-2.5">
+              <div class="rounded-sm bg-[#161b24] border border-[#28303e]"></div>
+              <div class="rounded-sm bg-[#161b24] border border-[#28303e]"></div>
+              <div class="rounded-sm bg-[#161b24] border border-[#28303e]"></div>
+              <div class="rounded-sm bg-[#161b24] border border-[#28303e]"></div>
+            </div>
+          </div>
+
+          <!-- Real-Time BPM & Pitch Readout -->
+          <div class="bg-[#0d1117] border border-[#252c38] rounded px-2 py-0.5 text-right shrink-0">
+            <div class="text-[9px] font-mono-dj text-slate-400 leading-none">BPM <span id="deckB-pitchReadout" class="text-amber-300">+0.00%</span></div>
+            <div id="deckB-bpmReadout" class="text-base sm:text-lg font-mono-dj font-extrabold text-white leading-tight">130.00</div>
+          </div>
+        </div>
+
+        <!-- Zoomed Scrolling RGB Waveform Canvas -->
+        <div class="relative w-full h-[68px] sm:h-[76px] rounded overflow-hidden bg-[#040608] border border-[#1d232e]">
+          <canvas id="deckB-zoomCanvas" class="w-full h-full block"></canvas>
+        </div>
+
+        <!-- Full-Track Overview Strip Canvas -->
+        <div class="relative w-full h-[22px] rounded overflow-hidden bg-[#090c10] border border-[#1d232e] cursor-pointer">
+          <canvas id="deckB-overviewCanvas" class="w-full h-full block"></canvas>
+        </div>
+      </div>
+
+      <!-- Deck B Sync / Master / KeyLock / Pitch Bend Row -->
+      <div class="grid grid-cols-5 gap-1">
+        <button id="deckB-syncBtn" type="button" class="dj-btn text-[10px]">SYNC</button>
+        <button id="deckB-masterBtn" type="button" class="dj-btn text-[10px]">MASTER</button>
+        <button id="deckB-keyLockBtn" type="button" class="dj-btn text-[10px] border-amber-400/70 text-amber-300">KEY LOCK</button>
+        <button id="deckB-bendDownBtn" type="button" class="dj-btn text-xs font-mono-dj">BEND -</button>
+        <button id="deckB-bendUpBtn" type="button" class="dj-btn text-xs font-mono-dj">BEND +</button>
+      </div>
+
+      <!-- Deck B Center Ergonomic Zone: Tempo Fader + Jog Wheel + Transport -->
+      <div class="flex items-center justify-between gap-2 my-auto py-0.5">
+        <!-- Left Column: Tempo Range & Vertical Pitch Fader -->
+        <div class="flex flex-col items-center justify-between gap-1 pl-0.5">
+          <button id="deckB-rangeBtn" type="button" class="dj-btn px-2 text-[10px] font-mono-dj text-amber-300">±10%</button>
+          <div id="deckB-tempoTrack" class="fader-track-v" title="Double-tap to reset 0.0%">
+            <div class="fader-slot-v">
+              <div class="absolute top-1/2 -left-2 -right-2 h-[1.5px] bg-amber-400/60 -translate-y-1/2"></div>
+            </div>
+            <div id="deckB-tempoThumb" class="fader-thumb-v" style="top: 50%;"></div>
+          </div>
+          <span class="text-[9px] font-mono-dj text-slate-400">TEMPO</span>
+        </div>
+
+        <!-- Center: Ergonomic CDJ-3000 Jog Wheel (166px-190px) -->
+        <div class="flex flex-col items-center justify-center">
+          <div id="deckB-jog" class="jog-wheel">
+            <div id="deckB-jogRing" class="jog-led-ring"></div>
+            <div class="jog-vinyl-plate">
+              <div class="jog-lcd">
+                <div id="deckB-jogNeedle" class="jog-needle"></div>
+                <span class="text-[8px] font-mono-dj text-amber-400 tracking-widest mt-3">VINYL</span>
+                <span id="deckB-jogBpm" class="text-[11px] font-mono-dj font-bold text-white">130.0</span>
+                <span id="deckB-jogState" class="text-[8px] font-mono-dj text-slate-400">READY</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Column: CUE & PLAY/PAUSE Large Circular Buttons -->
+        <div class="flex flex-col items-center justify-center gap-3 pr-0.5">
+          <button id="deckB-cueBtn" type="button" class="transport-btn text-amber-400" title="CUE (O)">
+            <span class="text-[11px] font-extrabold tracking-wider">CUE</span>
+          </button>
+          <button id="deckB-playBtn" type="button" class="transport-btn play-btn-standby text-emerald-400" title="PLAY / PAUSE (P)">
+            <span class="text-[10px] font-extrabold tracking-tight leading-none">PLAY</span>
+            <span class="text-[8px] opacity-80 leading-none mt-0.5">PAUSE</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Deck B Performance Pads Section -->
+      <div class="flex flex-col gap-1 bg-[#0b0e13] p-1.5 rounded-lg border border-[#222834]">
+        <div class="grid grid-cols-4 gap-1">
+          <button id="deckB-modeHotCue" type="button" class="dj-btn min-h-[36px] text-[10px] border-amber-400 bg-amber-950/40 text-amber-200">HOT CUE</button>
+          <button id="deckB-modeLoop" type="button" class="dj-btn min-h-[36px] text-[10px]">BEAT LOOP</button>
+          <button id="deckB-modeJump" type="button" class="dj-btn min-h-[36px] text-[10px]">BEAT JUMP</button>
+          <button id="deckB-delCueBtn" type="button" class="dj-btn min-h-[36px] text-[10px] text-rose-300 border-rose-500/30">DEL CUE</button>
+        </div>
+        <div id="deckB-padsGrid" class="grid grid-cols-4 gap-1.5">
+          <!-- 8 RGB Pads injected & managed by JS -->
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ========================================================================
+       MODAL 1: BUILT-IN EDM TRACK LIBRARY SELECTOR
+       ======================================================================== -->
+  <div id="libraryModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="w-full max-w-xl bg-[#12161e] border border-[#2d3545] rounded-2xl p-4 shadow-2xl">
+      <div class="flex items-center justify-between pb-3 border-b border-[#252c39]">
+        <div>
+          <h2 class="text-base font-extrabold text-white">BUILT-IN CLUB EDM LIBRARY</h2>
+          <p class="text-xs text-slate-400">Synthesized 44.1kHz stereo festival tracks ready for instant Beatmatch & Scratch</p>
+        </div>
+        <button id="closeLibraryBtn" type="button" class="dj-btn px-3 text-xs">CLOSE</button>
+      </div>
+      <div id="libraryTrackList" class="mt-3 flex flex-col gap-2">
+        <!-- Populated dynamically -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       MODAL 2: KEYBOARD SHORTCUTS & IPAD MULTI-TOUCH GUIDE
+       ======================================================================== -->
+  <div id="shortcutsModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="w-full max-w-2xl bg-[#12161e] border border-[#2d3545] rounded-2xl p-4 shadow-2xl max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between pb-3 border-b border-[#252c39]">
+        <h2 class="text-base font-extrabold text-white">PRO DJ CONTROLS & SHORTCUTS</h2>
+        <button id="closeShortcutsBtn" type="button" class="dj-btn px-3 text-xs">CLOSE</button>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3 text-xs">
+        <div class="bg-[#0b0e14] p-3 rounded-xl border border-[#222834]">
+          <h3 class="font-bold text-[#00d2ff] mb-2">DECK A (LEFT) SHORTCUTS</h3>
+          <ul class="space-y-1.5 text-slate-300 font-mono-dj text-[11px]">
+            <li><span class="px-1.5 py-0.5 bg-slate-800 rounded text-white">Q</span> — Play / Pause</li>
+            <li><span class="px-1.5 py-0.5 bg-slate-800 rounded text-white">W</span> — CUE Point / Return</li>
+            <li><span class="px-1.5 py-0.5 bg-slate-800 rounded text-white">E</span> — BPM & Phase SYNC</li>
+            <li><span class="px-1.5 py-0.5 bg-slate-800 rounded text-white">1 2 3 4</span> — Hot Cues A–D</li>
+            <li><span class="px-1.5 py-0.5 bg-slate-800 rounded text-white">A / S</span> — Pitch Bend - / +</li>
+          </ul>
+        </div>
+        <div class="bg-[#0b0e14] p-3 rounded-xl border border-[#222834]">
+          <h3 class="font-bold text-[#ff9500] mb-2">DECK B (RIGHT) SHORTCUTS</h3>
+          <ul class="space-y-1.5 text-slate-300 font-mono-dj text-[11px]">
+            <li><span class="px-1.5 py-0.5 bg-slate-800 rounded text-white">P</span> — Play / Pause</li>
+            <li><span class="px-1.5 py-0.5 bg-slate-800 rounded text-white">O</span> — CUE Point / Return</li>
+            <li><span class="px-1.5 py-0.5 bg-slate-800 rounded text-white">I</span> — BPM & Phase SYNC</li>
+            <li><span class="px-1.5 py-0.5 bg-slate-800 rounded text-white">7 8 9 0</span> — Hot Cues A–D</li>
+            <li><span class="px-1.5 py-0.5 bg-slate-800 rounded text-white">K / L</span> — Pitch Bend - / +</li>
+          </ul>
+        </div>
+        <div class="sm:col-span-2 bg-[#0b0e14] p-3 rounded-xl border border-[#222834]">
+          <h3 class="font-bold text-emerald-400 mb-1.5">IPAD MULTI-TOUCH & HARDWARE TIPS</h3>
+          <ul class="space-y-1 text-slate-300 text-[11px] list-disc pl-4">
+            <li><strong>Multi-Touch Ready:</strong> Drag both CH1 & CH2 faders, twist EQ knobs, and slide the Crossfader simultaneously on iPadOS.</li>
+            <li><strong>Dual-Zone Jog Wheel:</strong> Touch the inner vinyl plate to stop & scratch audio; drag the outer metallic rim to nudge Pitch Bend.</li>
+            <li><strong>Quick Reset:</strong> Double-tap/double-click any EQ knob, Trim, Color FX, Tempo slider, or Crossfader to snap back to center (12 o'clock / 0.0%).</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       JAVASCRIPT: WEB AUDIO DSP ENGINE, SYNTHESIZER, MULTI-TOUCH & CANVAS HUD
+       ======================================================================== -->
+  <script>
+    (() => {
+      'use strict';
+
+      /* ======================================================================
+         1. UTILITY & TOAST NOTIFICATION HELPER
+         ====================================================================== */
+      const toastEl = document.getElementById('djToast');
+      let toastTimer = null;
+      function showToast(msg, accent = 'cyan') {
+        toastEl.textContent = msg;
+        toastEl.style.borderColor = accent === 'amber' ? 'rgba(255,149,0,0.6)' : accent === 'rose' ? 'rgba(244,63,94,0.6)' : 'rgba(0,210,255,0.6)';
+        toastEl.style.opacity = '1';
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => {
+          toastEl.style.opacity = '0';
+        }, 2200);
+      }
+
+      function formatTimeDJ(sec) {
+        if (!isFinite(sec) || sec < 0) sec = 0;
+        const mins = Math.floor(sec / 60);
+        const rem = sec % 60;
+        const wholeSec = Math.floor(rem);
+        const tenths = Math.floor((rem - wholeSec) * 10);
+        return `${String(mins).padStart(2, '0')}:${String(wholeSec).padStart(2, '0')}.${tenths}`;
+      }
+
+      /* ======================================================================
+         2. WEB AUDIO CONTEXT & MASTER BUS ARCHITECTURE
+         ====================================================================== */
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      const audioCtx = new AudioCtx();
+      let audioUnlocked = false;
+
+      function unlockAudioEngine() {
+        if (audioCtx.state === 'suspended') {
+          audioCtx.resume().catch(() => {});
+        }
+        if (!audioUnlocked && audioCtx.state === 'running') {
+          audioUnlocked = true;
+          const btn = document.getElementById('audioStatusBtn');
+          const dot = document.getElementById('audioStatusDot');
+          const txt = document.getElementById('audioStatusText');
+          btn.className = 'px-2.5 py-1 rounded-full text-[10px] font-mono-dj font-bold tracking-wider flex items-center gap-1.5 bg-emerald-500/15 text-emerald-300 border border-emerald-500/50 cursor-pointer transition';
+          dot.className = 'w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_#00e676]';
+          txt.textContent = 'AUDIO READY';
+        }
+      }
+
+      ['pointerdown', 'touchstart', 'keydown', 'click'].forEach(evt => {
+        document.addEventListener(evt, unlockAudioEngine, { passive: true });
+      });
+
+      /* ======================================================================
+         3. BUILT-IN HIGH-ENERGY EDM TRACK SYNTHESIZER (OFFLINE AUDIO BUFFER)
+         ====================================================================== */
+      const BUILTIN_TRACKS = [
+        {
+          id: 'prog-house',
+          title: 'SOLARIS ANTHEM',
+          genre: 'Progressive House',
+          bpm: 128,
+          bars: 32,
+          rootMidi: 53, // F minor euphoric festival progression
+          style: 'progressive'
+        },
+        {
+          id: 'big-room',
+          title: 'APEX PROTOCOL',
+          genre: 'Big Room Festival',
+          bpm: 130,
+          bars: 32,
+          rootMidi: 52, // E Phrygian festival drop
+          style: 'bigroom'
+        },
+        {
+          id: 'peak-techno',
+          title: 'NEON OVERDRIVE',
+          genre: 'Peak-Time Techno',
+          bpm: 136,
+          bars: 32,
+          rootMidi: 48, // C minor driving rave acid/rumble
+          style: 'techno'
+        },
+        {
+          id: 'tech-house',
+          title: 'VELVET GROOVE',
+          genre: 'Tech House',
+          bpm: 125,
+          bars: 32,
+          rootMidi: 55, // G minor rolling club bass
+          style: 'techhouse'
+        }
+      ];
+
+      const synthesizedCache = new Map();
+
+      function midiToFreq(m) {
+        return 440 * Math.pow(2, (m - 69) / 12);
+      }
+
+      /**
+       * Synthesizes a rich, punchy stereo EDM festival track using OfflineAudioContext
+       * with structured Intro -> Build-up -> Main Drop -> Outro so DJs can mix immediately.
+       */
+      async function renderEdmTrackBuffer(spec) {
+        if (synthesizedCache.has(spec.id)) {
+          return synthesizedCache.get(spec.id);
+        }
+
+        const sr = audioCtx.sampleRate || 44100;
+        const beatDur = 60 / spec.bpm;
+        const totalBeats = spec.bars * 4;
+        const duration = totalBeats * beatDur;
+        const offline = new OfflineAudioContext(2, Math.ceil(duration * sr), sr);
+
+        // Master compressor for club punch
+        const comp = offline.createDynamicsCompressor();
+        comp.threshold.value = -10;
+        comp.knee.value = 12;
+        comp.ratio.value = 4;
+        comp.attack.value = 0.003;
+        comp.release.value = 0.15;
+        comp.connect(offline.destination);
+
+        // Pre-build white noise buffer for claps, hi-hats, and risers
+        const noiseLen = sr * 2;
+        const noiseBuf = offline.createBuffer(1, noiseLen, sr);
+        const nData = noiseBuf.getChannelData(0);
+        for (let i = 0; i < noiseLen; i++) nData[i] = Math.random() * 2 - 1;
+
+        const chordOffsets = spec.style === 'progressive'
+          ? [0, 8, 3, 10] // i - VI - III - VII
+          : spec.style === 'bigroom'
+          ? [0, 0, 1, 3]  // Phrygian tension
+          : spec.style === 'techno'
+          ? [0, 0, 3, 5]
+          : [0, 3, 5, 7];
+
+        for (let beat = 0; beat < totalBeats; beat++) {
+          const t = beat * beatDur;
+          const bar = Math.floor(beat / 4);
+          const beatInBar = beat % 4;
+          const isDrop = (bar >= 8 && bar < 24) || bar >= 28;
+          const isBuild = (bar >= 4 && bar < 8) || (bar >= 24 && bar < 28);
+
+          // 1. PUNCHY 4/4 FESTIVAL KICK
+          if (!isBuild || bar % 4 < 2) {
+            const kickOsc = offline.createOscillator();
+            const kickGain = offline.createGain();
+            kickOsc.type = 'sine';
+            kickOsc.frequency.setValueAtTime(spec.style === 'bigroom' ? 155 : 140, t);
+            kickOsc.frequency.exponentialRampToValueAtTime(spec.style === 'bigroom' ? 46 : 42, t + 0.075);
+            kickOsc.frequency.exponentialRampToValueAtTime(34, t + 0.32);
+
+            kickGain.gain.setValueAtTime(0.95, t);
+            kickGain.gain.exponentialRampToValueAtTime(0.001, t + Math.min(0.42, beatDur * 0.92));
+
+            kickOsc.connect(kickGain);
+            kickGain.connect(comp);
+            kickOsc.start(t);
+            kickOsc.stop(t + 0.45);
+          }
+
+          // Build-up Snare Roll
+          if (isBuild) {
+            const subdiv = bar % 4 >= 2 ? 4 : 2;
+            for (let s = 0; s < subdiv; s++) {
+              const st = t + (s * beatDur) / subdiv;
+              const sn = offline.createBufferSource();
+              sn.buffer = noiseBuf;
+              const snFilter = offline.createBiquadFilter();
+              snFilter.type = 'bandpass';
+              snFilter.frequency.value = 1400 + (bar % 4) * 350;
+              const snGain = offline.createGain();
+              snGain.gain.setValueAtTime(0.28 + (bar % 4) * 0.08, st);
+              snGain.gain.exponentialRampToValueAtTime(0.001, st + 0.11);
+              sn.connect(snFilter);
+              snFilter.connect(snGain);
+              snGain.connect(comp);
+              sn.start(st);
+              sn.stop(st + 0.12);
+            }
+          }
+
+          // 2. OFF-BEAT OPEN HI-HAT & CLAP ON 2 & 4
+          if (isDrop || bar < 4) {
+            // Off-beat 909 Open Hat
+            const hatT = t + beatDur * 0.5;
+            const hat = offline.createBufferSource();
+            hat.buffer = noiseBuf;
+            const hp = offline.createBiquadFilter();
+            hp.type = 'highpass';
+            hp.frequency.value = 7200;
+            const hGain = offline.createGain();
+            hGain.gain.setValueAtTime(isDrop ? 0.24 : 0.14, hatT);
+            hGain.gain.exponentialRampToValueAtTime(0.001, hatT + 0.14);
+            hat.connect(hp);
+            hp.connect(hGain);
+            hGain.connect(comp);
+            hat.start(hatT);
+            hat.stop(hatT + 0.15);
+
+            // Clap on beats 1 and 3 (0-indexed: 1 & 3)
+            if (beatInBar === 1 || beatInBar === 3) {
+              const clap = offline.createBufferSource();
+              clap.buffer = noiseBuf;
+              const bp = offline.createBiquadFilter();
+              bp.type = 'bandpass';
+              bp.frequency.value = 1650;
+              bp.Q.value = 1.2;
+              const cGain = offline.createGain();
+              cGain.gain.setValueAtTime(0.36, t);
+              cGain.gain.exponentialRampToValueAtTime(0.001, t + 0.19);
+              clap.connect(bp);
+              bp.connect(cGain);
+              cGain.connect(comp);
+              clap.start(t);
+              clap.stop(t + 0.2);
+            }
+          }
+
+          // 3. SIDECHAINED ROLLING SUB / BASSLINE
+          const chordIdx = Math.floor(bar / 2) % chordOffsets.length;
+          const noteMidi = spec.rootMidi + chordOffsets[chordIdx];
+          const bassFreq = midiToFreq(noteMidi - 12);
+          const bassStart = t + beatDur * 0.22; // Sidechain duck after kick
+          const bassOsc = offline.createOscillator();
+          bassOsc.type = spec.style === 'techno' ? 'sawtooth' : 'triangle';
+          bassOsc.frequency.setValueAtTime(bassFreq, bassStart);
+
+          const bassLp = offline.createBiquadFilter();
+          bassLp.type = 'lowpass';
+          bassLp.frequency.setValueAtTime(isDrop ? 520 : 240, bassStart);
+          bassLp.frequency.exponentialRampToValueAtTime(110, t + beatDur * 0.95);
+
+          const bassGain = offline.createGain();
+          bassGain.gain.setValueAtTime(0.001, t);
+          bassGain.gain.linearRampToValueAtTime(isDrop ? 0.52 : 0.3, bassStart + 0.05);
+          bassGain.gain.exponentialRampToValueAtTime(0.001, t + beatDur * 0.95);
+
+          bassOsc.connect(bassLp);
+          bassLp.connect(bassGain);
+          bassGain.connect(comp);
+          bassOsc.start(t);
+          bassOsc.stop(t + beatDur);
+
+          // 4. STEREO SUPERSAW LEAD / ARP SYNTH
+          if (isDrop || isBuild) {
+            const scaleSteps = [0, 3, 7, 10, 12, 15];
+            const stepNote = noteMidi + 12 + scaleSteps[(beat + bar) % scaleSteps.length];
+            const leadFreq = midiToFreq(stepNote);
+
+            [-9, 9].forEach((detuneCents, idx) => {
+              const osc = offline.createOscillator();
+              osc.type = 'sawtooth';
+              osc.frequency.setValueAtTime(leadFreq, t);
+              osc.detune.value = detuneCents;
+
+              const pan = offline.createStereoPanner();
+              pan.pan.value = idx === 0 ? -0.55 : 0.55;
+
+              const flt = offline.createBiquadFilter();
+              flt.type = 'lowpass';
+              flt.frequency.setValueAtTime(isDrop ? 3800 : 900 + (bar % 4) * 500, t);
+              flt.Q.value = 3.2;
+
+              const lGain = offline.createGain();
+              lGain.gain.setValueAtTime(0.001, t);
+              lGain.gain.linearRampToValueAtTime(isDrop ? 0.16 : 0.11, t + 0.04);
+              lGain.gain.exponentialRampToValueAtTime(0.001, t + beatDur * 0.88);
+
+              osc.connect(flt);
+              flt.connect(lGain);
+              lGain.connect(pan);
+              pan.connect(comp);
+              osc.start(t);
+              osc.stop(t + beatDur * 0.92);
+            });
+          }
+        }
+
+        const rendered = await offline.startRendering();
+        synthesizedCache.set(spec.id, rendered);
+        return rendered;
+      }
+
+      /* ======================================================================
+         4. WAVEFORM & BEATGRID ANALYZER (3-BAND FREQUENCY COLORING)
+         ====================================================================== */
+      function analyzeAudioBuffer(buffer, knownBpm = null) {
+        const sr = buffer.sampleRate;
+        const left = buffer.getChannelData(0);
+        const right = buffer.numberOfChannels > 1 ? buffer.getChannelData(1) : left;
+        const totalSamples = buffer.length;
+
+        // Downsample into ~150 points per second for crisp scrolling zoom + overview
+        const pointsPerSec = 150;
+        const step = Math.max(1, Math.floor(sr / pointsPerSec));
+        const numPoints = Math.ceil(totalSamples / step);
+
+        const peaks = new Float32Array(numPoints);
+        const lows = new Float32Array(numPoints);
+        const highs = new Float32Array(numPoints);
+
+        let lpState = 0;
+        const alpha = 0.08;
+
+        for (let i = 0; i < numPoints; i++) {
+          const start = i * step;
+          const end = Math.min(totalSamples, start + step);
+          let maxPeak = 0;
+          let lowSum = 0;
+          let highSum = 0;
+
+          for (let s = start; s < end; s += 2) {
+            const mono = 0.5 * (left[s] + right[s]);
+            const abs = Math.abs(mono);
+            if (abs > maxPeak) maxPeak = abs;
+
+            // Simple 1-pole low/high split for RGB DJ waveform coloring
+            lpState += alpha * (mono - lpState);
+            const hi = mono - lpState;
+            lowSum += lpState * lpState;
+            highSum += hi * hi;
+          }
+
+          const count = Math.max(1, (end - start) / 2);
+          peaks[i] = Math.min(1, maxPeak);
+          lows[i] = Math.min(1, Math.sqrt(lowSum / count) * 2.2);
+          highs[i] = Math.min(1, Math.sqrt(highSum / count) * 3.0);
+        }
+
+        // Estimate BPM for uploaded external tracks if not known
+        let bpm = knownBpm;
+        if (!bpm) {
+          bpm = estimateBpmFromPeaks(peaks, pointsPerSec);
+        }
+
+        return {
+          peaks,
+          lows,
+          highs,
+          pointsPerSec,
+          bpm,
+          duration: buffer.duration
+        };
+      }
+
+      function estimateBpmFromPeaks(peaks, pps) {
+        // Onset energy autocorrelation across 115–145 BPM range
+        const minLag = Math.floor((60 / 145) * pps);
+        const maxLag = Math.floor((60 / 115) * pps);
+        let bestLag = Math.floor((60 / 128) * pps);
+        let bestScore = -1;
+
+        const maxScan = Math.min(peaks.length, pps * 30);
+        for (let lag = minLag; lag <= maxLag; lag++) {
+          let score = 0;
+          for (let i = 0; i < maxScan - lag; i++) {
+            score += peaks[i] * peaks[i + lag];
+          }
+          if (score > bestScore) {
+            bestScore = score;
+            bestLag = lag;
+          }
+        }
+        const rawBpm = (60 * pps) / bestLag;
+        return Math.round(rawBpm * 2) / 2; // Snap to nearest 0.5 BPM
+      }
+
+      /* ======================================================================
+         5. DJM-A9 MIXER DSP ENGINE (ISOLATOR EQ, COLOR FX, BEAT FX, VU METERS)
+         ====================================================================== */
+      const mixerState = {
+        colorFxType: 'FILTER', // FILTER | SPACE | ECHO | CRUSH
+        xfadePos: 0,           // -1 (Full A) to +1 (Full B)
+        xfadeCurve: 'MIX',     // MIX | SCRATCH
+        masterVol: 1.0,
+        beatFxType: 'ECHO',
+        beatFxDiv: 0.5,        // Beats: 0.25, 0.5, 0.75, 1, 2
+        beatFxDepth: 0.55,
+        beatFxAssign: 'MST',   // CH1 | CH2 | MST
+        beatFxOn: false,
+        hpCue1: false,
+        hpCue2: false
+      };
+
+      // Master Bus Nodes
+      const masterSummer = audioCtx.createGain();
+      const beatFxSendBus = audioCtx.createGain();
+      const beatFxReturnBus = audioCtx.createGain();
+      const masterOutGain = audioCtx.createGain();
+      const masterLimiter = audioCtx.createDynamicsCompressor();
+      masterLimiter.threshold.value = -1.5;
+      masterLimiter.knee.value = 3;
+      masterLimiter.ratio.value = 12;
+      masterLimiter.attack.value = 0.002;
+      masterLimiter.release.value = 0.08;
+
+      const masterAnalyserL = audioCtx.createAnalyser();
+      const masterAnalyserR = audioCtx.createAnalyser();
+      masterAnalyserL.fftSize = 256;
+      masterAnalyserR.fftSize = 256;
+      const masterSplitter = audioCtx.createChannelSplitter(2);
+
+      // MediaStreamDestination for Live WAV Recording
+      const recordDest = audioCtx.createMediaStreamDestination();
+
+      masterSummer.connect(masterOutGain);
+      beatFxReturnBus.connect(masterOutGain);
+      masterOutGain.connect(masterLimiter);
+      masterLimiter.connect(audioCtx.destination);
+      masterLimiter.connect(recordDest);
+      masterLimiter.connect(masterSplitter);
+      masterSplitter.connect(masterAnalyserL, 0);
+      masterSplitter.connect(masterAnalyserR, 1);
+
+      // Beat FX DSP Subgraph (Delay/Echo, Reverb, Flanger/Phaser, Trans Gate)
+      const bfxDelay = audioCtx.createDelay(4.0);
+      const bfxFeedback = audioCtx.createGain();
+      const bfxFilter = audioCtx.createBiquadFilter();
+      bfxFilter.type = 'bandpass';
+      bfxFilter.frequency.value = 1800;
+      bfxFilter.Q.value = 0.7;
+
+      const bfxGateGain = audioCtx.createGain();
+      bfxGateGain.gain.value = 1.0;
+
+      beatFxSendBus.connect(bfxDelay);
+      bfxDelay.connect(bfxFilter);
+      bfxFilter.connect(bfxFeedback);
+      bfxFeedback.connect(bfxDelay);
+      bfxFilter.connect(bfxGateGain);
+      bfxGateGain.connect(beatFxReturnBus);
+
+      function updateBeatFxDsp(masterBpm) {
+        const beatSec = 60 / Math.max(60, masterBpm || 128);
+        const divTime = Math.min(3.5, Math.max(0.015, beatSec * mixerState.beatFxDiv));
+        const depth = mixerState.beatFxOn ? mixerState.beatFxDepth : 0;
+
+        beatFxReturnBus.gain.setTargetAtTime(depth, audioCtx.currentTime, 0.02);
+
+        switch (mixerState.beatFxType) {
+          case 'ECHO':
+            bfxDelay.delayTime.setTargetAtTime(divTime, audioCtx.currentTime, 0.02);
+            bfxFeedback.gain.setTargetAtTime(0.55, audioCtx.currentTime, 0.02);
+            bfxFilter.type = 'lowpass';
+            bfxFilter.frequency.setTargetAtTime(4200, audioCtx.currentTime, 0.02);
+            break;
+          case 'DELAY':
+            bfxDelay.delayTime.setTargetAtTime(divTime * 0.75, audioCtx.currentTime, 0.02);
+            bfxFeedback.gain.setTargetAtTime(0.45, audioCtx.currentTime, 0.02);
+            bfxFilter.type = 'bandpass';
+            bfxFilter.frequency.setTargetAtTime(2200, audioCtx.currentTime, 0.02);
+            break;
+          case 'REVERB':
+            bfxDelay.delayTime.setTargetAtTime(0.065, audioCtx.currentTime, 0.02);
+            bfxFeedback.gain.setTargetAtTime(0.76, audioCtx.currentTime, 0.02);
+            bfxFilter.type = 'lowpass';
+            bfxFilter.frequency.setTargetAtTime(3200, audioCtx.currentTime, 0.02);
+            break;
+          case 'FLANGER':
+          case 'PHASER': {
+            const lfo = Math.sin(audioCtx.currentTime * (Math.PI * 2) / (beatSec * 4));
+            bfxDelay.delayTime.setTargetAtTime(0.006 + (lfo + 1) * 0.004, audioCtx.currentTime, 0.01);
+            bfxFeedback.gain.setTargetAtTime(0.68, audioCtx.currentTime, 0.02);
+            bfxFilter.type = mixerState.beatFxType === 'PHASER' ? 'allpass' : 'highpass';
+            bfxFilter.frequency.setTargetAtTime(900 + lfo * 500, audioCtx.currentTime, 0.02);
+            break;
+          }
+          case 'TRANS': {
+            // Rhythmic Beat-Synced Trance Gate
+            bfxDelay.delayTime.setTargetAtTime(0.005, audioCtx.currentTime, 0.01);
+            bfxFeedback.gain.setTargetAtTime(0.0, audioCtx.currentTime, 0.01);
+            const phase = (audioCtx.currentTime / divTime) % 1;
+            const gateOpen = phase < 0.5 ? 1.0 : 0.05;
+            bfxGateGain.gain.setTargetAtTime(gateOpen, audioCtx.currentTime, 0.008);
+            break;
+          }
+        }
+        if (mixerState.beatFxType !== 'TRANS') {
+          bfxGateGain.gain.setTargetAtTime(1.0, audioCtx.currentTime, 0.01);
+        }
+      }
+
+      /**
+       * Creates a full DJM-A9 Channel Strip DSP chain (Trim -> 3-Band Isolator -> Sound Color FX -> Fader -> Crossfader)
+       */
+      function createMixerChannelStrip() {
+        const trimNode = audioCtx.createGain();
+        const eqLow = audioCtx.createBiquadFilter();
+        eqLow.type = 'lowshelf';
+        eqLow.frequency.value = 250;
+
+        const eqMid = audioCtx.createBiquadFilter();
+        eqMid.type = 'peaking';
+        eqMid.frequency.value = 1100;
+        eqMid.Q.value = 0.9;
+
+        const eqHi = audioCtx.createBiquadFilter();
+        eqHi.type = 'highshelf';
+        eqHi.frequency.value = 4200;
+
+        // Isolator sub-kill gate for authentic -∞ dB kill when LOW/MID/HI turned fully left
+        const subKillFilter = audioCtx.createBiquadFilter();
+        subKillFilter.type = 'highpass';
+        subKillFilter.frequency.value = 18;
+
+        // Sound Color FX nodes
+        const colorFilter = audioCtx.createBiquadFilter();
+        colorFilter.type = 'allpass';
+        colorFilter.frequency.value = 1000;
+
+        const colorEchoDelay = audioCtx.createDelay(1.0);
+        colorEchoDelay.delayTime.value = 0.23;
+        const colorEchoFb = audioCtx.createGain();
+        colorEchoFb.gain.value = 0.45;
+        const colorEchoWet = audioCtx.createGain();
+        colorEchoWet.gain.value = 0;
+
+        const chFaderGain = audioCtx.createGain();
+        const xfadeGain = audioCtx.createGain();
+        const bfxTapGain = audioCtx.createGain();
+        bfxTapGain.gain.value = 1.0;
+
+        const analyser = audioCtx.createAnalyser();
+        analyser.fftSize = 256;
+
+        // Routing graph
+        trimNode.connect(eqLow);
+        eqLow.connect(eqMid);
+        eqMid.connect(eqHi);
+        eqHi.connect(subKillFilter);
+        subKillFilter.connect(colorFilter);
+
+        // Parallel Color Echo/Space send
+        colorFilter.connect(colorEchoDelay);
+        colorEchoDelay.connect(colorEchoFb);
+        colorEchoFb.connect(colorEchoDelay);
+        colorEchoDelay.connect(colorEchoWet);
+
+        colorFilter.connect(chFaderGain);
+        colorEchoWet.connect(chFaderGain);
+
+        chFaderGain.connect(analyser);
+        chFaderGain.connect(xfadeGain);
+        xfadeGain.connect(masterSummer);
+        xfadeGain.connect(bfxTapGain);
+        bfxTapGain.connect(beatFxSendBus);
+
+        const state = {
+          trim: 1.0,
+          eqHi: 0,
+          eqMid: 0,
+          eqLow: 0,
+          colorFx: 0,
+          fader: 1.0
+        };
+
+        function updateDsp() {
+          const now = audioCtx.currentTime;
+          trimNode.gain.setTargetAtTime(state.trim, now, 0.015);
+
+          // -26dB to +6dB EQ curve + true bass kill when eqLow <= -0.94
+          const lowDb = state.eqLow >= 0 ? state.eqLow * 6 : state.eqLow * 28;
+          const midDb = state.eqMid >= 0 ? state.eqMid * 6 : state.eqMid * 26;
+          const hiDb = state.eqHi >= 0 ? state.eqHi * 6 : state.eqHi * 26;
+
+          eqLow.gain.setTargetAtTime(lowDb, now, 0.015);
+          eqMid.gain.setTargetAtTime(midDb, now, 0.015);
+          eqHi.gain.setTargetAtTime(hiDb, now, 0.015);
+
+          if (state.eqLow <= -0.94) {
+            subKillFilter.type = 'highpass';
+            subKillFilter.frequency.setTargetAtTime(280, now, 0.015);
+          } else {
+            subKillFilter.frequency.setTargetAtTime(18, now, 0.015);
+          }
+
+          // Sound Color FX bipolar mapping (-1 to +1, 0 = bypass)
+          const cVal = state.colorFx;
+          const absC = Math.abs(cVal);
+          if (absC < 0.04) {
+            colorFilter.type = 'allpass';
+            colorFilter.Q.setTargetAtTime(0.7, now, 0.02);
+            colorEchoWet.gain.setTargetAtTime(0, now, 0.02);
+          } else {
+            switch (mixerState.colorFxType) {
+              case 'FILTER':
+                colorEchoWet.gain.setTargetAtTime(0, now, 0.02);
+                if (cVal < 0) {
+                  // LPF sweep 18kHz down to 160Hz
+                  colorFilter.type = 'lowpass';
+                  const freq = 160 * Math.pow(110, 1 + cVal);
+                  colorFilter.frequency.setTargetAtTime(freq, now, 0.02);
+                  colorFilter.Q.setTargetAtTime(4.5, now, 0.02);
+                } else {
+                  // HPF sweep 35Hz up to 5500Hz
+                  colorFilter.type = 'highpass';
+                  const freq = 35 * Math.pow(155, cVal);
+                  colorFilter.frequency.setTargetAtTime(freq, now, 0.02);
+                  colorFilter.Q.setTargetAtTime(4.5, now, 0.02);
+                }
+                break;
+              case 'SPACE':
+                colorFilter.type = cVal > 0 ? 'highpass' : 'lowpass';
+                colorFilter.frequency.setTargetAtTime(cVal > 0 ? 300 : 6500, now, 0.02);
+                colorFilter.Q.setTargetAtTime(1.0, now, 0.02);
+                colorEchoDelay.delayTime.setTargetAtTime(0.055, now, 0.02);
+                colorEchoFb.gain.setTargetAtTime(0.72, now, 0.02);
+                colorEchoWet.gain.setTargetAtTime(absC * 0.75, now, 0.02);
+                break;
+              case 'ECHO':
+                colorFilter.type = 'allpass';
+                colorEchoDelay.delayTime.setTargetAtTime(0.24, now, 0.02);
+                colorEchoFb.gain.setTargetAtTime(0.55, now, 0.02);
+                colorEchoWet.gain.setTargetAtTime(absC * 0.8, now, 0.02);
+                break;
+              case 'CRUSH':
+                colorFilter.type = 'peaking';
+                colorFilter.frequency.setTargetAtTime(600 + absC * 3200, now, 0.02);
+                colorFilter.Q.setTargetAtTime(10 + absC * 12, now, 0.02);
+                colorFilter.gain.setTargetAtTime(absC * 14, now, 0.02);
+                colorEchoWet.gain.setTargetAtTime(0, now, 0.02);
+                break;
+            }
+          }
+
+          // Smooth club fader curve
+          const faderGainVal = Math.pow(state.fader, 1.35);
+          chFaderGain.gain.setTargetAtTime(faderGainVal, now, 0.01);
+        }
+
+        return { input: trimNode, xfadeGain, bfxTapGain, analyser, state, updateDsp };
+      }
+
+      const ch1Strip = createMixerChannelStrip();
+      const ch2Strip = createMixerChannelStrip();
+
+      function updateCrossfaderAndRouting() {
+        const pos = mixerState.xfadePos; // -1 (A) to +1 (B)
+        const norm = (pos + 1) * 0.5;     // 0 to 1
+        let gainA = 1;
+        let gainB = 1;
+
+        if (mixerState.xfadeCurve === 'MIX') {
+          // Smooth equal-power curve
+          gainA = Math.cos(norm * Math.PI * 0.5);
+          gainB = Math.sin(norm * Math.PI * 0.5);
+        } else {
+          // Sharp Scratch cut-in curve
+          gainA = norm > 0.92 ? (1 - norm) / 0.08 : 1;
+          gainB = norm < 0.08 ? norm / 0.08 : 1;
+        }
+
+        const now = audioCtx.currentTime;
+        ch1Strip.xfadeGain.gain.setTargetAtTime(gainA, now, 0.008);
+        ch2Strip.xfadeGain.gain.setTargetAtTime(gainB, now, 0.008);
+        masterOutGain.gain.setTargetAtTime(mixerState.masterVol, now, 0.015);
+
+        // Beat FX channel assignment
+        const assign = mixerState.beatFxAssign;
+        ch1Strip.bfxTapGain.gain.setTargetAtTime(assign === 'CH1' || assign === 'MST' ? 1 : 0, now, 0.015);
+        ch2Strip.bfxTapGain.gain.setTargetAtTime(assign === 'CH2' || assign === 'MST' ? 1 : 0, now, 0.015);
+      }
+
+      /* ======================================================================
+         6. CDJ-3000 DECK ENGINE (SCRATCH PHYSICS, HOT CUES, LOOPS, SYNC)
+         ====================================================================== */
+      const HOT_CUE_COLORS = ['#00e676', '#00d2ff', '#ff9500', '#ff1744', '#d500f9', '#ffea00', '#1de9b6', '#ff6d00'];
+      const HOT_CUE_LABELS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
+      const LOOP_BEATS = [0.25, 0.5, 1, 2, 4, 8, 16];
+      const JUMP_BEATS = [-4, -2, -1, -0.5, 0.5, 1, 2, 4];
+      const TEMPO_RANGES = [0.06, 0.10, 0.16, 0.50];
+      const TEMPO_RANGE_LABELS = ['±6%', '±10%', '±16%', 'WIDE'];
+
+      class CDJDeck {
+        constructor(id, prefix, accentColor, channelStrip) {
+          this.id = id;
+          this.prefix = prefix;
+          this.accentColor = accentColor;
+          this.channelStrip = channelStrip;
+
+          // Playback & Track State
+          this.buffer = null;
+          this.analysis = null;
+          this.trackTitle = '';
+          this.baseBpm = 128.0;
+          this.samplePos = 0; // Exact floating-point sample position
+          this.isPlaying = false;
+          this.cuePointSample = 0;
+          this.cuePreviewing = false;
+
+          // Tempo / Pitch / Sync / Key Lock
+          this.tempoOffset = 0; // -1 to +1 normalized slider
+          this.tempoRangeIdx = 1; // Default ±10%
+          this.pitchBendOffset = 0; // Momentary pitch bend from buttons or outer jog rim
+          this.keyLock = true;
+          this.isMaster = id === 'A';
+
+          // Vinyl Scratch Physics
+          this.isTouchingPlatter = false;
+          this.scratchVelocity = 0; // In playback-rate multiples (1.0 = normal forward, -1.5 = reverse scratch)
+          this.jogAngle = 0;
+
+          // Performance Pads State
+          this.padMode = 'HOTCUE'; // HOTCUE | LOOP | JUMP
+          this.deleteCueMode = false;
+          this.hotCues = new Array(8).fill(null);
+          this.loopActive = false;
+          this.loopStartSample = 0;
+          this.loopEndSample = 0;
+          this.activeLoopBeats = 0;
+
+          // Custom Low-Latency AudioBuffer Player Node (supports forward + reverse scratch!)
+          this.scriptNode = audioCtx.createScriptProcessor(1024, 0, 2);
+          this.scriptNode.onaudioprocess = (e) => this.processAudio(e);
+          this.scriptNode.connect(this.channelStrip.input);
+
+          this.bindUI();
+          this.renderPads();
+        }
+
+        loadBuffer(buffer, title, knownBpm = null) {
+          this.isPlaying = false;
+          this.loopActive = false;
+          this.activeLoopBeats = 0;
+          this.hotCues.fill(null);
+          this.buffer = buffer;
+          this.trackTitle = title;
+          this.analysis = analyzeAudioBuffer(buffer, knownBpm);
+          this.baseBpm = this.analysis.bpm;
+          this.samplePos = 0;
+          this.cuePointSample = 0;
+          this.jogAngle = 0;
+
+          document.getElementById(`${this.prefix}-title`).textContent = title;
+          this.updateTransportLEDs();
+          this.renderPads();
+          this.drawOverviewWaveform();
+          this.updateHUD();
+        }
+
+        getEffectiveRate() {
+          const range = TEMPO_RANGES[this.tempoRangeIdx];
+          const pitchMult = 1 + this.tempoOffset * range + this.pitchBendOffset;
+          return Math.max(0.2, pitchMult);
+        }
+
+        getEffectiveBpm() {
+          return this.baseBpm * this.getEffectiveRate();
+        }
+
+        getSamplesPerBeat() {
+          const sr = this.buffer ? this.buffer.sampleRate : audioCtx.sampleRate;
+          return (60 / this.baseBpm) * sr;
+        }
+
+        /**
+         * Real-time stereo audio DSP callback supporting forward/backward vinyl scratch,
+         * quantized loops, and smooth de-clicked sample playback.
+         */
+        processAudio(event) {
+          const outL = event.outputBuffer.getChannelData(0);
+          const outR = event.outputBuffer.getChannelData(1);
+          const len = outL.length;
+
+          if (!this.buffer) {
+            outL.fill(0);
+            outR.fill(0);
+            return;
+          }
+
+          const srcL = this.buffer.getChannelData(0);
+          const srcR = this.buffer.numberOfChannels > 1 ? this.buffer.getChannelData(1) : srcL;
+          const maxSample = this.buffer.length - 1;
+
+          for (let i = 0; i < len; i++) {
+            let rate = 0;
+
+            if (this.isTouchingPlatter) {
+              // Hand on Vinyl Plate: follow finger angular scratch velocity with damping
+              rate = this.scratchVelocity;
+              this.scratchVelocity *= 0.996;
+            } else if (this.isPlaying || this.cuePreviewing) {
+              rate = this.getEffectiveRate();
+            } else {
+              rate = 0;
+            }
+
+            if (Math.abs(rate) < 0.0005) {
+              outL[i] = 0;
+              outR[i] = 0;
+              continue;
+            }
+
+            // Linear interpolation between adjacent samples for silky smooth pitch/scratch
+            const idx0 = Math.floor(this.samplePos);
+            if (idx0 < 0 || idx0 >= maxSample) {
+              outL[i] = 0;
+              outR[i] = 0;
+              if (idx0 >= maxSample) {
+                this.isPlaying = false;
+                this.samplePos = maxSample;
+              } else if (idx0 < 0) {
+                this.samplePos = 0;
+              }
+              continue;
+            }
+
+            const frac = this.samplePos - idx0;
+            const idx1 = Math.min(maxSample, idx0 + 1);
+            outL[i] = srcL[idx0] + (srcL[idx1] - srcL[idx0]) * frac;
+            outR[i] = srcR[idx0] + (srcR[idx1] - srcR[idx0]) * frac;
+
+            this.samplePos += rate;
+
+            // Active Beat Loop wrap-around
+            if (this.loopActive && rate > 0 && this.samplePos >= this.loopEndSample) {
+              const loopLen = this.loopEndSample - this.loopStartSample;
+              if (loopLen > 64) {
+                this.samplePos = this.loopStartSample + ((this.samplePos - this.loopStartSample) % loopLen);
+              }
+            }
+          }
+        }
+
+        togglePlay() {
+          unlockAudioEngine();
+          if (!this.buffer) return;
+          if (this.samplePos >= this.buffer.length - 10) {
+            this.samplePos = 0;
+          }
+          this.isPlaying = !this.isPlaying;
+          this.cuePreviewing = false;
+          this.updateTransportLEDs();
+        }
+
+        handleCueDown() {
+          unlockAudioEngine();
+          if (!this.buffer) return;
+          if (this.isPlaying) {
+            // Pioneer CUE behavior while playing: pause and snap back to Cue Point
+            this.isPlaying = false;
+            this.samplePos = this.cuePointSample;
+          } else {
+            // While paused: if away from Cue Point, set new Cue Point; if at Cue Point, preview play while held!
+            if (Math.abs(this.samplePos - this.cuePointSample) > 400) {
+              this.cuePointSample = Math.max(0, this.samplePos);
+              showToast(`Deck ${this.id}: Cue Point Stored`, this.id === 'A' ? 'cyan' : 'amber');
+            } else {
+              this.cuePreviewing = true;
+            }
+          }
+          this.updateTransportLEDs();
+        }
+
+        handleCueUp() {
+          if (this.cuePreviewing) {
+            this.cuePreviewing = false;
+            this.samplePos = this.cuePointSample;
+            this.updateTransportLEDs();
+          }
+        }
+
+        syncToOtherDeck(otherDeck) {
+          if (!this.buffer || !otherDeck.buffer) return;
+          const targetBpm = otherDeck.getEffectiveBpm();
+          const neededRate = targetBpm / this.baseBpm;
+          const range = TEMPO_RANGES[this.tempoRangeIdx];
+          this.tempoOffset = Math.max(-1, Math.min(1, (neededRate - 1) / range));
+          this.updateTempoThumbUI();
+
+          // Phase align beat fractional position to the Master deck!
+          const mySpb = this.getSamplesPerBeat();
+          const otherSpb = otherDeck.getSamplesPerBeat();
+          const otherBeatFrac = (otherDeck.samplePos % otherSpb) / otherSpb;
+          const currentBeatIndex = Math.floor(this.samplePos / mySpb);
+          this.samplePos = (currentBeatIndex + otherBeatFrac) * mySpb;
+
+          this.isMaster = false;
+          otherDeck.isMaster = true;
+          updateMasterButtonsUI();
+          showToast(`Deck ${this.id} SYNCED to ${targetBpm.toFixed(2)} BPM`, this.id === 'A' ? 'cyan' : 'amber');
+        }
+
+        triggerPad(index) {
+          unlockAudioEngine();
+          if (!this.buffer) return;
+
+          if (this.padMode === 'HOTCUE') {
+            if (this.deleteCueMode) {
+              this.hotCues[index] = null;
+              this.deleteCueMode = false;
+              document.getElementById(`${this.prefix}-delCueBtn`).classList.remove('bg-rose-600', 'text-white');
+              this.renderPads();
+              this.drawOverviewWaveform();
+              showToast(`Deck ${this.id}: Deleted Hot Cue ${HOT_CUE_LABELS[index]}`, 'rose');
+              return;
+            }
+            if (this.hotCues[index] === null) {
+              // Set Hot Cue at current playhead
+              this.hotCues[index] = this.samplePos;
+              this.renderPads();
+              this.drawOverviewWaveform();
+              showToast(`Deck ${this.id}: Set Hot Cue ${HOT_CUE_LABELS[index]}`, this.id === 'A' ? 'cyan' : 'amber');
+            } else {
+              // Instant jump & play from Hot Cue!
+              this.samplePos = this.hotCues[index];
+              this.isPlaying = true;
+              this.updateTransportLEDs();
+            }
+          } else if (this.padMode === 'LOOP') {
+            if (index === 7) {
+              // Exit / Toggle Loop
+              this.loopActive = false;
+              this.activeLoopBeats = 0;
+              this.renderPads();
+              return;
+            }
+            const beats = LOOP_BEATS[index];
+            if (this.loopActive && this.activeLoopBeats === beats) {
+              this.loopActive = false;
+              this.activeLoopBeats = 0;
+            } else {
+              const spb = this.getSamplesPerBeat();
+              // Quantize loop start to nearest beat
+              const nearestBeat = Math.round(this.samplePos / spb);
+              this.loopStartSample = Math.max(0, nearestBeat * spb);
+              this.loopEndSample = Math.min(this.buffer.length - 1, this.loopStartSample + beats * spb);
+              this.loopActive = true;
+              this.activeLoopBeats = beats;
+            }
+            this.renderPads();
+          } else if (this.padMode === 'JUMP') {
+            const jumpBeats = JUMP_BEATS[index];
+            const spb = this.getSamplesPerBeat();
+            const target = this.samplePos + jumpBeats * spb;
+            this.samplePos = Math.max(0, Math.min(this.buffer.length - 1, target));
+          }
+        }
+
+        updateTransportLEDs() {
+          const playBtn = document.getElementById(`${this.prefix}-playBtn`);
+          const cueBtn = document.getElementById(`${this.prefix}-cueBtn`);
+          const jogState = document.getElementById(`${this.prefix}-jogState`);
+
+          if (this.isPlaying) {
+            playBtn.classList.add('play-btn-active');
+            playBtn.classList.remove('play-btn-standby');
+            jogState.textContent = this.isTouchingPlatter ? 'SCRATCH' : 'PLAYING';
+          } else {
+            playBtn.classList.remove('play-btn-active');
+            playBtn.classList.add('play-btn-standby');
+            jogState.textContent = this.isTouchingPlatter ? 'HOLD' : 'CUE READY';
+          }
+
+          if (!this.isPlaying && Math.abs(this.samplePos - this.cuePointSample) <= 400) {
+            cueBtn.classList.add('cue-btn-active');
+          } else {
+            cueBtn.classList.remove('cue-btn-active');
+          }
+
+          const loopBadge = document.getElementById(`${this.prefix}-loopBadge`);
+          if (this.loopActive) {
+            loopBadge.textContent = `LOOP ${this.activeLoopBeats}`;
+            loopBadge.classList.remove('hidden');
+          } else {
+            loopBadge.classList.add('hidden');
+          }
+        }
+
+        updateTempoThumbUI() {
+          // tempoOffset -1 (top, faster pitch in Pioneer CDJ style or standard? Pioneer CDJ: UP is -, DOWN is +)
+          const pct = ((this.tempoOffset + 1) * 0.5) * 100;
+          document.getElementById(`${this.prefix}-tempoThumb`).style.top = `${pct}%`;
+        }
+
+        renderPads() {
+          const grid = document.getElementById(`${this.prefix}-padsGrid`);
+          grid.innerHTML = '';
+
+          for (let i = 0; i < 8; i++) {
+            const pad = document.createElement('button');
+            pad.type = 'button';
+            pad.className = 'perf-pad';
+
+            if (this.padMode === 'HOTCUE') {
+              const hasCue = this.hotCues[i] !== null;
+              const color = HOT_CUE_COLORS[i];
+              pad.style.borderColor = hasCue ? color : '#323947';
+              pad.style.boxShadow = hasCue ? `0 0 10px ${color}66, inset 0 0 8px ${color}33` : '';
+              pad.style.color = hasCue ? '#ffffff' : '#64748b';
+              const timeStr = hasCue && this.buffer ? formatTimeDJ(this.hotCues[i] / this.buffer.sampleRate) : 'EMPTY';
+              pad.innerHTML = `<span class="text-xs font-extrabold">${HOT_CUE_LABELS[i]}</span><span class="text-[8px] font-mono-dj opacity-80">${timeStr}</span>`;
+            } else if (this.padMode === 'LOOP') {
+              if (i === 7) {
+                pad.style.borderColor = this.loopActive ? '#ff1744' : '#323947';
+                pad.style.color = this.loopActive ? '#ff8a80' : '#94a3b8';
+                pad.innerHTML = `<span>EXIT</span><span class="text-[8px] opacity-75">LOOP</span>`;
+              } else {
+                const beats = LOOP_BEATS[i];
+                const isAct = this.loopActive && this.activeLoopBeats === beats;
+                pad.style.borderColor = isAct ? '#00e676' : '#323947';
+                pad.style.background = isAct ? 'rgba(0, 230, 118, 0.22)' : '';
+                pad.style.boxShadow = isAct ? '0 0 12px rgba(0, 230, 118, 0.6)' : '';
+                pad.style.color = isAct ? '#69f0ae' : '#cbd5e1';
+                const label = beats < 1 ? `1/${Math.round(1 / beats)}` : `${beats}`;
+                pad.innerHTML = `<span class="font-mono-dj">${label}</span><span class="text-[8px] opacity-70">BEAT</span>`;
+              }
+            } else {
+              const jb = JUMP_BEATS[i];
+              const label = jb > 0 ? `+${jb}` : `${jb}`;
+              pad.style.borderColor = jb < 0 ? 'rgba(0,210,255,0.4)' : 'rgba(255,149,0,0.4)';
+              pad.style.color = jb < 0 ? '#7dd3fc' : '#fcd34d';
+              pad.innerHTML = `<span class="font-mono-dj">${label}</span><span class="text-[8px] opacity-70">JUMP</span>`;
+            }
+
+            pad.addEventListener('pointerdown', (e) => {
+              e.preventDefault();
+              this.triggerPad(i);
+            });
+
+            grid.appendChild(pad);
+          }
+        }
+
+        bindUI() {
+          // Play & Cue
+          document.getElementById(`${this.prefix}-playBtn`).addEventListener('pointerdown', (e) => {
+            e.preventDefault();
+            this.togglePlay();
+          });
+
+          const cueBtn = document.getElementById(`${this.prefix}-cueBtn`);
+          cueBtn.addEventListener('pointerdown', (e) => {
+            e.preventDefault();
+            cueBtn.setPointerCapture(e.pointerId);
+            this.handleCueDown();
+          });
+          cueBtn.addEventListener('pointerup', () => this.handleCueUp());
+          cueBtn.addEventListener('pointercancel', () => this.handleCueUp());
+
+          // Sync, Master, Key Lock
+          document.getElementById(`${this.prefix}-syncBtn`).addEventListener('pointerdown', (e) => {
+            e.preventDefault();
+            const other = this.id === 'A' ? deckB : deckA;
+            this.syncToOtherDeck(other);
+          });
+
+          document.getElementById(`${this.prefix}-masterBtn`).addEventListener('pointerdown', (e) => {
+            e.preventDefault();
+            deckA.isMaster = this.id === 'A';
+            deckB.isMaster = this.id === 'B';
+            updateMasterButtonsUI();
+          });
+
+          document.getElementById(`${this.prefix}-keyLockBtn`).addEventListener('pointerdown', (e) => {
+            e.preventDefault();
+            this.keyLock = !this.keyLock;
+            const lbl = document.getElementById(`${this.prefix}-keyLockLabel`);
+            lbl.textContent = this.keyLock ? 'MT: ON' : 'MT: OFF';
+            lbl.style.opacity = this.keyLock ? '1' : '0.45';
+          });
+
+          // Momentary Pitch Bend Buttons
+          const bendDown = document.getElementById(`${this.prefix}-bendDownBtn`);
+          const bendUp = document.getElementById(`${this.prefix}-bendUpBtn`);
+          bendDown.addEventListener('pointerdown', (e) => { e.preventDefault(); this.pitchBendOffset = -0.04; });
+          bendDown.addEventListener('pointerup', () => { this.pitchBendOffset = 0; });
+          bendDown.addEventListener('pointercancel', () => { this.pitchBendOffset = 0; });
+          bendUp.addEventListener('pointerdown', (e) => { e.preventDefault(); this.pitchBendOffset = 0.04; });
+          bendUp.addEventListener('pointerup', () => { this.pitchBendOffset = 0; });
+          bendUp.addEventListener('pointercancel', () => { this.pitchBendOffset = 0; });
+
+          // Tempo Range Toggle
+          const rangeBtn = document.getElementById(`${this.prefix}-rangeBtn`);
+          rangeBtn.addEventListener('pointerdown', (e) => {
+            e.preventDefault();
+            this.tempoRangeIdx = (this.tempoRangeIdx + 1) % TEMPO_RANGES.length;
+            rangeBtn.textContent = TEMPO_RANGE_LABELS[this.tempoRangeIdx];
+          });
+
+          // Vertical Tempo Fader (Multi-touch Pointer Capture + Double-tap reset)
+          const tempoTrack = document.getElementById(`${this.prefix}-tempoTrack`);
+          let lastTempoTap = 0;
+          const updateTempoFromPointer = (clientY) => {
+            const rect = tempoTrack.getBoundingClientRect();
+            const norm = Math.max(0, Math.min(1, (clientY - rect.top) / rect.height));
+            this.tempoOffset = norm * 2 - 1; // Top = -1 (slower), Bottom = +1 (faster) like real Pioneer CDJ!
+            if (Math.abs(this.tempoOffset) < 0.03) this.tempoOffset = 0; // Center click detent
+            this.updateTempoThumbUI();
+          };
+
+          tempoTrack.addEventListener('pointerdown', (e) => {
+            e.preventDefault();
+            const now = performance.now();
+            if (now - lastTempoTap < 300) {
+              this.tempoOffset = 0;
+              this.updateTempoThumbUI();
+              return;
+            }
+            lastTempoTap = now;
+            tempoTrack.setPointerCapture(e.pointerId);
+            updateTempoFromPointer(e.clientY);
+          });
+          tempoTrack.addEventListener('pointermove', (e) => {
+            if (tempoTrack.hasPointerCapture(e.pointerId)) {
+              updateTempoFromPointer(e.clientY);
+            }
+          });
+
+          // Dual-Zone Capacitive Jog Wheel (Inner Vinyl Scratch + Outer Ring Pitch Bend)
+          const jogEl = document.getElementById(`${this.prefix}-jog`);
+          let jogPointerId = null;
+          let lastAngle = 0;
+          let lastMoveTime = 0;
+          let isOuterRim = false;
+
+          const getPointerAngle = (clientX, clientY) => {
+            const rect = jogEl.getBoundingClientRect();
+            const cx = rect.left + rect.width * 0.5;
+            const cy = rect.top + rect.height * 0.5;
+            return Math.atan2(clientY - cy, clientX - cx);
+          };
+
+          jogEl.addEventListener('pointerdown', (e) => {
+            e.preventDefault();
+            unlockAudioEngine();
+            jogPointerId = e.pointerId;
+            jogEl.setPointerCapture(e.pointerId);
+
+            const rect = jogEl.getBoundingClientRect();
+            const cx = rect.left + rect.width * 0.5;
+            const cy = rect.top + rect.height * 0.5;
+            const dist = Math.hypot(e.clientX - cx, e.clientY - cy);
+            const radius = rect.width * 0.5;
+
+            isOuterRim = dist > radius * 0.72;
+            lastAngle = getPointerAngle(e.clientX, e.clientY);
+            lastMoveTime = performance.now();
+
+            if (!isOuterRim) {
+              // Touching top Vinyl plate stops platter immediately for scratch
+              this.isTouchingPlatter = true;
+              this.scratchVelocity = 0;
+              this.updateTransportLEDs();
+            }
+          });
+
+          jogEl.addEventListener('pointermove', (e) => {
+            if (e.pointerId !== jogPointerId) return;
+            const now = performance.now();
+            const dt = Math.max(4, now - lastMoveTime) / 1000;
+            const angle = getPointerAngle(e.clientX, e.clientY);
+            let delta = angle - lastAngle;
+            if (delta > Math.PI) delta -= Math.PI * 2;
+            if (delta < -Math.PI) delta += Math.PI * 2;
+
+            lastAngle = angle;
+            lastMoveTime = now;
+
+            if (isOuterRim) {
+              // Outer metallic rim nudges Pitch Bend smoothly
+              this.pitchBendOffset = Math.max(-0.08, Math.min(0.08, delta * 1.4));
+            } else {
+              // Inner Vinyl platter scratches forward & backward!
+              // 1 full rotation (2*PI rad) = ~1.8 seconds of audio (33 1/3 RPM)
+              const angularVel = delta / dt; // rad/s
+              const vinylNominalRadPerSec = (33.333 / 60) * Math.PI * 2;
+              this.scratchVelocity = Math.max(-4.5, Math.min(4.5, angularVel / vinylNominalRadPerSec));
+              this.jogAngle += delta;
+            }
+          });
+
+          const releaseJog = (e) => {
+            if (e.pointerId !== jogPointerId) return;
+            jogPointerId = null;
+            this.isTouchingPlatter = false;
+            this.scratchVelocity = 0;
+            this.pitchBendOffset = 0;
+            this.updateTransportLEDs();
+          };
+          jogEl.addEventListener('pointerup', releaseJog);
+          jogEl.addEventListener('pointercancel', releaseJog);
+
+          // Pad Mode Tabs
+          const modeHotCue = document.getElementById(`${this.prefix}-modeHotCue`);
+          const modeLoop = document.getElementById(`${this.prefix}-modeLoop`);
+          const modeJump = document.getElementById(`${this.prefix}-modeJump`);
+          const delCueBtn = document.getElementById(`${this.prefix}-delCueBtn`);
+
+          const setPadMode = (mode) => {
+            this.padMode = mode;
+            [modeHotCue, modeLoop, modeJump].forEach(b => {
+              b.style.borderColor = '#333a47';
+              b.style.background = '';
+              b.style.color = '#cbd5e1';
+            });
+            const activeBtn = mode === 'HOTCUE' ? modeHotCue : mode === 'LOOP' ? modeLoop : modeJump;
+            activeBtn.style.borderColor = this.accentColor;
+            activeBtn.style.background = `${this.accentColor}26`;
+            activeBtn.style.color = '#ffffff';
+            this.renderPads();
+          };
+
+          modeHotCue.addEventListener('pointerdown', (e) => { e.preventDefault(); setPadMode('HOTCUE'); });
+          modeLoop.addEventListener('pointerdown', (e) => { e.preventDefault(); setPadMode('LOOP'); });
+          modeJump.addEventListener('pointerdown', (e) => { e.preventDefault(); setPadMode('JUMP'); });
+          delCueBtn.addEventListener('pointerdown', (e) => {
+            e.preventDefault();
+            this.deleteCueMode = !this.deleteCueMode;
+            delCueBtn.classList.toggle('bg-rose-600', this.deleteCueMode);
+            delCueBtn.classList.toggle('text-white', this.deleteCueMode);
+          });
+
+          // Overview Waveform Strip Click/Touch Scrubbing
+          const ovCanvas = document.getElementById(`${this.prefix}-overviewCanvas`);
+          const scrubFromOverview = (clientX) => {
+            if (!this.buffer) return;
+            const rect = ovCanvas.getBoundingClientRect();
+            const ratio = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+            this.samplePos = ratio * (this.buffer.length - 1);
+            this.updateTransportLEDs();
+          };
+          ovCanvas.addEventListener('pointerdown', (e) => {
+            e.preventDefault();
+            unlockAudioEngine();
+            ovCanvas.setPointerCapture(e.pointerId);
+            scrubFromOverview(e.clientX);
+          });
+          ovCanvas.addEventListener('pointermove', (e) => {
+            if (ovCanvas.hasPointerCapture(e.pointerId)) {
+              scrubFromOverview(e.clientX);
+            }
+          });
+
+          // Local Audio File Loader (MP3, WAV, OGG, M4A)
+          const fileInput = document.getElementById(`${this.prefix}-fileInput`);
+          fileInput.addEventListener('change', async (e) => {
+            const file = e.target.files && e.target.files[0];
+            if (!file) return;
+            unlockAudioEngine();
+            showToast(`Decoding "${file.name}"...`, this.id === 'A' ? 'cyan' : 'amber');
+            try {
+              const arrayBuf = await file.arrayBuffer();
+              const decoded = await audioCtx.decodeAudioData(arrayBuf);
+              const cleanName = file.name.replace(/\.[^/.]+$/, '');
+              this.loadBuffer(decoded, cleanName, null);
+              showToast(`Loaded "${cleanName}" (${this.baseBpm.toFixed(1)} BPM)`, this.id === 'A' ? 'cyan' : 'amber');
+            } catch (err) {
+              showToast(`Unable to decode audio file`, 'rose');
+            }
+            fileInput.value = '';
+          });
+        }
+
+        drawOverviewWaveform() {
+          const canvas = document.getElementById(`${this.prefix}-overviewCanvas`);
+          if (!canvas || !this.analysis) return;
+          const dpr = window.devicePixelRatio || 1;
+          const rect = canvas.getBoundingClientRect();
+          if (rect.width === 0 || rect.height === 0) return;
+
+          canvas.width = Math.round(rect.width * dpr);
+          canvas.height = Math.round(rect.height * dpr);
+          const ctx = canvas.getContext('2d');
+          ctx.scale(dpr, dpr);
+
+          const w = rect.width;
+          const h = rect.height;
+          ctx.clearRect(0, 0, w, h);
+
+          const { peaks, lows, highs } = this.analysis;
+          const total = peaks.length;
+
+          for (let x = 0; x < w; x++) {
+            const idx = Math.floor((x / w) * total);
+            const p = peaks[idx] || 0;
+            const lo = lows[idx] || 0;
+            const hi = highs[idx] || 0;
+
+            const barH = Math.max(2, p * (h - 4));
+            const y = h - barH;
+
+            // RGB Energy Color (Bass = warm amber/red, Highs = crisp cyan/white)
+            const r = Math.min(255, Math.round(80 + lo * 210));
+            const g = Math.min(255, Math.round(130 + hi * 125));
+            const b = Math.min(255, Math.round(190 + hi * 65));
+            ctx.fillStyle = `rgb(${r},${g},${b})`;
+            ctx.fillRect(x, y, 1.5, barH);
+          }
+
+          // Draw Hot Cue Flag Ticks on Overview
+          if (this.buffer) {
+            this.hotCues.forEach((cueSample, i) => {
+              if (cueSample !== null) {
+                const cx = (cueSample / this.buffer.length) * w;
+                ctx.fillStyle = HOT_CUE_COLORS[i];
+                ctx.fillRect(cx - 1, 0, 2.5, h);
+              }
+            });
+          }
+        }
+
+        drawZoomedWaveformAndPlayhead() {
+          const zoomCanvas = document.getElementById(`${this.prefix}-zoomCanvas`);
+          const ovCanvas = document.getElementById(`${this.prefix}-overviewCanvas`);
+          if (!zoomCanvas || !this.analysis || !this.buffer) return;
+
+          const dpr = window.devicePixelRatio || 1;
+          const rect = zoomCanvas.getBoundingClientRect();
+          if (rect.width === 0 || rect.height === 0) return;
+
+          const targetW = Math.round(rect.width * dpr);
+          const targetH = Math.round(rect.height * dpr);
+          if (zoomCanvas.width !== targetW || zoomCanvas.height !== targetH) {
+            zoomCanvas.width = targetW;
+            zoomCanvas.height = targetH;
+          }
+
+          const ctx = zoomCanvas.getContext('2d');
+          ctx.save();
+          ctx.scale(dpr, dpr);
+
+          const w = rect.width;
+          const h = rect.height;
+          const midY = h * 0.5;
+          ctx.fillStyle = '#040608';
+          ctx.fillRect(0, 0, w, h);
+
+          // Center horizon line
+          ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+          ctx.beginPath();
+          ctx.moveTo(0, midY);
+          ctx.lineTo(w, midY);
+          ctx.stroke();
+
+          const { peaks, lows, highs, pointsPerSec } = this.analysis;
+          const sr = this.buffer.sampleRate;
+          const curSec = this.samplePos / sr;
+          const visibleSec = 4.4; // Show ~4.4 seconds window around playhead
+          const startSec = curSec - visibleSec * 0.35;
+          const pxPerSec = w / visibleSec;
+
+          // Active Loop Highlight Region
+          if (this.loopActive) {
+            const lStartSec = this.loopStartSample / sr;
+            const lEndSec = this.loopEndSample / sr;
+            const lx1 = (lStartSec - startSec) * pxPerSec;
+            const lx2 = (lEndSec - startSec) * pxPerSec;
+            ctx.fillStyle = 'rgba(0, 230, 118, 0.16)';
+            ctx.fillRect(lx1, 0, lx2 - lx1, h);
+          }
+
+          // Render RGB Frequency Waveform Bars
+          const startPt = Math.floor(startSec * pointsPerSec);
+          const endPt = Math.ceil((startSec + visibleSec) * pointsPerSec);
+
+          for (let pt = startPt; pt <= endPt; pt++) {
+            if (pt < 0 || pt >= peaks.length) continue;
+            const ptSec = pt / pointsPerSec;
+            const x = (ptSec - startSec) * pxPerSec;
+            const amp = peaks[pt] * (midY - 6);
+            const lo = lows[pt];
+            const hi = highs[pt];
+
+            const r = Math.min(255, Math.round(60 + lo * 225));
+            const g = Math.min(255, Math.round(140 + hi * 115));
+            const b = Math.min(255, Math.round(210 + hi * 45));
+            ctx.fillStyle = `rgb(${r},${g},${b})`;
+            ctx.fillRect(x, midY - amp, 2.2, amp * 2);
+          }
+
+          // Render Beatgrid Vertical Lines
+          const beatSec = 60 / this.baseBpm;
+          const firstBeat = Math.floor(startSec / beatSec);
+          const lastBeat = Math.ceil((startSec + visibleSec) / beatSec);
+          for (let b = firstBeat; b <= lastBeat; b++) {
+            if (b < 0) continue;
+            const bTime = b * beatSec;
+            const bx = (bTime - startSec) * pxPerSec;
+            const isDownbeat = b % 4 === 0;
+            ctx.strokeStyle = isDownbeat ? 'rgba(255, 65, 95, 0.85)' : 'rgba(255, 255, 255, 0.22)';
+            ctx.lineWidth = isDownbeat ? 1.5 : 1;
+            ctx.beginPath();
+            ctx.moveTo(bx, 0);
+            ctx.lineTo(bx, h);
+            ctx.stroke();
+          }
+
+          // Render Hot Cue Markers on Zoomed Waveform
+          this.hotCues.forEach((cueSample, idx) => {
+            if (cueSample === null) return;
+            const cSec = cueSample / sr;
+            const cx = (cSec - startSec) * pxPerSec;
+            if (cx >= -10 && cx <= w + 10) {
+              ctx.strokeStyle = HOT_CUE_COLORS[idx];
+              ctx.lineWidth = 2;
+              ctx.beginPath();
+              ctx.moveTo(cx, 0);
+              ctx.lineTo(cx, h);
+              ctx.stroke();
+              ctx.fillStyle = HOT_CUE_COLORS[idx];
+              ctx.fillRect(cx, 2, 13, 12);
+              ctx.fillStyle = '#000';
+              ctx.font = 'bold 9px JetBrains Mono';
+              ctx.fillText(HOT_CUE_LABELS[idx], cx + 3, 11);
+            }
+          });
+
+          // Fixed Red/White Playhead Needle at 35% horizontal mark
+          const playheadX = w * 0.35;
+          ctx.strokeStyle = '#ff1744';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(playheadX, 0);
+          ctx.lineTo(playheadX, h);
+          ctx.stroke();
+
+          ctx.restore();
+
+          // Update Overview Playhead Overlay via lightweight redraw + playhead line
+          this.drawOverviewWaveform();
+          const ovRect = ovCanvas.getBoundingClientRect();
+          if (ovRect.width > 0) {
+            const ovCtx = ovCanvas.getContext('2d');
+            ovCtx.save();
+            ovCtx.scale(dpr, dpr);
+            const px = (this.samplePos / this.buffer.length) * ovRect.width;
+            ovCtx.strokeStyle = '#ffffff';
+            ovCtx.lineWidth = 2;
+            ovCtx.beginPath();
+            ovCtx.moveTo(px, 0);
+            ovCtx.lineTo(px, ovRect.height);
+            ovCtx.stroke();
+            ovCtx.restore();
+          }
+        }
+
+        updateHUD() {
+          const effBpm = this.getEffectiveBpm();
+          const pitchPct = (this.getEffectiveRate() - 1) * 100;
+          const sign = pitchPct >= 0 ? '+' : '';
+
+          document.getElementById(`${this.prefix}-bpmReadout`).textContent = effBpm.toFixed(2);
+          document.getElementById(`${this.prefix}-jogBpm`).textContent = effBpm.toFixed(1);
+          document.getElementById(`${this.prefix}-pitchReadout`).textContent = `${sign}${pitchPct.toFixed(2)}%`;
+
+          if (this.buffer) {
+            const sr = this.buffer.sampleRate;
+            const elapsed = this.samplePos / sr;
+            const remain = Math.max(0, this.buffer.duration - elapsed);
+            document.getElementById(`${this.prefix}-timeElapsed`).textContent = formatTimeDJ(elapsed);
+            document.getElementById(`${this.prefix}-timeRemain`).textContent = `-${formatTimeDJ(remain)}`;
+
+            // Update 4-Beat Phase Meter Blocks
+            const spb = this.getSamplesPerBeat();
+            const currentBeatInBar = Math.floor(this.samplePos / spb) % 4;
+            const phaseCells = document.getElementById(`${this.prefix}-phaseBar`).children;
+            for (let b = 0; b < 4; b++) {
+              if (b === currentBeatInBar) {
+                phaseCells[b].style.background = b === 0 ? '#ff1744' : this.accentColor;
+                phaseCells[b].style.boxShadow = `0 0 8px ${b === 0 ? '#ff1744' : this.accentColor}`;
+              } else {
+                phaseCells[b].style.background = '#161b24';
+                phaseCells[b].style.boxShadow = 'none';
+              }
+            }
+          }
+
+          // Rotate Virtual Vinyl Needle on Jog LCD
+          if (this.isPlaying && !this.isTouchingPlatter) {
+            this.jogAngle += 0.058 * this.getEffectiveRate();
+          }
+          document.getElementById(`${this.prefix}-jogNeedle`).style.transform = `rotate(${this.jogAngle}rad)`;
+        }
+      }
+
+      const deckA = new CDJDeck('A', 'deckA', '#00d2ff', ch1Strip);
+      const deckB = new CDJDeck('B', 'deckB', '#ff9500', ch2Strip);
+
+      function updateMasterButtonsUI() {
+        const btnA = document.getElementById('deckA-masterBtn');
+        const btnB = document.getElementById('deckB-masterBtn');
+        if (deckA.isMaster) {
+          btnA.className = 'dj-btn text-[10px] border-cyan-400 text-cyan-200 bg-cyan-950/50';
+          btnB.className = 'dj-btn text-[10px]';
+        } else {
+          btnA.className = 'dj-btn text-[10px]';
+          btnB.className = 'dj-btn text-[10px] border-amber-400 text-amber-200 bg-amber-950/50';
+        }
+      }
+
+      /* ======================================================================
+         7. MULTI-TOUCH KNOBS, FADERS, CROSSFADER & MIXER CONTROLS
+         ====================================================================== */
+      function initRotaryKnobs() {
+        const knobWrappers = document.querySelectorAll('.knob-wrapper');
+
+        knobWrappers.forEach(wrapper => {
+          const id = wrapper.dataset.knob;
+          const min = parseFloat(wrapper.dataset.min);
+          const max = parseFloat(wrapper.dataset.max);
+          const defVal = parseFloat(wrapper.dataset.default);
+          const cap = wrapper.querySelector('.knob-cap');
+
+          let val = defVal;
+          let activePointer = null;
+          let startY = 0;
+          let startVal = defVal;
+          let lastTap = 0;
+
+          const applyKnobValue = (newVal) => {
+            val = Math.max(min, Math.min(max, newVal));
+            // Snap cleanly to center detent for bipolar knobs
+            if (min < 0 && max > 0 && Math.abs(val) < 0.04) val = 0;
+
+            const norm = (val - min) / (max - min); // 0 to 1
+            const deg = -135 + norm * 270;
+            cap.style.transform = `rotate(${deg}deg)`;
+
+            // Route value to DSP state
+            switch (id) {
+              case 'ch1-trim': ch1Strip.state.trim = val; ch1Strip.updateDsp(); break;
+              case 'ch1-eqHi': ch1Strip.state.eqHi = val; ch1Strip.updateDsp(); break;
+              case 'ch1-eqMid': ch1Strip.state.eqMid = val; ch1Strip.updateDsp(); break;
+              case 'ch1-eqLow': ch1Strip.state.eqLow = val; ch1Strip.updateDsp(); break;
+              case 'ch1-colorFx': ch1Strip.state.colorFx = val; ch1Strip.updateDsp(); break;
+
+              case 'ch2-trim': ch2Strip.state.trim = val; ch2Strip.updateDsp(); break;
+              case 'ch2-eqHi': ch2Strip.state.eqHi = val; ch2Strip.updateDsp(); break;
+              case 'ch2-eqMid': ch2Strip.state.eqMid = val; ch2Strip.updateDsp(); break;
+              case 'ch2-eqLow': ch2Strip.state.eqLow = val; ch2Strip.updateDsp(); break;
+              case 'ch2-colorFx': ch2Strip.state.colorFx = val; ch2Strip.updateDsp(); break;
+
+              case 'master-vol': mixerState.masterVol = val; updateCrossfaderAndRouting(); break;
+              case 'beatfx-depth': mixerState.beatFxDepth = val; break;
+            }
+          };
+
+          applyKnobValue(defVal);
+
+          wrapper.addEventListener('pointerdown', (e) => {
+            e.preventDefault();
+            unlockAudioEngine();
+            const now = performance.now();
+            if (now - lastTap < 300) {
+              applyKnobValue(defVal);
+              return;
+            }
+            lastTap = now;
+            activePointer = e.pointerId;
+            startY = e.clientY;
+            startVal = val;
+            wrapper.setPointerCapture(e.pointerId);
+          });
+
+          wrapper.addEventListener('pointermove', (e) => {
+            if (e.pointerId !== activePointer) return;
+            const dy = startY - e.clientY;
+            const sensitivity = (max - min) / 130; // 130px drag = full sweep
+            applyKnobValue(startVal + dy * sensitivity);
+          });
+
+          const releaseKnob = (e) => {
+            if (e.pointerId === activePointer) activePointer = null;
+          };
+          wrapper.addEventListener('pointerup', releaseKnob);
+          wrapper.addEventListener('pointercancel', releaseKnob);
+        });
+      }
+
+      function initMixerFaders() {
+        // Channel 1 & Channel 2 Volume Faders
+        [
+          { trackId: 'ch1-faderTrack', thumbId: 'ch1-faderThumb', strip: ch1Strip },
+          { trackId: 'ch2-faderTrack', thumbId: 'ch2-faderThumb', strip: ch2Strip }
+        ].forEach(({ trackId, thumbId, strip }) => {
+          const track = document.getElementById(trackId);
+          const thumb = document.getElementById(thumbId);
+
+          const updateFader = (clientY) => {
+            const rect = track.getBoundingClientRect();
+            const norm = Math.max(0, Math.min(1, (clientY - rect.top) / rect.height));
+            strip.state.fader = 1 - norm; // Top = 1.0 (Full), Bottom = 0.0 (Mute)
+            thumb.style.top = `${norm * 100}%`;
+            strip.updateDsp();
+          };
+
+          track.addEventListener('pointerdown', (e) => {
+            e.preventDefault();
+            unlockAudioEngine();
+            track.setPointerCapture(e.pointerId);
+            updateFader(e.clientY);
+          });
+          track.addEventListener('pointermove', (e) => {
+            if (track.hasPointerCapture(e.pointerId)) {
+              updateFader(e.clientY);
+            }
+          });
+        });
+
+        // Horizontal Crossfader
+        const xfTrack = document.getElementById('crossfaderTrack');
+        const xfThumb = document.getElementById('crossfaderThumb');
+        let lastXfTap = 0;
+
+        const updateCrossfader = (clientX) => {
+          const rect = xfTrack.getBoundingClientRect();
+          const norm = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+          mixerState.xfadePos = norm * 2 - 1;
+          if (Math.abs(mixerState.xfadePos) < 0.04) mixerState.xfadePos = 0; // Center detent
+          xfThumb.style.left = `${((mixerState.xfadePos + 1) * 0.5) * 100}%`;
+          updateCrossfaderAndRouting();
+        };
+
+        xfTrack.addEventListener('pointerdown', (e) => {
+          e.preventDefault();
+          unlockAudioEngine();
+          const now = performance.now();
+          if (now - lastXfTap < 300) {
+            mixerState.xfadePos = 0;
+            xfThumb.style.left = '50%';
+            updateCrossfaderAndRouting();
+            return;
+          }
+          lastXfTap = now;
+          xfTrack.setPointerCapture(e.pointerId);
+          updateCrossfader(e.clientX);
+        });
+
+        xfTrack.addEventListener('pointermove', (e) => {
+          if (xfTrack.hasPointerCapture(e.pointerId)) {
+            updateCrossfader(e.clientX);
+          }
+        });
+      }
+
+      function initMixerButtons() {
+        // Sound Color FX Selector Buttons
+        const cfxBtns = document.querySelectorAll('#colorFxButtons button');
+        cfxBtns.forEach(btn => {
+          btn.addEventListener('pointerdown', (e) => {
+            e.preventDefault();
+            mixerState.colorFxType = btn.dataset.cfx;
+            cfxBtns.forEach(b => {
+              b.className = 'dj-btn min-h-[36px] text-[10px]';
+            });
+            btn.className = 'dj-btn min-h-[36px] text-[10px] border-cyan-400 bg-cyan-950/50 text-cyan-200';
+            ch1Strip.updateDsp();
+            ch2Strip.updateDsp();
+          });
+        });
+
+        // Headphone CUE 1 & CUE 2
+        const hp1 = document.getElementById('ch1-hpCueBtn');
+        const hp2 = document.getElementById('ch2-hpCueBtn');
+        hp1.addEventListener('pointerdown', (e) => {
+          e.preventDefault();
+          mixerState.hpCue1 = !mixerState.hpCue1;
+          hp1.classList.toggle('border-amber-400', mixerState.hpCue1);
+          hp1.classList.toggle('bg-amber-500/20', mixerState.hpCue1);
+          hp1.classList.toggle('text-amber-300', mixerState.hpCue1);
+        });
+        hp2.addEventListener('pointerdown', (e) => {
+          e.preventDefault();
+          mixerState.hpCue2 = !mixerState.hpCue2;
+          hp2.classList.toggle('border-amber-400', mixerState.hpCue2);
+          hp2.classList.toggle('bg-amber-500/20', mixerState.hpCue2);
+          hp2.classList.toggle('text-amber-300', mixerState.hpCue2);
+        });
+
+        // Crossfader Curve Toggle
+        const curveBtn = document.getElementById('xfadeCurveBtn');
+        const curveLbl = document.getElementById('xfadeCurveLabel');
+        curveBtn.addEventListener('pointerdown', (e) => {
+          e.preventDefault();
+          mixerState.xfadeCurve = mixerState.xfadeCurve === 'MIX' ? 'SCRATCH' : 'MIX';
+          curveLbl.textContent = mixerState.xfadeCurve;
+          updateCrossfaderAndRouting();
+        });
+
+        // Beat FX Controls
+        const divBtns = document.querySelectorAll('#beatFxDivButtons button');
+        divBtns.forEach(btn => {
+          btn.addEventListener('pointerdown', (e) => {
+            e.preventDefault();
+            mixerState.beatFxDiv = parseFloat(btn.dataset.div);
+            divBtns.forEach(b => {
+              b.className = 'px-1.5 py-0.5 rounded bg-[#181d26] border border-[#2d3545] text-[9px] font-mono-dj';
+            });
+            btn.className = 'px-1.5 py-0.5 rounded bg-cyan-950 border border-cyan-400 text-cyan-200 text-[9px] font-mono-dj';
+          });
+        });
+
+        document.getElementById('beatFxTypeSelect').addEventListener('change', (e) => {
+          mixerState.beatFxType = e.target.value;
+        });
+
+        const assignOrder = ['MST', 'CH1', 'CH2'];
+        const assignBtn = document.getElementById('beatFxAssignBtn');
+        assignBtn.addEventListener('pointerdown', (e) => {
+          e.preventDefault();
+          const nextIdx = (assignOrder.indexOf(mixerState.beatFxAssign) + 1) % assignOrder.length;
+          mixerState.beatFxAssign = assignOrder[nextIdx];
+          assignBtn.textContent = mixerState.beatFxAssign;
+          updateCrossfaderAndRouting();
+        });
+
+        const fxOnBtn = document.getElementById('beatFxOnBtn');
+        const toggleBeatFx = () => {
+          mixerState.beatFxOn = !mixerState.beatFxOn;
+          if (mixerState.beatFxOn) {
+            fxOnBtn.classList.add('fx-on-btn-flash', 'bg-cyan-500/25', 'border-cyan-300', 'text-white');
+          } else {
+            fxOnBtn.classList.remove('fx-on-btn-flash', 'bg-cyan-500/25', 'border-cyan-300', 'text-white');
+          }
+        };
+        fxOnBtn.addEventListener('pointerdown', (e) => {
+          e.preventDefault();
+          toggleBeatFx();
+        });
+
+        // Expose toggle for keyboard Spacebar
+        window.toggleBeatFxGlobal = toggleBeatFx;
+      }
+
+      /* ======================================================================
+         8. 12-SEGMENT LED VU METERS (60FPS REAL-TIME METERING)
+         ====================================================================== */
+      const vuBanks = {};
+      const vuTempData = new Uint8Array(256);
+
+      function initVuMeters() {
+        ['vu-ch1', 'vu-mstL', 'vu-mstR', 'vu-ch2'].forEach(id => {
+          const container = document.getElementById(id);
+          container.innerHTML = '';
+          const leds = [];
+          for (let i = 0; i < 12; i++) {
+            const led = document.createElement('div');
+            led.className = 'vu-led';
+            container.appendChild(led);
+            leds.push(led);
+          }
+          vuBanks[id] = leds;
+        });
+      }
+
+      function computeAnalyserLevel(analyser) {
+        analyser.getByteTimeDomainData(vuTempData);
+        let sumSq = 0;
+        for (let i = 0; i < vuTempData.length; i++) {
+          const v = (vuTempData[i] - 128) / 128;
+          sumSq += v * v;
+        }
+        const rms = Math.sqrt(sumSq / vuTempData.length);
+        // Map RMS to 0..12 LED segments
+        return Math.min(12, Math.round(rms * 34));
+      }
+
+      function renderVuMeter(id, activeSegments) {
+        const leds = vuBanks[id];
+        if (!leds) return;
+        for (let i = 0; i < 12; i++) {
+          const led = leds[i];
+          if (i < activeSegments) {
+            if (i >= 11) led.className = 'vu-led on-red';
+            else if (i >= 8) led.className = 'vu-led on-amber';
+            else led.className = 'vu-led on-green';
+          } else {
+            led.className = 'vu-led';
+          }
+        }
+      }
+
+      /* ======================================================================
+         9. LIVE MIX RECORDER (EXPORTS REAL 16-BIT WAV FILE)
+         ====================================================================== */
+      let isRecording = false;
+      let recChunks = [];
+      let recProcessor = null;
+      let recStartTime = 0;
+
+      function encodeWavFile(leftBuffers, rightBuffers, sampleRate) {
+        const totalLen = leftBuffers.reduce((acc, b) => acc + b.length, 0);
+        const wavBuffer = new ArrayBuffer(44 + totalLen * 4);
+        const view = new DataView(wavBuffer);
+
+        const writeStr = (offset, str) => {
+          for (let i = 0; i < str.length; i++) view.setUint8(offset + i, str.charCodeAt(i));
+        };
+
+        writeStr(0, 'RIFF');
+        view.setUint32(4, 36 + totalLen * 4, true);
+        writeStr(8, 'WAVE');
+        writeStr(12, 'fmt ');
+        view.setUint32(16, 16, true);
+        view.setUint16(20, 1, true); // PCM
+        view.setUint16(22, 2, true); // Stereo
+        view.setUint32(24, sampleRate, true);
+        view.setUint32(28, sampleRate * 4, true);
+        view.setUint16(32, 4, true);
+        view.setUint16(34, 16, true);
+        writeStr(36, 'data');
+        view.setUint32(40, totalLen * 4, true);
+
+        let offset = 44;
+        for (let c = 0; c < leftBuffers.length; c++) {
+          const L = leftBuffers[c];
+          const R = rightBuffers[c];
+          for (let i = 0; i < L.length; i++) {
+            const sL = Math.max(-1, Math.min(1, L[i]));
+            const sR = Math.max(-1, Math.min(1, R[i]));
+            view.setInt16(offset, sL < 0 ? sL * 0x8000 : sL * 0x7FFF, true);
+            view.setInt16(offset + 2, sR < 0 ? sR * 0x8000 : sR * 0x7FFF, true);
+            offset += 4;
+          }
+        }
+        return new Blob([wavBuffer], { type: 'audio/wav' });
+      }
+
+      function initMixRecorder() {
+        const recBtn = document.getElementById('recMixBtn');
+        const recDot = document.getElementById('recDot');
+        const recLbl = document.getElementById('recLabel');
+        let leftChunks = [];
+        let rightChunks = [];
+
+        recBtn.addEventListener('click', () => {
+          unlockAudioEngine();
+          if (!isRecording) {
+            isRecording = true;
+            leftChunks = [];
+            rightChunks = [];
+            recStartTime = performance.now();
+
+            recProcessor = audioCtx.createScriptProcessor(4096, 2, 2);
+            recProcessor.onaudioprocess = (e) => {
+              if (!isRecording) return;
+              leftChunks.push(new Float32Array(e.inputBuffer.getChannelData(0)));
+              rightChunks.push(new Float32Array(e.inputBuffer.getChannelData(1)));
+            };
+            masterLimiter.connect(recProcessor);
+            recProcessor.connect(audioCtx.destination);
+
+            recDot.classList.add('animate-ping');
+            recBtn.classList.add('border-rose-500', 'bg-rose-950/50', 'text-rose-200');
+            showToast('Recording Live Stereo Mix...', 'rose');
+          } else {
+            isRecording = false;
+            if (recProcessor) {
+              masterLimiter.disconnect(recProcessor);
+              recProcessor.disconnect();
+              recProcessor = null;
+            }
+            recDot.classList.remove('animate-ping');
+            recBtn.classList.remove('border-rose-500', 'bg-rose-950/50', 'text-rose-200');
+            recLbl.textContent = 'REC MIX';
+
+            const wavBlob = encodeWavFile(leftChunks, rightChunks, audioCtx.sampleRate);
+            const url = URL.createObjectURL(wavBlob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Pioneer_DJ_Set_${new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-')}.wav`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            setTimeout(() => URL.revokeObjectURL(url), 5000);
+            showToast('WAV Mix Exported!', 'cyan');
+          }
+        });
+      }
+
+      /* ======================================================================
+         10. BUILT-IN LIBRARY MODAL & DESKTOP KEYBOARD SHORTCUTS
+         ====================================================================== */
+      function initModalsAndShortcuts() {
+        const libModal = document.getElementById('libraryModal');
+        const libList = document.getElementById('libraryTrackList');
+
+        BUILTIN_TRACKS.forEach(track => {
+          const row = document.createElement('div');
+          row.className = 'flex items-center justify-between gap-2 p-2.5 rounded-xl bg-[#0b0e14] border border-[#222834]';
+          row.innerHTML = `
+            <div>
+              <div class="text-xs font-extrabold text-white">${track.title}</div>
+              <div class="text-[11px] font-mono-dj text-slate-400">${track.genre} • <span class="text-cyan-300">${track.bpm} BPM</span></div>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <button type="button" data-load-deck="A" class="dj-btn px-2.5 text-[10px] border-cyan-500/50 text-cyan-300">LOAD A</button>
+              <button type="button" data-load-deck="B" class="dj-btn px-2.5 text-[10px] border-amber-500/50 text-amber-300">LOAD B</button>
+            </div>
+          `;
+
+          row.querySelector('[data-load-deck="A"]').addEventListener('click', async () => {
+            unlockAudioEngine();
+            const buf = await renderEdmTrackBuffer(track);
+            deckA.loadBuffer(buf, `${track.title} — ${track.genre}`, track.bpm);
+            libModal.classList.add('hidden');
+            libModal.classList.remove('flex');
+            showToast(`Deck A Loaded: ${track.title}`, 'cyan');
+          });
+
+          row.querySelector('[data-load-deck="B"]').addEventListener('click', async () => {
+            unlockAudioEngine();
+            const buf = await renderEdmTrackBuffer(track);
+            deckB.loadBuffer(buf, `${track.title} — ${track.genre}`, track.bpm);
+            libModal.classList.add('hidden');
+            libModal.classList.remove('flex');
+            showToast(`Deck B Loaded: ${track.title}`, 'amber');
+          });
+
+          libList.appendChild(row);
+        });
+
+        document.getElementById('openLibraryBtn').addEventListener('click', () => {
+          libModal.classList.remove('hidden');
+          libModal.classList.add('flex');
+        });
+        document.getElementById('closeLibraryBtn').addEventListener('click', () => {
+          libModal.classList.add('hidden');
+          libModal.classList.remove('flex');
+        });
+
+        const keysModal = document.getElementById('shortcutsModal');
+        document.getElementById('shortcutsBtn').addEventListener('click', () => {
+          keysModal.classList.remove('hidden');
+          keysModal.classList.add('flex');
+        });
+        document.getElementById('closeShortcutsBtn').addEventListener('click', () => {
+          keysModal.classList.add('hidden');
+          keysModal.classList.remove('flex');
+        });
+
+        // Keyboard Performance Controls
+        document.addEventListener('keydown', (e) => {
+          if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+          const k = e.key.toLowerCase();
+
+          switch (k) {
+            case 'q': e.preventDefault(); deckA.togglePlay(); break;
+            case 'w': e.preventDefault(); deckA.handleCueDown(); break;
+            case 'e': e.preventDefault(); deckA.syncToOtherDeck(deckB); break;
+            case '1': case '2': case '3': case '4':
+              deckA.triggerPad(parseInt(k, 10) - 1); break;
+            case 'a': deckA.pitchBendOffset = -0.04; break;
+            case 's': deckA.pitchBendOffset = 0.04; break;
+
+            case 'p': e.preventDefault(); deckB.togglePlay(); break;
+            case 'o': e.preventDefault(); deckB.handleCueDown(); break;
+            case 'i': e.preventDefault(); deckB.syncToOtherDeck(deckA); break;
+            case '7': deckB.triggerPad(0); break;
+            case '8': deckB.triggerPad(1); break;
+            case '9': deckB.triggerPad(2); break;
+            case '0': deckB.triggerPad(3); break;
+            case 'k': deckB.pitchBendOffset = -0.04; break;
+            case 'l': deckB.pitchBendOffset = 0.04; break;
+
+            case ' ':
+              e.preventDefault();
+              if (window.toggleBeatFxGlobal) window.toggleBeatFxGlobal();
+              break;
+            case 'arrowleft':
+              mixerState.xfadePos = Math.max(-1, mixerState.xfadePos - 0.15);
+              document.getElementById('crossfaderThumb').style.left = `${((mixerState.xfadePos + 1) * 0.5) * 100}%`;
+              updateCrossfaderAndRouting();
+              break;
+            case 'arrowright':
+              mixerState.xfadePos = Math.min(1, mixerState.xfadePos + 0.15);
+              document.getElementById('crossfaderThumb').style.left = `${((mixerState.xfadePos + 1) * 0.5) * 100}%`;
+              updateCrossfaderAndRouting();
+              break;
+          }
+        });
+
+        document.addEventListener('keyup', (e) => {
+          const k = e.key.toLowerCase();
+          if (k === 'w') deckA.handleCueUp();
+          if (k === 'o') deckB.handleCueUp();
+          if (k === 'a' || k === 's') deckA.pitchBendOffset = 0;
+          if (k === 'k' || k === 'l') deckB.pitchBendOffset = 0;
+        });
+      }
+
+      /* ======================================================================
+         11. MAIN 60FPS RENDER LOOP & INITIALIZATION
+         ====================================================================== */
+      function mainAnimationLoop() {
+        // Update Master BPM synced Beat FX
+        const masterBpm = deckA.isMaster ? deckA.getEffectiveBpm() : deckB.getEffectiveBpm();
+        updateBeatFxDsp(masterBpm);
+
+        // Render Deck HUDs & Waveforms
+        deckA.updateHUD();
+        deckA.drawZoomedWaveformAndPlayhead();
+
+        deckB.updateHUD();
+        deckB.drawZoomedWaveformAndPlayhead();
+
+        // Update 12-LED Real-Time VU Meters
+        renderVuMeter('vu-ch1', computeAnalyserLevel(ch1Strip.analyser));
+        renderVuMeter('vu-ch2', computeAnalyserLevel(ch2Strip.analyser));
+        renderVuMeter('vu-mstL', computeAnalyserLevel(masterAnalyserL));
+        renderVuMeter('vu-mstR', computeAnalyserLevel(masterAnalyserR));
+
+        // Update Live Mix Recorder Timer
+        if (isRecording) {
+          const sec = Math.floor((performance.now() - recStartTime) / 1000);
+          const m = String(Math.floor(sec / 60)).padStart(2, '0');
+          const s = String(sec % 60).padStart(2, '0');
+          document.getElementById('recLabel').textContent = `${m}:${s}`;
+        }
+
+        requestAnimationFrame(mainAnimationLoop);
+      }
+
+      window.addEventListener('load', async () => {
+        initRotaryKnobs();
+        initMixerFaders();
+        initMixerButtons();
+        initVuMeters();
+        initMixRecorder();
+        initModalsAndShortcuts();
+        updateCrossfaderAndRouting();
+
+        // Pre-synthesize & load Track 1 onto Deck A and Track 2 onto Deck B immediately
+        const [track1Buf, track2Buf] = await Promise.all([
+          renderEdmTrackBuffer(BUILTIN_TRACKS[0]),
+          renderEdmTrackBuffer(BUILTIN_TRACKS[1])
+        ]);
+
+        deckA.loadBuffer(track1Buf, `${BUILTIN_TRACKS[0].title} — ${BUILTIN_TRACKS[0].genre}`, BUILTIN_TRACKS[0].bpm);
+        deckB.loadBuffer(track2Buf, `${BUILTIN_TRACKS[1].title} — ${BUILTIN_TRACKS[1].genre}`, BUILTIN_TRACKS[1].bpm);
+
+        // Pre-cache remaining tracks in background
+        renderEdmTrackBuffer(BUILTIN_TRACKS[2]);
+        renderEdmTrackBuffer(BUILTIN_TRACKS[3]);
+
+        window.addEventListener('resize', () => {
+          deckA.drawOverviewWaveform();
+          deckB.drawOverviewWaveform();
+        });
+
+        requestAnimationFrame(mainAnimationLoop);
+      });
+    })();
+  </script>
+</body>
+</html>

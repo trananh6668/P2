@@ -1,0 +1,3583 @@
+<!DOCTYPE html>
+<html lang="vi" class="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PDF Toolbox Pro</title>
+
+  <!-- Google Fonts: Inter hỗ trợ tiếng Việt đầy đủ -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@1,600&display=swap" rel="stylesheet" />
+
+  <!-- Tailwind CSS CDN & Cấu hình Dark Mode -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+            signature: ['"Playfair Display"', 'Georgia', 'serif']
+          }
+        }
+      }
+    };
+  </script>
+
+  <!-- Thư viện Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Thư viện PDF.js (v3.11.174) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+
+  <!-- Thư viện pdf-lib (v1.17.1) -->
+  <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+
+  <!-- Thư viện JSZip (v3.10.1) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
+  <style>
+    /* Tùy chỉnh thanh cuộn tinh tế cho giao diện SaaS */
+    ::-webkit-scrollbar {
+      width: 7px;
+      height: 7px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(148, 163, 184, 0.45);
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(100, 116, 139, 0.7);
+    }
+
+    /* Chế độ đọc ban đêm cho canvas PDF */
+    .pdf-night-mode canvas {
+      filter: invert(0.9) hue-rotate(180deg) contrast(0.95);
+    }
+
+    /* Hiệu ứng xuất hiện mượt mà */
+    @keyframes fadeSlideUp {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    .animate-fade-up {
+      animation: fadeSlideUp 0.25s ease-out forwards;
+    }
+
+    /* Ngăn cuộn trang khi vẽ/kéo chữ ký trên màn hình cảm ứng */
+    .touch-none-area {
+      touch-action: none;
+    }
+  </style>
+</head>
+
+<body class="bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 font-sans antialiased min-h-screen flex flex-col transition-colors duration-200 selection:bg-indigo-500 selection:text-white">
+
+  <!-- ==================== THANH ĐIỀU HƯỚNG TRÊN CÙNG ==================== -->
+  <header class="sticky top-0 z-40 w-full bg-white/85 dark:bg-slate-900/85 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800/80 transition-colors">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-3">
+      <!-- Logo & Tên ứng dụng -->
+      <div class="flex items-center gap-3 shrink-0">
+        <button id="btn-logo-home" type="button" class="flex items-center gap-2.5 text-left group focus:outline-none">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-600 via-blue-600 to-cyan-500 flex items-center justify-center text-white shadow-md shadow-indigo-500/20 group-hover:scale-105 transition-transform">
+            <i data-lucide="file-stack" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <div class="flex items-center gap-1.5">
+              <span class="font-extrabold text-lg tracking-tight text-slate-900 dark:text-white">PDF Toolbox</span>
+              <span class="px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-md bg-indigo-100 text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-300">Pro</span>
+            </div>
+            <p class="hidden sm:block text-[11px] text-slate-500 dark:text-slate-400 leading-none">Xử lý PDF thông minh tại trình duyệt</p>
+          </div>
+        </button>
+      </div>
+
+      <!-- Thanh tìm kiếm công cụ nhanh -->
+      <div class="relative flex-1 max-w-md">
+        <div class="relative flex items-center">
+          <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3.5 pointer-events-none"></i>
+          <input
+            id="global-tool-search"
+            type="text"
+            placeholder="Tìm công cụ (ví dụ: gộp, tách, ký tên, watermark...)"
+            autocomplete="off"
+            class="w-full pl-10 pr-8 py-2 text-sm rounded-xl bg-slate-100/90 dark:bg-slate-800/90 border border-transparent focus:border-indigo-500 focus:bg-white dark:focus:bg-slate-900 text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none transition-all"
+          />
+          <button id="btn-clear-search" type="button" class="hidden absolute right-2.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1">
+            <i data-lucide="x" class="w-3.5 h-3.5"></i>
+          </button>
+        </div>
+        <!-- Dropdown kết quả tìm kiếm nhanh khi đang ở trong công cụ -->
+        <div id="search-dropdown" class="hidden absolute left-0 right-0 mt-2 bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 overflow-hidden z-50 max-h-80 overflow-y-auto"></div>
+      </div>
+
+      <!-- Các nút chức năng bên phải -->
+      <div class="flex items-center gap-2 shrink-0">
+        <!-- Badge Bảo mật (Ẩn trên màn hình rất nhỏ) -->
+        <div class="hidden xl:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200/80 dark:border-emerald-500/20 text-emerald-700 dark:text-emerald-300 text-xs font-medium">
+          <i data-lucide="shield-check" class="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400"></i>
+          <span>100% Xử lý tại trình duyệt - Bảo mật tuyệt đối</span>
+        </div>
+
+        <!-- Nút quay về Trang chủ (Hub) -->
+        <button
+          id="btn-nav-hub"
+          type="button"
+          class="hidden items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-medium bg-slate-100 hover:bg-slate-200/80 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition-colors"
+          title="Quay về danh sách công cụ"
+        >
+          <i data-lucide="layout-grid" class="w-4 h-4"></i>
+          <span class="hidden sm:inline">Trang chủ</span>
+        </button>
+
+        <!-- Nút chuyển Dark / Light Mode -->
+        <button
+          id="btn-theme-toggle"
+          type="button"
+          class="p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200/80 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition-colors"
+          title="Chuyển giao diện Sáng / Tối"
+          aria-label="Chuyển giao diện Sáng / Tối"
+        >
+          <i id="icon-theme-moon" data-lucide="moon" class="w-4 h-4 block dark:hidden"></i>
+          <i id="icon-theme-sun" data-lucide="sun" class="w-4 h-4 hidden dark:block text-amber-400"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ==================== NỘI DUNG CHÍNH ==================== -->
+  <main class="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+
+    <!-- ==================== VIEW 1: TRANG CHỦ (TOOL HUB) ==================== -->
+    <section id="hub-view" class="space-y-8 animate-fade-up">
+      <!-- Hero Banner tinh gọn chuẩn SaaS -->
+      <div class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 dark:from-slate-900 dark:via-indigo-950/90 dark:to-slate-900 text-white p-6 sm:p-10 shadow-xl border border-slate-800">
+        <!-- Họa tiết nền trang trí -->
+        <div class="absolute -top-24 -right-24 w-72 h-72 rounded-full bg-indigo-500/20 blur-3xl pointer-events-none"></div>
+        <div class="absolute -bottom-24 -left-24 w-72 h-72 rounded-full bg-cyan-500/15 blur-3xl pointer-events-none"></div>
+
+        <div class="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+          <div class="max-w-2xl space-y-3">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/15 border border-emerald-400/30 text-emerald-300 text-xs font-semibold">
+              <i data-lucide="lock" class="w-3.5 h-3.5"></i>
+              <span>100% Xử lý tại trình duyệt - Bảo mật tuyệt đối (Không tải file lên máy chủ)</span>
+            </div>
+            <h1 class="text-2xl sm:text-4xl font-extrabold tracking-tight leading-tight">
+              Mọi công cụ PDF chuyên nghiệp trong <span class="text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-indigo-300">một không gian duy nhất</span>
+            </h1>
+            <p class="text-slate-300 text-sm sm:text-base leading-relaxed">
+              Xem, gộp, tách, sắp xếp trang, ký tên điện tử, đóng dấu bản quyền và chuyển đổi định dạng PDF siêu tốc ngay trên thiết bị của bạn.
+            </p>
+          </div>
+
+          <!-- Thẻ thống kê nhanh Bento -->
+          <div class="grid grid-cols-3 gap-3 sm:gap-4 shrink-0">
+            <div class="rounded-2xl bg-white/10 backdrop-blur-sm border border-white/10 p-3.5 sm:p-4 text-center">
+              <div class="text-xl sm:text-2xl font-extrabold text-cyan-300">11</div>
+              <div class="text-[11px] sm:text-xs text-slate-300 mt-0.5">Công cụ Pro</div>
+            </div>
+            <div class="rounded-2xl bg-white/10 backdrop-blur-sm border border-white/10 p-3.5 sm:p-4 text-center">
+              <div class="text-xl sm:text-2xl font-extrabold text-emerald-300">0 KB</div>
+              <div class="text-[11px] sm:text-xs text-slate-300 mt-0.5">Dữ liệu gửi đi</div>
+            </div>
+            <div class="rounded-2xl bg-white/10 backdrop-blur-sm border border-white/10 p-3.5 sm:p-4 text-center">
+              <div class="text-xl sm:text-2xl font-extrabold text-amber-300">Tức thì</div>
+              <div class="text-[11px] sm:text-xs text-slate-300 mt-0.5">Tốc độ xử lý</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Thanh lọc danh mục công cụ -->
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div id="category-filters" class="flex items-center gap-2 overflow-x-auto pb-1">
+          <button type="button" data-category="all" class="cat-btn active px-4 py-2 rounded-xl text-sm font-semibold transition-all whitespace-nowrap bg-indigo-600 text-white shadow-sm shadow-indigo-500/25">
+            Tất cả (11)
+          </button>
+          <button type="button" data-category="view" class="cat-btn px-4 py-2 rounded-xl text-sm font-medium transition-all whitespace-nowrap bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200/80 dark:border-slate-800">
+            Xem &amp; Đọc
+          </button>
+          <button type="button" data-category="organize" class="cat-btn px-4 py-2 rounded-xl text-sm font-medium transition-all whitespace-nowrap bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200/80 dark:border-slate-800">
+            Tổ chức trang
+          </button>
+          <button type="button" data-category="edit" class="cat-btn px-4 py-2 rounded-xl text-sm font-medium transition-all whitespace-nowrap bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200/80 dark:border-slate-800">
+            Chỉnh sửa &amp; Ký tên
+          </button>
+          <button type="button" data-category="convert" class="cat-btn px-4 py-2 rounded-xl text-sm font-medium transition-all whitespace-nowrap bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200/80 dark:border-slate-800">
+            Chuyển đổi
+          </button>
+        </div>
+
+        <p class="text-xs text-slate-500 dark:text-slate-400">
+          Chọn một công cụ bên dưới để bắt đầu làm việc
+        </p>
+      </div>
+
+      <!-- Lưới thẻ công cụ Bento Grid -->
+      <div id="tools-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+        <!-- Nội dung thẻ công cụ được render bằng JavaScript -->
+      </div>
+
+      <!-- Trạng thái không tìm thấy công cụ -->
+      <div id="no-tools-found" class="hidden text-center py-16 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800">
+        <div class="w-14 h-14 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center mx-auto text-slate-400 mb-3">
+          <i data-lucide="search-x" class="w-7 h-7"></i>
+        </div>
+        <h3 class="text-base font-bold text-slate-800 dark:text-slate-200">Không tìm thấy công cụ phù hợp</h3>
+        <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Thử tìm với từ khóa khác hoặc đặt lại bộ lọc danh mục.</p>
+        <button id="btn-reset-filters" type="button" class="mt-4 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium transition-colors">
+          Xem tất cả công cụ
+        </button>
+      </div>
+    </section>
+
+    <!-- ==================== VIEW 2: KHÔNG GIAN LÀM VIỆC CÔNG CỤ ==================== -->
+    <section id="workspace-view" class="hidden space-y-6 animate-fade-up">
+      <!-- Header của công cụ đang mở -->
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm">
+        <div class="flex items-center gap-3.5">
+          <button id="btn-back-hub" type="button" class="p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition-colors" title="Quay lại Trang chủ">
+            <i data-lucide="arrow-left" class="w-5 h-5"></i>
+          </button>
+          <div id="ws-tool-icon" class="w-11 h-11 rounded-xl flex items-center justify-center shrink-0"></div>
+          <div>
+            <div class="flex items-center gap-2 flex-wrap">
+              <h2 id="ws-tool-title" class="text-lg sm:text-xl font-bold text-slate-900 dark:text-white">Tên công cụ</h2>
+              <span id="ws-tool-badge" class="px-2 py-0.5 text-[11px] font-semibold rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">Danh mục</span>
+            </div>
+            <p id="ws-tool-desc" class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">Mô tả công cụ</p>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2 self-end sm:self-center">
+          <button id="btn-ws-reset" type="button" class="hidden items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-medium bg-rose-50 hover:bg-rose-100 dark:bg-rose-500/10 dark:hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-200/60 dark:border-rose-500/20 transition-colors">
+            <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+            <span>Làm mới / Chọn file khác</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Vùng nội dung động của từng công cụ -->
+      <div id="workspace-body"></div>
+    </section>
+
+  </main>
+
+  <!-- ==================== CHÂN TRANG (FOOTER) ==================== -->
+  <footer class="mt-auto border-t border-slate-200/80 dark:border-slate-800/80 bg-white/60 dark:bg-slate-900/60 py-5">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500 dark:text-slate-400">
+      <div class="flex items-center gap-2">
+        <span class="font-semibold text-slate-700 dark:text-slate-300">PDF Toolbox Pro</span>
+        <span>•</span>
+        <span>Vận hành 100% Client-Side bằng PDF.js, pdf-lib &amp; JSZip</span>
+      </div>
+      <div class="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-medium">
+        <i data-lucide="shield" class="w-3.5 h-3.5"></i>
+        <span>Tệp tin của bạn không bao giờ rời khỏi thiết bị</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ==================== OVERLAY TIẾN TRÌNH XỬ LÝ ==================== -->
+  <div id="loading-overlay" class="hidden fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 max-w-sm w-full shadow-2xl border border-slate-200 dark:border-slate-800 text-center space-y-4">
+      <div class="w-14 h-14 rounded-2xl bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center mx-auto">
+        <i data-lucide="loader-2" class="w-8 h-8 animate-spin"></i>
+      </div>
+      <div>
+        <h3 id="loading-title" class="text-base font-bold text-slate-900 dark:text-white">Đang xử lý tệp PDF...</h3>
+        <p id="loading-subtitle" class="text-xs text-slate-500 dark:text-slate-400 mt-1">Vui lòng đợi trong giây lát</p>
+      </div>
+      <div class="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2 overflow-hidden">
+        <div id="loading-bar" class="bg-indigo-600 h-full rounded-full transition-all duration-300" style="width: 45%"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== CONTAINER THÔNG BÁO TOAST ==================== -->
+  <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2.5 max-w-sm w-full pointer-events-none px-4 sm:px-0"></div>
+
+  <!-- ==================== MÃ NGUỒN JAVASCRIPT ỨNG DỤNG ==================== -->
+  <script>
+    // =========================================================================
+    // 1. CẤU HÌNH THƯ VIỆN & HẰNG SỐ TOÀN CỤC
+    // =========================================================================
+    pdfjsLib.GlobalWorkerOptions.workerSrc =
+      'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+    const { PDFDocument, rgb, degrees, StandardFonts } = PDFLib;
+
+    // Danh sách 11 công cụ chuyên nghiệp phân theo nhóm
+    const TOOLS_CONFIG = [
+      {
+        id: 'viewer',
+        title: 'Trình xem & Đọc PDF',
+        shortDesc: 'Đọc PDF sắc nét, mục lục trang thu nhỏ, phóng to/thu nhỏ, chế độ ban đêm & xem Metadata.',
+        category: 'view',
+        categoryLabel: 'Xem & Đọc',
+        icon: 'eye',
+        colorClass: 'bg-sky-50 text-sky-600 dark:bg-sky-500/15 dark:text-sky-400',
+        borderHover: 'hover:border-sky-400/60 dark:hover:border-sky-500/50',
+        keywords: 'xem doc viewer zoom ban dem metadata'
+      },
+      {
+        id: 'merge',
+        title: 'Gộp file PDF',
+        shortDesc: 'Kết hợp nhiều tệp PDF thành một tài liệu duy nhất, dễ dàng sắp xếp thứ tự trang.',
+        category: 'organize',
+        categoryLabel: 'Tổ chức trang',
+        icon: 'merge',
+        colorClass: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-400',
+        borderHover: 'hover:border-emerald-400/60 dark:hover:border-emerald-500/50',
+        keywords: 'gop noi ghep merge combine nhieu file'
+      },
+      {
+        id: 'split',
+        title: 'Tách file PDF',
+        shortDesc: 'Trích xuất khoảng trang tùy chọn hoặc tách rời từng trang thành gói tệp .ZIP.',
+        category: 'organize',
+        categoryLabel: 'Tổ chức trang',
+        icon: 'scissors',
+        colorClass: 'bg-teal-50 text-teal-600 dark:bg-teal-500/15 dark:text-teal-400',
+        borderHover: 'hover:border-teal-400/60 dark:hover:border-teal-500/50',
+        keywords: 'tach cat split trich xuat trang zip'
+      },
+      {
+        id: 'organize',
+        title: 'Sắp xếp, Xoay & Xóa trang',
+        shortDesc: 'Quản lý trực quan từng trang: xoay 90°, nhân bản, đảo vị trí hoặc xóa trang thừa.',
+        category: 'organize',
+        categoryLabel: 'Tổ chức trang',
+        icon: 'layout-grid',
+        colorClass: 'bg-green-50 text-green-600 dark:bg-green-500/15 dark:text-green-400',
+        borderHover: 'hover:border-green-400/60 dark:hover:border-green-500/50',
+        keywords: 'sap xep xoay xoa nhan ban trang rotate delete reorder'
+      },
+      {
+        id: 'watermark',
+        title: 'Chèn Watermark',
+        shortDesc: 'Đóng dấu bản quyền chữ tiếng Việt lên toàn bộ trang với tùy chỉnh màu, độ mờ, góc xoay.',
+        category: 'edit',
+        categoryLabel: 'Chỉnh sửa & Ký tên',
+        icon: 'stamp',
+        colorClass: 'bg-amber-50 text-amber-600 dark:bg-amber-500/15 dark:text-amber-400',
+        borderHover: 'hover:border-amber-400/60 dark:hover:border-amber-500/50',
+        keywords: 'watermark dong dau ban quyen chu mo'
+      },
+      {
+        id: 'pagenumbers',
+        title: 'Đánh số trang',
+        shortDesc: 'Tự động thêm số trang chuyên nghiệp (Trang 1/N, - 1 -) vào vị trí tùy chọn.',
+        category: 'edit',
+        categoryLabel: 'Chỉnh sửa & Ký tên',
+        icon: 'hash',
+        colorClass: 'bg-orange-50 text-orange-600 dark:bg-orange-500/15 dark:text-orange-400',
+        borderHover: 'hover:border-orange-400/60 dark:hover:border-orange-500/50',
+        keywords: 'danh so trang page numbers footer header'
+      },
+      {
+        id: 'sign',
+        title: 'Ký tên điện tử',
+        shortDesc: 'Vẽ chữ ký tay mượt mà hoặc gõ chữ ký, kéo thả đặt vị trí trực tiếp trên trang PDF.',
+        category: 'edit',
+        categoryLabel: 'Chỉnh sửa & Ký tên',
+        icon: 'pen-tool',
+        colorClass: 'bg-rose-50 text-rose-600 dark:bg-rose-500/15 dark:text-rose-400',
+        borderHover: 'hover:border-rose-400/60 dark:hover:border-rose-500/50',
+        keywords: 'ky ten chu ky dien tu sign signature'
+      },
+      {
+        id: 'img2pdf',
+        title: 'Chuyển Ảnh sang PDF',
+        shortDesc: 'Gộp nhiều ảnh JPG, PNG, WebP thành file PDF sắc nét với tùy chọn khổ giấy A4/Letter.',
+        category: 'convert',
+        categoryLabel: 'Chuyển đổi',
+        icon: 'image-plus',
+        colorClass: 'bg-indigo-50 text-indigo-600 dark:bg-indigo-500/15 dark:text-indigo-400',
+        borderHover: 'hover:border-indigo-400/60 dark:hover:border-indigo-500/50',
+        keywords: 'anh sang pdf jpg png image to pdf'
+      },
+      {
+        id: 'pdf2img',
+        title: 'Chuyển PDF sang Ảnh',
+        shortDesc: 'Xuất các trang PDF thành ảnh PNG/JPG độ phân giải cao, tải lẻ hoặc trọn bộ .ZIP.',
+        category: 'convert',
+        categoryLabel: 'Chuyển đổi',
+        icon: 'images',
+        colorClass: 'bg-violet-50 text-violet-600 dark:bg-violet-500/15 dark:text-violet-400',
+        borderHover: 'hover:border-violet-400/60 dark:hover:border-violet-500/50',
+        keywords: 'pdf sang anh jpg png convert zip'
+      },
+      {
+        id: 'pdf2text',
+        title: 'Trích xuất văn bản',
+        shortDesc: 'Lấy toàn bộ nội dung chữ từ PDF theo từng trang, tìm từ khóa, sao chép hoặc tải .TXT.',
+        category: 'view',
+        categoryLabel: 'Xem & Đọc',
+        icon: 'file-text',
+        colorClass: 'bg-cyan-50 text-cyan-600 dark:bg-cyan-500/15 dark:text-cyan-400',
+        borderHover: 'hover:border-cyan-400/60 dark:hover:border-cyan-500/50',
+        keywords: 'trich xuat van ban text copy txt ocr'
+      },
+      {
+        id: 'metadata',
+        title: 'Chỉnh sửa Metadata PDF',
+        shortDesc: 'Xem và cập nhật Tiêu đề, Tác giả, Chủ đề, Từ khóa thuộc tính bên trong tệp PDF.',
+        category: 'edit',
+        categoryLabel: 'Chỉnh sửa & Ký tên',
+        icon: 'info',
+        colorClass: 'bg-fuchsia-50 text-fuchsia-600 dark:bg-fuchsia-500/15 dark:text-fuchsia-400',
+        borderHover: 'hover:border-fuchsia-400/60 dark:hover:border-fuchsia-500/50',
+        keywords: 'metadata thuoc tinh tieu de tac gia title author'
+      }
+    ];
+
+    // Trạng thái ứng dụng toàn cục
+    const appState = {
+      currentToolId: null,
+      activeCategory: 'all',
+      searchQuery: '',
+      toolData: {} // Lưu trữ dữ liệu tạm thời cho công cụ đang mở
+    };
+
+    // =========================================================================
+    // 2. HÀM TIỆN ÍCH CHUNG (FILE, DOWNLOAD, TOAST, LOADING, TEXT-TO-PNG)
+    // =========================================================================
+
+    // Khởi tạo giao diện Sáng / Tối từ localStorage hoặc hệ thống
+    function initTheme() {
+      const savedTheme = localStorage.getItem('pdf_toolbox_theme');
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+    }
+
+    function toggleTheme() {
+      const isDark = document.documentElement.classList.toggle('dark');
+      localStorage.setItem('pdf_toolbox_theme', isDark ? 'dark' : 'light');
+    }
+
+    // Hiển thị thông báo Toast chuyên nghiệp (không bao giờ dùng alert)
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      toast.className =
+        'pointer-events-auto flex items-start gap-3 p-3.5 rounded-2xl shadow-xl border backdrop-blur-md transition-all duration-300 transform translate-y-2 opacity-0 ' +
+        (type === 'success'
+          ? 'bg-emerald-50/95 dark:bg-slate-900/95 border-emerald-200 dark:border-emerald-500/30 text-emerald-900 dark:text-emerald-200'
+          : type === 'error'
+          ? 'bg-rose-50/95 dark:bg-slate-900/95 border-rose-200 dark:border-rose-500/30 text-rose-900 dark:text-rose-200'
+          : 'bg-white/95 dark:bg-slate-900/95 border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200');
+
+      const iconName =
+        type === 'success' ? 'check-circle-2' : type === 'error' ? 'alert-circle' : 'info';
+      const iconColor =
+        type === 'success'
+          ? 'text-emerald-600 dark:text-emerald-400'
+          : type === 'error'
+          ? 'text-rose-600 dark:text-rose-400'
+          : 'text-indigo-600 dark:text-indigo-400';
+
+      toast.innerHTML = `
+        <i data-lucide="${iconName}" class="w-5 h-5 shrink-0 mt-0.5 ${iconColor}"></i>
+        <div class="text-xs sm:text-sm font-medium leading-snug flex-1">${escapeHtml(message)}</div>
+        <button type="button" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-0.5">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      `;
+
+      toast.querySelector('button').addEventListener('click', () => removeToast(toast));
+      container.appendChild(toast);
+      lucide.createIcons({ nodes: [toast] });
+
+      requestAnimationFrame(() => {
+        toast.classList.remove('translate-y-2', 'opacity-0');
+      });
+
+      setTimeout(() => removeToast(toast), 4500);
+    }
+
+    function removeToast(toast) {
+      if (!toast || !toast.parentElement) return;
+      toast.classList.add('opacity-0', 'translate-y-2');
+      setTimeout(() => toast.remove(), 250);
+    }
+
+    // Điều khiển màn hình Loading / Tiến trình
+    function showLoading(title = 'Đang xử lý...', subtitle = 'Vui lòng đợi trong giây lát', percent = 50) {
+      const overlay = document.getElementById('loading-overlay');
+      document.getElementById('loading-title').textContent = title;
+      document.getElementById('loading-subtitle').textContent = subtitle;
+      document.getElementById('loading-bar').style.width = `${Math.min(100, Math.max(5, percent))}%`;
+      overlay.classList.remove('hidden');
+    }
+
+    function updateLoading(percent, subtitle) {
+      document.getElementById('loading-bar').style.width = `${Math.min(100, Math.max(5, percent))}%`;
+      if (subtitle) {
+        document.getElementById('loading-subtitle').textContent = subtitle;
+      }
+    }
+
+    function hideLoading() {
+      document.getElementById('loading-overlay').classList.add('hidden');
+    }
+
+    // Đọc File sang ArrayBuffer an toàn
+    function readFileAsArrayBuffer(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = () => reject(new Error('Không thể đọc tệp tin từ thiết bị.'));
+        reader.readAsArrayBuffer(file);
+      });
+    }
+
+    // Kiểm tra và nạp PDF bằng pdf-lib (bắt lỗi file mã hóa/mật khẩu thân thiện)
+    async function loadPdfLibSafely(arrayBuffer) {
+      try {
+        // Luôn truyền bản sao .slice(0) để tránh làm hỏng ArrayBuffer gốc
+        return await PDFDocument.load(arrayBuffer.slice(0));
+      } catch (err) {
+        const msg = (err && err.message ? err.message : '').toLowerCase();
+        if (msg.includes('encrypted') || msg.includes('password')) {
+          throw new Error('File PDF này được bảo vệ bằng mật khẩu. Vui lòng gỡ mật khẩu trước khi thực hiện thao tác.');
+        }
+        throw new Error('Tệp PDF không hợp lệ hoặc bị hỏng cấu trúc. Vui lòng kiểm tra lại.');
+      }
+    }
+
+    // Nạp PDF bằng PDF.js an toàn
+    async function loadPdfJsSafely(arrayBuffer) {
+      try {
+        const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer.slice(0) });
+        return await loadingTask.promise;
+      } catch (err) {
+        if (err && err.name === 'PasswordException') {
+          throw new Error('File PDF có đặt mật khẩu bảo vệ. Không thể mở trực tiếp.');
+        }
+        throw new Error('Không thể hiển thị nội dung tệp PDF này. Tệp có thể bị lỗi.');
+      }
+    }
+
+    // Tải Blob xuống máy người dùng
+    function downloadBlob(blob, filename) {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+
+    // Định dạng dung lượng tệp
+    function formatFileSize(bytes) {
+      if (bytes === 0) return '0 B';
+      const k = 1024;
+      const sizes = ['B', 'KB', 'MB', 'GB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+
+    // Thoát ký tự HTML chống XSS
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    // Sao chép văn bản tương thích iFrame bằng execCommand('copy')
+    function copyTextToClipboard(text) {
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      textarea.style.position = 'fixed';
+      textarea.style.opacity = '0';
+      document.body.appendChild(textarea);
+      textarea.select();
+      try {
+        const ok = document.execCommand('copy');
+        if (ok) {
+          showToast('Đã sao chép văn bản vào bộ nhớ tạm!', 'success');
+        } else {
+          showToast('Không thể sao chép tự động. Vui lòng bôi đen và nhấn Ctrl+C.', 'error');
+        }
+      } catch (e) {
+        showToast('Trình duyệt chặn quyền sao chép tự động.', 'error');
+      } finally {
+        document.body.removeChild(textarea);
+      }
+    }
+
+    /**
+     * Render chữ tiếng Việt có dấu sắc nét thành ảnh PNG trong suốt (độ phân giải 3x)
+     * Giúp pdf-lib nhúng tiếng Việt hoàn hảo mà không bao giờ gặp lỗi mã hóa WinAnsi!
+     */
+    async function renderVietnameseTextToPngBytes(text, options = {}) {
+      const {
+        fontSize = 36,
+        color = '#dc2626',
+        fontFamily = 'Inter, sans-serif',
+        fontWeight = '700',
+        fontStyle = 'normal',
+        padding = 16
+      } = options;
+
+      const scale = 3; // Siêu nét khi in/zoom PDF
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+
+      const fontSpec = `${fontStyle} ${fontWeight} ${fontSize * scale}px ${fontFamily}`;
+      ctx.font = fontSpec;
+      const metrics = ctx.measureText(text);
+
+      const textWidth = Math.ceil(metrics.width);
+      const textHeight = Math.ceil(fontSize * scale * 1.35);
+
+      canvas.width = Math.max(10, textWidth + padding * 2 * scale);
+      canvas.height = Math.max(10, textHeight + padding * 2 * scale);
+
+      ctx.font = fontSpec;
+      ctx.fillStyle = color;
+      ctx.textBaseline = 'middle';
+      ctx.textAlign = 'center';
+      ctx.fillText(text, canvas.width / 2, canvas.height / 2);
+
+      const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
+      const pngBytes = await blob.arrayBuffer();
+      return {
+        pngBytes,
+        width: canvas.width / scale,
+        height: canvas.height / scale
+      };
+    }
+
+    // Tạo vùng Kéo & Thả (Dropzone) chuẩn dùng chung cho các công cụ
+    function createDropzoneHTML({ id, accept = '.pdf,application/pdf', multiple = false, title, subtitle, icon = 'upload-cloud' }) {
+      return `
+        <div
+          id="${id}"
+          class="dropzone-area relative group cursor-pointer rounded-3xl border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-indigo-500 dark:hover:border-indigo-400 bg-white dark:bg-slate-900/80 p-8 sm:p-14 text-center transition-all duration-200 hover:bg-indigo-50/30 dark:hover:bg-indigo-950/20 shadow-sm"
+        >
+          <input
+            type="file"
+            id="${id}-input"
+            accept="${accept}"
+            ${multiple ? 'multiple' : ''}
+            class="hidden"
+          />
+          <div class="w-16 h-16 rounded-2xl bg-indigo-50 dark:bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+            <i data-lucide="${icon}" class="w-8 h-8"></i>
+          </div>
+          <h3 class="text-lg sm:text-xl font-bold text-slate-900 dark:text-white">${title}</h3>
+          <p class="text-sm text-slate-500 dark:text-slate-400 mt-1.5 max-w-md mx-auto">${subtitle}</p>
+          <div class="mt-6">
+            <span class="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-indigo-600 group-hover:bg-indigo-700 text-white font-semibold text-sm shadow-md shadow-indigo-500/20 transition-all">
+              <i data-lucide="folder-open" class="w-4 h-4"></i>
+              <span>Chọn tệp từ thiết bị</span>
+            </span>
+          </div>
+          <div class="mt-4 flex items-center justify-center gap-1.5 text-xs text-slate-400 dark:text-slate-500">
+            <i data-lucide="shield-check" class="w-3.5 h-3.5 text-emerald-500"></i>
+            <span>Tệp được xử lý cục bộ 100% trên trình duyệt</span>
+          </div>
+        </div>
+      `;
+    }
+
+    // Gắn sự kiện Kéo & Thả cho Dropzone
+    function bindDropzoneEvents(dropzoneId, onFilesSelected) {
+      const zone = document.getElementById(dropzoneId);
+      const input = document.getElementById(`${dropzoneId}-input`);
+      if (!zone || !input) return;
+
+      zone.addEventListener('click', () => input.click());
+
+      input.addEventListener('change', (e) => {
+        if (e.target.files && e.target.files.length > 0) {
+          onFilesSelected(Array.from(e.target.files));
+          input.value = '';
+        }
+      });
+
+      ['dragenter', 'dragover'].forEach((evt) => {
+        zone.addEventListener(evt, (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          zone.classList.add('border-indigo-500', 'bg-indigo-50/60', 'dark:bg-indigo-950/40', 'scale-[1.01]');
+        });
+      });
+
+      ['dragleave', 'drop'].forEach((evt) => {
+        zone.addEventListener(evt, (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          zone.classList.remove('border-indigo-500', 'bg-indigo-50/60', 'dark:bg-indigo-950/40', 'scale-[1.01]');
+        });
+      });
+
+      zone.addEventListener('drop', (e) => {
+        const files = e.dataTransfer && e.dataTransfer.files ? Array.from(e.dataTransfer.files) : [];
+        if (files.length > 0) {
+          onFilesSelected(files);
+        }
+      });
+    }
+
+    // =========================================================================
+    // 3. ĐIỀU HƯỚNG HUB & RENDER DANH SÁCH CÔNG CỤ
+    // =========================================================================
+
+    function renderToolsGrid() {
+      const grid = document.getElementById('tools-grid');
+      const emptyState = document.getElementById('no-tools-found');
+      const q = appState.searchQuery.trim().toLowerCase();
+
+      const filtered = TOOLS_CONFIG.filter((tool) => {
+        const matchCat = appState.activeCategory === 'all' || tool.category === appState.activeCategory;
+        const matchQuery =
+          !q ||
+          tool.title.toLowerCase().includes(q) ||
+          tool.shortDesc.toLowerCase().includes(q) ||
+          tool.keywords.toLowerCase().includes(q);
+        return matchCat && matchQuery;
+      });
+
+      if (filtered.length === 0) {
+        grid.innerHTML = '';
+        emptyState.classList.remove('hidden');
+        return;
+      }
+
+      emptyState.classList.add('hidden');
+      grid.innerHTML = filtered
+        .map(
+          (tool) => `
+          <button
+            type="button"
+            data-open-tool="${tool.id}"
+            class="tool-card group text-left flex flex-col justify-between p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 ${tool.borderHover} shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          >
+            <div>
+              <div class="flex items-start justify-between gap-3 mb-4">
+                <div class="w-12 h-12 rounded-xl ${tool.colorClass} flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <i data-lucide="${tool.icon}" class="w-6 h-6"></i>
+                </div>
+                <span class="px-2.5 py-1 rounded-lg text-[11px] font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+                  ${tool.categoryLabel}
+                </span>
+              </div>
+              <h3 class="text-base font-bold text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                ${tool.title}
+              </h3>
+              <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1.5 leading-relaxed">
+                ${tool.shortDesc}
+              </p>
+            </div>
+
+            <div class="mt-5 pt-3 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-xs font-semibold text-indigo-600 dark:text-indigo-400">
+              <span>Mở công cụ</span>
+              <i data-lucide="arrow-right" class="w-4 h-4 group-hover:translate-x-1 transition-transform"></i>
+            </div>
+          </button>
+        `
+        )
+        .join('');
+
+      lucide.createIcons({ nodes: [grid] });
+
+      grid.querySelectorAll('[data-open-tool]').forEach((btn) => {
+        btn.addEventListener('click', () => openTool(btn.dataset.openTool));
+      });
+    }
+
+    // Chuyển về Trang chủ (Hub)
+    function goToHub() {
+      appState.currentToolId = null;
+      appState.toolData = {};
+      document.getElementById('workspace-view').classList.add('hidden');
+      document.getElementById('hub-view').classList.remove('hidden');
+      document.getElementById('btn-nav-hub').classList.add('hidden');
+      document.getElementById('btn-nav-hub').classList.remove('flex');
+      document.getElementById('btn-ws-reset').classList.add('hidden');
+      document.getElementById('btn-ws-reset').classList.remove('flex');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // Mở một công cụ cụ thể
+    function openTool(toolId) {
+      const tool = TOOLS_CONFIG.find((t) => t.id === toolId);
+      if (!tool) return;
+
+      appState.currentToolId = toolId;
+      appState.toolData = {};
+
+      // Ẩn dropdown tìm kiếm nếu đang mở
+      document.getElementById('search-dropdown').classList.add('hidden');
+
+      // Cập nhật Header công cụ
+      const iconBox = document.getElementById('ws-tool-icon');
+      iconBox.className = `w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${tool.colorClass}`;
+      iconBox.innerHTML = `<i data-lucide="${tool.icon}" class="w-6 h-6"></i>`;
+
+      document.getElementById('ws-tool-title').textContent = tool.title;
+      document.getElementById('ws-tool-badge').textContent = tool.categoryLabel;
+      document.getElementById('ws-tool-desc').textContent = tool.shortDesc;
+
+      document.getElementById('hub-view').classList.add('hidden');
+      document.getElementById('workspace-view').classList.remove('hidden');
+
+      const navHubBtn = document.getElementById('btn-nav-hub');
+      navHubBtn.classList.remove('hidden');
+      navHubBtn.classList.add('flex');
+
+      const resetBtn = document.getElementById('btn-ws-reset');
+      resetBtn.classList.add('hidden');
+      resetBtn.classList.remove('flex');
+
+      lucide.createIcons();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+
+      // Khởi tạo giao diện từng công cụ
+      const initializers = {
+        viewer: initViewerTool,
+        merge: initMergeTool,
+        split: initSplitTool,
+        organize: initOrganizeTool,
+        watermark: initWatermarkTool,
+        pagenumbers: initPageNumbersTool,
+        sign: initSignTool,
+        img2pdf: initImg2PdfTool,
+        pdf2img: initPdf2ImgTool,
+        pdf2text: initPdf2TextTool,
+        metadata: initMetadataTool
+      };
+
+      if (initializers[toolId]) {
+        initializers[toolId]();
+      }
+    }
+
+    function showWorkspaceResetButton(onResetCallback) {
+      const resetBtn = document.getElementById('btn-ws-reset');
+      resetBtn.classList.remove('hidden');
+      resetBtn.classList.add('flex');
+      resetBtn.onclick = onResetCallback;
+    }
+
+    // =========================================================================
+    // 4. CÔNG CỤ 1: TRÌNH XEM & ĐỌC PDF (PDF VIEWER PRO)
+    // =========================================================================
+    function initViewerTool() {
+      const body = document.getElementById('workspace-body');
+      body.innerHTML = createDropzoneHTML({
+        id: 'viewer-dropzone',
+        title: 'Mở tệp PDF để đọc & kiểm tra chi tiết',
+        subtitle: 'Kéo thả tệp PDF vào đây để xem sắc nét từng trang, phóng to, đọc ban đêm và xem thông tin Metadata.'
+      });
+      lucide.createIcons({ nodes: [body] });
+
+      bindDropzoneEvents('viewer-dropzone', async (files) => {
+        const file = files[0];
+        if (!file || !file.name.toLowerCase().endsWith('.pdf')) {
+          showToast('Vui lòng chọn tệp có định dạng .PDF', 'error');
+          return;
+        }
+        try {
+          showLoading('Đang mở tài liệu PDF...', file.name, 40);
+          const buffer = await readFileAsArrayBuffer(file);
+          const pdfDoc = await loadPdfJsSafely(buffer);
+          let metaInfo = {};
+          try {
+            const meta = await pdfDoc.getMetadata();
+            metaInfo = meta && meta.info ? meta.info : {};
+          } catch (_) {}
+
+          appState.toolData = {
+            file,
+            buffer,
+            pdfDoc,
+            numPages: pdfDoc.numPages,
+            currentPage: 1,
+            scale: 1.25,
+            nightMode: false,
+            metaInfo
+          };
+
+          renderViewerWorkspace();
+          showWorkspaceResetButton(() => initViewerTool());
+        } catch (err) {
+          showToast(err.message, 'error');
+        } finally {
+          hideLoading();
+        }
+      });
+    }
+
+    function renderViewerWorkspace() {
+      const d = appState.toolData;
+      const body = document.getElementById('workspace-body');
+      body.innerHTML = `
+        <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm overflow-hidden flex flex-col">
+          <!-- Thanh công cụ điều khiển Viewer -->
+          <div class="p-3 bg-slate-100/80 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-700 flex flex-wrap items-center justify-between gap-2">
+            <!-- Thông tin tên file -->
+            <div class="flex items-center gap-2 min-w-0 max-w-xs">
+              <i data-lucide="file-text" class="w-4 h-4 text-sky-600 dark:text-sky-400 shrink-0"></i>
+              <span class="text-xs sm:text-sm font-semibold truncate" title="${escapeHtml(d.file.name)}">${escapeHtml(d.file.name)}</span>
+            </div>
+
+            <!-- Điều hướng trang -->
+            <div class="flex items-center gap-1.5 bg-white dark:bg-slate-900 px-2 py-1 rounded-xl border border-slate-200 dark:border-slate-700">
+              <button id="vw-prev" type="button" class="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-40" title="Trang trước">
+                <i data-lucide="chevron-left" class="w-4 h-4"></i>
+              </button>
+              <div class="flex items-center gap-1 text-xs font-medium px-1">
+                <input id="vw-page-input" type="number" min="1" max="${d.numPages}" value="${d.currentPage}" class="w-12 text-center py-0.5 rounded bg-slate-100 dark:bg-slate-800 font-bold focus:outline-none focus:ring-1 focus:ring-indigo-500" />
+                <span class="text-slate-400">/ ${d.numPages}</span>
+              </div>
+              <button id="vw-next" type="button" class="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-40" title="Trang sau">
+                <i data-lucide="chevron-right" class="w-4 h-4"></i>
+              </button>
+            </div>
+
+            <!-- Zoom & Chế độ đọc -->
+            <div class="flex items-center gap-1.5">
+              <button id="vw-zoom-out" type="button" class="p-2 rounded-xl bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700" title="Thu nhỏ">
+                <i data-lucide="zoom-out" class="w-4 h-4"></i>
+              </button>
+              <span id="vw-zoom-label" class="text-xs font-bold w-12 text-center">${Math.round(d.scale * 100)}%</span>
+              <button id="vw-zoom-in" type="button" class="p-2 rounded-xl bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700" title="Phóng to">
+                <i data-lucide="zoom-in" class="w-4 h-4"></i>
+              </button>
+              <button id="vw-fit-width" type="button" class="px-2.5 py-2 rounded-xl bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-medium" title="Vừa chiều rộng">
+                Vừa khung
+              </button>
+              <button id="vw-night-toggle" type="button" class="p-2 rounded-xl bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700" title="Chế độ đọc ban đêm (Đảo màu trang)">
+                <i data-lucide="contrast" class="w-4 h-4"></i>
+              </button>
+              <button id="vw-meta-btn" type="button" class="flex items-center gap-1 px-3 py-2 rounded-xl bg-sky-600 hover:bg-sky-700 text-white text-xs font-semibold transition-colors">
+                <i data-lucide="info" class="w-3.5 h-3.5"></i>
+                <span class="hidden sm:inline">Thông tin</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Panel Metadata ẩn/hiện -->
+          <div id="vw-meta-panel" class="hidden bg-sky-50/70 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-700 p-4 text-xs">
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div><span class="text-slate-400 block">Tiêu đề:</span><strong class="text-slate-800 dark:text-slate-200">${escapeHtml(d.metaInfo.Title || 'Không có')}</strong></div>
+              <div><span class="text-slate-400 block">Tác giả:</span><strong class="text-slate-800 dark:text-slate-200">${escapeHtml(d.metaInfo.Author || 'Không có')}</strong></div>
+              <div><span class="text-slate-400 block">Số trang / Dung lượng:</span><strong class="text-slate-800 dark:text-slate-200">${d.numPages} trang • ${formatFileSize(d.file.size)}</strong></div>
+              <div><span class="text-slate-400 block">Phần mềm tạo:</span><strong class="text-slate-800 dark:text-slate-200">${escapeHtml(d.metaInfo.Producer || d.metaInfo.Creator || 'Không rõ')}</strong></div>
+            </div>
+          </div>
+
+          <!-- Khu vực hiển thị chính: Sidebar Thumbnail + Canvas đọc -->
+          <div class="flex flex-col md:flex-row h-[72vh] min-h-[480px]">
+            <!-- Sidebar Thumbnail -->
+            <aside id="vw-thumbnails" class="w-full md:w-52 shrink-0 border-b md:border-b-0 md:border-r border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950/60 p-3 flex md:flex-col gap-3 overflow-x-auto md:overflow-y-auto">
+              <!-- Thumbnails được render bất đồng bộ -->
+            </aside>
+
+            <!-- Khung Canvas trang chính -->
+            <div id="vw-canvas-wrapper" class="flex-1 overflow-auto bg-slate-200/70 dark:bg-slate-950 p-4 sm:p-8 flex justify-center items-start">
+              <div class="shadow-2xl rounded-lg overflow-hidden bg-white transition-all">
+                <canvas id="vw-main-canvas" class="block"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      lucide.createIcons({ nodes: [body] });
+
+      // Gắn sự kiện điều khiển
+      document.getElementById('vw-prev').onclick = () => goToViewerPage(d.currentPage - 1);
+      document.getElementById('vw-next').onclick = () => goToViewerPage(d.currentPage + 1);
+      document.getElementById('vw-page-input').onchange = (e) => {
+        const val = parseInt(e.target.value, 10);
+        if (!isNaN(val)) goToViewerPage(val);
+      };
+      document.getElementById('vw-zoom-out').onclick = () => {
+        d.scale = Math.max(0.4, +(d.scale - 0.2).toFixed(2));
+        renderCurrentViewerPage();
+      };
+      document.getElementById('vw-zoom-in').onclick = () => {
+        d.scale = Math.min(3.5, +(d.scale + 0.2).toFixed(2));
+        renderCurrentViewerPage();
+      };
+      document.getElementById('vw-fit-width').onclick = async () => {
+        const page = await d.pdfDoc.getPage(d.currentPage);
+        const vp = page.getViewport({ scale: 1 });
+        const containerW = document.getElementById('vw-canvas-wrapper').clientWidth - 64;
+        d.scale = Math.max(0.5, Math.min(2.5, +(containerW / vp.width).toFixed(2)));
+        renderCurrentViewerPage();
+      };
+      document.getElementById('vw-night-toggle').onclick = () => {
+        d.nightMode = !d.nightMode;
+        const wrap = document.getElementById('vw-canvas-wrapper');
+        wrap.classList.toggle('pdf-night-mode', d.nightMode);
+        showToast(d.nightMode ? 'Đã bật chế độ đọc ban đêm' : 'Đã tắt chế độ đọc ban đêm', 'info');
+      };
+      document.getElementById('vw-meta-btn').onclick = () => {
+        document.getElementById('vw-meta-panel').classList.toggle('hidden');
+      };
+
+      renderCurrentViewerPage();
+      renderViewerThumbnails();
+    }
+
+    async function goToViewerPage(pageNum) {
+      const d = appState.toolData;
+      const target = Math.min(d.numPages, Math.max(1, pageNum));
+      d.currentPage = target;
+      document.getElementById('vw-page-input').value = target;
+      await renderCurrentViewerPage();
+
+      // Highlight thumbnail đang chọn
+      document.querySelectorAll('.vw-thumb-item').forEach((el) => {
+        const isCurrent = parseInt(el.dataset.page, 10) === target;
+        el.classList.toggle('ring-2', isCurrent);
+        el.classList.toggle('ring-indigo-500', isCurrent);
+        if (isCurrent) el.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+      });
+    }
+
+    async function renderCurrentViewerPage() {
+      const d = appState.toolData;
+      const canvas = document.getElementById('vw-main-canvas');
+      if (!canvas) return;
+
+      document.getElementById('vw-zoom-label').textContent = `${Math.round(d.scale * 100)}%`;
+      document.getElementById('vw-prev').disabled = d.currentPage <= 1;
+      document.getElementById('vw-next').disabled = d.currentPage >= d.numPages;
+
+      const page = await d.pdfDoc.getPage(d.currentPage);
+      const outputScale = window.devicePixelRatio || 1;
+      const viewport = page.getViewport({ scale: d.scale });
+
+      canvas.width = Math.floor(viewport.width * outputScale);
+      canvas.height = Math.floor(viewport.height * outputScale);
+      canvas.style.width = `${Math.floor(viewport.width)}px`;
+      canvas.style.height = `${Math.floor(viewport.height)}px`;
+
+      const ctx = canvas.getContext('2d');
+      const transform = outputScale !== 1 ? [outputScale, 0, 0, outputScale, 0, 0] : null;
+      await page.render({ canvasContext: ctx, transform, viewport }).promise;
+    }
+
+    async function renderViewerThumbnails() {
+      const d = appState.toolData;
+      const container = document.getElementById('vw-thumbnails');
+      if (!container) return;
+
+      container.innerHTML = '';
+      for (let i = 1; i <= d.numPages; i++) {
+        const item = document.createElement('button');
+        item.type = 'button';
+        item.dataset.page = i;
+        item.className = `vw-thumb-item shrink-0 flex flex-col items-center p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-indigo-400 transition-all ${
+          i === d.currentPage ? 'ring-2 ring-indigo-500' : ''
+        }`;
+        item.innerHTML = `
+          <canvas class="rounded border border-slate-100 dark:border-slate-800 max-w-[110px] h-auto bg-white"></canvas>
+          <span class="text-[11px] font-semibold text-slate-600 dark:text-slate-400 mt-1.5">Trang ${i}</span>
+        `;
+        item.onclick = () => goToViewerPage(i);
+        container.appendChild(item);
+
+        // Render từng thumbnail
+        const page = await d.pdfDoc.getPage(i);
+        const vp = page.getViewport({ scale: 0.25 });
+        const c = item.querySelector('canvas');
+        c.width = vp.width;
+        c.height = vp.height;
+        await page.render({ canvasContext: c.getContext('2d'), viewport: vp }).promise;
+      }
+    }
+
+    // =========================================================================
+    // 5. CÔNG CỤ 2: GỘP FILE PDF (MERGE PDF)
+    // =========================================================================
+    function initMergeTool() {
+      appState.toolData = { items: [] };
+      renderMergeWorkspace();
+    }
+
+    function renderMergeWorkspace() {
+      const d = appState.toolData;
+      const body = document.getElementById('workspace-body');
+
+      if (d.items.length === 0) {
+        body.innerHTML = createDropzoneHTML({
+          id: 'merge-dropzone',
+          multiple: true,
+          title: 'Chọn nhiều tệp PDF để gộp lại',
+          subtitle: 'Kéo thả 2 hoặc nhiều tệp PDF vào đây. Bạn có thể thêm tiếp và sắp xếp lại thứ tự trước khi gộp.'
+        });
+        lucide.createIcons({ nodes: [body] });
+        bindDropzoneEvents('merge-dropzone', handleAddMergeFiles);
+        return;
+      }
+
+      showWorkspaceResetButton(() => initMergeTool());
+      const totalPages = d.items.reduce((sum, item) => sum + item.pageCount, 0);
+
+      body.innerHTML = `
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <!-- Danh sách các file PDF -->
+          <div class="lg:col-span-2 space-y-3">
+            <div class="flex items-center justify-between bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800">
+              <div>
+                <h3 class="font-bold text-sm sm:text-base">Danh sách tệp cần gộp (${d.items.length} tệp)</h3>
+                <p class="text-xs text-slate-500 dark:text-slate-400">Tổng cộng ${totalPages} trang PDF sẽ được nối theo thứ tự từ trên xuống dưới</p>
+              </div>
+              <label class="cursor-pointer inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-500/15 dark:hover:bg-indigo-500/25 text-indigo-600 dark:text-indigo-300 text-xs font-semibold transition-colors">
+                <i data-lucide="plus" class="w-4 h-4"></i>
+                <span>Thêm file PDF</span>
+                <input id="merge-add-more" type="file" accept=".pdf,application/pdf" multiple class="hidden" />
+              </label>
+            </div>
+
+            <div class="space-y-2.5">
+              ${d.items
+                .map(
+                  (item, idx) => `
+                <div class="flex items-center justify-between gap-3 p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm">
+                  <div class="flex items-center gap-3 min-w-0">
+                    <span class="w-7 h-7 rounded-lg bg-emerald-50 dark:bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-bold text-xs flex items-center justify-center shrink-0">
+                      ${idx + 1}
+                    </span>
+                    <div class="min-w-0">
+                      <p class="text-sm font-semibold text-slate-800 dark:text-slate-100 truncate">${escapeHtml(item.name)}</p>
+                      <p class="text-xs text-slate-500 dark:text-slate-400">${item.pageCount} trang • ${formatFileSize(item.size)}</p>
+                    </div>
+                  </div>
+
+                  <div class="flex items-center gap-1 shrink-0">
+                    <button type="button" data-merge-up="${idx}" ${idx === 0 ? 'disabled' : ''} class="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-30 text-slate-600 dark:text-slate-300" title="Di chuyển lên">
+                      <i data-lucide="arrow-up" class="w-4 h-4"></i>
+                    </button>
+                    <button type="button" data-merge-down="${idx}" ${idx === d.items.length - 1 ? 'disabled' : ''} class="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-30 text-slate-600 dark:text-slate-300" title="Di chuyển xuống">
+                      <i data-lucide="arrow-down" class="w-4 h-4"></i>
+                    </button>
+                    <button type="button" data-merge-del="${idx}" class="p-2 rounded-xl hover:bg-rose-50 dark:hover:bg-rose-500/15 text-rose-500" title="Xóa khỏi danh sách">
+                      <i data-lucide="trash-2" class="w-4 h-4"></i>
+                    </button>
+                  </div>
+                </div>
+              `
+                )
+                .join('')}
+            </div>
+          </div>
+
+          <!-- Cột hành động xuất file -->
+          <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm h-fit space-y-4">
+            <h3 class="font-bold text-base">Tùy chọn xuất bản</h3>
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">Tên tệp PDF sau khi gộp</label>
+              <input id="merge-output-name" type="text" value="Tai_Lieu_Da_Gop.pdf" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm focus:outline-none focus:border-indigo-500" />
+            </div>
+
+            <div class="p-3 rounded-xl bg-emerald-50/70 dark:bg-emerald-500/10 text-xs text-emerald-800 dark:text-emerald-300 space-y-1">
+              <p class="font-semibold">Sẵn sàng gộp ${d.items.length} tệp (${totalPages} trang)</p>
+              <p class="opacity-80">Giữ nguyên chất lượng văn bản, hình ảnh và kích thước trang gốc.</p>
+            </div>
+
+            <button id="btn-execute-merge" type="button" class="w-full py-3.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2 transition-all">
+              <i data-lucide="merge" class="w-4 h-4"></i>
+              <span>Gộp &amp; Tải xuống PDF</span>
+            </button>
+          </div>
+        </div>
+      `;
+
+      lucide.createIcons({ nodes: [body] });
+
+      document.getElementById('merge-add-more').onchange = (e) => {
+        if (e.target.files.length) handleAddMergeFiles(Array.from(e.target.files));
+      };
+
+      body.querySelectorAll('[data-merge-up]').forEach((btn) => {
+        btn.onclick = () => {
+          const i = parseInt(btn.dataset.mergeUp, 10);
+          if (i > 0) {
+            [d.items[i - 1], d.items[i]] = [d.items[i], d.items[i - 1]];
+            renderMergeWorkspace();
+          }
+        };
+      });
+
+      body.querySelectorAll('[data-merge-down]').forEach((btn) => {
+        btn.onclick = () => {
+          const i = parseInt(btn.dataset.mergeDown, 10);
+          if (i < d.items.length - 1) {
+            [d.items[i + 1], d.items[i]] = [d.items[i], d.items[i + 1]];
+            renderMergeWorkspace();
+          }
+        };
+      });
+
+      body.querySelectorAll('[data-merge-del]').forEach((btn) => {
+        btn.onclick = () => {
+          const i = parseInt(btn.dataset.mergeDel, 10);
+          d.items.splice(i, 1);
+          renderMergeWorkspace();
+        };
+      });
+
+      document.getElementById('btn-execute-merge').onclick = executeMergePdf;
+    }
+
+    async function handleAddMergeFiles(files) {
+      const pdfFiles = files.filter((f) => f.name.toLowerCase().endsWith('.pdf'));
+      if (pdfFiles.length === 0) {
+        showToast('Vui lòng chỉ chọn các tệp định dạng .PDF', 'error');
+        return;
+      }
+
+      showLoading('Đang kiểm tra tệp PDF...', `Đang nạp ${pdfFiles.length} tệp`, 35);
+      let added = 0;
+      for (const file of pdfFiles) {
+        try {
+          const buffer = await readFileAsArrayBuffer(file);
+          const doc = await loadPdfLibSafely(buffer);
+          appState.toolData.items.push({
+            name: file.name,
+            size: file.size,
+            buffer,
+            pageCount: doc.getPageCount()
+          });
+          added++;
+        } catch (err) {
+          showToast(`${file.name}: ${err.message}`, 'error');
+        }
+      }
+      hideLoading();
+      if (added > 0) {
+        showToast(`Đã thêm ${added} tệp PDF vào danh sách.`, 'success');
+        renderMergeWorkspace();
+      }
+    }
+
+    async function executeMergePdf() {
+      const d = appState.toolData;
+      if (d.items.length < 2) {
+        showToast('Vui lòng thêm ít nhất 2 tệp PDF để tiến hành gộp.', 'error');
+        return;
+      }
+
+      try {
+        showLoading('Đang gộp các tệp PDF...', 'Đang ghép trang và tối ưu cấu trúc', 30);
+        const mergedPdf = await PDFDocument.create();
+
+        for (let i = 0; i < d.items.length; i++) {
+          updateLoading(30 + Math.round(((i + 1) / d.items.length) * 60), `Đang gộp tệp ${i + 1}/${d.items.length}...`);
+          const srcDoc = await PDFDocument.load(d.items[i].buffer.slice(0));
+          const copiedPages = await mergedPdf.copyPages(srcDoc, srcDoc.getPageIndices());
+          copiedPages.forEach((p) => mergedPdf.addPage(p));
+        }
+
+        const outBytes = await mergedPdf.save();
+        let outName = document.getElementById('merge-output-name').value.trim() || 'Tai_Lieu_Da_Gop.pdf';
+        if (!outName.toLowerCase().endsWith('.pdf')) outName += '.pdf';
+
+        downloadBlob(new Blob([outBytes], { type: 'application/pdf' }), outName);
+        showToast('Gộp tệp PDF thành công!', 'success');
+      } catch (err) {
+        showToast(err.message || 'Có lỗi xảy ra khi gộp PDF.', 'error');
+      } finally {
+        hideLoading();
+      }
+    }
+
+    // =========================================================================
+    // 6. CÔNG CỤ 3: TÁCH FILE PDF (SPLIT PDF)
+    // =========================================================================
+    function initSplitTool() {
+      const body = document.getElementById('workspace-body');
+      body.innerHTML = createDropzoneHTML({
+        id: 'split-dropzone',
+        title: 'Chọn tệp PDF cần tách trang',
+        subtitle: 'Tách theo khoảng trang tùy chọn (ví dụ: 1-3, 5, 7-9) hoặc tách rời từng trang vào file .ZIP.'
+      });
+      lucide.createIcons({ nodes: [body] });
+
+      bindDropzoneEvents('split-dropzone', async (files) => {
+        const file = files[0];
+        if (!file || !file.name.toLowerCase().endsWith('.pdf')) {
+          showToast('Vui lòng chọn tệp .PDF hợp lệ.', 'error');
+          return;
+        }
+        try {
+          showLoading('Đang phân tích cấu trúc trang...', file.name, 45);
+          const buffer = await readFileAsArrayBuffer(file);
+          const pdfLibDoc = await loadPdfLibSafely(buffer);
+          const pdfJsDoc = await loadPdfJsSafely(buffer);
+
+          appState.toolData = {
+            file,
+            buffer,
+            pageCount: pdfLibDoc.getPageCount(),
+            pdfJsDoc,
+            mode: 'range',
+            rangeStr: `1-${Math.min(3, pdfLibDoc.getPageCount())}`
+          };
+
+          renderSplitWorkspace();
+          showWorkspaceResetButton(() => initSplitTool());
+        } catch (err) {
+          showToast(err.message, 'error');
+        } finally {
+          hideLoading();
+        }
+      });
+    }
+
+    async function renderSplitWorkspace() {
+      const d = appState.toolData;
+      const body = document.getElementById('workspace-body');
+
+      body.innerHTML = `
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <!-- Cột cấu hình tách -->
+          <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-5 h-fit">
+            <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700">
+              <p class="text-sm font-bold truncate">${escapeHtml(d.file.name)}</p>
+              <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Tổng số trang: <strong class="text-teal-600 dark:text-teal-400">${d.pageCount} trang</strong></p>
+            </div>
+
+            <div class="space-y-2.5">
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-500">Chế độ tách PDF</label>
+              <label class="flex items-start gap-3 p-3.5 rounded-xl border cursor-pointer transition-all ${
+                d.mode === 'range'
+                  ? 'border-teal-500 bg-teal-50/50 dark:bg-teal-500/10'
+                  : 'border-slate-200 dark:border-slate-800'
+              }">
+                <input type="radio" name="split-mode" value="range" ${d.mode === 'range' ? 'checked' : ''} class="mt-1 accent-teal-600" />
+                <div>
+                  <span class="block text-sm font-bold">Tách theo khoảng trang</span>
+                  <span class="block text-xs text-slate-500 dark:text-slate-400 mt-0.5">Trích xuất các trang chọn lọc thành 1 file PDF mới.</span>
+                </div>
+              </label>
+
+              <label class="flex items-start gap-3 p-3.5 rounded-xl border cursor-pointer transition-all ${
+                d.mode === 'all_zip'
+                  ? 'border-teal-500 bg-teal-50/50 dark:bg-teal-500/10'
+                  : 'border-slate-200 dark:border-slate-800'
+              }">
+                <input type="radio" name="split-mode" value="all_zip" ${d.mode === 'all_zip' ? 'checked' : ''} class="mt-1 accent-teal-600" />
+                <div>
+                  <span class="block text-sm font-bold">Tách rời từng trang (.ZIP)</span>
+                  <span class="block text-xs text-slate-500 dark:text-slate-400 mt-0.5">Mỗi trang thành 1 file PDF riêng, đóng gói nén .ZIP.</span>
+                </div>
+              </label>
+            </div>
+
+            <div id="split-range-box" class="${d.mode === 'range' ? '' : 'hidden'} space-y-2">
+              <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300">Nhập khoảng trang (từ 1 đến ${d.pageCount})</label>
+              <input id="split-range-input" type="text" value="${escapeHtml(d.rangeStr)}" placeholder="Ví dụ: 1-3, 5, 7-9" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm font-medium focus:outline-none focus:border-teal-500" />
+              <p class="text-[11px] text-slate-400">Dùng dấu gạch ngang (-) cho khoảng liên tiếp và dấu phẩy (,) để ngăn cách.</p>
+            </div>
+
+            <button id="btn-execute-split" type="button" class="w-full py-3.5 px-4 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold text-sm shadow-lg shadow-teal-500/20 flex items-center justify-center gap-2 transition-all">
+              <i data-lucide="scissors" class="w-4 h-4"></i>
+              <span>${d.mode === 'range' ? 'Tách & Tải file PDF' : 'Tách tất cả & Tải .ZIP'}</span>
+            </button>
+          </div>
+
+          <!-- Lưới xem trước trang giúp người dùng dễ chọn số trang -->
+          <div class="lg:col-span-2 bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="font-bold text-sm sm:text-base">Xem trước các trang của tài liệu</h3>
+              <span class="text-xs text-slate-400">Nhấn vào trang để thêm nhanh vào khoảng tách</span>
+            </div>
+            <div id="split-preview-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 max-h-[62vh] overflow-y-auto pr-1"></div>
+          </div>
+        </div>
+      `;
+
+      lucide.createIcons({ nodes: [body] });
+
+      body.querySelectorAll('input[name="split-mode"]').forEach((radio) => {
+        radio.onchange = () => {
+          d.mode = radio.value;
+          renderSplitWorkspace();
+        };
+      });
+
+      const rangeInput = document.getElementById('split-range-input');
+      if (rangeInput) {
+        rangeInput.oninput = (e) => (d.rangeStr = e.target.value);
+      }
+
+      document.getElementById('btn-execute-split').onclick = executeSplitPdf;
+
+      // Render thumbnail các trang
+      const grid = document.getElementById('split-preview-grid');
+      for (let i = 1; i <= d.pageCount; i++) {
+        const card = document.createElement('button');
+        card.type = 'button';
+        card.className =
+          'flex flex-col items-center p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/70 dark:border-slate-700 hover:border-teal-500 transition-all';
+        card.innerHTML = `
+          <canvas class="rounded bg-white shadow-sm max-w-full h-auto"></canvas>
+          <span class="mt-2 text-xs font-bold text-slate-700 dark:text-slate-300">Trang ${i}</span>
+        `;
+        card.onclick = () => {
+          if (d.mode !== 'range') {
+            d.mode = 'range';
+            d.rangeStr = String(i);
+            renderSplitWorkspace();
+            return;
+          }
+          const inp = document.getElementById('split-range-input');
+          const cur = inp.value.trim();
+          inp.value = cur ? `${cur}, ${i}` : `${i}`;
+          d.rangeStr = inp.value;
+          showToast(`Đã thêm trang ${i} vào danh sách tách.`, 'info');
+        };
+        grid.appendChild(card);
+
+        const page = await d.pdfJsDoc.getPage(i);
+        const vp = page.getViewport({ scale: 0.32 });
+        const canvas = card.querySelector('canvas');
+        canvas.width = vp.width;
+        canvas.height = vp.height;
+        await page.render({ canvasContext: canvas.getContext('2d'), viewport: vp }).promise;
+      }
+    }
+
+    // Phân tích chuỗi khoảng trang như "1-3, 5, 7-9" thành mảng index 0-based
+    function parsePageRanges(rangeStr, maxPage) {
+      const parts = rangeStr
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean);
+      if (parts.length === 0) {
+        throw new Error('Vui lòng nhập khoảng trang cần tách (ví dụ: 1-3, 5).');
+      }
+
+      const indices = [];
+      for (const part of parts) {
+        if (part.includes('-')) {
+          const [startStr, endStr] = part.split('-').map((s) => s.trim());
+          const start = parseInt(startStr, 10);
+          const end = parseInt(endStr, 10);
+          if (isNaN(start) || isNaN(end) || start < 1 || end > maxPage || start > end) {
+            throw new Error(`Khoảng trang "${part}" không hợp lệ (tài liệu có từ trang 1 đến ${maxPage}).`);
+          }
+          for (let p = start; p <= end; p++) {
+            indices.push(p - 1);
+          }
+        } else {
+          const p = parseInt(part, 10);
+          if (isNaN(p) || p < 1 || p > maxPage) {
+            throw new Error(`Số trang "${part}" không hợp lệ (tài liệu có từ trang 1 đến ${maxPage}).`);
+          }
+          indices.push(p - 1);
+        }
+      }
+      return indices;
+    }
+
+    async function executeSplitPdf() {
+      const d = appState.toolData;
+      const baseName = d.file.name.replace(/\.pdf$/i, '');
+
+      try {
+        const srcDoc = await PDFDocument.load(d.buffer.slice(0));
+
+        if (d.mode === 'range') {
+          const pageIndices = parsePageRanges(d.rangeStr, d.pageCount);
+          showLoading('Đang trích xuất các trang đã chọn...', `Tổng cộng ${pageIndices.length} trang`, 50);
+
+          const newDoc = await PDFDocument.create();
+          const copied = await newDoc.copyPages(srcDoc, pageIndices);
+          copied.forEach((p) => newDoc.addPage(p));
+
+          const bytes = await newDoc.save();
+          downloadBlob(new Blob([bytes], { type: 'application/pdf' }), `${baseName}_Da_Tach.pdf`);
+          showToast(`Đã tách thành công ${pageIndices.length} trang PDF!`, 'success');
+        } else {
+          showLoading('Đang tách rời từng trang thành gói .ZIP...', 'Đang khởi tạo JSZip', 15);
+          const zip = new JSZip();
+
+          for (let i = 0; i < d.pageCount; i++) {
+            updateLoading(15 + Math.round(((i + 1) / d.pageCount) * 70), `Đang xử lý trang ${i + 1}/${d.pageCount}...`);
+            const singleDoc = await PDFDocument.create();
+            const [copiedPage] = await singleDoc.copyPages(srcDoc, [i]);
+            singleDoc.addPage(copiedPage);
+            const singleBytes = await singleDoc.save();
+            const padNum = String(i + 1).padStart(String(d.pageCount).length, '0');
+            zip.file(`${baseName}_Trang_${padNum}.pdf`, singleBytes);
+          }
+
+          updateLoading(90, 'Đang nén tệp .ZIP...');
+          const zipBlob = await zip.generateAsync({ type: 'blob' });
+          downloadBlob(zipBlob, `${baseName}_Tat_Ca_Trang.zip`);
+          showToast(`Đã tách ${d.pageCount} trang và đóng gói thành tệp .ZIP!`, 'success');
+        }
+      } catch (err) {
+        showToast(err.message || 'Lỗi khi tách tệp PDF.', 'error');
+      } finally {
+        hideLoading();
+      }
+    }
+
+    // =========================================================================
+    // 7. CÔNG CỤ 4: SẮP XẾP, XOAY & XÓA TRANG (ORGANIZE PAGES)
+    // =========================================================================
+    function initOrganizeTool() {
+      const body = document.getElementById('workspace-body');
+      body.innerHTML = createDropzoneHTML({
+        id: 'org-dropzone',
+        title: 'Chọn tệp PDF để sắp xếp, xoay & xóa trang',
+        subtitle: 'Hiển thị trực quan tất cả các trang để bạn xoay 90°, nhân bản, đảo thứ tự hoặc xóa trang.'
+      });
+      lucide.createIcons({ nodes: [body] });
+
+      bindDropzoneEvents('org-dropzone', async (files) => {
+        const file = files[0];
+        if (!file || !file.name.toLowerCase().endsWith('.pdf')) {
+          showToast('Vui lòng chọn tệp .PDF hợp lệ.', 'error');
+          return;
+        }
+        try {
+          showLoading('Đang dựng hình thu nhỏ các trang...', file.name, 30);
+          const buffer = await readFileAsArrayBuffer(file);
+          await loadPdfLibSafely(buffer);
+          const pdfJsDoc = await loadPdfJsSafely(buffer);
+
+          const thumbUrls = [];
+          for (let i = 1; i <= pdfJsDoc.numPages; i++) {
+            updateLoading(30 + Math.round((i / pdfJsDoc.numPages) * 60), `Đang render trang ${i}/${pdfJsDoc.numPages}`);
+            const page = await pdfJsDoc.getPage(i);
+            const vp = page.getViewport({ scale: 0.45 });
+            const canvas = document.createElement('canvas');
+            canvas.width = vp.width;
+            canvas.height = vp.height;
+            await page.render({ canvasContext: canvas.getContext('2d'), viewport: vp }).promise;
+            thumbUrls.push(canvas.toDataURL('image/jpeg', 0.85));
+          }
+
+          const pages = thumbUrls.map((url, idx) => ({
+            uid: `p_${idx}_${Date.now()}`,
+            originalIndex: idx,
+            rotation: 0, // góc xoay cộng thêm (bội số 90)
+            thumbUrl: url
+          }));
+
+          appState.toolData = { file, buffer, pages };
+          renderOrganizeWorkspace();
+          showWorkspaceResetButton(() => initOrganizeTool());
+        } catch (err) {
+          showToast(err.message, 'error');
+        } finally {
+          hideLoading();
+        }
+      });
+    }
+
+    function renderOrganizeWorkspace() {
+      const d = appState.toolData;
+      const body = document.getElementById('workspace-body');
+
+      body.innerHTML = `
+        <div class="space-y-4">
+          <!-- Thanh hành động trên cùng -->
+          <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm flex flex-wrap items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+              <span class="px-3 py-1.5 rounded-xl bg-green-50 dark:bg-green-500/15 text-green-700 dark:text-green-300 text-xs font-bold">
+                Hiện có ${d.pages.length} trang
+              </span>
+              <button id="org-rotate-all-right" type="button" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-xs font-semibold transition-colors">
+                <i data-lucide="rotate-cw" class="w-3.5 h-3.5"></i>
+                <span>Xoay tất cả +90°</span>
+              </button>
+            </div>
+
+            <button id="btn-execute-organize" type="button" class="px-5 py-2.5 rounded-xl bg-green-600 hover:bg-green-700 text-white font-bold text-sm shadow-lg shadow-green-500/20 flex items-center gap-2 transition-all">
+              <i data-lucide="download" class="w-4 h-4"></i>
+              <span>Lưu &amp; Tải file PDF mới</span>
+            </button>
+          </div>
+
+          <!-- Lưới quản lý trang -->
+          <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+            ${d.pages
+              .map(
+                (p, idx) => `
+              <div class="group bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-3 flex flex-col justify-between shadow-sm hover:border-green-500 transition-all">
+                <!-- Khung ảnh thumbnail xoay mượt -->
+                <div class="relative aspect-[3/4] bg-slate-100 dark:bg-slate-950 rounded-xl overflow-hidden flex items-center justify-center p-2">
+                  <img
+                    src="${p.thumbUrl}"
+                    alt="Trang ${idx + 1}"
+                    style="transform: rotate(${p.rotation}deg);"
+                    class="max-w-full max-h-full object-contain shadow rounded transition-transform duration-200"
+                  />
+                  <span class="absolute top-2 left-2 px-2 py-0.5 rounded-md bg-slate-900/80 text-white text-[11px] font-bold">
+                    #${idx + 1} <span class="font-normal opacity-75">(Gốc ${p.originalIndex + 1})</span>
+                  </span>
+                </div>
+
+                <!-- Các nút thao tác trên từng trang -->
+                <div class="mt-3 pt-2.5 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-1">
+                  <div class="flex items-center gap-0.5">
+                    <button type="button" data-org-left="${idx}" ${idx === 0 ? 'disabled' : ''} class="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-30" title="Chuyển sang trái">
+                      <i data-lucide="chevron-left" class="w-4 h-4"></i>
+                    </button>
+                    <button type="button" data-org-right="${idx}" ${idx === d.pages.length - 1 ? 'disabled' : ''} class="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-30" title="Chuyển sang phải">
+                      <i data-lucide="chevron-right" class="w-4 h-4"></i>
+                    </button>
+                  </div>
+
+                  <div class="flex items-center gap-0.5">
+                    <button type="button" data-org-rot-l="${idx}" class="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300" title="Xoay trái 90°">
+                      <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+                    </button>
+                    <button type="button" data-org-rot-r="${idx}" class="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300" title="Xoay phải 90°">
+                      <i data-lucide="rotate-cw" class="w-3.5 h-3.5"></i>
+                    </button>
+                    <button type="button" data-org-dup="${idx}" class="p-1.5 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-500/15 text-indigo-600 dark:text-indigo-400" title="Nhân bản trang">
+                      <i data-lucide="copy-plus" class="w-3.5 h-3.5"></i>
+                    </button>
+                    <button type="button" data-org-del="${idx}" class="p-1.5 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-500/15 text-rose-500" title="Xóa trang">
+                      <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            `
+              )
+              .join('')}
+          </div>
+        </div>
+      `;
+
+      lucide.createIcons({ nodes: [body] });
+
+      document.getElementById('org-rotate-all-right').onclick = () => {
+        d.pages.forEach((p) => (p.rotation = (p.rotation + 90) % 360));
+        renderOrganizeWorkspace();
+      };
+
+      body.querySelectorAll('[data-org-left]').forEach((btn) => {
+        btn.onclick = () => {
+          const i = parseInt(btn.dataset.orgLeft, 10);
+          if (i > 0) {
+            [d.pages[i - 1], d.pages[i]] = [d.pages[i], d.pages[i - 1]];
+            renderOrganizeWorkspace();
+          }
+        };
+      });
+
+      body.querySelectorAll('[data-org-right]').forEach((btn) => {
+        btn.onclick = () => {
+          const i = parseInt(btn.dataset.orgRight, 10);
+          if (i < d.pages.length - 1) {
+            [d.pages[i + 1], d.pages[i]] = [d.pages[i], d.pages[i + 1]];
+            renderOrganizeWorkspace();
+          }
+        };
+      });
+
+      body.querySelectorAll('[data-org-rot-l]').forEach((btn) => {
+        btn.onclick = () => {
+          const i = parseInt(btn.dataset.orgRotL, 10);
+          d.pages[i].rotation = (d.pages[i].rotation - 90 + 360) % 360;
+          renderOrganizeWorkspace();
+        };
+      });
+
+      body.querySelectorAll('[data-org-rot-r]').forEach((btn) => {
+        btn.onclick = () => {
+          const i = parseInt(btn.dataset.orgRotR, 10);
+          d.pages[i].rotation = (d.pages[i].rotation + 90) % 360;
+          renderOrganizeWorkspace();
+        };
+      });
+
+      body.querySelectorAll('[data-org-dup]').forEach((btn) => {
+        btn.onclick = () => {
+          const i = parseInt(btn.dataset.orgDup, 10);
+          const clone = { ...d.pages[i], uid: `p_dup_${Date.now()}_${Math.random()}` };
+          d.pages.splice(i + 1, 0, clone);
+          renderOrganizeWorkspace();
+          showToast('Đã nhân bản trang.', 'info');
+        };
+      });
+
+      body.querySelectorAll('[data-org-del]').forEach((btn) => {
+        btn.onclick = () => {
+          if (d.pages.length <= 1) {
+            showToast('Tài liệu phải giữ lại ít nhất 1 trang.', 'error');
+            return;
+          }
+          const i = parseInt(btn.dataset.orgDel, 10);
+          d.pages.splice(i, 1);
+          renderOrganizeWorkspace();
+        };
+      });
+
+      document.getElementById('btn-execute-organize').onclick = executeOrganizePdf;
+    }
+
+    async function executeOrganizePdf() {
+      const d = appState.toolData;
+      try {
+        showLoading('Đang tạo tệp PDF mới...', 'Đang áp dụng thứ tự và góc xoay trang', 45);
+        const srcDoc = await PDFDocument.load(d.buffer.slice(0));
+        const outDoc = await PDFDocument.create();
+
+        for (const item of d.pages) {
+          const [copiedPage] = await outDoc.copyPages(srcDoc, [item.originalIndex]);
+          const currentRot = copiedPage.getRotation().angle || 0;
+          copiedPage.setRotation(degrees((currentRot + item.rotation) % 360));
+          outDoc.addPage(copiedPage);
+        }
+
+        const outBytes = await outDoc.save();
+        const baseName = d.file.name.replace(/\.pdf$/i, '');
+        downloadBlob(new Blob([outBytes], { type: 'application/pdf' }), `${baseName}_Da_Sap_Xep.pdf`);
+        showToast('Đã xuất tệp PDF mới thành công!', 'success');
+      } catch (err) {
+        showToast(err.message || 'Lỗi khi xuất tệp PDF.', 'error');
+      } finally {
+        hideLoading();
+      }
+    }
+
+    // =========================================================================
+    // 8. CÔNG CỤ 5: CHÈN WATERMARK (ADD WATERMARK)
+    // =========================================================================
+    function initWatermarkTool() {
+      const body = document.getElementById('workspace-body');
+      body.innerHTML = createDropzoneHTML({
+        id: 'wm-dropzone',
+        title: 'Chọn tệp PDF cần đóng dấu Watermark',
+        subtitle: 'Hỗ trợ đầy đủ tiếng Việt có dấu, xem trước trực tiếp góc xoay, độ mờ và màu sắc trên trang.'
+      });
+      lucide.createIcons({ nodes: [body] });
+
+      bindDropzoneEvents('wm-dropzone', async (files) => {
+        const file = files[0];
+        if (!file || !file.name.toLowerCase().endsWith('.pdf')) {
+          showToast('Vui lòng chọn tệp .PDF hợp lệ.', 'error');
+          return;
+        }
+        try {
+          showLoading('Đang tải bản xem trước...', file.name, 40);
+          const buffer = await readFileAsArrayBuffer(file);
+          await loadPdfLibSafely(buffer);
+          const pdfJsDoc = await loadPdfJsSafely(buffer);
+          const page1 = await pdfJsDoc.getPage(1);
+          const vp = page1.getViewport({ scale: 1.0 });
+          const canvas = document.createElement('canvas');
+          canvas.width = vp.width;
+          canvas.height = vp.height;
+          await page1.render({ canvasContext: canvas.getContext('2d'), viewport: vp }).promise;
+
+          appState.toolData = {
+            file,
+            buffer,
+            previewUrl: canvas.toDataURL('image/png'),
+            text: 'BẢN SAO MẬT - NỘI BỘ',
+            fontSize: 42,
+            color: '#dc2626',
+            opacity: 0.3,
+            rotation: -35,
+            tiled: false
+          };
+
+          renderWatermarkWorkspace();
+          showWorkspaceResetButton(() => initWatermarkTool());
+        } catch (err) {
+          showToast(err.message, 'error');
+        } finally {
+          hideLoading();
+        }
+      });
+    }
+
+    function renderWatermarkWorkspace() {
+      const d = appState.toolData;
+      const body = document.getElementById('workspace-body');
+
+      body.innerHTML = `
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <!-- Bảng tùy chỉnh Watermark -->
+          <div class="lg:col-span-5 bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4 h-fit">
+            <div>
+              <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Nội dung Watermark</label>
+              <input id="wm-text" type="text" value="${escapeHtml(d.text)}" placeholder="Nhập chữ đóng dấu..." class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm font-semibold focus:outline-none focus:border-amber-500" />
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Cỡ chữ: <span id="wm-size-val">${d.fontSize}px</span></label>
+                <input id="wm-size" type="range" min="18" max="96" value="${d.fontSize}" class="w-full accent-amber-600" />
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Màu sắc chữ</label>
+                <div class="flex items-center gap-2">
+                  <input id="wm-color" type="color" value="${d.color}" class="w-10 h-9 rounded-lg cursor-pointer border-0 bg-transparent" />
+                  <span id="wm-color-hex" class="text-xs font-mono uppercase text-slate-500">${d.color}</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Độ mờ (Opacity): <span id="wm-op-val">${Math.round(d.opacity * 100)}%</span></label>
+                <input id="wm-opacity" type="range" min="0.08" max="0.95" step="0.02" value="${d.opacity}" class="w-full accent-amber-600" />
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Góc xoay: <span id="wm-rot-val">${d.rotation}°</span></label>
+                <input id="wm-rotation" type="range" min="-90" max="90" step="5" value="${d.rotation}" class="w-full accent-amber-600" />
+              </div>
+            </div>
+
+            <label class="flex items-center gap-2.5 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/80 cursor-pointer">
+              <input id="wm-tiled" type="checkbox" ${d.tiled ? 'checked' : ''} class="w-4 h-4 accent-amber-600 rounded" />
+              <span class="text-xs sm:text-sm font-medium">Lặp lại phủ kín trang (Dạng lưới chéo)</span>
+            </label>
+
+            <button id="btn-execute-wm" type="button" class="w-full py-3.5 px-4 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-sm shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2 transition-all">
+              <i data-lucide="stamp" class="w-4 h-4"></i>
+              <span>Đóng dấu toàn bộ trang &amp; Tải về</span>
+            </button>
+          </div>
+
+          <!-- Khung xem trước trực quan -->
+          <div class="lg:col-span-7 bg-slate-200/70 dark:bg-slate-950 p-4 sm:p-6 rounded-2xl border border-slate-200/80 dark:border-slate-800 flex flex-col items-center">
+            <span class="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-3">Xem trước trực tiếp trên Trang 1</span>
+            <div class="relative inline-block shadow-xl rounded-lg overflow-hidden bg-white max-w-full">
+              <img src="${d.previewUrl}" alt="Trang 1" class="block max-h-[60vh] w-auto select-none" />
+              <div id="wm-live-overlay" class="absolute inset-0 pointer-events-none overflow-hidden flex items-center justify-center"></div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      lucide.createIcons({ nodes: [body] });
+
+      const updateLivePreview = () => {
+        const overlay = document.getElementById('wm-live-overlay');
+        if (!overlay) return;
+        const safeText = escapeHtml(d.text || 'WATERMARK');
+        const styleBase = `color:${d.color}; opacity:${d.opacity}; font-size:${Math.max(12, d.fontSize * 0.65)}px; font-weight:800; transform:rotate(${d.rotation}deg); white-space:nowrap;`;
+
+        if (d.tiled) {
+          const items = Array(9)
+            .fill(0)
+            .map(() => `<div style="${styleBase}" class="p-4 select-none">${safeText}</div>`)
+            .join('');
+          overlay.innerHTML = `<div class="grid grid-cols-3 gap-6 place-items-center w-[140%] h-[140%]">${items}</div>`;
+        } else {
+          overlay.innerHTML = `<div style="${styleBase}" class="select-none">${safeText}</div>`;
+        }
+      };
+
+      document.getElementById('wm-text').oninput = (e) => {
+        d.text = e.target.value;
+        updateLivePreview();
+      };
+      document.getElementById('wm-size').oninput = (e) => {
+        d.fontSize = parseInt(e.target.value, 10);
+        document.getElementById('wm-size-val').textContent = `${d.fontSize}px`;
+        updateLivePreview();
+      };
+      document.getElementById('wm-color').oninput = (e) => {
+        d.color = e.target.value;
+        document.getElementById('wm-color-hex').textContent = d.color;
+        updateLivePreview();
+      };
+      document.getElementById('wm-opacity').oninput = (e) => {
+        d.opacity = parseFloat(e.target.value);
+        document.getElementById('wm-op-val').textContent = `${Math.round(d.opacity * 100)}%`;
+        updateLivePreview();
+      };
+      document.getElementById('wm-rotation').oninput = (e) => {
+        d.rotation = parseInt(e.target.value, 10);
+        document.getElementById('wm-rot-val').textContent = `${d.rotation}°`;
+        updateLivePreview();
+      };
+      document.getElementById('wm-tiled').onchange = (e) => {
+        d.tiled = e.target.checked;
+        updateLivePreview();
+      };
+
+      document.getElementById('btn-execute-wm').onclick = executeAddWatermark;
+      updateLivePreview();
+    }
+
+    async function executeAddWatermark() {
+      const d = appState.toolData;
+      if (!d.text || !d.text.trim()) {
+        showToast('Vui lòng nhập nội dung chữ Watermark.', 'error');
+        return;
+      }
+
+      try {
+        showLoading('Đang đóng dấu Watermark lên các trang...', 'Đang dựng lớp chữ độ phân giải cao', 35);
+        const { pngBytes, width, height } = await renderVietnameseTextToPngBytes(d.text.trim(), {
+          fontSize: d.fontSize,
+          color: d.color,
+          fontWeight: '800'
+        });
+
+        const pdfDoc = await PDFDocument.load(d.buffer.slice(0));
+        const wmImage = await pdfDoc.embedPng(pngBytes);
+        const pages = pdfDoc.getPages();
+
+        // Chuyển đổi góc xoay CSS (chiều kim đồng hồ) sang pdf-lib (ngược chiều kim đồng hồ)
+        const pdfAngle = -d.rotation;
+        const rad = (pdfAngle * Math.PI) / 180;
+
+        pages.forEach((page, idx) => {
+          updateLoading(35 + Math.round(((idx + 1) / pages.length) * 55), `Đang đóng dấu trang ${idx + 1}/${pages.length}`);
+          const { width: pw, height: ph } = page.getSize();
+
+          if (d.tiled) {
+            const cols = [0.22, 0.5, 0.78];
+            const rows = [0.22, 0.5, 0.78];
+            const scaleFactor = 0.65;
+            const w = width * scaleFactor;
+            const h = height * scaleFactor;
+            for (const cxRatio of cols) {
+              for (const cyRatio of rows) {
+                const cx = pw * cxRatio;
+                const cy = ph * cyRatio;
+                const x = cx - (w / 2) * Math.cos(rad) + (h / 2) * Math.sin(rad);
+                const y = cy - (w / 2) * Math.sin(rad) - (h / 2) * Math.cos(rad);
+                page.drawImage(wmImage, {
+                  x,
+                  y,
+                  width: w,
+                  height: h,
+                  rotate: degrees(pdfAngle),
+                  opacity: d.opacity
+                });
+              }
+            }
+          } else {
+            const cx = pw / 2;
+            const cy = ph / 2;
+            const x = cx - (width / 2) * Math.cos(rad) + (height / 2) * Math.sin(rad);
+            const y = cy - (width / 2) * Math.sin(rad) - (height / 2) * Math.cos(rad);
+            page.drawImage(wmImage, {
+              x,
+              y,
+              width,
+              height,
+              rotate: degrees(pdfAngle),
+              opacity: d.opacity
+            });
+          }
+        });
+
+        const outBytes = await pdfDoc.save();
+        const baseName = d.file.name.replace(/\.pdf$/i, '');
+        downloadBlob(new Blob([outBytes], { type: 'application/pdf' }), `${baseName}_Watermark.pdf`);
+        showToast('Đã chèn Watermark lên toàn bộ tài liệu!', 'success');
+      } catch (err) {
+        showToast(err.message || 'Lỗi khi chèn Watermark.', 'error');
+      } finally {
+        hideLoading();
+      }
+    }
+
+    // =========================================================================
+    // 9. CÔNG CỤ 6: ĐÁNH SỐ TRANG (PAGE NUMBERS)
+    // =========================================================================
+    function initPageNumbersTool() {
+      const body = document.getElementById('workspace-body');
+      body.innerHTML = createDropzoneHTML({
+        id: 'pn-dropzone',
+        title: 'Chọn tệp PDF để đánh số trang tự động',
+        subtitle: 'Hỗ trợ các mẫu số trang chuẩn như "1", "Trang 1/N", "- 1 -" với vị trí linh hoạt.'
+      });
+      lucide.createIcons({ nodes: [body] });
+
+      bindDropzoneEvents('pn-dropzone', async (files) => {
+        const file = files[0];
+        if (!file || !file.name.toLowerCase().endsWith('.pdf')) {
+          showToast('Vui lòng chọn tệp .PDF hợp lệ.', 'error');
+          return;
+        }
+        try {
+          showLoading('Đang nạp tệp PDF...', file.name, 40);
+          const buffer = await readFileAsArrayBuffer(file);
+          const pdfDoc = await loadPdfLibSafely(buffer);
+          const pdfJsDoc = await loadPdfJsSafely(buffer);
+          const page1 = await pdfJsDoc.getPage(1);
+          const vp = page1.getViewport({ scale: 0.9 });
+          const canvas = document.createElement('canvas');
+          canvas.width = vp.width;
+          canvas.height = vp.height;
+          await page1.render({ canvasContext: canvas.getContext('2d'), viewport: vp }).promise;
+
+          appState.toolData = {
+            file,
+            buffer,
+            pageCount: pdfDoc.getPageCount(),
+            previewUrl: canvas.toDataURL('image/png'),
+            format: 'trang_n_total', // 'num', 'trang_n_total', 'dash_num', 'slash'
+            position: 'bottom-center',
+            fontSize: 13,
+            color: '#1e293b',
+            startPage: 1
+          };
+
+          renderPageNumbersWorkspace();
+          showWorkspaceResetButton(() => initPageNumbersTool());
+        } catch (err) {
+          showToast(err.message, 'error');
+        } finally {
+          hideLoading();
+        }
+      });
+    }
+
+    function formatPageLabel(format, pageNum, totalPages) {
+      switch (format) {
+        case 'num':
+          return `${pageNum}`;
+        case 'dash_num':
+          return `- ${pageNum} -`;
+        case 'slash':
+          return `${pageNum} / ${totalPages}`;
+        case 'trang_n_total':
+        default:
+          return `Trang ${pageNum}/${totalPages}`;
+      }
+    }
+
+    function renderPageNumbersWorkspace() {
+      const d = appState.toolData;
+      const body = document.getElementById('workspace-body');
+
+      body.innerHTML = `
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <div class="lg:col-span-5 bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4 h-fit">
+            <div>
+              <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Định dạng hiển thị số trang</label>
+              <select id="pn-format" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm font-medium focus:outline-none focus:border-orange-500">
+                <option value="trang_n_total" ${d.format === 'trang_n_total' ? 'selected' : ''}>Trang 1/${d.pageCount}</option>
+                <option value="num" ${d.format === 'num' ? 'selected' : ''}>1, 2, 3...</option>
+                <option value="dash_num" ${d.format === 'dash_num' ? 'selected' : ''}>- 1 -, - 2 -...</option>
+                <option value="slash" ${d.format === 'slash' ? 'selected' : ''}>1 / ${d.pageCount}</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Vị trí trên trang</label>
+              <div class="grid grid-cols-2 gap-2">
+                ${[
+                  { id: 'bottom-center', label: 'Dưới giữa' },
+                  { id: 'bottom-right', label: 'Dưới phải' },
+                  { id: 'bottom-left', label: 'Dưới trái' },
+                  { id: 'top-right', label: 'Trên phải' }
+                ]
+                  .map(
+                    (pos) => `
+                  <button type="button" data-pn-pos="${pos.id}" class="py-2 px-3 rounded-xl text-xs font-semibold border transition-all ${
+                      d.position === pos.id
+                        ? 'bg-orange-600 text-white border-orange-600'
+                        : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300'
+                    }">
+                    ${pos.label}
+                  </button>
+                `
+                  )
+                  .join('')}
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Cỡ chữ: <span id="pn-size-val">${d.fontSize}pt</span></label>
+                <input id="pn-size" type="range" min="9" max="24" value="${d.fontSize}" class="w-full accent-orange-600" />
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Bắt đầu từ trang</label>
+                <input id="pn-start" type="number" min="1" max="${d.pageCount}" value="${d.startPage}" class="w-full px-3 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm font-semibold" />
+              </div>
+            </div>
+
+            <button id="btn-execute-pn" type="button" class="w-full py-3.5 px-4 rounded-xl bg-orange-600 hover:bg-orange-700 text-white font-bold text-sm shadow-lg shadow-orange-500/20 flex items-center justify-center gap-2 transition-all">
+              <i data-lucide="hash" class="w-4 h-4"></i>
+              <span>Đánh số trang &amp; Tải PDF</span>
+            </button>
+          </div>
+
+          <!-- Xem trước vị trí số trang -->
+          <div class="lg:col-span-7 bg-slate-200/70 dark:bg-slate-950 p-4 sm:p-6 rounded-2xl border border-slate-200/80 dark:border-slate-800 flex flex-col items-center">
+            <span class="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-3">Minh họa vị trí số trang</span>
+            <div class="relative inline-block shadow-xl rounded-lg overflow-hidden bg-white">
+              <img src="${d.previewUrl}" alt="Trang 1" class="block max-h-[58vh] w-auto" />
+              <div id="pn-preview-badge" class="absolute px-2.5 py-1 rounded bg-orange-500/15 border border-orange-500/40 text-slate-900 font-bold text-xs"></div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      lucide.createIcons({ nodes: [body] });
+
+      const updatePreviewBadge = () => {
+        const badge = document.getElementById('pn-preview-badge');
+        if (!badge) return;
+        badge.textContent = formatPageLabel(d.format, 1, d.pageCount);
+        badge.style.top = '';
+        badge.style.bottom = '';
+        badge.style.left = '';
+        badge.style.right = '';
+        badge.style.transform = '';
+
+        if (d.position === 'bottom-center') {
+          badge.style.bottom = '14px';
+          badge.style.left = '50%';
+          badge.style.transform = 'translateX(-50%)';
+        } else if (d.position === 'bottom-right') {
+          badge.style.bottom = '14px';
+          badge.style.right = '18px';
+        } else if (d.position === 'bottom-left') {
+          badge.style.bottom = '14px';
+          badge.style.left = '18px';
+        } else if (d.position === 'top-right') {
+          badge.style.top = '14px';
+          badge.style.right = '18px';
+        }
+      };
+
+      document.getElementById('pn-format').onchange = (e) => {
+        d.format = e.target.value;
+        updatePreviewBadge();
+      };
+      body.querySelectorAll('[data-pn-pos]').forEach((btn) => {
+        btn.onclick = () => {
+          d.position = btn.dataset.pnPos;
+          renderPageNumbersWorkspace();
+        };
+      });
+      document.getElementById('pn-size').oninput = (e) => {
+        d.fontSize = parseInt(e.target.value, 10);
+        document.getElementById('pn-size-val').textContent = `${d.fontSize}pt`;
+      };
+      document.getElementById('pn-start').onchange = (e) => {
+        d.startPage = Math.min(d.pageCount, Math.max(1, parseInt(e.target.value, 10) || 1));
+      };
+      document.getElementById('btn-execute-pn').onclick = executePageNumbers;
+
+      updatePreviewBadge();
+    }
+
+    async function executePageNumbers() {
+      const d = appState.toolData;
+      try {
+        showLoading('Đang đánh số trang PDF...', 'Đang xử lý từng trang tài liệu', 30);
+        const pdfDoc = await PDFDocument.load(d.buffer.slice(0));
+        const pages = pdfDoc.getPages();
+        const total = pages.length;
+        const margin = 24;
+
+        for (let i = d.startPage - 1; i < total; i++) {
+          updateLoading(30 + Math.round(((i + 1) / total) * 60), `Đang đánh số trang ${i + 1}/${total}`);
+          const label = formatPageLabel(d.format, i + 1, total);
+          const { pngBytes, width, height } = await renderVietnameseTextToPngBytes(label, {
+            fontSize: d.fontSize,
+            color: d.color,
+            fontWeight: '600',
+            padding: 4
+          });
+
+          const img = await pdfDoc.embedPng(pngBytes);
+          const page = pages[i];
+          const { width: pw, height: ph } = page.getSize();
+
+          let x = (pw - width) / 2;
+          let y = margin;
+
+          if (d.position === 'bottom-right') {
+            x = pw - width - margin;
+            y = margin;
+          } else if (d.position === 'bottom-left') {
+            x = margin;
+            y = margin;
+          } else if (d.position === 'top-right') {
+            x = pw - width - margin;
+            y = ph - height - margin;
+          }
+
+          page.drawImage(img, { x, y, width, height });
+        }
+
+        const outBytes = await pdfDoc.save();
+        const baseName = d.file.name.replace(/\.pdf$/i, '');
+        downloadBlob(new Blob([outBytes], { type: 'application/pdf' }), `${baseName}_Danh_So_Trang.pdf`);
+        showToast('Đã đánh số trang thành công!', 'success');
+      } catch (err) {
+        showToast(err.message || 'Lỗi khi đánh số trang.', 'error');
+      } finally {
+        hideLoading();
+      }
+    }
+
+    // =========================================================================
+    // 10. CÔNG CỤ 7: KÝ TÊN ĐIỆN TỬ (SIGN PDF)
+    // =========================================================================
+    function initSignTool() {
+      const body = document.getElementById('workspace-body');
+      body.innerHTML = createDropzoneHTML({
+        id: 'sign-dropzone',
+        title: 'Chọn tệp PDF cần ký tên điện tử',
+        subtitle: 'Vẽ chữ ký tay bằng chuột/cảm ứng hoặc gõ chữ ký, sau đó đặt chính xác lên trang cần ký.'
+      });
+      lucide.createIcons({ nodes: [body] });
+
+      bindDropzoneEvents('sign-dropzone', async (files) => {
+        const file = files[0];
+        if (!file || !file.name.toLowerCase().endsWith('.pdf')) {
+          showToast('Vui lòng chọn tệp .PDF hợp lệ.', 'error');
+          return;
+        }
+        try {
+          showLoading('Đang chuẩn bị không gian ký tên...', file.name, 40);
+          const buffer = await readFileAsArrayBuffer(file);
+          await loadPdfLibSafely(buffer);
+          const pdfJsDoc = await loadPdfJsSafely(buffer);
+
+          appState.toolData = {
+            file,
+            buffer,
+            pdfJsDoc,
+            numPages: pdfJsDoc.numPages,
+            targetPage: 1,
+            sigMode: 'draw', // 'draw' hoặc 'type'
+            inkColor: '#1d4ed8',
+            strokeWidth: 3,
+            typedText: 'Nguyễn Văn A',
+            sigDataUrl: null,
+            // Vị trí chuẩn hóa (0..1) tính từ góc trên trái của trang
+            posX: 0.55,
+            posY: 0.72,
+            sigWidthRatio: 0.28
+          };
+
+          renderSignWorkspace();
+          showWorkspaceResetButton(() => initSignTool());
+        } catch (err) {
+          showToast(err.message, 'error');
+        } finally {
+          hideLoading();
+        }
+      });
+    }
+
+    async function renderSignWorkspace() {
+      const d = appState.toolData;
+      const body = document.getElementById('workspace-body');
+
+      body.innerHTML = `
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <!-- Cột trái: Tạo chữ ký & Điều chỉnh -->
+          <div class="lg:col-span-5 bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4 h-fit">
+            <!-- Tab chọn kiểu chữ ký -->
+            <div class="grid grid-cols-2 gap-1.5 p-1 rounded-xl bg-slate-100 dark:bg-slate-800">
+              <button id="sig-tab-draw" type="button" class="py-2 rounded-lg text-xs font-bold transition-all ${
+                d.sigMode === 'draw'
+                  ? 'bg-white dark:bg-slate-900 text-rose-600 dark:text-rose-400 shadow-sm'
+                  : 'text-slate-600 dark:text-slate-400'
+              }">
+                Vẽ chữ ký tay
+              </button>
+              <button id="sig-tab-type" type="button" class="py-2 rounded-lg text-xs font-bold transition-all ${
+                d.sigMode === 'type'
+                  ? 'bg-white dark:bg-slate-900 text-rose-600 dark:text-rose-400 shadow-sm'
+                  : 'text-slate-600 dark:text-slate-400'
+              }">
+                Gõ chữ ký
+              </button>
+            </div>
+
+            <!-- Khu vực vẽ tay -->
+            <div id="sig-draw-area" class="${d.sigMode === 'draw' ? '' : 'hidden'} space-y-3">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <span class="text-xs font-semibold text-slate-500">Màu mực:</span>
+                  ${[
+                    { color: '#0f172a', label: 'Đen' },
+                    { color: '#1d4ed8', label: 'Xanh' },
+                    { color: '#dc2626', label: 'Đỏ' }
+                  ]
+                    .map(
+                      (c) => `
+                    <button type="button" data-ink="${c.color}" class="w-6 h-6 rounded-full border-2 ${
+                        d.inkColor === c.color ? 'border-slate-900 dark:border-white scale-110' : 'border-transparent'
+                      }" style="background:${c.color}" title="${c.label}"></button>
+                  `
+                    )
+                    .join('')}
+                </div>
+                <button id="sig-clear-pad" type="button" class="text-xs font-semibold text-rose-600 hover:underline flex items-center gap-1">
+                  <i data-lucide="eraser" class="w-3.5 h-3.5"></i>
+                  <span>Xóa vẽ lại</span>
+                </button>
+              </div>
+
+              <div class="rounded-xl border-2 border-dashed border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-white overflow-hidden">
+                <canvas id="sig-pad-canvas" width="420" height="160" class="w-full h-36 cursor-crosshair touch-none-area block"></canvas>
+              </div>
+              <p class="text-[11px] text-slate-400">Dùng chuột hoặc ngón tay ký trực tiếp vào khung trắng phía trên.</p>
+            </div>
+
+            <!-- Khu vực gõ chữ ký -->
+            <div id="sig-type-area" class="${d.sigMode === 'type' ? '' : 'hidden'} space-y-3">
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Nhập họ tên chữ ký</label>
+                <input id="sig-type-input" type="text" value="${escapeHtml(d.typedText)}" placeholder="Nhập tên của bạn..." class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm font-semibold focus:outline-none focus:border-rose-500" />
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="text-xs font-semibold text-slate-500">Màu chữ ký:</span>
+                ${['#0f172a', '#1d4ed8', '#dc2626']
+                  .map(
+                    (c) => `
+                  <button type="button" data-ink="${c}" class="w-6 h-6 rounded-full border-2 ${
+                      d.inkColor === c ? 'border-slate-900 dark:border-white scale-110' : 'border-transparent'
+                    }" style="background:${c}"></button>
+                `
+                  )
+                  .join('')}
+              </div>
+              <div class="p-4 rounded-xl bg-slate-50 dark:bg-white border border-slate-200 text-center">
+                <span id="sig-type-preview" class="font-signature italic text-2xl font-bold" style="color:${d.inkColor}">${escapeHtml(d.typedText)}</span>
+              </div>
+            </div>
+
+            <hr class="border-slate-100 dark:border-slate-800" />
+
+            <!-- Tùy chỉnh trang ký & kích thước -->
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Trang cần ký (1-${d.numPages})</label>
+                <input id="sig-page-num" type="number" min="1" max="${d.numPages}" value="${d.targetPage}" class="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm font-bold" />
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Cỡ chữ ký: <span id="sig-w-label">${Math.round(d.sigWidthRatio * 100)}%</span></label>
+                <input id="sig-width-slider" type="range" min="12" max="60" value="${Math.round(d.sigWidthRatio * 100)}" class="w-full accent-rose-600 mt-2" />
+              </div>
+            </div>
+
+            <button id="btn-execute-sign" type="button" class="w-full py-3.5 px-4 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-sm shadow-lg shadow-rose-500/20 flex items-center justify-center gap-2 transition-all">
+              <i data-lucide="pen-tool" class="w-4 h-4"></i>
+              <span>Chèn chữ ký &amp; Tải PDF</span>
+            </button>
+          </div>
+
+          <!-- Cột phải: Xem trước trang PDF và kéo thả đặt vị trí chữ ký -->
+          <div class="lg:col-span-7 bg-slate-200/70 dark:bg-slate-950 p-4 sm:p-6 rounded-2xl border border-slate-200/80 dark:border-slate-800 flex flex-col items-center">
+            <span class="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-3">
+              Kéo khung chữ ký trên trang để đặt đúng vị trí mong muốn
+            </span>
+            <div id="sig-stage" class="relative inline-block shadow-xl rounded-lg overflow-hidden bg-white select-none touch-none-area">
+              <canvas id="sig-pdf-canvas" class="block max-h-[62vh] w-auto"></canvas>
+              <!-- Hộp chữ ký có thể kéo thả trực tiếp -->
+              <div
+                id="sig-draggable-box"
+                style="left:${d.posX * 100}%; top:${d.posY * 100}%; width:${d.sigWidthRatio * 100}%;"
+                class="absolute border-2 border-dashed border-rose-500 bg-rose-500/10 rounded-lg p-1 cursor-move flex items-center justify-center shadow-sm"
+              >
+                <img id="sig-overlay-img" alt="Chữ ký" class="w-full h-auto pointer-events-none hidden" />
+                <span id="sig-overlay-placeholder" class="text-[11px] font-bold text-rose-600 py-2 text-center">Vị trí chữ ký</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      lucide.createIcons({ nodes: [body] });
+
+      // Khởi tạo Pad vẽ tay
+      initSignaturePad();
+      // Render trang PDF mục tiêu
+      await renderSignTargetPage();
+      // Cập nhật ảnh chữ ký lên overlay
+      updateSignatureOverlayImage();
+
+      // Sự kiện chuyển tab
+      document.getElementById('sig-tab-draw').onclick = () => {
+        d.sigMode = 'draw';
+        renderSignWorkspace();
+      };
+      document.getElementById('sig-tab-type').onclick = () => {
+        d.sigMode = 'type';
+        renderSignWorkspace();
+      };
+
+      // Chọn màu mực
+      body.querySelectorAll('[data-ink]').forEach((btn) => {
+        btn.onclick = () => {
+          d.inkColor = btn.dataset.ink;
+          if (d.sigMode === 'type') {
+            document.getElementById('sig-type-preview').style.color = d.inkColor;
+            updateSignatureOverlayImage();
+          }
+          body.querySelectorAll('[data-ink]').forEach((b) => {
+            b.classList.toggle('border-slate-900', b.dataset.ink === d.inkColor);
+            b.classList.toggle('dark:border-white', b.dataset.ink === d.inkColor);
+            b.classList.toggle('scale-110', b.dataset.ink === d.inkColor);
+          });
+        };
+      });
+
+      const typeInp = document.getElementById('sig-type-input');
+      if (typeInp) {
+        typeInp.oninput = (e) => {
+          d.typedText = e.target.value;
+          document.getElementById('sig-type-preview').textContent = d.typedText || ' ';
+          updateSignatureOverlayImage();
+        };
+      }
+
+      document.getElementById('sig-page-num').onchange = async (e) => {
+        d.targetPage = Math.min(d.numPages, Math.max(1, parseInt(e.target.value, 10) || 1));
+        e.target.value = d.targetPage;
+        await renderSignTargetPage();
+      };
+
+      document.getElementById('sig-width-slider').oninput = (e) => {
+        d.sigWidthRatio = parseInt(e.target.value, 10) / 100;
+        document.getElementById('sig-w-label').textContent = `${e.target.value}%`;
+        const box = document.getElementById('sig-draggable-box');
+        box.style.width = `${d.sigWidthRatio * 100}%`;
+      };
+
+      // Kéo thả khung chữ ký trên trang xem trước
+      bindDraggableSignatureBox();
+
+      document.getElementById('btn-execute-sign').onclick = executeSignPdf;
+    }
+
+    function initSignaturePad() {
+      const d = appState.toolData;
+      const pad = document.getElementById('sig-pad-canvas');
+      if (!pad) return;
+      const ctx = pad.getContext('2d');
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+
+      let drawing = false;
+      let hasDrawn = false;
+
+      const getCoords = (e) => {
+        const rect = pad.getBoundingClientRect();
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        return {
+          x: ((clientX - rect.left) / rect.width) * pad.width,
+          y: ((clientY - rect.top) / rect.height) * pad.height
+        };
+      };
+
+      const start = (e) => {
+        e.preventDefault();
+        drawing = true;
+        hasDrawn = true;
+        const { x, y } = getCoords(e);
+        ctx.strokeStyle = d.inkColor;
+        ctx.lineWidth = d.strokeWidth;
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+      };
+
+      const move = (e) => {
+        if (!drawing) return;
+        e.preventDefault();
+        const { x, y } = getCoords(e);
+        ctx.lineTo(x, y);
+        ctx.stroke();
+      };
+
+      const end = () => {
+        if (!drawing) return;
+        drawing = false;
+        if (hasDrawn) {
+          d.sigDataUrl = pad.toDataURL('image/png');
+          updateSignatureOverlayImage();
+        }
+      };
+
+      pad.addEventListener('mousedown', start);
+      pad.addEventListener('mousemove', move);
+      window.addEventListener('mouseup', end);
+
+      pad.addEventListener('touchstart', start, { passive: false });
+      pad.addEventListener('touchmove', move, { passive: false });
+      window.addEventListener('touchend', end);
+
+      document.getElementById('sig-clear-pad').onclick = () => {
+        ctx.clearRect(0, 0, pad.width, pad.height);
+        hasDrawn = false;
+        d.sigDataUrl = null;
+        updateSignatureOverlayImage();
+      };
+    }
+
+    async function updateSignatureOverlayImage() {
+      const d = appState.toolData;
+      const img = document.getElementById('sig-overlay-img');
+      const ph = document.getElementById('sig-overlay-placeholder');
+      if (!img || !ph) return;
+
+      if (d.sigMode === 'draw') {
+        if (d.sigDataUrl) {
+          img.src = d.sigDataUrl;
+          img.classList.remove('hidden');
+          ph.classList.add('hidden');
+        } else {
+          img.classList.add('hidden');
+          ph.classList.remove('hidden');
+        }
+      } else {
+        if (d.typedText && d.typedText.trim()) {
+          const { pngBytes } = await renderVietnameseTextToPngBytes(d.typedText.trim(), {
+            fontSize: 44,
+            color: d.inkColor,
+            fontFamily: '"Playfair Display", Georgia, serif',
+            fontStyle: 'italic',
+            fontWeight: '700',
+            padding: 10
+          });
+          const blob = new Blob([pngBytes], { type: 'image/png' });
+          const url = URL.createObjectURL(blob);
+          img.src = url;
+          img.classList.remove('hidden');
+          ph.classList.add('hidden');
+        } else {
+          img.classList.add('hidden');
+          ph.classList.remove('hidden');
+        }
+      }
+    }
+
+    async function renderSignTargetPage() {
+      const d = appState.toolData;
+      const canvas = document.getElementById('sig-pdf-canvas');
+      if (!canvas) return;
+      const page = await d.pdfJsDoc.getPage(d.targetPage);
+      const vp = page.getViewport({ scale: 1.1 });
+      canvas.width = vp.width;
+      canvas.height = vp.height;
+      await page.render({ canvasContext: canvas.getContext('2d'), viewport: vp }).promise;
+    }
+
+    function bindDraggableSignatureBox() {
+      const d = appState.toolData;
+      const stage = document.getElementById('sig-stage');
+      const box = document.getElementById('sig-draggable-box');
+      if (!stage || !box) return;
+
+      let dragging = false;
+      let startX = 0;
+      let startY = 0;
+      let initLeft = 0;
+      let initTop = 0;
+
+      const onDown = (e) => {
+        e.preventDefault();
+        dragging = true;
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        startX = clientX;
+        startY = clientY;
+        initLeft = box.offsetLeft;
+        initTop = box.offsetTop;
+      };
+
+      const onMove = (e) => {
+        if (!dragging) return;
+        e.preventDefault();
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        const dx = clientX - startX;
+        const dy = clientY - startY;
+
+        const maxLeft = stage.clientWidth - box.offsetWidth;
+        const maxTop = stage.clientHeight - box.offsetHeight;
+
+        const newLeft = Math.max(0, Math.min(maxLeft, initLeft + dx));
+        const newTop = Math.max(0, Math.min(maxTop, initTop + dy));
+
+        d.posX = newLeft / stage.clientWidth;
+        d.posY = newTop / stage.clientHeight;
+
+        box.style.left = `${d.posX * 100}%`;
+        box.style.top = `${d.posY * 100}%`;
+      };
+
+      const onUp = () => {
+        dragging = false;
+      };
+
+      box.addEventListener('mousedown', onDown);
+      window.addEventListener('mousemove', onMove);
+      window.addEventListener('mouseup', onUp);
+
+      box.addEventListener('touchstart', onDown, { passive: false });
+      window.addEventListener('touchmove', onMove, { passive: false });
+      window.addEventListener('touchend', onUp);
+    }
+
+    async function executeSignPdf() {
+      const d = appState.toolData;
+      try {
+        let sigBytes = null;
+
+        if (d.sigMode === 'draw') {
+          if (!d.sigDataUrl) {
+            showToast('Vui lòng vẽ chữ ký vào khung trước khi xuất tệp.', 'error');
+            return;
+          }
+          const res = await fetch(d.sigDataUrl);
+          sigBytes = await res.arrayBuffer();
+        } else {
+          if (!d.typedText || !d.typedText.trim()) {
+            showToast('Vui lòng nhập nội dung chữ ký.', 'error');
+            return;
+          }
+          const rendered = await renderVietnameseTextToPngBytes(d.typedText.trim(), {
+            fontSize: 44,
+            color: d.inkColor,
+            fontFamily: '"Playfair Display", Georgia, serif',
+            fontStyle: 'italic',
+            fontWeight: '700',
+            padding: 10
+          });
+          sigBytes = rendered.pngBytes;
+        }
+
+        showLoading('Đang đóng chữ ký vào tài liệu PDF...', `Trang ${d.targetPage}`, 50);
+        const pdfDoc = await PDFDocument.load(d.buffer.slice(0));
+        const sigImage = await pdfDoc.embedPng(sigBytes);
+        const page = pdfDoc.getPages()[d.targetPage - 1];
+        const { width: pw, height: ph } = page.getSize();
+
+        const targetW = pw * d.sigWidthRatio;
+        const aspect = sigImage.height / sigImage.width;
+        const targetH = targetW * aspect;
+
+        // Quy đổi tọa độ từ góc trên-trái (Web) sang góc dưới-trái (PDF)
+        const pdfX = pw * d.posX;
+        const pdfY = Math.max(0, ph - ph * d.posY - targetH);
+
+        page.drawImage(sigImage, {
+          x: pdfX,
+          y: pdfY,
+          width: targetW,
+          height: targetH
+        });
+
+        const outBytes = await pdfDoc.save();
+        const baseName = d.file.name.replace(/\.pdf$/i, '');
+        downloadBlob(new Blob([outBytes], { type: 'application/pdf' }), `${baseName}_Da_Ky.pdf`);
+        showToast('Đã ký tên và xuất tệp PDF thành công!', 'success');
+      } catch (err) {
+        showToast(err.message || 'Lỗi khi chèn chữ ký.', 'error');
+      } finally {
+        hideLoading();
+      }
+    }
+
+    // =========================================================================
+    // 11. CÔNG CỤ 8: CHUYỂN ẢNH SANG PDF (IMAGES TO PDF)
+    // =========================================================================
+    function initImg2PdfTool() {
+      appState.toolData = {
+        images: [],
+        pageSize: 'A4', // 'A4', 'Letter', 'Fit'
+        margin: 24
+      };
+      renderImg2PdfWorkspace();
+    }
+
+    function renderImg2PdfWorkspace() {
+      const d = appState.toolData;
+      const body = document.getElementById('workspace-body');
+
+      if (d.images.length === 0) {
+        body.innerHTML = createDropzoneHTML({
+          id: 'i2p-dropzone',
+          accept: 'image/jpeg,image/png,image/webp',
+          multiple: true,
+          icon: 'image-plus',
+          title: 'Chọn các hình ảnh (JPG, PNG, WebP) để tạo PDF',
+          subtitle: 'Kéo thả nhiều ảnh cùng lúc, sắp xếp lại thứ tự và chọn khổ giấy A4, Letter hoặc vừa khít ảnh.'
+        });
+        lucide.createIcons({ nodes: [body] });
+        bindDropzoneEvents('i2p-dropzone', handleAddImagesToPdf);
+        return;
+      }
+
+      showWorkspaceResetButton(() => initImg2PdfTool());
+
+      body.innerHTML = `
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div class="lg:col-span-2 space-y-4">
+            <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 flex items-center justify-between">
+              <span class="text-sm font-bold">Đã chọn ${d.images.length} hình ảnh</span>
+              <label class="cursor-pointer inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-500/15 text-indigo-600 dark:text-indigo-300 text-xs font-semibold">
+                <i data-lucide="plus" class="w-4 h-4"></i>
+                <span>Thêm ảnh</span>
+                <input id="i2p-add-more" type="file" accept="image/jpeg,image/png,image/webp" multiple class="hidden" />
+              </label>
+            </div>
+
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+              ${d.images
+                .map(
+                  (img, idx) => `
+                <div class="bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-200/80 dark:border-slate-800 flex flex-col justify-between shadow-sm">
+                  <div class="relative aspect-square bg-slate-100 dark:bg-slate-950 rounded-xl overflow-hidden flex items-center justify-center">
+                    <img src="${img.previewUrl}" alt="${escapeHtml(img.name)}" class="max-w-full max-h-full object-contain" />
+                    <span class="absolute top-2 left-2 px-2 py-0.5 rounded-md bg-slate-900/75 text-white text-[11px] font-bold">#${idx + 1}</span>
+                  </div>
+                  <p class="text-xs font-medium truncate mt-2 text-slate-600 dark:text-slate-300">${escapeHtml(img.name)}</p>
+                  <div class="mt-2 pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                    <div class="flex gap-1">
+                      <button type="button" data-i2p-left="${idx}" ${idx === 0 ? 'disabled' : ''} class="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-30">
+                        <i data-lucide="chevron-left" class="w-4 h-4"></i>
+                      </button>
+                      <button type="button" data-i2p-right="${idx}" ${idx === d.images.length - 1 ? 'disabled' : ''} class="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-30">
+                        <i data-lucide="chevron-right" class="w-4 h-4"></i>
+                      </button>
+                    </div>
+                    <button type="button" data-i2p-del="${idx}" class="p-1.5 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-500/15 text-rose-500">
+                      <i data-lucide="trash-2" class="w-4 h-4"></i>
+                    </button>
+                  </div>
+                </div>
+              `
+                )
+                .join('')}
+            </div>
+          </div>
+
+          <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm h-fit space-y-4">
+            <h3 class="font-bold text-base">Cài đặt trang PDF</h3>
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">Khổ giấy</label>
+              <select id="i2p-size" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm font-medium">
+                <option value="A4" ${d.pageSize === 'A4' ? 'selected' : ''}>Chuẩn A4 (210 × 297 mm)</option>
+                <option value="Letter" ${d.pageSize === 'Letter' ? 'selected' : ''}>Chuẩn Letter (8.5 × 11 in)</option>
+                <option value="Fit" ${d.pageSize === 'Fit' ? 'selected' : ''}>Vừa khít kích thước từng ảnh</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">Lề trang</label>
+              <select id="i2p-margin" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm font-medium">
+                <option value="0" ${d.margin === 0 ? 'selected' : ''}>Không lề (Tràn viền)</option>
+                <option value="24" ${d.margin === 24 ? 'selected' : ''}>Lề nhỏ (Tiêu chuẩn)</option>
+                <option value="48" ${d.margin === 48 ? 'selected' : ''}>Lề rộng</option>
+              </select>
+            </div>
+
+            <button id="btn-execute-i2p" type="button" class="w-full py-3.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm shadow-lg shadow-indigo-500/20 flex items-center justify-center gap-2 transition-all">
+              <i data-lucide="file-output" class="w-4 h-4"></i>
+              <span>Tạo &amp; Tải xuống PDF</span>
+            </button>
+          </div>
+        </div>
+      `;
+
+      lucide.createIcons({ nodes: [body] });
+
+      document.getElementById('i2p-add-more').onchange = (e) => {
+        if (e.target.files.length) handleAddImagesToPdf(Array.from(e.target.files));
+      };
+      document.getElementById('i2p-size').onchange = (e) => (d.pageSize = e.target.value);
+      document.getElementById('i2p-margin').onchange = (e) => (d.margin = parseInt(e.target.value, 10));
+
+      body.querySelectorAll('[data-i2p-left]').forEach((btn) => {
+        btn.onclick = () => {
+          const i = parseInt(btn.dataset.i2pLeft, 10);
+          if (i > 0) {
+            [d.images[i - 1], d.images[i]] = [d.images[i], d.images[i - 1]];
+            renderImg2PdfWorkspace();
+          }
+        };
+      });
+
+      body.querySelectorAll('[data-i2p-right]').forEach((btn) => {
+        btn.onclick = () => {
+          const i = parseInt(btn.dataset.i2pRight, 10);
+          if (i < d.images.length - 1) {
+            [d.images[i + 1], d.images[i]] = [d.images[i], d.images[i + 1]];
+            renderImg2PdfWorkspace();
+          }
+        };
+      });
+
+      body.querySelectorAll('[data-i2p-del]').forEach((btn) => {
+        btn.onclick = () => {
+          const i = parseInt(btn.dataset.i2pDel, 10);
+          d.images.splice(i, 1);
+          renderImg2PdfWorkspace();
+        };
+      });
+
+      document.getElementById('btn-execute-i2p').onclick = executeImagesToPdf;
+    }
+
+    async function handleAddImagesToPdf(files) {
+      const validFiles = files.filter((f) => f.type.startsWith('image/'));
+      if (validFiles.length === 0) {
+        showToast('Vui lòng chọn tệp hình ảnh hợp lệ (JPG, PNG, WebP).', 'error');
+        return;
+      }
+
+      showLoading('Đang nạp hình ảnh...', `Đang xử lý ${validFiles.length} ảnh`, 40);
+      for (const file of validFiles) {
+        // Chuẩn hóa mọi ảnh (kể cả WebP) thành PNG hoặc giữ nguyên JPG/PNG để pdf-lib nhúng 100% thành công
+        const previewUrl = URL.createObjectURL(file);
+        const isJpg = file.type === 'image/jpeg' || file.type === 'image/jpg';
+        let bytes;
+        let embedType = isJpg ? 'jpg' : 'png';
+
+        if (isJpg || file.type === 'image/png') {
+          bytes = await readFileAsArrayBuffer(file);
+        } else {
+          // Chuyển WebP/ảnh khác sang PNG qua Canvas
+          const imgEl = await new Promise((resolve, reject) => {
+            const img = new Image();
+            img.onload = () => resolve(img);
+            img.onerror = reject;
+            img.src = previewUrl;
+          });
+          const c = document.createElement('canvas');
+          c.width = imgEl.naturalWidth;
+          c.height = imgEl.naturalHeight;
+          c.getContext('2d').drawImage(imgEl, 0, 0);
+          const pngBlob = await new Promise((r) => c.toBlob(r, 'image/png'));
+          bytes = await pngBlob.arrayBuffer();
+        }
+
+        appState.toolData.images.push({
+          name: file.name,
+          previewUrl,
+          bytes,
+          embedType
+        });
+      }
+      hideLoading();
+      renderImg2PdfWorkspace();
+    }
+
+    async function executeImagesToPdf() {
+      const d = appState.toolData;
+      try {
+        showLoading('Đang tạo tệp PDF từ hình ảnh...', 'Đang đóng gói các trang', 35);
+        const pdfDoc = await PDFDocument.create();
+
+        for (let i = 0; i < d.images.length; i++) {
+          updateLoading(35 + Math.round(((i + 1) / d.images.length) * 55), `Đang xử lý ảnh ${i + 1}/${d.images.length}`);
+          const item = d.images[i];
+          const embeddedImg =
+            item.embedType === 'jpg'
+              ? await pdfDoc.embedJpg(item.bytes.slice(0))
+              : await pdfDoc.embedPng(item.bytes.slice(0));
+
+          const iw = embeddedImg.width;
+          const ih = embeddedImg.height;
+          const m = d.margin;
+
+          let pageW, pageH;
+          if (d.pageSize === 'Fit') {
+            pageW = iw + m * 2;
+            pageH = ih + m * 2;
+          } else if (d.pageSize === 'Letter') {
+            pageW = iw > ih ? 792 : 612;
+            pageH = iw > ih ? 612 : 792;
+          } else {
+            // A4 (tự động xoay ngang nếu ảnh ngang)
+            pageW = iw > ih ? 841.89 : 595.28;
+            pageH = iw > ih ? 595.28 : 841.89;
+          }
+
+          const page = pdfDoc.addPage([pageW, pageH]);
+          const availW = Math.max(10, pageW - m * 2);
+          const availH = Math.max(10, pageH - m * 2);
+          const scale = Math.min(availW / iw, availH / ih);
+
+          const drawW = iw * scale;
+          const drawH = ih * scale;
+          const x = (pageW - drawW) / 2;
+          const y = (pageH - drawH) / 2;
+
+          page.drawImage(embeddedImg, { x, y, width: drawW, height: drawH });
+        }
+
+        const outBytes = await pdfDoc.save();
+        downloadBlob(new Blob([outBytes], { type: 'application/pdf' }), 'Hinh_Anh_Sang_PDF.pdf');
+        showToast('Đã chuyển đổi hình ảnh sang PDF thành công!', 'success');
+      } catch (err) {
+        showToast(err.message || 'Lỗi khi chuyển ảnh sang PDF.', 'error');
+      } finally {
+        hideLoading();
+      }
+    }
+
+    // =========================================================================
+    // 12. CÔNG CỤ 9: CHUYỂN PDF SANG ẢNH (PDF TO JPG/PNG)
+    // =========================================================================
+    function initPdf2ImgTool() {
+      const body = document.getElementById('workspace-body');
+      body.innerHTML = createDropzoneHTML({
+        id: 'p2i-dropzone',
+        icon: 'images',
+        title: 'Chọn tệp PDF để xuất thành hình ảnh PNG / JPG',
+        subtitle: 'Chuyển đổi từng trang PDF thành ảnh chất lượng cao, xem trước và tải trọn bộ dưới dạng .ZIP.'
+      });
+      lucide.createIcons({ nodes: [body] });
+
+      bindDropzoneEvents('p2i-dropzone', async (files) => {
+        const file = files[0];
+        if (!file || !file.name.toLowerCase().endsWith('.pdf')) {
+          showToast('Vui lòng chọn tệp .PDF hợp lệ.', 'error');
+          return;
+        }
+        try {
+          showLoading('Đang nạp các trang PDF...', file.name, 40);
+          const buffer = await readFileAsArrayBuffer(file);
+          const pdfJsDoc = await loadPdfJsSafely(buffer);
+          const selected = new Set();
+          for (let i = 1; i <= pdfJsDoc.numPages; i++) selected.add(i);
+
+          appState.toolData = {
+            file,
+            buffer,
+            pdfJsDoc,
+            numPages: pdfJsDoc.numPages,
+            selectedPages: selected,
+            format: 'png', // 'png' hoặc 'jpeg'
+            scale: 2.0,
+            results: []
+          };
+
+          renderPdf2ImgWorkspace();
+          showWorkspaceResetButton(() => initPdf2ImgTool());
+        } catch (err) {
+          showToast(err.message, 'error');
+        } finally {
+          hideLoading();
+        }
+      });
+    }
+
+    async function renderPdf2ImgWorkspace() {
+      const d = appState.toolData;
+      const body = document.getElementById('workspace-body');
+
+      body.innerHTML = `
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <!-- Cột thiết lập -->
+          <div class="lg:col-span-4 bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4 h-fit">
+            <div>
+              <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Định dạng ảnh xuất ra</label>
+              <div class="grid grid-cols-2 gap-2">
+                <button type="button" data-p2i-fmt="png" class="py-2.5 rounded-xl text-xs font-bold border ${
+                  d.format === 'png'
+                    ? 'bg-violet-600 text-white border-violet-600'
+                    : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700'
+                }">PNG (Sắc nét)</button>
+                <button type="button" data-p2i-fmt="jpeg" class="py-2.5 rounded-xl text-xs font-bold border ${
+                  d.format === 'jpeg'
+                    ? 'bg-violet-600 text-white border-violet-600'
+                    : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700'
+                }">JPG (Nhẹ dung lượng)</button>
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Độ phân giải Render</label>
+              <select id="p2i-scale" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm font-medium">
+                <option value="1.5" ${d.scale === 1.5 ? 'selected' : ''}>1.5x (Tiêu chuẩn)</option>
+                <option value="2.0" ${d.scale === 2.0 ? 'selected' : ''}>2.0x (HD Sắc nét)</option>
+                <option value="3.0" ${d.scale === 3.0 ? 'selected' : ''}>3.0x (Siêu nét In ấn)</option>
+              </select>
+            </div>
+
+            <div class="flex items-center justify-between text-xs pt-1">
+              <span class="font-semibold text-slate-600 dark:text-slate-400">Đã chọn: ${d.selectedPages.size}/${d.numPages} trang</span>
+              <div class="flex gap-2">
+                <button id="p2i-sel-all" type="button" class="text-violet-600 dark:text-violet-400 font-semibold hover:underline">Chọn hết</button>
+                <button id="p2i-sel-none" type="button" class="text-slate-400 hover:underline">Bỏ chọn</button>
+              </div>
+            </div>
+
+            <button id="btn-execute-p2i" type="button" class="w-full py-3.5 px-4 rounded-xl bg-violet-600 hover:bg-violet-700 text-white font-bold text-sm shadow-lg shadow-violet-500/20 flex items-center justify-center gap-2 transition-all">
+              <i data-lucide="archive" class="w-4 h-4"></i>
+              <span>Chuyển đổi &amp; Tải gói .ZIP</span>
+            </button>
+          </div>
+
+          <!-- Lưới chọn trang & tải ảnh lẻ -->
+          <div class="lg:col-span-8 bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm">
+            <h3 class="font-bold text-sm sm:text-base mb-4">Chọn các trang cần xuất ảnh (hoặc tải nhanh từng trang)</h3>
+            <div id="p2i-pages-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3.5 max-h-[64vh] overflow-y-auto pr-1"></div>
+          </div>
+        </div>
+      `;
+
+      lucide.createIcons({ nodes: [body] });
+
+      body.querySelectorAll('[data-p2i-fmt]').forEach((btn) => {
+        btn.onclick = () => {
+          d.format = btn.dataset.p2iFmt;
+          renderPdf2ImgWorkspace();
+        };
+      });
+      document.getElementById('p2i-scale').onchange = (e) => (d.scale = parseFloat(e.target.value));
+      document.getElementById('p2i-sel-all').onclick = () => {
+        for (let i = 1; i <= d.numPages; i++) d.selectedPages.add(i);
+        renderPdf2ImgWorkspace();
+      };
+      document.getElementById('p2i-sel-none').onclick = () => {
+        d.selectedPages.clear();
+        renderPdf2ImgWorkspace();
+      };
+      document.getElementById('btn-execute-p2i').onclick = executePdfToImagesZip;
+
+      // Render thumbnail từng trang
+      const grid = document.getElementById('p2i-pages-grid');
+      for (let i = 1; i <= d.numPages; i++) {
+        const isChecked = d.selectedPages.has(i);
+        const card = document.createElement('div');
+        card.className = `p-2.5 rounded-xl border transition-all flex flex-col justify-between ${
+          isChecked
+            ? 'border-violet-500 bg-violet-50/30 dark:bg-violet-500/10'
+            : 'border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/40'
+        }`;
+        card.innerHTML = `
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <label class="inline-flex items-center gap-1.5 cursor-pointer text-xs font-bold">
+                <input type="checkbox" ${isChecked ? 'checked' : ''} class="p2i-chk accent-violet-600 rounded" />
+                <span>Trang ${i}</span>
+              </label>
+              <button type="button" class="p2i-single-dl p-1 rounded-lg hover:bg-violet-100 dark:hover:bg-violet-500/20 text-violet-600 dark:text-violet-400" title="Tải riêng ảnh trang ${i}">
+                <i data-lucide="download" class="w-3.5 h-3.5"></i>
+              </button>
+            </div>
+            <canvas class="w-full h-auto rounded bg-white shadow-sm"></canvas>
+          </div>
+        `;
+        grid.appendChild(card);
+        lucide.createIcons({ nodes: [card] });
+
+        card.querySelector('.p2i-chk').onchange = (e) => {
+          if (e.target.checked) d.selectedPages.add(i);
+          else d.selectedPages.delete(i);
+          renderPdf2ImgWorkspace();
+        };
+
+        card.querySelector('.p2i-single-dl').onclick = () => downloadSinglePdfPageAsImage(i);
+
+        const page = await d.pdfJsDoc.getPage(i);
+        const vp = page.getViewport({ scale: 0.35 });
+        const canvas = card.querySelector('canvas');
+        canvas.width = vp.width;
+        canvas.height = vp.height;
+        await page.render({ canvasContext: canvas.getContext('2d'), viewport: vp }).promise;
+      }
+    }
+
+    async function renderPdfPageToImageBlob(pdfJsDoc, pageNum, scale, format) {
+      const page = await pdfJsDoc.getPage(pageNum);
+      const vp = page.getViewport({ scale });
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.floor(vp.width);
+      canvas.height = Math.floor(vp.height);
+      const ctx = canvas.getContext('2d');
+
+      if (format === 'jpeg') {
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+      }
+
+      await page.render({ canvasContext: ctx, viewport: vp }).promise;
+      const mime = format === 'jpeg' ? 'image/jpeg' : 'image/png';
+      return await new Promise((resolve) => canvas.toBlob(resolve, mime, 0.92));
+    }
+
+    async function downloadSinglePdfPageAsImage(pageNum) {
+      const d = appState.toolData;
+      try {
+        showLoading(`Đang xuất ảnh trang ${pageNum}...`, `Độ phân giải ${d.scale}x`, 50);
+        const blob = await renderPdfPageToImageBlob(d.pdfJsDoc, pageNum, d.scale, d.format);
+        const baseName = d.file.name.replace(/\.pdf$/i, '');
+        const ext = d.format === 'jpeg' ? 'jpg' : 'png';
+        downloadBlob(blob, `${baseName}_Trang_${pageNum}.${ext}`);
+        showToast(`Đã tải ảnh trang ${pageNum}!`, 'success');
+      } catch (err) {
+        showToast(err.message || 'Lỗi khi xuất ảnh.', 'error');
+      } finally {
+        hideLoading();
+      }
+    }
+
+    async function executePdfToImagesZip() {
+      const d = appState.toolData;
+      const selectedArr = Array.from(d.selectedPages).sort((a, b) => a - b);
+      if (selectedArr.length === 0) {
+        showToast('Vui lòng chọn ít nhất 1 trang để chuyển đổi.', 'error');
+        return;
+      }
+
+      try {
+        showLoading('Đang chuyển đổi các trang PDF sang ảnh...', 'Đang khởi tạo...', 10);
+        const zip = new JSZip();
+        const baseName = d.file.name.replace(/\.pdf$/i, '');
+        const ext = d.format === 'jpeg' ? 'jpg' : 'png';
+
+        for (let i = 0; i < selectedArr.length; i++) {
+          const pNum = selectedArr[i];
+          updateLoading(10 + Math.round(((i + 1) / selectedArr.length) * 75), `Đang render trang ${pNum} (${i + 1}/${selectedArr.length})...`);
+          const blob = await renderPdfPageToImageBlob(d.pdfJsDoc, pNum, d.scale, d.format);
+          const padNum = String(pNum).padStart(String(d.numPages).length, '0');
+          zip.file(`${baseName}_Trang_${padNum}.${ext}`, blob);
+        }
+
+        updateLoading(92, 'Đang nén thành gói .ZIP...');
+        const zipBlob = await zip.generateAsync({ type: 'blob' });
+        downloadBlob(zipBlob, `${baseName}_Hinh_Anh_${ext.toUpperCase()}.zip`);
+        showToast(`Đã xuất ${selectedArr.length} ảnh và tải gói .ZIP thành công!`, 'success');
+      } catch (err) {
+        showToast(err.message || 'Lỗi khi xuất gói ảnh.', 'error');
+      } finally {
+        hideLoading();
+      }
+    }
+
+    // =========================================================================
+    // 13. CÔNG CỤ 10: TRÍCH XUẤT VĂN BẢN (PDF TO TEXT)
+    // =========================================================================
+    function initPdf2TextTool() {
+      const body = document.getElementById('workspace-body');
+      body.innerHTML = createDropzoneHTML({
+        id: 'p2t-dropzone',
+        icon: 'file-text',
+        title: 'Chọn tệp PDF để trích xuất toàn bộ nội dung chữ',
+        subtitle: 'Tách văn bản theo từng trang, hỗ trợ tìm kiếm từ khóa, sao chép nhanh hoặc lưu thành tệp .TXT.'
+      });
+      lucide.createIcons({ nodes: [body] });
+
+      bindDropzoneEvents('p2t-dropzone', async (files) => {
+        const file = files[0];
+        if (!file || !file.name.toLowerCase().endsWith('.pdf')) {
+          showToast('Vui lòng chọn tệp .PDF hợp lệ.', 'error');
+          return;
+        }
+        try {
+          showLoading('Đang trích xuất văn bản từ PDF...', file.name, 25);
+          const buffer = await readFileAsArrayBuffer(file);
+          const pdfJsDoc = await loadPdfJsSafely(buffer);
+          const pagesText = [];
+
+          for (let i = 1; i <= pdfJsDoc.numPages; i++) {
+            updateLoading(25 + Math.round((i / pdfJsDoc.numPages) * 70), `Đang đọc trang ${i}/${pdfJsDoc.numPages}`);
+            const page = await pdfJsDoc.getPage(i);
+            const content = await page.getTextContent();
+            // Ghép các item văn bản giữ ngắt dòng tự nhiên
+            let lastY = null;
+            let pageStr = '';
+            for (const item of content.items) {
+              if (lastY !== null && Math.abs(item.transform[5] - lastY) > 6) {
+                pageStr += '\n';
+              } else if (pageStr && !pageStr.endsWith(' ') && !pageStr.endsWith('\n')) {
+                pageStr += ' ';
+              }
+              pageStr += item.str;
+              lastY = item.transform[5];
+            }
+            pagesText.push({ pageNum: i, text: pageStr.trim() });
+          }
+
+          appState.toolData = {
+            file,
+            pagesText,
+            keyword: ''
+          };
+
+          renderPdf2TextWorkspace();
+          showWorkspaceResetButton(() => initPdf2TextTool());
+        } catch (err) {
+          showToast(err.message, 'error');
+        } finally {
+          hideLoading();
+        }
+      });
+    }
+
+    function renderPdf2TextWorkspace() {
+      const d = appState.toolData;
+      const body = document.getElementById('workspace-body');
+      const fullText = d.pagesText
+        .map((p) => `--- TRANG ${p.pageNum} ---\n${p.text || '(Trang không có văn bản)'}`)
+        .join('\n\n');
+      const totalChars = d.pagesText.reduce((acc, p) => acc + p.text.length, 0);
+
+      body.innerHTML = `
+        <div class="space-y-4">
+          <!-- Thanh công cụ tìm kiếm, sao chép & tải TXT -->
+          <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div class="relative flex-1 max-w-md">
+              <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
+              <input id="p2t-search" type="text" value="${escapeHtml(d.keyword)}" placeholder="Tìm từ khóa trong văn bản trích xuất..." class="w-full pl-10 pr-4 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm focus:outline-none focus:border-cyan-500" />
+            </div>
+
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="text-xs text-slate-500 mr-1">${d.pagesText.length} trang • ${totalChars.toLocaleString('vi-VN')} ký tự</span>
+              <button id="btn-p2t-copy-all" type="button" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-xs font-bold transition-colors">
+                <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                <span>Sao chép tất cả</span>
+              </button>
+              <button id="btn-p2t-download" type="button" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-700 text-white text-xs font-bold shadow-md shadow-cyan-500/20 transition-colors">
+                <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                <span>Tải tệp .TXT</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Danh sách văn bản theo từng trang -->
+          <div id="p2t-pages-list" class="space-y-4"></div>
+        </div>
+      `;
+
+      lucide.createIcons({ nodes: [body] });
+
+      const renderList = () => {
+        const listEl = document.getElementById('p2t-pages-list');
+        const kw = d.keyword.trim();
+        const filtered = kw
+          ? d.pagesText.filter((p) => p.text.toLowerCase().includes(kw.toLowerCase()))
+          : d.pagesText;
+
+        if (filtered.length === 0) {
+          listEl.innerHTML = `<div class="p-8 text-center bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 text-sm text-slate-500">Không tìm thấy từ khóa "${escapeHtml(kw)}" trong tài liệu.</div>`;
+          return;
+        }
+
+        listEl.innerHTML = filtered
+          .map((p) => {
+            let displayHtml = escapeHtml(p.text || '(Trang này không chứa lớp văn bản - có thể là trang ảnh scan)');
+            if (kw) {
+              const safeKw = escapeHtml(kw).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+              displayHtml = displayHtml.replace(
+                new RegExp(`(${safeKw})`, 'gi'),
+                '<mark class="bg-amber-300 text-slate-900 px-0.5 rounded">$1</mark>'
+              );
+            }
+            return `
+              <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-4 sm:p-5 shadow-sm">
+                <div class="flex items-center justify-between pb-2.5 mb-3 border-b border-slate-100 dark:border-slate-800">
+                  <span class="text-xs font-bold uppercase tracking-wider text-cyan-600 dark:text-cyan-400">Trang ${p.pageNum}</span>
+                  <button type="button" data-copy-page="${p.pageNum}" class="text-xs font-semibold text-slate-500 hover:text-cyan-600 flex items-center gap-1">
+                    <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                    <span>Sao chép trang này</span>
+                  </button>
+                </div>
+                <pre class="whitespace-pre-wrap font-sans text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed">${displayHtml}</pre>
+              </div>
+            `;
+          })
+          .join('');
+
+        lucide.createIcons({ nodes: [listEl] });
+        listEl.querySelectorAll('[data-copy-page]').forEach((btn) => {
+          btn.onclick = () => {
+            const pNum = parseInt(btn.dataset.copyPage, 10);
+            const found = d.pagesText.find((item) => item.pageNum === pNum);
+            if (found) copyTextToClipboard(found.text);
+          };
+        });
+      };
+
+      document.getElementById('p2t-search').oninput = (e) => {
+        d.keyword = e.target.value;
+        renderList();
+      };
+      document.getElementById('btn-p2t-copy-all').onclick = () => copyTextToClipboard(fullText);
+      document.getElementById('btn-p2t-download').onclick = () => {
+        const baseName = d.file.name.replace(/\.pdf$/i, '');
+        downloadBlob(new Blob([fullText], { type: 'text/plain;charset=utf-8' }), `${baseName}_Van_Ban.txt`);
+        showToast('Đã tải tệp văn bản .TXT!', 'success');
+      };
+
+      renderList();
+    }
+
+    // =========================================================================
+    // 14. CÔNG CỤ 11: CHỈNH SỬA METADATA PDF (EDIT METADATA)
+    // =========================================================================
+    function initMetadataTool() {
+      const body = document.getElementById('workspace-body');
+      body.innerHTML = createDropzoneHTML({
+        id: 'meta-dropzone',
+        icon: 'info',
+        title: 'Chọn tệp PDF để xem & chỉnh sửa Metadata',
+        subtitle: 'Cập nhật thông tin Tiêu đề (Title), Tác giả (Author), Chủ đề (Subject) và Từ khóa (Keywords).'
+      });
+      lucide.createIcons({ nodes: [body] });
+
+      bindDropzoneEvents('meta-dropzone', async (files) => {
+        const file = files[0];
+        if (!file || !file.name.toLowerCase().endsWith('.pdf')) {
+          showToast('Vui lòng chọn tệp .PDF hợp lệ.', 'error');
+          return;
+        }
+        try {
+          showLoading('Đang đọc thuộc tính Metadata...', file.name, 45);
+          const buffer = await readFileAsArrayBuffer(file);
+          const pdfDoc = await loadPdfLibSafely(buffer);
+
+          appState.toolData = {
+            file,
+            buffer,
+            pageCount: pdfDoc.getPageCount(),
+            title: pdfDoc.getTitle() || '',
+            author: pdfDoc.getAuthor() || '',
+            subject: pdfDoc.getSubject() || '',
+            keywords: pdfDoc.getKeywords() || '',
+            creator: pdfDoc.getCreator() || 'Không rõ',
+            producer: pdfDoc.getProducer() || 'Không rõ'
+          };
+
+          renderMetadataWorkspace();
+          showWorkspaceResetButton(() => initMetadataTool());
+        } catch (err) {
+          showToast(err.message, 'error');
+        } finally {
+          hideLoading();
+        }
+      });
+    }
+
+    function renderMetadataWorkspace() {
+      const d = appState.toolData;
+      const body = document.getElementById('workspace-body');
+
+      body.innerHTML = `
+        <div class="max-w-3xl mx-auto bg-white dark:bg-slate-900 p-6 sm:p-8 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-6">
+          <div class="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-slate-100 dark:border-slate-800">
+            <div>
+              <h3 class="font-bold text-base sm:text-lg">${escapeHtml(d.file.name)}</h3>
+              <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">${d.pageCount} trang • ${formatFileSize(d.file.size)} • Trình tạo: ${escapeHtml(d.producer)}</p>
+            </div>
+            <span class="px-3 py-1 rounded-full bg-fuchsia-50 dark:bg-fuchsia-500/15 text-fuchsia-600 dark:text-fuchsia-300 text-xs font-bold">
+              Chỉnh sửa thuộc tính
+            </span>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="sm:col-span-2">
+              <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Tiêu đề tài liệu (Title)</label>
+              <input id="meta-title" type="text" value="${escapeHtml(d.title)}" placeholder="Ví dụ: Báo cáo tài chính năm 2026" class="w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm focus:outline-none focus:border-fuchsia-500" />
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Tác giả (Author)</label>
+              <input id="meta-author" type="text" value="${escapeHtml(d.author)}" placeholder="Ví dụ: Nguyễn Văn A" class="w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm focus:outline-none focus:border-fuchsia-500" />
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Chủ đề (Subject)</label>
+              <input id="meta-subject" type="text" value="${escapeHtml(d.subject)}" placeholder="Ví dụ: Tài liệu nội bộ" class="w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm focus:outline-none focus:border-fuchsia-500" />
+            </div>
+
+            <div class="sm:col-span-2">
+              <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Từ khóa (Keywords - ngăn cách bằng dấu phẩy)</label>
+              <input id="meta-keywords" type="text" value="${escapeHtml(d.keywords)}" placeholder="Ví dụ: hợp đồng, kinh doanh, pdf, 2026" class="w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm focus:outline-none focus:border-fuchsia-500" />
+            </div>
+          </div>
+
+          <div class="pt-2 flex justify-end">
+            <button id="btn-execute-meta" type="button" class="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-fuchsia-600 hover:bg-fuchsia-700 text-white font-bold text-sm shadow-lg shadow-fuchsia-500/20 flex items-center justify-center gap-2 transition-all">
+              <i data-lucide="save" class="w-4 h-4"></i>
+              <span>Lưu Metadata &amp; Tải PDF</span>
+            </button>
+          </div>
+        </div>
+      `;
+
+      lucide.createIcons({ nodes: [body] });
+
+      document.getElementById('btn-execute-meta').onclick = async () => {
+        try {
+          showLoading('Đang cập nhật Metadata...', 'Đang ghi thuộc tính vào tệp PDF', 55);
+          const pdfDoc = await PDFDocument.load(d.buffer.slice(0));
+
+          const title = document.getElementById('meta-title').value.trim();
+          const author = document.getElementById('meta-author').value.trim();
+          const subject = document.getElementById('meta-subject').value.trim();
+          const keywordsRaw = document.getElementById('meta-keywords').value.trim();
+
+          pdfDoc.setTitle(title);
+          pdfDoc.setAuthor(author);
+          pdfDoc.setSubject(subject);
+          pdfDoc.setKeywords(
+            keywordsRaw
+              ? keywordsRaw.split(',').map((k) => k.trim()).filter(Boolean)
+              : []
+          );
+          pdfDoc.setModificationDate(new Date());
+
+          const outBytes = await pdfDoc.save();
+          const baseName = d.file.name.replace(/\.pdf$/i, '');
+          downloadBlob(new Blob([outBytes], { type: 'application/pdf' }), `${baseName}_Metadata.pdf`);
+          showToast('Đã cập nhật Metadata và xuất tệp PDF mới!', 'success');
+        } catch (err) {
+          showToast(err.message || 'Lỗi khi lưu Metadata.', 'error');
+        } finally {
+          hideLoading();
+        }
+      };
+    }
+
+    // =========================================================================
+    // 15. KHỞI TẠO SỰ KIỆN TOÀN CỤC KHI TẢI TRANG
+    // =========================================================================
+    document.addEventListener('DOMContentLoaded', () => {
+      initTheme();
+      lucide.createIcons();
+      renderToolsGrid();
+
+      // Nút chuyển Dark/Light mode
+      document.getElementById('btn-theme-toggle').addEventListener('click', toggleTheme);
+
+      // Các nút quay về Trang chủ (Hub)
+      document.getElementById('btn-logo-home').addEventListener('click', goToHub);
+      document.getElementById('btn-nav-hub').addEventListener('click', goToHub);
+      document.getElementById('btn-back-hub').addEventListener('click', goToHub);
+
+      // Bộ lọc danh mục trên Hub
+      document.querySelectorAll('.cat-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          appState.activeCategory = btn.dataset.category;
+          document.querySelectorAll('.cat-btn').forEach((b) => {
+            const active = b === btn;
+            b.className = active
+              ? 'cat-btn active px-4 py-2 rounded-xl text-sm font-semibold transition-all whitespace-nowrap bg-indigo-600 text-white shadow-sm shadow-indigo-500/25'
+              : 'cat-btn px-4 py-2 rounded-xl text-sm font-medium transition-all whitespace-nowrap bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200/80 dark:border-slate-800';
+          });
+          renderToolsGrid();
+        });
+      });
+
+      // Tìm kiếm công cụ nhanh trên thanh Header
+      const searchInput = document.getElementById('global-tool-search');
+      const clearSearchBtn = document.getElementById('btn-clear-search');
+      const searchDropdown = document.getElementById('search-dropdown');
+
+      searchInput.addEventListener('input', (e) => {
+        const val = e.target.value;
+        appState.searchQuery = val;
+        clearSearchBtn.classList.toggle('hidden', !val);
+
+        if (!appState.currentToolId) {
+          // Đang ở trang Hub -> lọc trực tiếp lưới thẻ
+          renderToolsGrid();
+          searchDropdown.classList.add('hidden');
+        } else {
+          // Đang ở trong 1 công cụ -> hiển thị dropdown chuyển nhanh công cụ
+          const q = val.trim().toLowerCase();
+          if (!q) {
+            searchDropdown.classList.add('hidden');
+            return;
+          }
+          const matches = TOOLS_CONFIG.filter(
+            (t) =>
+              t.title.toLowerCase().includes(q) ||
+              t.keywords.toLowerCase().includes(q)
+          );
+          if (matches.length === 0) {
+            searchDropdown.innerHTML = `<div class="p-4 text-xs text-slate-500 text-center">Không tìm thấy công cụ phù hợp</div>`;
+          } else {
+            searchDropdown.innerHTML = matches
+              .map(
+                (t) => `
+              <button type="button" data-jump-tool="${t.id}" class="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-slate-50 dark:hover:bg-slate-800 text-left transition-colors border-b last:border-b-0 border-slate-100 dark:border-slate-800">
+                <div class="w-8 h-8 rounded-lg ${t.colorClass} flex items-center justify-center shrink-0">
+                  <i data-lucide="${t.icon}" class="w-4 h-4"></i>
+                </div>
+                <div>
+                  <div class="text-xs font-bold text-slate-800 dark:text-slate-100">${t.title}</div>
+                  <div class="text-[11px] text-slate-400">${t.categoryLabel}</div>
+                </div>
+              </button>
+            `
+              )
+              .join('');
+            lucide.createIcons({ nodes: [searchDropdown] });
+            searchDropdown.querySelectorAll('[data-jump-tool]').forEach((b) => {
+              b.onclick = () => {
+                searchInput.value = '';
+                appState.searchQuery = '';
+                clearSearchBtn.classList.add('hidden');
+                searchDropdown.classList.add('hidden');
+                openTool(b.dataset.jumpTool);
+              };
+            });
+          }
+          searchDropdown.classList.remove('hidden');
+        }
+      });
+
+      clearSearchBtn.addEventListener('click', () => {
+        searchInput.value = '';
+        appState.searchQuery = '';
+        clearSearchBtn.classList.add('hidden');
+        searchDropdown.classList.add('hidden');
+        renderToolsGrid();
+      });
+
+      document.getElementById('btn-reset-filters').addEventListener('click', () => {
+        searchInput.value = '';
+        appState.searchQuery = '';
+        appState.activeCategory = 'all';
+        clearSearchBtn.classList.add('hidden');
+        document.querySelector('[data-category="all"]').click();
+      });
+
+      // Đóng dropdown tìm kiếm khi nhấn ra ngoài
+      document.addEventListener('click', (e) => {
+        if (!searchInput.contains(e.target) && !searchDropdown.contains(e.target)) {
+          searchDropdown.classList.add('hidden');
+        }
+      });
+    });
+  </script>
+</body>
+</html>

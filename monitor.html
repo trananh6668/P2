@@ -1,0 +1,2739 @@
+<!DOCTYPE html>
+<html lang="vi" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Monitor Checker</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Inter & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            slate: {
+              925: '#0b1120',
+              950: '#060913',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      background-color: #060913;
+      color: #f1f5f9;
+      font-family: 'Inter', sans-serif;
+      overflow-x: hidden;
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0f172a;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #475569;
+    }
+
+    /* Subtle grid background */
+    .bg-grid-pattern {
+      background-image: linear-gradient(to right, rgba(56, 189, 248, 0.04) 1px, transparent 1px),
+                        linear-gradient(to bottom, rgba(56, 189, 248, 0.04) 1px, transparent 1px);
+      background-size: 28px 28px;
+    }
+
+    /* Ripple animation for mouse tester */
+    @keyframes rippleEffect {
+      0% {
+        transform: translate(-50%, -50%) scale(0.2);
+        opacity: 0.75;
+      }
+      100% {
+        transform: translate(-50%, -50%) scale(2.8);
+        opacity: 0;
+      }
+    }
+    .click-ripple {
+      position: absolute;
+      width: 80px;
+      height: 80px;
+      border-radius: 9999px;
+      pointer-events: none;
+      animation: rippleEffect 0.55s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    /* Tab transition */
+    .tab-panel {
+      animation: fadeIn 0.2s ease-out;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Keyboard Keycap Styles */
+    .kb-key {
+      transition: transform 0.05s ease, background-color 0.1s ease, border-color 0.1s ease, color 0.1s ease;
+      user-select: none;
+    }
+    .kb-key.tested {
+      background-color: #064e3b;
+      border-color: #10b981;
+      color: #a7f3d0;
+    }
+    .kb-key.active {
+      background-color: #06b6d4 !important;
+      border-color: #67e8f9 !important;
+      color: #060913 !important;
+      transform: translateY(2px);
+      box-shadow: 0 0 14px rgba(6, 182, 212, 0.55);
+    }
+    .kb-key.chatter {
+      background-color: #be123c !important;
+      border-color: #fb7185 !important;
+      color: #ffffff !important;
+      box-shadow: 0 0 14px rgba(244, 63, 94, 0.65);
+    }
+
+    /* Mouse SVG active button highlight */
+    .mouse-btn-part {
+      transition: fill 0.08s ease, stroke 0.08s ease;
+    }
+    .mouse-btn-part.btn-down {
+      fill: #06b6d4 !important;
+      stroke: #67e8f9 !important;
+    }
+    .mouse-btn-part.btn-fault {
+      fill: #f43f5e !important;
+      stroke: #fda4af !important;
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-slate-950 text-slate-100 bg-grid-pattern selection:bg-cyan-500/30 selection:text-cyan-200">
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+  <!-- Fullscreen Color Overlay -->
+  <div id="fullscreen-overlay" class="fixed inset-0 z-[100] hidden flex-col items-center justify-center cursor-pointer select-none transition-colors duration-150">
+    <div id="fs-hud" class="bg-black/75 backdrop-blur-md border border-white/15 text-white px-6 py-4 rounded-2xl shadow-2xl text-center max-w-md mx-4 transition-opacity duration-300">
+      <div class="flex items-center justify-center gap-2 mb-1">
+        <span id="fs-color-dot" class="w-3.5 h-3.5 rounded-full border border-white/40"></span>
+        <h3 id="fs-color-name" class="font-bold text-lg tracking-wide">Màu Đỏ (Red)</h3>
+        <span id="fs-color-hex" class="font-mono text-xs bg-white/15 px-2 py-0.5 rounded">#FF0000</span>
+      </div>
+      <p class="text-xs text-slate-300 leading-relaxed mb-3">
+        Nhấn <span class="text-cyan-400 font-semibold">Chuột trái</span> hoặc phím <span class="text-cyan-400 font-semibold">← / →</span> để đổi màu.<br>
+        Nhấn phím <span class="text-amber-400 font-semibold">H</span> để ẩn/hiện bảng hướng dẫn, <span class="text-rose-400 font-semibold">ESC</span> để thoát.
+      </p>
+      <div class="flex items-center justify-center gap-2">
+        <button id="fs-prev-btn" class="px-3 py-1.5 bg-white/10 hover:bg-white/20 rounded-lg text-xs font-medium transition">← Trước</button>
+        <button id="fs-next-btn" class="px-3 py-1.5 bg-white/10 hover:bg-white/20 rounded-lg text-xs font-medium transition">Tiếp →</button>
+        <button id="fs-exit-btn" class="px-3 py-1.5 bg-rose-600/80 hover:bg-rose-600 rounded-lg text-xs font-semibold transition">Thoát (ESC)</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Header & Navigation (Đồng bộ giao diện Ảnh 2 & 3) -->
+  <header class="pt-4 sm:pt-5 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-7xl mx-auto space-y-3.5">
+      <!-- Top Brand Banner Card -->
+      <div class="bg-slate-900/90 border border-slate-800/90 rounded-2xl px-4 sm:px-6 py-4 shadow-xl backdrop-blur-xl flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        <!-- Brand Left -->
+        <div class="flex items-center gap-3.5">
+          <div class="w-11 h-11 rounded-xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400 shrink-0 shadow-inner">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+              <line x1="8" y1="21" x2="16" y2="21"></line>
+              <line x1="12" y1="17" x2="12" y2="21"></line>
+            </svg>
+          </div>
+          <div>
+            <h1 class="text-lg sm:text-xl font-extrabold tracking-tight text-white flex items-center gap-2.5 flex-wrap">
+              Monitor Checker
+              <span class="text-[11px] font-mono font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-cyan-500/15 text-cyan-400 border border-cyan-500/35">PRO</span>
+            </h1>
+            <p class="text-xs text-slate-400 mt-0.5">Bộ công cụ đo kiểm phần cứng màn hình, tần số quét, cân màu, chuột & bàn phím chuyên sâu</p>
+          </div>
+        </div>
+
+        <!-- Live Telemetry Pill Right -->
+        <div class="flex items-center justify-between sm:justify-start gap-3 sm:gap-4 bg-slate-950/90 border border-slate-800 px-4 py-2.5 rounded-full font-mono text-xs self-start lg:self-auto">
+          <div class="flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_#34d399]"></span>
+            <span class="text-slate-400">Hz:</span>
+            <span id="header-hz-pill" class="font-bold text-cyan-400">-- Hz</span>
+          </div>
+          <span class="text-slate-700">|</span>
+          <div class="flex items-center gap-1.5">
+            <span class="text-slate-400">Frame:</span>
+            <span id="header-frame-pill" class="font-bold text-emerald-400">-- ms</span>
+          </div>
+          <span class="text-slate-700 hidden sm:inline">|</span>
+          <div class="hidden sm:flex items-center gap-1.5">
+            <span class="text-slate-400">Res:</span>
+            <span id="header-res-pill" class="font-bold text-white">--×--</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 6-Column Pill Navigation Tabs -->
+      <nav class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5" aria-label="Tabs">
+        <button data-tab="dashboard" class="nav-tab active px-3.5 py-3 rounded-xl text-xs font-semibold text-center transition bg-cyan-500/10 text-white border border-cyan-500/60 shadow-[0_0_15px_rgba(6,182,212,0.12)]">
+          1. Màn Hình & PPI
+        </button>
+        <button data-tab="motion" class="nav-tab px-3.5 py-3 rounded-xl text-xs font-medium text-center transition bg-slate-900/85 text-slate-300 hover:text-white hover:bg-slate-800/80 border border-slate-800">
+          2. Gaming & Ghosting
+        </button>
+        <button data-tab="calibration" class="nav-tab px-3.5 py-3 rounded-xl text-xs font-medium text-center transition bg-slate-900/85 text-slate-300 hover:text-white hover:bg-slate-800/80 border border-slate-800">
+          3. Cân Màu & Độ Nét
+        </button>
+        <button data-tab="fullscreen" class="nav-tab px-3.5 py-3 rounded-xl text-xs font-medium text-center transition bg-slate-900/85 text-slate-300 hover:text-white hover:bg-slate-800/80 border border-slate-800">
+          4. Điểm Chết & Hở Sáng
+        </button>
+        <button data-tab="mouse" class="nav-tab px-3.5 py-3 rounded-xl text-xs font-medium text-center transition bg-slate-900/85 text-slate-300 hover:text-white hover:bg-slate-800/80 border border-slate-800">
+          5. Test Chuột Chi Tiết
+        </button>
+        <button data-tab="keyboard" class="nav-tab px-3.5 py-3 rounded-xl text-xs font-medium text-center transition bg-slate-900/85 text-slate-300 hover:text-white hover:bg-slate-800/80 border border-slate-800">
+          6. Test Bàn Phím 104
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 sm:py-6">
+
+    <!-- =================================================================== -->
+    <!-- TAB 1: DASHBOARD (REFRESH RATE, RESOLUTION, PPI/RETINA, HDR/GAMUT)  -->
+    <!-- =================================================================== -->
+    <section id="tab-dashboard" class="tab-panel space-y-6">
+      <!-- Top Summary Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
+        
+        <!-- Card 1: Refresh Rate (Hz) -->
+        <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 flex flex-col justify-between shadow-xl relative overflow-hidden">
+          <div class="absolute top-0 right-0 w-28 h-28 bg-emerald-500/10 rounded-full blur-2xl -mr-8 -mt-8 pointer-events-none"></div>
+          <div>
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Tần Số Quét Thực Tế</span>
+              <span class="inline-flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span> Đo trực tiếp
+              </span>
+            </div>
+            <div class="flex items-baseline gap-2">
+              <span id="hz-value" class="text-4xl sm:text-5xl font-extrabold font-mono text-white tracking-tight">--</span>
+              <span class="text-lg font-bold text-emerald-400">Hz</span>
+            </div>
+            <div class="mt-2 flex items-center gap-3 text-xs font-mono text-slate-400">
+              <span>Frametime: <strong id="frametime-value" class="text-slate-200">-- ms</strong></span>
+              <span>•</span>
+              <span>Chuẩn gần nhất: <strong id="hz-standard" class="text-cyan-400">-- Hz</strong></span>
+            </div>
+          </div>
+
+          <!-- Mini Frametime Sparkline Canvas -->
+          <div class="mt-4 pt-3 border-t border-slate-800/80">
+            <div class="flex justify-between text-[11px] text-slate-500 mb-1">
+              <span>Biểu đồ nhịp khung hình (Frame Pacing)</span>
+              <span id="jitter-value" class="font-mono text-slate-400">Jitter: -- ms</span>
+            </div>
+            <div class="w-full h-12 bg-slate-950/90 rounded-lg border border-slate-800/80 overflow-hidden">
+              <canvas id="hz-sparkline" class="w-full h-full block"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 2: Resolution & Aspect Ratio -->
+        <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 flex flex-col justify-between shadow-xl relative overflow-hidden">
+          <div class="absolute top-0 right-0 w-28 h-28 bg-cyan-500/10 rounded-full blur-2xl -mr-8 -mt-8 pointer-events-none"></div>
+          <div>
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Độ Phân Giải Màn Hình</span>
+              <span id="res-tier-badge" class="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-cyan-500/15 text-cyan-300 border border-cyan-500/30">--</span>
+            </div>
+            <div class="space-y-1">
+              <div class="text-xs text-slate-400">Độ phân giải vật lý (Native Pixels):</div>
+              <div id="physical-res" class="text-2xl sm:text-3xl font-extrabold font-mono text-white tracking-tight">-- × --</div>
+            </div>
+            <div class="mt-3 grid grid-cols-2 gap-2 pt-3 border-t border-slate-800/80 text-xs">
+              <div class="bg-slate-950/70 p-2 rounded-lg border border-slate-800/60">
+                <span class="text-slate-400 block text-[11px]">Logic (CSS Pixels)</span>
+                <span id="logical-res" class="font-mono font-semibold text-slate-200">-- × --</span>
+              </div>
+              <div class="bg-slate-950/70 p-2 rounded-lg border border-slate-800/60">
+                <span class="text-slate-400 block text-[11px]">Tỷ lệ & Scale (DPR)</span>
+                <span class="font-mono font-semibold text-slate-200"><span id="aspect-ratio">--</span> • <span id="dpr-value" class="text-cyan-400">--x</span></span>
+              </div>
+            </div>
+          </div>
+          <p class="text-[11px] text-slate-500 mt-3 leading-relaxed">
+            * Trình duyệt báo cáo độ phân giải theo mức phóng đại (Scaling) của hệ điều hành.
+          </p>
+        </div>
+
+        <!-- Card 3: HDR & Color Gamut -->
+        <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 flex flex-col justify-between shadow-xl relative overflow-hidden">
+          <div class="absolute top-0 right-0 w-28 h-28 bg-purple-500/10 rounded-full blur-2xl -mr-8 -mt-8 pointer-events-none"></div>
+          <div>
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">HDR & Không Gian Màu</span>
+              <span id="hdr-badge" class="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700">Đang kiểm tra...</span>
+            </div>
+            <div class="space-y-2.5 mt-2">
+              <div class="flex items-center justify-between bg-slate-950/70 px-3 py-2 rounded-lg border border-slate-800/70">
+                <span class="text-xs text-slate-400">Dải tương phản động</span>
+                <span id="hdr-status" class="text-xs font-mono font-bold text-slate-200">--</span>
+              </div>
+              <div class="flex items-center justify-between bg-slate-950/70 px-3 py-2 rounded-lg border border-slate-800/70">
+                <span class="text-xs text-slate-400">Dải màu rộng nhất</span>
+                <span id="gamut-status" class="text-xs font-mono font-bold text-purple-300">--</span>
+              </div>
+              <div class="flex items-center justify-between bg-slate-950/70 px-3 py-2 rounded-lg border border-slate-800/70">
+                <span class="text-xs text-slate-400">Độ sâu màu (Color Depth)</span>
+                <span id="color-depth" class="text-xs font-mono font-bold text-slate-200">-- bit</span>
+              </div>
+            </div>
+          </div>
+          <p class="text-[11px] text-slate-500 mt-3 leading-relaxed">
+            * Hỗ trợ kiểm tra chuẩn sRGB, DCI-P3, Rec.2020 và tín hiệu HDR10/Dolby Vision qua CSS Media Queries.
+          </p>
+        </div>
+
+        <!-- Card 4: Browser, GPU & Viewport Telemetry -->
+        <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 flex flex-col justify-between shadow-xl relative overflow-hidden">
+          <div class="absolute top-0 right-0 w-28 h-28 bg-amber-500/10 rounded-full blur-2xl -mr-8 -mt-8 pointer-events-none"></div>
+          <div>
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Phần Cứng Đồ Họa & GPU</span>
+              <span id="orientation-badge" class="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/30">Ngang</span>
+            </div>
+            <div class="space-y-2 mt-2">
+              <div class="bg-slate-950/70 px-3 py-2 rounded-lg border border-slate-800/70">
+                <span class="text-[11px] text-slate-400 block">GPU Renderer (WebGL)</span>
+                <span id="gpu-renderer" class="text-xs font-mono font-bold text-amber-300 line-clamp-2 break-words" title="Đang nhận diện GPU...">Đang nhận diện...</span>
+              </div>
+              <div class="flex items-center justify-between bg-slate-950/70 px-3 py-1.5 rounded-lg border border-slate-800/70">
+                <span class="text-xs text-slate-400">Khung nhìn & Tổng Pixel</span>
+                <span class="text-xs font-mono font-bold text-slate-200"><span id="viewport-size">--</span> • <span id="total-megapixels" class="text-cyan-400">-- MP</span></span>
+              </div>
+              <div class="flex items-center justify-between bg-slate-950/70 px-3 py-1.5 rounded-lg border border-slate-800/70">
+                <span class="text-xs text-slate-400">Cảm ứng đa điểm</span>
+                <span id="touch-support" class="text-xs font-mono font-bold text-slate-200">--</span>
+              </div>
+            </div>
+          </div>
+          <button id="copy-specs-btn" class="mt-3 w-full py-2 px-3 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-xl border border-slate-700 transition flex items-center justify-center gap-2">
+            <svg class="w-3.5 h-3.5 text-cyan-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+            Sao chép báo cáo thông số
+          </button>
+        </div>
+      </div>
+
+      <!-- Interactive PPI & Retina Calculator Panel (ĐÃ FIX CÂN ĐỐI THEO ẢNH 1) -->
+      <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-xl">
+        <div class="flex flex-col xl:flex-row xl:items-center justify-between gap-4 pb-5 border-b border-slate-800">
+          <div>
+            <h2 class="text-base sm:text-lg font-bold text-white flex items-center gap-2.5">
+              <span class="w-2.5 h-2.5 rounded-full bg-cyan-400 shrink-0"></span>
+              Tính Mật Độ Điểm Ảnh (PPI), Dot Pitch & Đánh Giá Chuẩn Retina
+            </h2>
+            <p class="text-xs text-slate-400 mt-1">
+              Trình duyệt không thể tự đọc kích thước vật lý (inch) vì lý do bảo mật. Hãy chọn hoặc nhập kích thước đường chéo màn hình của bạn bên dưới:
+            </p>
+          </div>
+          <!-- Quick Presets (Gọn 1 hàng thẳng đẹp) -->
+          <div class="flex flex-wrap items-center gap-1.5 shrink-0">
+            <span class="text-xs text-slate-400 mr-1">Chọn nhanh:</span>
+            <button data-inch="13.3" class="inch-preset-btn px-2.5 py-1.5 rounded-lg text-xs font-mono bg-slate-800/90 hover:bg-slate-700 text-slate-300 border border-slate-700 transition">13.3"</button>
+            <button data-inch="14" class="inch-preset-btn px-2.5 py-1.5 rounded-lg text-xs font-mono bg-slate-800/90 hover:bg-slate-700 text-slate-300 border border-slate-700 transition">14"</button>
+            <button data-inch="15.6" class="inch-preset-btn px-2.5 py-1.5 rounded-lg text-xs font-mono bg-cyan-500/20 text-cyan-300 border border-cyan-500/50 transition">15.6"</button>
+            <button data-inch="16" class="inch-preset-btn px-2.5 py-1.5 rounded-lg text-xs font-mono bg-slate-800/90 hover:bg-slate-700 text-slate-300 border border-slate-700 transition">16"</button>
+            <button data-inch="24" class="inch-preset-btn px-2.5 py-1.5 rounded-lg text-xs font-mono bg-slate-800/90 hover:bg-slate-700 text-slate-300 border border-slate-700 transition">24"</button>
+            <button data-inch="27" class="inch-preset-btn px-2.5 py-1.5 rounded-lg text-xs font-mono bg-slate-800/90 hover:bg-slate-700 text-slate-300 border border-slate-700 transition">27"</button>
+            <button data-inch="32" class="inch-preset-btn px-2.5 py-1.5 rounded-lg text-xs font-mono bg-slate-800/90 hover:bg-slate-700 text-slate-300 border border-slate-700 transition">32"</button>
+            <button data-inch="34" class="inch-preset-btn px-2.5 py-1.5 rounded-lg text-xs font-mono bg-slate-800/90 hover:bg-slate-700 text-slate-300 border border-slate-700 transition">34"</button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 pt-5 items-stretch">
+          <!-- Inputs Card (5 cols - Đóng khung cân đối chiều cao với thẻ phải) -->
+          <div class="lg:col-span-5 bg-slate-950/90 border border-slate-800 rounded-2xl p-4 sm:p-5 flex flex-col justify-between gap-4">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Thông số đầu vào</span>
+              <span class="text-[11px] font-mono text-cyan-400/80">Tự động đồng bộ độ phân giải</span>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div>
+                <label for="screen-inch-input" class="block text-xs font-medium text-slate-400 mb-1.5">Kích thước (Inch)</label>
+                <input id="screen-inch-input" type="number" step="0.1" min="3" max="120" value="15.6"
+                  class="w-full bg-slate-900 border border-slate-700 focus:border-cyan-500 rounded-xl px-3.5 py-2.5 text-sm font-mono font-bold text-white focus:outline-none transition" />
+              </div>
+              <div>
+                <label for="ppi-width-input" class="block text-xs font-medium text-slate-400 mb-1.5">Rộng (Pixels)</label>
+                <input id="ppi-width-input" type="number" min="320" max="15360"
+                  class="w-full bg-slate-900 border border-slate-700 focus:border-cyan-500 rounded-xl px-3.5 py-2.5 text-sm font-mono font-semibold text-slate-200 focus:outline-none transition" />
+              </div>
+              <div>
+                <label for="ppi-height-input" class="block text-xs font-medium text-slate-400 mb-1.5">Cao (Pixels)</label>
+                <input id="ppi-height-input" type="number" min="240" max="8640"
+                  class="w-full bg-slate-900 border border-slate-700 focus:border-cyan-500 rounded-xl px-3.5 py-2.5 text-sm font-mono font-semibold text-slate-200 focus:outline-none transition" />
+              </div>
+            </div>
+
+            <div class="bg-slate-900/80 border border-slate-800/80 rounded-xl p-3 text-[11px] text-slate-400 leading-relaxed flex items-start gap-2">
+              <span class="text-cyan-400 font-bold mt-0.5">ℹ</span>
+              <span>Bạn có thể nhập trực tiếp thông số màn hình khác (ví dụ: <strong>27"</strong> và <strong>2560 × 1440</strong>) để mô phỏng trước độ sắc nét trước khi mua màn hình.</span>
+            </div>
+          </div>
+
+          <!-- Output Metrics & Retina Verdict (7 cols) -->
+          <div class="lg:col-span-7 bg-slate-950/90 border border-slate-800 rounded-2xl p-4 sm:p-5 flex flex-col justify-between space-y-4">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+              <div class="flex items-center gap-4">
+                <div>
+                  <span class="text-[11px] uppercase tracking-wider text-slate-400 block mb-0.5">Mật độ điểm ảnh thực</span>
+                  <div class="flex items-baseline">
+                    <span id="ppi-physical-result" class="text-3xl sm:text-4xl font-extrabold font-mono text-white">--</span>
+                    <span class="text-sm font-bold text-cyan-400 ml-1.5">PPI</span>
+                  </div>
+                </div>
+                <div class="h-10 w-px bg-slate-800"></div>
+                <div>
+                  <span class="text-[11px] uppercase tracking-wider text-slate-400 block mb-0.5">PPI Hiệu dụng (CSS)</span>
+                  <div class="flex items-baseline">
+                    <span id="ppi-logical-result" class="text-xl font-bold font-mono text-slate-200">--</span>
+                    <span class="text-xs text-slate-400 ml-1">PPI</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Dynamic Retina Badge -->
+              <div id="retina-status-pill" class="px-3.5 py-1.5 rounded-full text-xs font-bold tracking-wide bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 flex items-center gap-1.5">
+                Đang tính toán...
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
+              <div class="bg-slate-900/90 p-3 rounded-xl border border-slate-800/80">
+                <span class="text-slate-400 block text-[11px] mb-0.5">Kích thước thực</span>
+                <span id="physical-cm-size" class="font-mono font-semibold text-slate-200">-- × -- cm</span>
+              </div>
+              <div class="bg-slate-900/90 p-3 rounded-xl border border-slate-800/80">
+                <span class="text-slate-400 block text-[11px] mb-0.5">Dot Pitch (Khoảng pixel)</span>
+                <span id="dot-pitch-value" class="font-mono font-semibold text-cyan-300">-- mm</span>
+              </div>
+              <div class="bg-slate-900/90 p-3 rounded-xl border border-slate-800/80">
+                <span class="text-slate-400 block text-[11px] mb-0.5">Khoảng cách Retina</span>
+                <span id="retina-distance" class="font-mono font-semibold text-emerald-400">≥ -- cm</span>
+              </div>
+            </div>
+
+            <div id="retina-explanation" class="text-xs leading-relaxed p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/25 text-emerald-200">
+              Đang phân tích mật độ điểm ảnh...
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- TAB 2: GAMING MOTION & GHOSTING TEST (UFO STYLE)                    -->
+    <!-- =================================================================== -->
+    <section id="tab-motion" class="tab-panel hidden space-y-6">
+      <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-5">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <h2 class="text-lg sm:text-xl font-bold text-white flex items-center gap-2">
+              Kiểm Tra Tốc Độ Phản Hồi & Bóng Mờ (Motion / Ghosting Test)
+            </h2>
+            <p class="text-xs sm:text-sm text-slate-400 mt-1">
+              Dùng mắt di chuyển theo vật thể UFO đang bay để quan sát đuôi bóng mờ (<strong>Ghosting</strong>), viền sáng ngược (<strong>Inverse Ghosting / Overdrive</strong>) hoặc hiện tượng xé hình (<strong>Screen Tearing</strong>).
+            </p>
+          </div>
+          <div class="flex items-center gap-3 bg-slate-950 px-4 py-2.5 rounded-xl border border-slate-800">
+            <div class="text-right">
+              <span class="text-[11px] text-slate-400 block">Tốc độ khung hình</span>
+              <span id="ufo-fps-display" class="font-mono font-bold text-emerald-400 text-sm">-- FPS</span>
+            </div>
+            <div class="h-7 w-px bg-slate-800"></div>
+            <button id="ufo-pause-btn" class="px-3.5 py-1.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-semibold transition">
+              Tạm dừng
+            </button>
+          </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 bg-slate-950/80 p-4 rounded-xl border border-slate-800/80">
+          <div>
+            <div class="flex justify-between text-xs mb-1.5">
+              <span class="text-slate-400">Tốc độ di chuyển</span>
+              <span id="ufo-speed-label" class="font-mono font-bold text-cyan-400">960 px/s</span>
+            </div>
+            <input id="ufo-speed-slider" type="range" min="120" max="1920" step="120" value="960"
+              class="w-full accent-cyan-500 cursor-pointer" />
+          </div>
+          <div>
+            <div class="flex justify-between text-xs mb-1.5">
+              <span class="text-slate-400">Kích thước vật thể</span>
+              <span id="ufo-size-label" class="font-mono font-bold text-cyan-400">1.0x</span>
+            </div>
+            <input id="ufo-size-slider" type="range" min="0.7" max="1.6" step="0.1" value="1.0"
+              class="w-full accent-cyan-500 cursor-pointer" />
+          </div>
+          <div>
+            <label class="block text-xs text-slate-400 mb-1.5">Màu nền tương phản (Test GtG)</label>
+            <div class="grid grid-cols-4 gap-1">
+              <button data-bg="#0f172a" class="ufo-bg-btn py-1.5 rounded-lg text-[11px] font-medium bg-cyan-500/20 text-cyan-300 border border-cyan-500/50">Tối</button>
+              <button data-bg="#475569" class="ufo-bg-btn py-1.5 rounded-lg text-[11px] font-medium bg-slate-800 text-slate-300 border border-slate-700">Xám</button>
+              <button data-bg="#1d4ed8" class="ufo-bg-btn py-1.5 rounded-lg text-[11px] font-medium bg-slate-800 text-slate-300 border border-slate-700">Xanh</button>
+              <button data-bg="#000000" class="ufo-bg-btn py-1.5 rounded-lg text-[11px] font-medium bg-slate-800 text-slate-300 border border-slate-700">Đen</button>
+            </div>
+          </div>
+          <div>
+            <label class="block text-xs text-slate-400 mb-1.5">Số làn tốc độ so sánh</label>
+            <div class="grid grid-cols-2 gap-1.5">
+              <button data-lanes="3" class="ufo-lane-btn py-1.5 rounded-lg text-xs font-medium bg-cyan-500/20 text-cyan-300 border border-cyan-500/50">3 Làn (1x/0.5x/0.25x)</button>
+              <button data-lanes="1" class="ufo-lane-btn py-1.5 rounded-lg text-xs font-medium bg-slate-800 text-slate-300 border border-slate-700">1 Làn toàn tốc</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- UFO Canvas Container -->
+        <div class="w-full h-72 sm:h-80 rounded-2xl overflow-hidden border border-slate-700/80 shadow-inner relative">
+          <canvas id="ufo-canvas" class="w-full h-full block"></canvas>
+        </div>
+
+        <!-- Guide Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+          <div class="bg-slate-950/70 p-4 rounded-xl border border-slate-800/80">
+            <h4 class="font-bold text-emerald-400 mb-1">✓ Phản hồi tốt (1ms - 4ms)</h4>
+            <p class="text-slate-400 leading-relaxed">Vật thể UFO sắc nét, các vạch trắng dọc trên thân rõ ràng, không kéo theo vệt bóng mờ phía sau.</p>
+          </div>
+          <div class="bg-slate-950/70 p-4 rounded-xl border border-slate-800/80">
+            <h4 class="font-bold text-amber-400 mb-1">⚠ Bóng mờ (Ghosting / Smearing)</h4>
+            <p class="text-slate-400 leading-relaxed">Thường gặp trên tấm nền VA ở nền tối. Phía sau UFO xuất hiện vệt mờ tối màu do pixel chuyển màu chậm.</p>
+          </div>
+          <div class="bg-slate-950/70 p-4 rounded-xl border border-slate-800/80">
+            <h4 class="font-bold text-rose-400 mb-1">⚡ Lỗi Overdrive (Inverse Ghosting)</h4>
+            <p class="text-slate-400 leading-relaxed">Xuất hiện viền sáng chói hoặc ám màu ngược phía sau vật thể. Hãy giảm mức Overdrive / Response Time trong menu màn hình.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Reaction & Input Lag Tester -->
+      <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <h2 class="text-lg font-bold text-white flex items-center gap-2">
+              Đo Phản Xạ & Độ Trễ Input (Reaction & Input Lag Tester)
+            </h2>
+            <p class="text-xs text-slate-400 mt-0.5">
+              Kiểm tra tổng độ trễ từ lúc khung hình đổi sang màu <span class="text-emerald-400 font-semibold">Xanh Lá</span> cho đến khi bạn nhấn chuột hoặc phím <kbd class="px-1.5 py-0.5 bg-slate-800 border border-slate-700 rounded text-[11px] font-mono">Space</kbd>.
+            </p>
+          </div>
+          <div class="flex items-center gap-3 font-mono text-xs bg-slate-950 px-4 py-2 rounded-xl border border-slate-800">
+            <span>Gần nhất: <strong id="reaction-last" class="text-cyan-400">-- ms</strong></span>
+            <span class="text-slate-700">|</span>
+            <span>Trung bình: <strong id="reaction-avg" class="text-emerald-400">-- ms</strong></span>
+            <span class="text-slate-700">|</span>
+            <span>Tốt nhất: <strong id="reaction-best" class="text-amber-400">-- ms</strong></span>
+          </div>
+        </div>
+
+        <div id="reaction-pad" role="button" tabindex="0"
+          class="select-none cursor-pointer h-44 rounded-2xl border-2 border-slate-700 bg-slate-950 hover:border-cyan-500/50 flex flex-col items-center justify-center text-center p-6 transition-colors duration-100">
+          <span id="reaction-badge" class="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-cyan-500/15 text-cyan-300 border border-cyan-500/30 mb-2">
+            Sẵn sàng
+          </span>
+          <h3 id="reaction-title" class="text-xl sm:text-2xl font-extrabold text-white">Nhấn vào đây hoặc bấm phím SPACE để bắt đầu</h3>
+          <p id="reaction-sub" class="text-xs text-slate-400 mt-1">Khi màn hình chuyển sang màu XANH LÁ, hãy phản xạ nhấn nhanh nhất có thể!</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- TAB 3: COLOR CALIBRATION & DISPLAY QUALITY (PRO SUITE)              -->
+    <!-- =================================================================== -->
+    <section id="tab-calibration" class="tab-panel hidden space-y-6">
+
+      <!-- 1. Macbeth ColorChecker 24-Patch Reference -->
+      <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div>
+            <h2 class="text-lg font-bold text-white">1. Bảng Chuẩn Màu ColorChecker 24 Ô (Macbeth Reference)</h2>
+            <p class="text-xs text-slate-400 mt-0.5">
+              24 ô màu tham chiếu tiêu chuẩn ngành nhiếp ảnh & đồ họa (Tông da tự nhiên, thiên nhiên, màu cơ bản và 6 bậc thang trung tính). Rê chuột hoặc chạm vào từng ô để xem thông số sRGB / Hex.
+            </p>
+          </div>
+          <div id="cc-hover-info" class="text-xs font-mono bg-slate-950 px-3.5 py-2 rounded-xl border border-slate-800 text-cyan-300">
+            Rê chuột lên ô màu để xem chi tiết
+          </div>
+        </div>
+
+        <div id="colorchecker-grid" class="grid grid-cols-3 sm:grid-cols-6 gap-2.5 bg-neutral-900 p-3.5 rounded-2xl border border-slate-700/80">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+
+      <!-- 2. Grayscale & Fine Near-Black / Near-White -->
+      <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div>
+            <h2 class="text-lg font-bold text-white">2. Thang Độ Xám 21 Bước & Phân Biệt Near-Black / Near-White</h2>
+            <p class="text-xs text-slate-400 mt-0.5">
+              Cân chỉnh <strong>Brightness (Độ sáng)</strong> và <strong>Contrast (Tương phản)</strong>: Bạn phải nhìn rõ ranh giới của các ô vùng tối (RGB 1 → 16) mà không bị bệt đen (Black Crush) và vùng sáng (RGB 239 → 255) không bị cháy trắng (White Clipping).
+            </p>
+          </div>
+          <span class="text-xs font-mono bg-slate-950 px-3 py-1.5 rounded-lg border border-slate-800 text-slate-300">0% → 100% (21 Bước)</span>
+        </div>
+
+        <div id="grayscale-grid" class="grid grid-cols-7 sm:grid-cols-21 gap-1 rounded-xl overflow-hidden border border-slate-700 p-1 bg-slate-950">
+          <!-- Populated by JS -->
+        </div>
+
+        <!-- Near-Black & Near-White 8-step Fine Test -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 pt-2">
+          <div class="bg-black p-4 rounded-xl border border-slate-800">
+            <div class="flex justify-between text-xs font-semibold text-slate-400 mb-2">
+              <span>Vùng tối sát ngưỡng đen (Near-Black)</span>
+              <span class="font-mono text-slate-500">RGB 1 → 16</span>
+            </div>
+            <div class="grid grid-cols-8 gap-1.5">
+              <div class="h-14 rounded-lg flex items-end justify-center pb-1.5 text-[10px] font-mono text-slate-500 border border-white/10" style="background-color: rgb(1,1,1)">1</div>
+              <div class="h-14 rounded-lg flex items-end justify-center pb-1.5 text-[10px] font-mono text-slate-500 border border-white/10" style="background-color: rgb(2,2,2)">2</div>
+              <div class="h-14 rounded-lg flex items-end justify-center pb-1.5 text-[10px] font-mono text-slate-500 border border-white/10" style="background-color: rgb(3,3,3)">3</div>
+              <div class="h-14 rounded-lg flex items-end justify-center pb-1.5 text-[10px] font-mono text-slate-500 border border-white/10" style="background-color: rgb(4,4,4)">4</div>
+              <div class="h-14 rounded-lg flex items-end justify-center pb-1.5 text-[10px] font-mono text-slate-400 border border-white/10" style="background-color: rgb(6,6,6)">6</div>
+              <div class="h-14 rounded-lg flex items-end justify-center pb-1.5 text-[10px] font-mono text-slate-400 border border-white/10" style="background-color: rgb(8,8,8)">8</div>
+              <div class="h-14 rounded-lg flex items-end justify-center pb-1.5 text-[10px] font-mono text-slate-400 border border-white/10" style="background-color: rgb(12,12,12)">12</div>
+              <div class="h-14 rounded-lg flex items-end justify-center pb-1.5 text-[10px] font-mono text-slate-300 border border-white/10" style="background-color: rgb(16,16,16)">16</div>
+            </div>
+          </div>
+
+          <div class="bg-white p-4 rounded-xl border border-slate-300">
+            <div class="flex justify-between text-xs font-semibold text-slate-700 mb-2">
+              <span>Vùng sáng sát ngưỡng trắng (Near-White)</span>
+              <span class="font-mono text-slate-500">RGB 239 → 255</span>
+            </div>
+            <div class="grid grid-cols-8 gap-1.5">
+              <div class="h-14 rounded-lg flex items-end justify-center pb-1.5 text-[10px] font-mono text-slate-700 border border-black/15" style="background-color: rgb(239,239,239)">239</div>
+              <div class="h-14 rounded-lg flex items-end justify-center pb-1.5 text-[10px] font-mono text-slate-700 border border-black/15" style="background-color: rgb(243,243,243)">243</div>
+              <div class="h-14 rounded-lg flex items-end justify-center pb-1.5 text-[10px] font-mono text-slate-600 border border-black/15" style="background-color: rgb(247,247,247)">247</div>
+              <div class="h-14 rounded-lg flex items-end justify-center pb-1.5 text-[10px] font-mono text-slate-600 border border-black/15" style="background-color: rgb(250,250,250)">250</div>
+              <div class="h-14 rounded-lg flex items-end justify-center pb-1.5 text-[10px] font-mono text-slate-500 border border-black/15" style="background-color: rgb(252,252,252)">252</div>
+              <div class="h-14 rounded-lg flex items-end justify-center pb-1.5 text-[10px] font-mono text-slate-500 border border-black/15" style="background-color: rgb(253,253,253)">253</div>
+              <div class="h-14 rounded-lg flex items-end justify-center pb-1.5 text-[10px] font-mono text-slate-500 border border-black/15" style="background-color: rgb(254,254,254)">254</div>
+              <div class="h-14 rounded-lg flex items-end justify-center pb-1.5 text-[10px] font-mono text-slate-500 border border-black/15" style="background-color: rgb(255,255,255)">255</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. Color Gradients (Color Banding Test - 7 Channels) -->
+      <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
+        <div>
+          <h2 class="text-lg font-bold text-white">3. Dải Chuyển Sắc & Kiểm Tra Độ Sâu Bit (Color Banding Ramp)</h2>
+          <p class="text-xs text-slate-400 mt-0.5">
+            Quan sát độ mượt trên cả 6 kênh màu cơ bản/thứ cấp và thang xám. Nếu thấy các vạch sọc dọc phân bậc rõ rệt (Banding), tấm nền có thể chỉ là 6-bit + FRC hoặc cấu hình màu đang bị giới hạn.
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+          <div class="space-y-1">
+            <div class="flex justify-between text-xs text-slate-400"><span>Đỏ (Red 0 → 255)</span><span class="font-mono">Primary</span></div>
+            <div class="h-9 w-full rounded-xl border border-slate-700/80" style="background: linear-gradient(to right, #000000, #ff0000);"></div>
+          </div>
+          <div class="space-y-1">
+            <div class="flex justify-between text-xs text-slate-400"><span>Lục lam (Cyan 0 → 255)</span><span class="font-mono">Secondary</span></div>
+            <div class="h-9 w-full rounded-xl border border-slate-700/80" style="background: linear-gradient(to right, #000000, #00ffff);"></div>
+          </div>
+          <div class="space-y-1">
+            <div class="flex justify-between text-xs text-slate-400"><span>Xanh lá (Green 0 → 255)</span><span class="font-mono">Primary</span></div>
+            <div class="h-9 w-full rounded-xl border border-slate-700/80" style="background: linear-gradient(to right, #000000, #00ff00);"></div>
+          </div>
+          <div class="space-y-1">
+            <div class="flex justify-between text-xs text-slate-400"><span>Đỏ tươi (Magenta 0 → 255)</span><span class="font-mono">Secondary</span></div>
+            <div class="h-9 w-full rounded-xl border border-slate-700/80" style="background: linear-gradient(to right, #000000, #ff00ff);"></div>
+          </div>
+          <div class="space-y-1">
+            <div class="flex justify-between text-xs text-slate-400"><span>Xanh dương (Blue 0 → 255)</span><span class="font-mono">Primary</span></div>
+            <div class="h-9 w-full rounded-xl border border-slate-700/80" style="background: linear-gradient(to right, #000000, #0000ff);"></div>
+          </div>
+          <div class="space-y-1">
+            <div class="flex justify-between text-xs text-slate-400"><span>Vàng (Yellow 0 → 255)</span><span class="font-mono">Secondary</span></div>
+            <div class="h-9 w-full rounded-xl border border-slate-700/80" style="background: linear-gradient(to right, #000000, #ffff00);"></div>
+          </div>
+        </div>
+        <div class="space-y-1 pt-1">
+          <div class="flex justify-between text-xs text-slate-400"><span>Thang Xám Toàn Dải (Grayscale 0 → 255)</span><span class="font-mono">Kiểm tra ám màu trung tính</span></div>
+          <div class="h-10 w-full rounded-xl border border-slate-700/80" style="background: linear-gradient(to right, #000000, #ffffff);"></div>
+        </div>
+      </div>
+
+      <!-- 4. Gamma Comparison (1.8 / 2.2 / 2.4) & Saturation -->
+      <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
+        <div>
+          <h2 class="text-lg font-bold text-white">4. Xác Định Mức Gamma Thực Tế (1.8 / 2.2 / 2.4)</h2>
+          <p class="text-xs text-slate-400 mt-0.5">
+            Lùi mắt ra xa khoảng 1m hoặc hơi nheo mắt lại: Cột nào có hai nửa sọc và màu đồng nhất hòa quyện vào nhau nhất thì đó chính là mức <strong>Gamma</strong> hiện tại của màn hình (Chuẩn Windows/Web là <strong>Gamma 2.2</strong>).
+          </p>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div class="rounded-xl overflow-hidden border border-slate-700">
+            <div class="h-24 flex">
+              <div class="w-1/2 h-full" style="background-image: repeating-linear-gradient(0deg, #000 0px, #000 1px, #fff 1px, #fff 2px);"></div>
+              <div class="w-1/2 h-full" style="background-color: rgb(174, 174, 174);"></div>
+            </div>
+            <div class="bg-slate-950 py-2 text-center text-xs font-mono text-slate-300">Gamma 1.8 (Mac cũ / In ấn)</div>
+          </div>
+          <div class="rounded-xl overflow-hidden border-2 border-cyan-500/60">
+            <div class="h-24 flex">
+              <div class="w-1/2 h-full" style="background-image: repeating-linear-gradient(0deg, #000 0px, #000 1px, #fff 1px, #fff 2px);"></div>
+              <div class="w-1/2 h-full" style="background-color: rgb(186, 186, 186);"></div>
+            </div>
+            <div class="bg-slate-950 py-2 text-center text-xs font-mono font-bold text-cyan-300">Gamma 2.2 (Chuẩn sRGB / PC)</div>
+          </div>
+          <div class="rounded-xl overflow-hidden border border-slate-700">
+            <div class="h-24 flex">
+              <div class="w-1/2 h-full" style="background-image: repeating-linear-gradient(0deg, #000 0px, #000 1px, #fff 1px, #fff 2px);"></div>
+              <div class="w-1/2 h-full" style="background-color: rgb(191, 191, 191);"></div>
+            </div>
+            <div class="bg-slate-950 py-2 text-center text-xs font-mono text-slate-300">Gamma 2.4 (Phim ảnh / Rec.709)</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 5. Sharpness, Chroma Subsampling 4:4:4 & Geometric Grid -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Chroma Subsampling 4:4:4 vs 4:2:2 & Subpixel -->
+        <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
+          <h2 class="text-lg font-bold text-white">5. Kiểm Tra Nén Màu Chroma 4:4:4 & Subpixel</h2>
+          <p class="text-xs text-slate-400">
+            Nếu cáp HDMI/DP hoặc card đồ họa xuất tín hiệu <strong>YCbCr 4:2:2 / 4:2:0</strong> thay vì <strong>RGB 4:4:4</strong>, các dòng chữ nhỏ dưới đây sẽ bị nhòe, rỗ viền hoặc khó đọc.
+          </p>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div class="p-3.5 rounded-xl border border-blue-800 space-y-1.5" style="background-color: #0000ff;">
+              <p class="text-[11px] font-bold" style="color: #ff0000;">Chữ ĐỎ trên nền XANH DƯƠNG (Test 4:4:4)</p>
+              <p class="text-xs font-mono" style="color: #ff0000;">0123456789 ABCDEFGHIJKLMN</p>
+              <p class="text-[11px]" style="color: #00ff00;">Chữ XANH LÁ trên nền XANH DƯƠNG</p>
+            </div>
+            <div class="p-3.5 rounded-xl border border-red-800 space-y-1.5" style="background-color: #ff0000;">
+              <p class="text-[11px] font-bold" style="color: #0000ff;">Chữ XANH DƯƠNG trên nền ĐỎ (Test 4:4:4)</p>
+              <p class="text-xs font-mono" style="color: #00ffff;">0123456789 OPQRSTUVWXYZ</p>
+              <p class="text-[11px]" style="color: #00ff00;">Chữ XANH LÁ trên nền ĐỎ TƯƠI</p>
+            </div>
+            <div class="bg-black p-3.5 rounded-xl border border-slate-800 space-y-1.5">
+              <p class="text-[11px] text-white">Chữ trắng 11px trên nền đen (Sharpness)</p>
+              <p class="text-xs text-cyan-400 font-mono">The quick brown fox jumps 0123456789</p>
+            </div>
+            <div class="bg-white p-3.5 rounded-xl border border-slate-300 space-y-1.5">
+              <p class="text-[11px] text-black">Chữ đen 11px trên nền trắng (ClearType)</p>
+              <p class="text-xs text-slate-900 font-mono">The quick brown fox jumps 0123456789</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Geometric Grid & Spatial Frequency Line Pairs -->
+        <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
+          <h2 class="text-lg font-bold text-white">6. Lưới Hình Học & Tần Số Không Gian (Sharpness)</h2>
+          <p class="text-xs text-slate-400">
+            Kiểm tra độ thẳng hàng của lưới pixel, tỷ lệ hình tròn chuẩn (không bị méo hình bầu dục) và độ sắc nét của các cặp vạch mảnh 1px / 2px.
+          </p>
+          <div class="grid grid-cols-2 gap-3">
+            <!-- Geometric Crosshatch & Circle -->
+            <div class="h-44 rounded-xl border border-slate-700 bg-slate-950 relative overflow-hidden flex items-center justify-center"
+              style="background-image: linear-gradient(to right, rgba(255,255,255,0.2) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.2) 1px, transparent 1px); background-size: 16px 16px;">
+              <div class="w-28 h-28 rounded-full border-2 border-cyan-400 flex items-center justify-center">
+                <div class="w-16 h-16 rounded-full border border-rose-400 flex items-center justify-center">
+                  <div class="w-2 h-2 rounded-full bg-emerald-400"></div>
+                </div>
+              </div>
+              <span class="absolute bottom-1.5 right-2 text-[10px] font-mono bg-black/80 px-1.5 py-0.5 rounded text-slate-300">Geometry 1:1</span>
+            </div>
+
+            <!-- 1px & 2px Spatial Line Pairs -->
+            <div class="h-44 rounded-xl border border-slate-700 overflow-hidden flex flex-col">
+              <div class="h-1/2 w-full relative flex items-center justify-center"
+                style="background-image: repeating-linear-gradient(90deg, #000 0px, #000 1px, #fff 1px, #fff 2px);">
+                <span class="text-[10px] font-mono font-bold bg-black/85 text-cyan-300 px-2 py-0.5 rounded border border-white/20">Vạch dọc 1px</span>
+              </div>
+              <div class="h-1/2 w-full relative flex items-center justify-center border-t border-slate-600"
+                style="background-image: repeating-linear-gradient(0deg, #000 0px, #000 2px, #fff 2px, #fff 4px);">
+                <span class="text-[10px] font-mono font-bold bg-black/85 text-amber-300 px-2 py-0.5 rounded border border-white/20">Vạch ngang 2px</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- TAB 4: FULLSCREEN COLOR TEST (DEAD PIXEL & BACKLIGHT BLEED)         -->
+    <!-- =================================================================== -->
+    <section id="tab-fullscreen" class="tab-panel hidden space-y-6">
+      <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-6">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <h2 class="text-lg sm:text-xl font-bold text-white">Kiểm Tra Điểm Chết (Dead Pixel) & Hở Sáng Toàn Màn Hình</h2>
+            <p class="text-xs sm:text-sm text-slate-400 mt-1">
+              Chọn một màu bên dưới để mở chế độ <strong>Toàn màn hình (Fullscreen)</strong>. Dùng <strong>Nền Đen</strong> trong phòng tối để kiểm tra hở sáng (Backlight Bleed / IPS Glow), và các màu <strong>Đỏ, Xanh lá, Xanh dương, Trắng</strong> để soi điểm chết (Dead/Stuck Pixel).
+            </p>
+          </div>
+          <button id="launch-cycle-btn" class="px-5 py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-semibold text-sm shadow-lg shadow-cyan-500/20 transition flex items-center justify-center gap-2 whitespace-nowrap">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
+            Bắt đầu trình chiếu Fullscreen
+          </button>
+        </div>
+
+        <!-- Preset Color Grid -->
+        <div id="fullscreen-color-grid" class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <!-- Populated via JS -->
+        </div>
+
+        <!-- Custom Color Picker Card -->
+        <div class="bg-slate-950/90 border border-slate-800 rounded-2xl p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div class="flex items-center gap-4">
+            <input id="custom-fs-color" type="color" value="#06b6d4"
+              class="w-14 h-14 rounded-xl bg-transparent border-0 cursor-pointer" />
+            <div>
+              <h3 class="text-sm font-bold text-white">Màu sắc tùy chọn (Custom Color)</h3>
+              <p class="text-xs text-slate-400 mt-0.5">Chọn bất kỳ mã màu nào để kiểm tra độ đồng đều màu sắc (Uniformity) trên tấm nền.</p>
+              <span id="custom-hex-label" class="inline-block mt-1 font-mono text-xs text-cyan-400 bg-cyan-500/10 px-2 py-0.5 rounded">#06B6D4</span>
+            </div>
+          </div>
+          <button id="launch-custom-color-btn" class="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs sm:text-sm font-semibold border border-slate-700 transition">
+            Mở toàn màn hình màu này
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- TAB 5: MOUSE DIAGNOSTICS (DOUBLE-CLICK, POLLING RATE & SCROLL)      -->
+    <!-- =================================================================== -->
+    <section id="tab-mouse" class="tab-panel hidden space-y-6">
+      <!-- Part A: Double-Click & Switch Bouncing -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        <!-- Left Interactive Click Zone (7 cols) -->
+        <div class="lg:col-span-7 bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-xl flex flex-col justify-between space-y-5">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h2 class="text-lg sm:text-xl font-bold text-white">1. Kiểm Tra Double Click, Switch Bounce & Hold Time</h2>
+              <p class="text-xs text-slate-400 mt-0.5">
+                Nhấn chuột liên tục vào vùng bên dưới. Hệ thống đo khoảng cách giữa 2 lần nhấn (<strong>Δt</strong>), thời gian giữ phím (<strong>Hold</strong>) và bắt lỗi <strong>Double Click (&lt;80ms)</strong>.
+              </p>
+            </div>
+            <div class="flex items-center gap-2">
+              <label class="text-xs text-slate-400">Ngưỡng lỗi:</label>
+              <select id="bounce-threshold-select" class="bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs font-mono text-cyan-400 focus:outline-none">
+                <option value="60">60 ms</option>
+                <option value="80" selected>80 ms (Chuẩn)</option>
+                <option value="100">100 ms</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Big Click Pad with Visual Mouse Diagram -->
+          <div id="mouse-click-pad" role="button" tabindex="0"
+            class="relative overflow-hidden select-none cursor-pointer h-64 sm:h-72 rounded-2xl border-2 border-dashed border-slate-700 hover:border-cyan-500/60 bg-slate-950/90 flex flex-col items-center justify-center text-center p-6 transition-colors duration-150">
+            
+            <!-- Interactive SVG Mouse Diagram -->
+            <div class="mb-3 pointer-events-none">
+              <svg width="68" height="104" viewBox="0 0 68 104" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="10" y="6" width="48" height="92" rx="24" fill="#0f172a" stroke="#334155" stroke-width="2.5"/>
+                <path id="svg-mouse-btn-0" class="mouse-btn-part" d="M11.5 30C11.5 17.5 21 7.5 33 7.5V42H11.5V30Z" fill="#1e293b" stroke="#475569" stroke-width="1.5"/>
+                <path id="svg-mouse-btn-2" class="mouse-btn-part" d="M56.5 30C56.5 17.5 47 7.5 35 7.5V42H56.5V30Z" fill="#1e293b" stroke="#475569" stroke-width="1.5"/>
+                <rect id="svg-mouse-btn-1" class="mouse-btn-part" x="30" y="16" width="8" height="18" rx="4" fill="#334155" stroke="#64748b" stroke-width="1.5"/>
+                <rect id="svg-mouse-btn-4" class="mouse-btn-part" x="5" y="45" width="4.5" height="14" rx="2" fill="#334155" stroke="#64748b" stroke-width="1.2"/>
+                <rect id="svg-mouse-btn-3" class="mouse-btn-part" x="5" y="62" width="4.5" height="14" rx="2" fill="#334155" stroke="#64748b" stroke-width="1.2"/>
+              </svg>
+            </div>
+
+            <h3 id="click-pad-title" class="text-lg sm:text-xl font-bold text-white pointer-events-none">NHẤN CHUỘT VÀO ĐÂY ĐỂ TEST</h3>
+            <p id="click-pad-subtitle" class="text-xs text-slate-400 mt-1 max-w-md pointer-events-none">
+              Hỗ trợ Chuột Trái, Chuột Giữa, Chuột Phải và 2 nút hông (Back/Forward).
+            </p>
+            <div class="mt-4 flex flex-wrap items-center justify-center gap-2 pointer-events-none">
+              <div id="last-interval-pill" class="px-3 py-1.5 rounded-full bg-slate-900 border border-slate-800 font-mono text-xs text-slate-300">
+                Khoảng cách Δt: <strong class="text-cyan-400">-- ms</strong>
+              </div>
+              <div id="last-hold-pill" class="px-3 py-1.5 rounded-full bg-slate-900 border border-slate-800 font-mono text-xs text-slate-300">
+                Thời gian giữ: <strong class="text-amber-400">-- ms</strong>
+              </div>
+            </div>
+          </div>
+
+          <!-- Action Bar -->
+          <div class="flex flex-wrap items-center justify-between gap-3 pt-1">
+            <div class="flex items-center gap-4 text-xs text-slate-400">
+              <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> Bình thường</span>
+              <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span> Lỗi Double Click</span>
+            </div>
+            <button id="reset-mouse-btn" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-rose-600/80 text-slate-200 hover:text-white text-xs font-semibold border border-slate-700 transition flex items-center gap-1.5">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+              Đặt lại toàn bộ chuột
+            </button>
+          </div>
+        </div>
+
+        <!-- Right Telemetry & Log (5 cols) -->
+        <div class="lg:col-span-5 space-y-4">
+          <div class="grid grid-cols-2 gap-3">
+            <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 shadow-lg">
+              <span class="text-xs text-slate-400 block">Tổng số lần nhấn</span>
+              <span id="mouse-total-clicks" class="text-3xl font-extrabold font-mono text-white mt-1 block">0</span>
+            </div>
+            <div id="fault-card" class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 shadow-lg transition-colors">
+              <span class="text-xs text-slate-400 block">Lỗi Double Click</span>
+              <span id="mouse-fault-clicks" class="text-3xl font-extrabold font-mono text-rose-400 mt-1 block">0</span>
+            </div>
+            <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 shadow-lg">
+              <span class="text-xs text-slate-400 block">Double Click chủ động</span>
+              <span id="mouse-double-clicks" class="text-2xl font-bold font-mono text-cyan-400 mt-1 block">0</span>
+            </div>
+            <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 shadow-lg">
+              <span class="text-xs text-slate-400 block">Tốc độ nhấn (CPS)</span>
+              <span id="mouse-cps" class="text-2xl font-bold font-mono text-amber-400 mt-1 block">0.0</span>
+            </div>
+          </div>
+
+          <div id="mouse-health-banner" class="bg-emerald-500/10 border border-emerald-500/30 rounded-2xl p-3.5 text-xs text-emerald-200 leading-relaxed">
+            <strong class="block text-sm text-emerald-300 mb-0.5">✓ Trạng thái Switch: Ổn định (0 lỗi)</strong>
+            Nhấn chuột trái 20–30 lần ở tốc độ bình thường để kiểm tra độ ổn định của lá đồng switch.
+          </div>
+
+          <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 shadow-lg">
+            <div class="flex items-center justify-between mb-2">
+              <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400">Lịch sử nhấn (Δt & Hold ms)</h3>
+              <span class="text-[11px] text-slate-500">15 lần gần nhất</span>
+            </div>
+            <div id="mouse-history-list" class="h-40 overflow-y-auto space-y-1.5 pr-1 font-mono text-xs">
+              <div class="text-slate-500 text-center py-10">Chưa có dữ liệu nhấn chuột...</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Part B: Polling Rate (Hz), Sensor Trajectory & Scroll Wheel Diagnostics -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        <!-- Polling Rate & Sensor Tracking Canvas (7 cols) -->
+        <div class="lg:col-span-7 bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h2 class="text-lg font-bold text-white">2. Đo Polling Rate (Hz) & Độ Mượt Cảm Biến</h2>
+              <p class="text-xs text-slate-400 mt-0.5">
+                Di chuyển chuột vòng tròn liên tục trong khung bên dưới để đo tần số báo cáo (125Hz – 8000Hz) và vẽ quỹ đạo kiểm tra <strong>Jitter / Angle Snapping</strong>.
+              </p>
+            </div>
+            <div class="flex items-center gap-3 bg-slate-950 px-3.5 py-2 rounded-xl border border-slate-800 font-mono">
+              <div>
+                <span class="text-[10px] text-slate-400 block">Hiện tại</span>
+                <span id="polling-current-hz" class="text-base font-extrabold text-cyan-400">0 Hz</span>
+              </div>
+              <div class="h-6 w-px bg-slate-800"></div>
+              <div>
+                <span class="text-[10px] text-slate-400 block">Đỉnh (Peak)</span>
+                <span id="polling-peak-hz" class="text-base font-extrabold text-emerald-400">0 Hz</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="relative w-full h-60 rounded-2xl border border-slate-700/80 bg-slate-950 overflow-hidden cursor-crosshair">
+            <canvas id="mouse-sensor-canvas" class="w-full h-full block"></canvas>
+            <div class="absolute top-3 left-3 pointer-events-none bg-black/70 backdrop-blur px-2.5 py-1 rounded-lg border border-white/10 font-mono text-[11px] text-slate-300">
+              Tọa độ: <span id="mouse-coords" class="text-cyan-300">0, 0</span> • Vận tốc: <span id="mouse-velocity" class="text-amber-300">0 px/s</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Scroll Wheel & Reverse-Step Bounce Tester (5 cols) -->
+        <div class="lg:col-span-5 bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-xl flex flex-col justify-between space-y-4">
+          <div>
+            <h2 class="text-lg font-bold text-white">3. Kiểm Tra Con Lăn (Scroll Wheel)</h2>
+            <p class="text-xs text-slate-400 mt-0.5">
+              Cuộn lên hoặc cuộn xuống liên tục trong khung bên dưới để kiểm tra encoder con lăn và phát hiện lỗi <strong>cuộn ngược (Reverse Step)</strong>.
+            </p>
+          </div>
+
+          <div id="scroll-test-pad" class="h-40 rounded-2xl border-2 border-dashed border-slate-700 hover:border-cyan-500/60 bg-slate-950 flex flex-col items-center justify-center text-center p-4 select-none transition">
+            <div id="scroll-direction-badge" class="px-3.5 py-1.5 rounded-full bg-slate-900 border border-slate-800 font-mono text-xs font-bold text-slate-300 mb-2">
+              Đang chờ cuộn chuột...
+            </div>
+            <p class="text-xs text-slate-400">Lăn con lăn chuột LÊN hoặc XUỐNG tại đây</p>
+            <div class="mt-3 flex items-center gap-4 font-mono text-xs">
+              <span class="text-cyan-400">▲ Lên: <strong id="scroll-up-count">0</strong></span>
+              <span class="text-amber-400">▼ Xuống: <strong id="scroll-down-count">0</strong></span>
+              <span class="text-rose-400">⚠ Cuộn ngược: <strong id="scroll-bounce-count">0</strong></span>
+            </div>
+          </div>
+
+          <div id="scroll-health-banner" class="bg-slate-950/90 border border-slate-800 rounded-xl p-3 text-xs text-slate-300">
+            <strong>Chẩn đoán Encoder:</strong> Hãy cuộn đều một hướng khoảng 15–20 nấc để kiểm tra xem con lăn có bị nhảy ngược chiều hay không.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- TAB 6: KEYBOARD DIAGNOSTICS (ĐỒNG BỘ GIAO DIỆN ẢNH 3)               -->
+    <!-- =================================================================== -->
+    <section id="tab-keyboard" class="tab-panel hidden space-y-6">
+      <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-5">
+        <!-- Header Row -->
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          <div class="flex items-center gap-2.5">
+            <span class="w-2.5 h-2.5 rounded-full bg-cyan-400 shrink-0"></span>
+            <h2 class="text-base sm:text-lg font-bold text-white">Kiểm Tra Bàn Phím 104 Phím, NKRO & Lỗi Nhấn Đúp (Key Chatter)</h2>
+          </div>
+          <div class="flex flex-wrap items-center gap-2.5">
+            <label class="flex items-center gap-2 bg-slate-950 px-3.5 py-2 rounded-xl border border-slate-800 text-xs text-slate-300 cursor-pointer select-none">
+              <input id="kb-prevent-default-chk" type="checkbox" checked class="accent-cyan-500 rounded" />
+              <span>Khóa phím tắt trình duyệt (F1–F12, Tab, Space, Alt)</span>
+            </label>
+            <button id="kb-reset-btn" class="px-4 py-2 rounded-xl bg-rose-950/50 hover:bg-rose-600/80 text-rose-300 hover:text-white text-xs font-semibold border border-rose-500/40 transition">
+              Reset toàn bộ phím
+            </button>
+          </div>
+        </div>
+
+        <!-- 4 Telemetry Cards (Đồng bộ Ảnh 3) -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+          <div class="bg-slate-950/90 border border-slate-800 rounded-2xl p-4">
+            <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-400 block">NKRO (ĐANG GIỮ / TỐI ĐA)</span>
+            <span id="kb-nkro-count" class="text-2xl font-extrabold font-mono text-cyan-400 mt-1.5 block">0 / 0</span>
+            <span class="text-[11px] text-slate-500 mt-1 block">Số phím nhận cùng lúc</span>
+          </div>
+          <div class="bg-slate-950/90 border border-slate-800 rounded-2xl p-4">
+            <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-400 block">PHÍM VỪA NHẤN (CODE)</span>
+            <span id="kb-insp-code" class="text-2xl font-extrabold font-mono text-white mt-1.5 block truncate">--</span>
+            <span class="text-[11px] text-slate-500 mt-1 block">Key: <strong id="kb-insp-key" class="text-slate-300">--</strong></span>
+          </div>
+          <div class="bg-slate-950/90 border border-slate-800 rounded-2xl p-4">
+            <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-400 block">DWELL TIME / TỐC ĐỘ GÕ</span>
+            <span id="kb-timing-last" class="text-2xl font-extrabold font-mono text-white mt-1.5 block">-- ms</span>
+            <span class="text-[11px] text-slate-500 mt-1 block">Ước tính: <strong id="kb-wpm-display" class="text-emerald-400">0 WPM</strong></span>
+          </div>
+          <div class="bg-slate-950/90 border border-slate-800 rounded-2xl p-4">
+            <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-400 block">CẢNH BÁO KEY CHATTER</span>
+            <span id="kb-chatter-count" class="text-2xl font-extrabold font-mono text-rose-400 mt-1.5 block">0</span>
+            <span class="text-[11px] text-slate-500 mt-1 block">Lặp tín hiệu bất thường &lt; 45ms</span>
+          </div>
+        </div>
+
+        <!-- Visual 104-Key Keyboard Map -->
+        <div class="overflow-x-auto pb-1">
+          <div id="keyboard-visual-board" class="min-w-[980px] bg-slate-950/95 p-5 rounded-2xl border border-slate-800 flex justify-center gap-4 select-none shadow-inner">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+
+        <!-- Status Legend & Held Keys Strip (Đồng bộ Ảnh 3) -->
+        <div class="flex flex-wrap items-center justify-between gap-3 pt-1 text-xs">
+          <div class="flex flex-wrap items-center gap-4 text-slate-300">
+            <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-cyan-400"></span> Đang nhấn</span>
+            <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-emerald-500"></span> Đã kiểm tra tốt (<span id="kb-tested-count" class="font-mono text-emerald-400">0/104</span>)</span>
+            <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-rose-500"></span> Lỗi Key Chatter</span>
+          </div>
+          <div class="flex items-center gap-2 flex-wrap">
+            <span class="text-slate-400">Phím đang giữ:</span>
+            <div id="kb-held-list" class="flex flex-wrap gap-1.5 font-mono">
+              <span class="text-slate-500 italic">Không có</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Event Log Bar -->
+        <div class="bg-slate-950/90 border border-slate-800 rounded-2xl p-4">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-semibold text-slate-400">Nhật ký tín hiệu bàn phím (Dwell Time & Flight Time)</span>
+            <span class="text-[11px] font-mono text-slate-500">keyCode: <strong id="kb-insp-keycode" class="text-amber-400">--</strong> • Loc: <strong id="kb-insp-loc" class="text-slate-300">--</strong></span>
+          </div>
+          <div id="kb-history-list" class="max-h-36 overflow-y-auto space-y-1.5 pr-1 font-mono text-xs">
+            <div class="text-slate-500 text-center py-4">Hãy bấm bất kỳ phím nào trên bàn phím của bạn để bắt đầu kiểm tra...</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="border-t border-slate-800/80 mt-10 py-5 text-center text-xs text-slate-500">
+    <div class="max-w-7xl mx-auto px-4">
+      <p>Display, Mouse & Keyboard Lab Pro — Công cụ kiểm tra phần cứng trực tiếp trên trình duyệt (100% xử lý cục bộ, không thu thập dữ liệu).</p>
+    </div>
+  </footer>
+
+  <!-- Main Application Logic -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      'use strict';
+
+      // =========================================================================
+      // UTILITY: TOAST NOTIFICATION
+      // =========================================================================
+      function showToast(message, type = 'info') {
+        const container = document.getElementById('toast-container');
+        if (!container) return;
+        const toast = document.createElement('div');
+        const styles = {
+          info: 'bg-slate-900 border-cyan-500/40 text-cyan-200',
+          success: 'bg-slate-900 border-emerald-500/40 text-emerald-200',
+          danger: 'bg-rose-950 border-rose-500/60 text-rose-100',
+        };
+        toast.className = `pointer-events-auto px-4 py-3 rounded-xl border shadow-2xl text-xs font-medium flex items-center gap-2.5 transition-all duration-300 transform translate-y-2 opacity-0 ${styles[type] || styles.info}`;
+        toast.innerHTML = `<span>${message}</span>`;
+        container.appendChild(toast);
+
+        requestAnimationFrame(() => {
+          toast.classList.remove('translate-y-2', 'opacity-0');
+        });
+
+        setTimeout(() => {
+          toast.classList.add('translate-y-2', 'opacity-0');
+          setTimeout(() => toast.remove(), 300);
+        }, 3200);
+      }
+
+      // =========================================================================
+      // 1. REAL-TIME REFRESH RATE (Hz) & FRAMETIME SPARKLINE ENGINE
+      // =========================================================================
+      const hzValueEl = document.getElementById('hz-value');
+      const headerHzPillEl = document.getElementById('header-hz-pill');
+      const headerFramePillEl = document.getElementById('header-frame-pill');
+      const headerResPillEl = document.getElementById('header-res-pill');
+      const frametimeEl = document.getElementById('frametime-value');
+      const hzStandardEl = document.getElementById('hz-standard');
+      const jitterEl = document.getElementById('jitter-value');
+      const ufoFpsDisplayEl = document.getElementById('ufo-fps-display');
+      const sparklineCanvas = document.getElementById('hz-sparkline');
+      const sparkCtx = sparklineCanvas.getContext('2d');
+
+      const MAX_DELTAS = 90;
+      const frameDeltas = [];
+      let lastFrameTime = performance.now();
+      let lastUiUpdate = 0;
+      let currentMeasuredHz = 60;
+
+      const standardRates = [24, 30, 50, 60, 75, 90, 100, 120, 144, 165, 180, 240, 280, 360, 480, 540];
+
+      function matchStandardHz(hz) {
+        let closest = standardRates[0];
+        let minDiff = Math.abs(hz - closest);
+        for (let i = 1; i < standardRates.length; i++) {
+          const diff = Math.abs(hz - standardRates[i]);
+          if (diff < minDiff) {
+            minDiff = diff;
+            closest = standardRates[i];
+          }
+        }
+        return `${closest} Hz`;
+      }
+
+      function drawSparkline() {
+        const parent = sparklineCanvas.parentElement;
+        if (!parent) return;
+        const rect = parent.getBoundingClientRect();
+        if (rect.width === 0 || rect.height === 0) return;
+
+        const dpr = window.devicePixelRatio || 1;
+        const w = Math.floor(rect.width * dpr);
+        const h = Math.floor(rect.height * dpr);
+        if (sparklineCanvas.width !== w || sparklineCanvas.height !== h) {
+          sparklineCanvas.width = w;
+          sparklineCanvas.height = h;
+        }
+
+        sparkCtx.clearRect(0, 0, w, h);
+        if (frameDeltas.length < 2) return;
+
+        const avg = frameDeltas.reduce((a, b) => a + b, 0) / frameDeltas.length;
+        const minRange = Math.max(1, avg * 0.5);
+        const maxRange = avg * 1.5;
+
+        sparkCtx.strokeStyle = 'rgba(148, 163, 184, 0.2)';
+        sparkCtx.lineWidth = 1 * dpr;
+        sparkCtx.beginPath();
+        sparkCtx.moveTo(0, h / 2);
+        sparkCtx.lineTo(w, h / 2);
+        sparkCtx.stroke();
+
+        sparkCtx.strokeStyle = '#34d399';
+        sparkCtx.lineWidth = 1.8 * dpr;
+        sparkCtx.beginPath();
+
+        const stepX = w / (MAX_DELTAS - 1);
+        frameDeltas.forEach((dt, idx) => {
+          const clamped = Math.min(maxRange, Math.max(minRange, dt));
+          const norm = (clamped - minRange) / (maxRange - minRange);
+          const y = h - norm * (h - 8 * dpr) - 4 * dpr;
+          const x = idx * stepX;
+          if (idx === 0) sparkCtx.moveTo(x, y);
+          else sparkCtx.lineTo(x, y);
+        });
+        sparkCtx.stroke();
+      }
+
+      // =========================================================================
+      // TAB NAVIGATION LOGIC
+      // =========================================================================
+      const navTabs = document.querySelectorAll('.nav-tab');
+      const tabPanels = document.querySelectorAll('.tab-panel');
+      let activeTab = 'dashboard';
+
+      function switchTab(targetTab) {
+        activeTab = targetTab;
+        navTabs.forEach((btn) => {
+          const isMatch = btn.dataset.tab === targetTab;
+          if (isMatch) {
+            btn.classList.add('active', 'bg-cyan-500/10', 'text-white', 'border-cyan-500/60', 'font-semibold', 'shadow-[0_0_15px_rgba(6,182,212,0.12)]');
+            btn.classList.remove('bg-slate-900/85', 'text-slate-300', 'border-slate-800', 'font-medium');
+          } else {
+            btn.classList.remove('active', 'bg-cyan-500/10', 'text-white', 'border-cyan-500/60', 'font-semibold', 'shadow-[0_0_15px_rgba(6,182,212,0.12)]');
+            btn.classList.add('bg-slate-900/85', 'text-slate-300', 'border-slate-800', 'font-medium');
+          }
+        });
+
+        tabPanels.forEach((panel) => {
+          if (panel.id === `tab-${targetTab}`) {
+            panel.classList.remove('hidden');
+          } else {
+            panel.classList.add('hidden');
+          }
+        });
+
+        if (targetTab === 'motion') {
+          resizeUfoCanvas();
+        } else if (targetTab === 'mouse') {
+          resizeSensorCanvas();
+        }
+      }
+
+      navTabs.forEach((btn) => {
+        btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+      });
+
+      // =========================================================================
+      // 2. SCREEN SPECS, GPU, HDR, COLOR GAMUT & PPI / RETINA CALCULATOR
+      // =========================================================================
+      function gcd(a, b) {
+        return b === 0 ? a : gcd(b, a % b);
+      }
+
+      function detectGpuRenderer() {
+        const gpuEl = document.getElementById('gpu-renderer');
+        try {
+          const canvas = document.createElement('canvas');
+          const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+          if (!gl) {
+            gpuEl.textContent = 'WebGL không khả dụng';
+            return;
+          }
+          const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+          if (debugInfo) {
+            const renderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
+            gpuEl.textContent = renderer || gl.getParameter(gl.RENDERER);
+            gpuEl.title = gpuEl.textContent;
+          } else {
+            gpuEl.textContent = gl.getParameter(gl.RENDERER) || 'Trình duyệt ẩn tên GPU';
+          }
+        } catch (e) {
+          gpuEl.textContent = 'Không thể truy xuất GPU';
+        }
+      }
+
+      function detectDisplaySpecs() {
+        const dpr = window.devicePixelRatio || 1;
+        const cssW = window.screen.width;
+        const cssH = window.screen.height;
+        const physW = Math.round(cssW * dpr);
+        const physH = Math.round(cssH * dpr);
+
+        document.getElementById('physical-res').textContent = `${physW} × ${physH}`;
+        if (headerResPillEl) headerResPillEl.textContent = `${physW}×${physH}`;
+        document.getElementById('logical-res').textContent = `${cssW} × ${cssH}`;
+        document.getElementById('dpr-value').textContent = `${Number.isInteger(dpr) ? dpr : dpr.toFixed(2)}x`;
+
+        const divisor = gcd(physW, physH);
+        let ratioW = Math.round(physW / divisor);
+        let ratioH = Math.round(physH / divisor);
+        const decimalRatio = physW / physH;
+        if (Math.abs(decimalRatio - 16 / 9) < 0.02) { ratioW = 16; ratioH = 9; }
+        else if (Math.abs(decimalRatio - 16 / 10) < 0.02) { ratioW = 16; ratioH = 10; }
+        else if (Math.abs(decimalRatio - 21 / 9) < 0.04) { ratioW = 21; ratioH = 9; }
+        else if (Math.abs(decimalRatio - 32 / 9) < 0.04) { ratioW = 32; ratioH = 9; }
+        else if (Math.abs(decimalRatio - 4 / 3) < 0.02) { ratioW = 4; ratioH = 3; }
+        document.getElementById('aspect-ratio').textContent = `${ratioW}:${ratioH}`;
+
+        const maxDim = Math.max(physW, physH);
+        let tier = 'HD / Standard';
+        if (maxDim >= 7680) tier = '8K UHD';
+        else if (maxDim >= 5120) tier = '5K / Ultrawide';
+        else if (maxDim >= 3840) tier = '4K UHD';
+        else if (maxDim >= 2560) tier = '2K QHD';
+        else if (maxDim >= 1920) tier = 'Full HD (1080p)';
+        document.getElementById('res-tier-badge').textContent = tier;
+
+        const mp = ((physW * physH) / 1_000_000).toFixed(2);
+        document.getElementById('total-megapixels').textContent = `${mp} MP`;
+        document.getElementById('viewport-size').textContent = `${window.innerWidth}×${window.innerHeight}`;
+        document.getElementById('orientation-badge').textContent = window.innerWidth >= window.innerHeight ? 'Màn hình Ngang' : 'Màn hình Dọc';
+        document.getElementById('touch-support').textContent = navigator.maxTouchPoints > 0 ? `Có (${navigator.maxTouchPoints} điểm)` : 'Không hỗ trợ';
+
+        const isHdrHigh = window.matchMedia('(dynamic-range: high)').matches;
+        const hdrBadge = document.getElementById('hdr-badge');
+        const hdrStatus = document.getElementById('hdr-status');
+        if (isHdrHigh) {
+          hdrBadge.textContent = 'Hỗ trợ HDR';
+          hdrBadge.className = 'text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40';
+          hdrStatus.textContent = 'High Dynamic Range (HDR)';
+          hdrStatus.className = 'text-xs font-mono font-bold text-emerald-400';
+        } else {
+          hdrBadge.textContent = 'SDR Tiêu chuẩn';
+          hdrBadge.className = 'text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700';
+          hdrStatus.textContent = 'Standard Dynamic Range';
+          hdrStatus.className = 'text-xs font-mono font-bold text-slate-300';
+        }
+
+        let gamut = 'sRGB (Cơ bản)';
+        if (window.matchMedia('(color-gamut: rec2020)').matches) {
+          gamut = 'Rec.2020 (Rất rộng)';
+        } else if (window.matchMedia('(color-gamut: p3)').matches) {
+          gamut = 'Display P3 (Dải màu rộng)';
+        } else if (window.matchMedia('(color-gamut: srgb)').matches) {
+          gamut = 'sRGB (100% Tiêu chuẩn)';
+        }
+        document.getElementById('gamut-status').textContent = gamut;
+
+        const depth = window.screen.colorDepth || 24;
+        const perChannel = Math.round(depth / 3);
+        document.getElementById('color-depth').textContent = `${depth}-bit (${perChannel}-bit / kênh màu)`;
+
+        const ppiWInput = document.getElementById('ppi-width-input');
+        const ppiHInput = document.getElementById('ppi-height-input');
+        if (!ppiWInput.dataset.edited) ppiWInput.value = physW;
+        if (!ppiHInput.dataset.edited) ppiHInput.value = physH;
+
+        calculatePPI();
+      }
+
+      const screenInchInput = document.getElementById('screen-inch-input');
+      const ppiWidthInput = document.getElementById('ppi-width-input');
+      const ppiHeightInput = document.getElementById('ppi-height-input');
+
+      function calculatePPI() {
+        const inches = parseFloat(screenInchInput.value);
+        const w = parseFloat(ppiWidthInput.value);
+        const h = parseFloat(ppiHeightInput.value);
+        const dpr = window.devicePixelRatio || 1;
+
+        if (!inches || inches <= 0 || !w || !h) return;
+
+        const diagonalPx = Math.sqrt(w * w + h * h);
+        const ppi = diagonalPx / inches;
+        const logicalPpi = ppi / dpr;
+
+        document.getElementById('ppi-physical-result').textContent = ppi.toFixed(1);
+        document.getElementById('ppi-logical-result').textContent = logicalPpi.toFixed(1);
+
+        const angle = Math.atan2(h, w);
+        const widthCm = (inches * Math.cos(angle) * 2.54).toFixed(1);
+        const heightCm = (inches * Math.sin(angle) * 2.54).toFixed(1);
+        document.getElementById('physical-cm-size').textContent = `${widthCm} × ${heightCm} cm`;
+
+        const dotPitchMm = (25.4 / ppi).toFixed(4);
+        document.getElementById('dot-pitch-value').textContent = `${dotPitchMm} mm`;
+
+        const retinaDistCm = Math.round((3438 / ppi) * 2.54);
+        document.getElementById('retina-distance').textContent = `≥ ${retinaDistCm} cm`;
+
+        let typicalDistCm = 50;
+        let deviceCategory = 'Laptop';
+        if (inches <= 7) {
+          typicalDistCm = 25;
+          deviceCategory = 'Điện thoại';
+        } else if (inches <= 12.9) {
+          typicalDistCm = 38;
+          deviceCategory = 'Máy tính bảng';
+        } else if (inches <= 18) {
+          typicalDistCm = 50;
+          deviceCategory = 'Laptop';
+        } else {
+          typicalDistCm = 70;
+          deviceCategory = 'Màn hình rời (Desktop)';
+        }
+
+        const isRetina = retinaDistCm <= typicalDistCm || ppi >= 218 || (inches >= 24 && ppi >= 163);
+        const pill = document.getElementById('retina-status-pill');
+        const explanation = document.getElementById('retina-explanation');
+
+        if (isRetina) {
+          pill.innerHTML = '✨ Đạt chuẩn Retina / HiDPI';
+          pill.className = 'px-3.5 py-1.5 rounded-full text-xs font-bold tracking-wide bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 flex items-center gap-1.5';
+          explanation.className = 'text-xs leading-relaxed p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/25 text-emerald-200';
+          explanation.innerHTML = `<strong>Tuyệt vời!</strong> Với mật độ <strong>${ppi.toFixed(1)} PPI</strong> trên màn hình ${inches}" (${deviceCategory}), mắt người không thể phân biệt từng điểm ảnh riêng lẻ ở khoảng cách nhìn tiêu chuẩn (~${typicalDistCm} cm).`;
+        } else {
+          pill.innerHTML = 'Mật độ điểm ảnh Tiêu chuẩn (Non-Retina)';
+          pill.className = 'px-3.5 py-1.5 rounded-full text-xs font-bold tracking-wide bg-amber-500/20 text-amber-300 border border-amber-500/40 flex items-center gap-1.5';
+          explanation.className = 'text-xs leading-relaxed p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/25 text-amber-200';
+          explanation.innerHTML = `Mật độ <strong>${ppi.toFixed(1)} PPI</strong> trên màn hình ${inches}" (${deviceCategory}) đạt chuẩn Retina khi bạn ngồi cách màn hình từ <strong>${retinaDistCm} cm</strong> trở lên.`;
+        }
+      }
+
+      document.querySelectorAll('.inch-preset-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.inch-preset-btn').forEach((b) => {
+            b.classList.remove('bg-cyan-500/20', 'text-cyan-300', 'border-cyan-500/50');
+            b.classList.add('bg-slate-800/90', 'text-slate-300', 'border-slate-700');
+          });
+          btn.classList.remove('bg-slate-800/90', 'text-slate-300', 'border-slate-700');
+          btn.classList.add('bg-cyan-500/20', 'text-cyan-300', 'border-cyan-500/50');
+          screenInchInput.value = btn.dataset.inch;
+          calculatePPI();
+        });
+      });
+
+      screenInchInput.addEventListener('input', calculatePPI);
+      ppiWidthInput.addEventListener('input', () => { ppiWidthInput.dataset.edited = 'true'; calculatePPI(); });
+      ppiHeightInput.addEventListener('input', () => { ppiHeightInput.dataset.edited = 'true'; calculatePPI(); });
+
+      document.getElementById('copy-specs-btn').addEventListener('click', () => {
+        const summary = [
+          `=== BÁO CÁO THÔNG SỐ MÀN HÌNH ===`,
+          `• Tần số quét đo được: ${hzValueEl.textContent} Hz (${frametimeEl.textContent})`,
+          `• Độ phân giải vật lý: ${document.getElementById('physical-res').textContent} (${document.getElementById('res-tier-badge').textContent})`,
+          `• Độ phân giải logic: ${document.getElementById('logical-res').textContent} | Scale: ${document.getElementById('dpr-value').textContent}`,
+          `• Tỷ lệ khung hình: ${document.getElementById('aspect-ratio').textContent}`,
+          `• Kích thước & Mật độ: ${screenInchInput.value}" — ${document.getElementById('ppi-physical-result').textContent} PPI | Dot Pitch: ${document.getElementById('dot-pitch-value').textContent} (${document.getElementById('retina-status-pill').textContent.trim()})`,
+          `• HDR & Dải màu: ${document.getElementById('hdr-status').textContent} | ${document.getElementById('gamut-status').textContent} | ${document.getElementById('color-depth').textContent}`,
+          `• GPU Renderer: ${document.getElementById('gpu-renderer').textContent}`
+        ].join('\n');
+
+        const tempArea = document.createElement('textarea');
+        tempArea.value = summary;
+        document.body.appendChild(tempArea);
+        tempArea.select();
+        try {
+          document.execCommand('copy');
+          showToast('Đã sao chép báo cáo thông số màn hình vào bộ nhớ tạm!', 'success');
+        } catch (err) {
+          showToast('Không thể sao chép tự động.', 'danger');
+        }
+        document.body.removeChild(tempArea);
+      });
+
+      // =========================================================================
+      // 3. UFO MOTION & GHOSTING TEST ENGINE + REACTION / INPUT LAG TESTER
+      // =========================================================================
+      const ufoCanvas = document.getElementById('ufo-canvas');
+      const ufoCtx = ufoCanvas.getContext('2d');
+      let ufoSpeed = 960;
+      let ufoScaleMult = 1.0;
+      let ufoBgColor = '#0f172a';
+      let ufoLanes = 3;
+      let ufoPaused = false;
+      let ufoPositions = [0, 0, 0];
+
+      function resizeUfoCanvas() {
+        const parent = ufoCanvas.parentElement;
+        if (!parent) return;
+        const rect = parent.getBoundingClientRect();
+        if (rect.width === 0 || rect.height === 0) return;
+        const dpr = window.devicePixelRatio || 1;
+        ufoCanvas.width = Math.floor(rect.width * dpr);
+        ufoCanvas.height = Math.floor(rect.height * dpr);
+      }
+
+      function drawUfoSprite(ctx, x, y, scale, speedLabel) {
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.scale(scale, scale);
+
+        ctx.fillStyle = '#38bdf8';
+        ctx.beginPath();
+        ctx.arc(0, -10, 18, Math.PI, 0);
+        ctx.fill();
+
+        ctx.fillStyle = '#4ade80';
+        ctx.beginPath();
+        ctx.arc(0, -14, 7, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = '#e2e8f0';
+        ctx.beginPath();
+        ctx.ellipse(0, 0, 38, 12, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        const barColors = ['#ef4444', '#ffffff', '#000000', '#ffffff', '#3b82f6'];
+        barColors.forEach((col, i) => {
+          ctx.fillStyle = col;
+          ctx.fillRect(-20 + i * 8, -7, 4, 14);
+        });
+
+        [-22, 0, 22].forEach((lx) => {
+          ctx.fillStyle = '#facc15';
+          ctx.beginPath();
+          ctx.arc(lx, 7, 3, 0, Math.PI * 2);
+          ctx.fill();
+        });
+
+        ctx.fillStyle = 'rgba(255,255,255,0.8)';
+        ctx.font = '600 11px "JetBrains Mono", monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText(speedLabel, 0, 28);
+
+        ctx.restore();
+      }
+
+      function renderUfoFrame(dtSeconds) {
+        if (activeTab !== 'motion') return;
+        const w = ufoCanvas.width;
+        const h = ufoCanvas.height;
+        if (w === 0 || h === 0) {
+          resizeUfoCanvas();
+          return;
+        }
+        const dpr = window.devicePixelRatio || 1;
+
+        ufoCtx.fillStyle = ufoBgColor;
+        ufoCtx.fillRect(0, 0, w, h);
+
+        ufoCtx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
+        ufoCtx.lineWidth = 1 * dpr;
+        const gridSpacing = 80 * dpr;
+        for (let gx = 0; gx < w; gx += gridSpacing) {
+          ufoCtx.beginPath();
+          ufoCtx.moveTo(gx, 0);
+          ufoCtx.lineTo(gx, h);
+          ufoCtx.stroke();
+        }
+
+        const multipliers = ufoLanes === 3 ? [1, 0.5, 0.25] : [1];
+        const laneHeight = h / multipliers.length;
+
+        multipliers.forEach((mult, idx) => {
+          const laneY = laneHeight * idx + laneHeight / 2;
+          const speedPx = ufoSpeed * mult * dpr;
+
+          if (!ufoPaused) {
+            ufoPositions[idx] = (ufoPositions[idx] + speedPx * dtSeconds) % (w + 160 * dpr);
+          }
+
+          if (idx > 0) {
+            ufoCtx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+            ufoCtx.beginPath();
+            ufoCtx.moveTo(0, laneHeight * idx);
+            ufoCtx.lineTo(w, laneHeight * idx);
+            ufoCtx.stroke();
+          }
+
+          const drawX = ufoPositions[idx] - 80 * dpr;
+          drawUfoSprite(ufoCtx, drawX, laneY, dpr * ufoScaleMult, `${Math.round(ufoSpeed * mult)} px/s`);
+        });
+      }
+
+      const ufoSpeedSlider = document.getElementById('ufo-speed-slider');
+      const ufoSpeedLabel = document.getElementById('ufo-speed-label');
+      ufoSpeedSlider.addEventListener('input', () => {
+        ufoSpeed = parseInt(ufoSpeedSlider.value, 10);
+        ufoSpeedLabel.textContent = `${ufoSpeed} px/s`;
+      });
+
+      const ufoSizeSlider = document.getElementById('ufo-size-slider');
+      const ufoSizeLabel = document.getElementById('ufo-size-label');
+      ufoSizeSlider.addEventListener('input', () => {
+        ufoScaleMult = parseFloat(ufoSizeSlider.value);
+        ufoSizeLabel.textContent = `${ufoScaleMult.toFixed(1)}x`;
+      });
+
+      const ufoPauseBtn = document.getElementById('ufo-pause-btn');
+      ufoPauseBtn.addEventListener('click', () => {
+        ufoPaused = !ufoPaused;
+        ufoPauseBtn.textContent = ufoPaused ? 'Tiếp tục' : 'Tạm dừng';
+        ufoPauseBtn.classList.toggle('bg-amber-600', ufoPaused);
+        ufoPauseBtn.classList.toggle('bg-cyan-600', !ufoPaused);
+      });
+
+      document.querySelectorAll('.ufo-bg-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.ufo-bg-btn').forEach((b) => {
+            b.classList.remove('bg-cyan-500/20', 'text-cyan-300', 'border-cyan-500/50');
+            b.classList.add('bg-slate-800', 'text-slate-300', 'border-slate-700');
+          });
+          btn.classList.remove('bg-slate-800', 'text-slate-300', 'border-slate-700');
+          btn.classList.add('bg-cyan-500/20', 'text-cyan-300', 'border-cyan-500/50');
+          ufoBgColor = btn.dataset.bg;
+        });
+      });
+
+      document.querySelectorAll('.ufo-lane-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.ufo-lane-btn').forEach((b) => {
+            b.classList.remove('bg-cyan-500/20', 'text-cyan-300', 'border-cyan-500/50');
+            b.classList.add('bg-slate-800', 'text-slate-300', 'border-slate-700');
+          });
+          btn.classList.remove('bg-slate-800', 'text-slate-300', 'border-slate-700');
+          btn.classList.add('bg-cyan-500/20', 'text-cyan-300', 'border-cyan-500/50');
+          ufoLanes = parseInt(btn.dataset.lanes, 10);
+        });
+      });
+
+      // Reaction & Input Lag Tester Logic
+      const reactionPad = document.getElementById('reaction-pad');
+      const reactionBadge = document.getElementById('reaction-badge');
+      const reactionTitle = document.getElementById('reaction-title');
+      const reactionSub = document.getElementById('reaction-sub');
+      const reactionLastEl = document.getElementById('reaction-last');
+      const reactionAvgEl = document.getElementById('reaction-avg');
+      const reactionBestEl = document.getElementById('reaction-best');
+
+      let reactionState = 'idle';
+      let reactionTimeout = null;
+      let reactionGreenStart = 0;
+      const reactionScores = [];
+
+      function triggerReactionAction() {
+        if (reactionState === 'idle') {
+          reactionState = 'waiting';
+          reactionPad.className = 'select-none cursor-pointer h-44 rounded-2xl border-2 border-rose-500 bg-rose-950/70 flex flex-col items-center justify-center text-center p-6 transition-colors duration-75';
+          reactionBadge.className = 'px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-rose-500/25 text-rose-200 border border-rose-500/40 mb-2';
+          reactionBadge.textContent = 'Đợi tín hiệu...';
+          reactionTitle.textContent = 'CHỜ MÀU XANH LÁ... ĐỪNG NHẤN SỚM!';
+          reactionSub.textContent = 'Chuẩn bị ngón tay trên chuột hoặc phím Space';
+
+          const delay = 1400 + Math.random() * 2600;
+          reactionTimeout = setTimeout(() => {
+            reactionState = 'ready';
+            reactionPad.className = 'select-none cursor-pointer h-44 rounded-2xl border-2 border-emerald-400 bg-emerald-600 flex flex-col items-center justify-center text-center p-6';
+            reactionBadge.className = 'px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-black/30 text-white border border-white/30 mb-2';
+            reactionBadge.textContent = 'NHẤN NGAY!';
+            reactionTitle.textContent = 'NHẤN NGAY BÂY GIỜ!';
+            reactionSub.textContent = 'Click chuột hoặc bấm Space!';
+            reactionGreenStart = performance.now();
+          }, delay);
+        } else if (reactionState === 'waiting') {
+          clearTimeout(reactionTimeout);
+          reactionState = 'idle';
+          reactionPad.className = 'select-none cursor-pointer h-44 rounded-2xl border-2 border-amber-500 bg-amber-950/60 flex flex-col items-center justify-center text-center p-6 transition-colors duration-100';
+          reactionBadge.className = 'px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-amber-500/20 text-amber-300 border border-amber-500/40 mb-2';
+          reactionBadge.textContent = 'Nhấn quá sớm!';
+          reactionTitle.textContent = 'Bạn đã nhấn trước khi đèn xanh bật!';
+          reactionSub.textContent = 'Nhấn chuột hoặc bấm Space để thử lại.';
+        } else if (reactionState === 'ready') {
+          const elapsed = performance.now() - reactionGreenStart;
+          reactionState = 'idle';
+          reactionScores.push(elapsed);
+          const avg = reactionScores.reduce((a, b) => a + b, 0) / reactionScores.length;
+          const best = Math.min(...reactionScores);
+
+          reactionLastEl.textContent = `${elapsed.toFixed(1)} ms`;
+          reactionAvgEl.textContent = `${avg.toFixed(1)} ms`;
+          reactionBestEl.textContent = `${best.toFixed(1)} ms`;
+
+          reactionPad.className = 'select-none cursor-pointer h-44 rounded-2xl border-2 border-cyan-500/60 bg-slate-950 flex flex-col items-center justify-center text-center p-6 transition-colors duration-100';
+          reactionBadge.className = 'px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 mb-2';
+          reactionBadge.textContent = 'Hoàn thành';
+          reactionTitle.textContent = `${elapsed.toFixed(1)} ms`;
+          reactionSub.textContent = 'Nhấn chuột hoặc bấm Space để tiếp tục đo lượt mới.';
+        }
+      }
+
+      reactionPad.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+        triggerReactionAction();
+      });
+
+      // =========================================================================
+      // MASTER ANIMATION LOOP
+      // =========================================================================
+      function masterLoop(now) {
+        const dt = now - lastFrameTime;
+        lastFrameTime = now;
+
+        if (dt > 0 && dt < 250) {
+          frameDeltas.push(dt);
+          if (frameDeltas.length > MAX_DELTAS) frameDeltas.shift();
+        }
+
+        if (now - lastUiUpdate > 250 && frameDeltas.length > 5) {
+          lastUiUpdate = now;
+          const avgDelta = frameDeltas.reduce((a, b) => a + b, 0) / frameDeltas.length;
+          currentMeasuredHz = 1000 / avgDelta;
+
+          const variance = frameDeltas.reduce((acc, val) => acc + Math.pow(val - avgDelta, 2), 0) / frameDeltas.length;
+          const jitter = Math.sqrt(variance);
+
+          const displayHz = currentMeasuredHz.toFixed(1);
+          hzValueEl.textContent = displayHz;
+          if (headerHzPillEl) headerHzPillEl.textContent = `${Math.round(currentMeasuredHz)} Hz`;
+          if (headerFramePillEl) headerFramePillEl.textContent = `${avgDelta.toFixed(2)} ms`;
+          frametimeEl.textContent = `${avgDelta.toFixed(2)} ms`;
+          hzStandardEl.textContent = matchStandardHz(currentMeasuredHz);
+          jitterEl.textContent = `Jitter: ${jitter.toFixed(2)} ms`;
+          ufoFpsDisplayEl.textContent = `${displayHz} FPS / Hz`;
+
+          drawSparkline();
+        }
+
+        renderUfoFrame(dt / 1000);
+        requestAnimationFrame(masterLoop);
+      }
+
+      // =========================================================================
+      // 4. COLOR CALIBRATION: MACBETH 24 COLORCHECKER & GRAYSCALE BUILDER
+      // =========================================================================
+      const macbethPatches = [
+        { name: '01. Dark Skin', hex: '#735244', rgb: '115, 82, 68' },
+        { name: '02. Light Skin', hex: '#C29682', rgb: '194, 150, 130' },
+        { name: '03. Blue Sky', hex: '#627A9D', rgb: '98, 122, 157' },
+        { name: '04. Foliage', hex: '#576C43', rgb: '87, 108, 67' },
+        { name: '05. Blue Flower', hex: '#8580B1', rgb: '133, 128, 177' },
+        { name: '06. Bluish Green', hex: '#67BDAA', rgb: '103, 189, 170' },
+        { name: '07. Orange', hex: '#D67E2C', rgb: '214, 126, 44' },
+        { name: '08. Purplish Blue', hex: '#505BA6', rgb: '80, 91, 166' },
+        { name: '09. Moderate Red', hex: '#C15A63', rgb: '193, 90, 99' },
+        { name: '10. Purple', hex: '#5E3C6C', rgb: '94, 60, 108' },
+        { name: '11. Yellow Green', hex: '#9DBC40', rgb: '157, 188, 64' },
+        { name: '12. Orange Yellow', hex: '#E0A32E', rgb: '224, 163, 46' },
+        { name: '13. Blue', hex: '#383D96', rgb: '56, 61, 150' },
+        { name: '14. Green', hex: '#469449', rgb: '70, 148, 73' },
+        { name: '15. Red', hex: '#AF363C', rgb: '175, 54, 60' },
+        { name: '16. Yellow', hex: '#E7C71F', rgb: '231, 199, 31' },
+        { name: '17. Magenta', hex: '#BB5695', rgb: '187, 86, 149' },
+        { name: '18. Cyan', hex: '#0885A1', rgb: '8, 133, 161' },
+        { name: '19. White 9.5', hex: '#F3F3F2', rgb: '243, 243, 242' },
+        { name: '20. Neutral 8', hex: '#C8C8C8', rgb: '200, 200, 200' },
+        { name: '21. Neutral 6.5', hex: '#A0A0A0', rgb: '160, 160, 160' },
+        { name: '22. Neutral 5', hex: '#7A7A79', rgb: '122, 122, 121' },
+        { name: '23. Neutral 3.5', hex: '#555555', rgb: '85, 85, 85' },
+        { name: '24. Black 2.0', hex: '#343434', rgb: '52, 52, 52' },
+      ];
+
+      function buildColorCheckerGrid() {
+        const grid = document.getElementById('colorchecker-grid');
+        const infoBox = document.getElementById('cc-hover-info');
+        grid.innerHTML = '';
+
+        macbethPatches.forEach((patch) => {
+          const card = document.createElement('div');
+          card.className = 'group rounded-xl overflow-hidden border border-black/40 bg-slate-950/90 cursor-pointer transition-transform hover:scale-[1.03] shadow';
+          card.innerHTML = `
+            <div class="h-14 sm:h-16 w-full" style="background-color: ${patch.hex}"></div>
+            <div class="px-2 py-1.5 flex items-center justify-between gap-1">
+              <span class="text-[10px] font-semibold text-slate-200 truncate">${patch.name}</span>
+              <span class="text-[9px] font-mono text-slate-400 hidden sm:inline">${patch.hex}</span>
+            </div>
+          `;
+          card.addEventListener('mouseenter', () => {
+            infoBox.textContent = `${patch.name} | HEX: ${patch.hex} | sRGB(${patch.rgb})`;
+          });
+          card.addEventListener('click', () => {
+            infoBox.textContent = `${patch.name} | HEX: ${patch.hex} | sRGB(${patch.rgb})`;
+          });
+          grid.appendChild(card);
+        });
+      }
+
+      function buildGrayscaleGrid() {
+        const grid = document.getElementById('grayscale-grid');
+        grid.innerHTML = '';
+        for (let i = 0; i <= 20; i++) {
+          const pct = i * 5;
+          const val = Math.round((pct / 100) * 255);
+          const cell = document.createElement('div');
+          cell.className = 'h-16 sm:h-24 flex flex-col items-center justify-end pb-1.5 rounded text-[10px] font-mono select-none';
+          cell.style.backgroundColor = `rgb(${val}, ${val}, ${val})`;
+          cell.style.color = pct > 50 ? '#0f172a' : '#94a3b8';
+          cell.innerHTML = `<span>${pct}%</span>`;
+          grid.appendChild(cell);
+        }
+      }
+
+      // =========================================================================
+      // 5. FULLSCREEN DEAD PIXEL & BACKLIGHT BLEED TEST
+      // =========================================================================
+      const fsPresetColors = [
+        { name: 'Đen Tuyền (Black)', hex: '#000000', desc: 'Soi hở sáng viền (Backlight Bleed) & IPS Glow' },
+        { name: 'Trắng Tinh (White)', hex: '#FFFFFF', desc: 'Soi điểm chết tối, vết bẩn & độ đồng đều sáng' },
+        { name: 'Đỏ Thuần (Red)', hex: '#FF0000', desc: 'Kiểm tra subpixel Đỏ (Stuck / Dead Red)' },
+        { name: 'Xanh Lá (Green)', hex: '#00FF00', desc: 'Kiểm tra subpixel Xanh lá (Stuck / Dead Green)' },
+        { name: 'Xanh Dương (Blue)', hex: '#0000FF', desc: 'Kiểm tra subpixel Xanh dương (Stuck / Dead Blue)' },
+        { name: 'Lục Lam (Cyan)', hex: '#00FFFF', desc: 'Tổ hợp Green + Blue (Soi điểm chết Red)' },
+        { name: 'Đỏ Tươi (Magenta)', hex: '#FF00FF', desc: 'Tổ hợp Red + Blue (Soi điểm chết Green)' },
+        { name: 'Vàng (Yellow)', hex: '#FFFF00', desc: 'Tổ hợp Red + Green (Soi điểm chết Blue)' },
+      ];
+
+      const fsOverlay = document.getElementById('fullscreen-overlay');
+      const fsHud = document.getElementById('fs-hud');
+      const fsColorDot = document.getElementById('fs-color-dot');
+      const fsColorName = document.getElementById('fs-color-name');
+      const fsColorHex = document.getElementById('fs-color-hex');
+
+      let fsActive = false;
+      let fsCurrentIndex = 0;
+      let fsCustomMode = false;
+
+      function applyFullscreenColor(name, hex) {
+        fsOverlay.style.backgroundColor = hex;
+        fsColorDot.style.backgroundColor = hex;
+        fsColorName.textContent = name;
+        fsColorHex.textContent = hex.toUpperCase();
+      }
+
+      function enterFullscreenColor(indexOrHex, isCustom = false) {
+        fsActive = true;
+        fsCustomMode = isCustom;
+        fsHud.classList.remove('opacity-0', 'pointer-events-none');
+
+        if (isCustom) {
+          applyFullscreenColor('Màu Tùy Chọn (Custom)', indexOrHex);
+        } else {
+          fsCurrentIndex = (indexOrHex + fsPresetColors.length) % fsPresetColors.length;
+          const item = fsPresetColors[fsCurrentIndex];
+          applyFullscreenColor(item.name, item.hex);
+        }
+
+        fsOverlay.classList.remove('hidden');
+        fsOverlay.classList.add('flex');
+
+        if (document.documentElement.requestFullscreen) {
+          document.documentElement.requestFullscreen().catch(() => {});
+        }
+      }
+
+      function exitFullscreenColor() {
+        if (!fsActive) return;
+        fsActive = false;
+        fsOverlay.classList.add('hidden');
+        fsOverlay.classList.remove('flex');
+        if (document.fullscreenElement && document.exitFullscreen) {
+          document.exitFullscreen().catch(() => {});
+        }
+      }
+
+      function cycleFullscreenColor(step) {
+        if (fsCustomMode) {
+          fsCustomMode = false;
+          fsCurrentIndex = 0;
+        } else {
+          fsCurrentIndex = (fsCurrentIndex + step + fsPresetColors.length) % fsPresetColors.length;
+        }
+        const item = fsPresetColors[fsCurrentIndex];
+        applyFullscreenColor(item.name, item.hex);
+      }
+
+      function buildFullscreenGrid() {
+        const grid = document.getElementById('fullscreen-color-grid');
+        grid.innerHTML = '';
+
+        fsPresetColors.forEach((col, idx) => {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'group text-left bg-slate-950/90 hover:bg-slate-800/90 border border-slate-800 hover:border-cyan-500/50 rounded-2xl p-3.5 transition shadow-lg flex flex-col justify-between gap-3';
+          btn.innerHTML = `
+            <div class="w-full h-16 rounded-xl border border-white/15 shadow-inner flex items-end justify-end p-2" style="background-color: ${col.hex}">
+              <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-black/65 text-white">${col.hex}</span>
+            </div>
+            <div>
+              <div class="text-xs sm:text-sm font-bold text-white group-hover:text-cyan-300 transition">${col.name}</div>
+              <p class="text-[11px] text-slate-400 mt-0.5 leading-snug">${col.desc}</p>
+            </div>
+          `;
+          btn.addEventListener('click', () => enterFullscreenColor(idx, false));
+          grid.appendChild(btn);
+        });
+      }
+
+      document.getElementById('launch-cycle-btn').addEventListener('click', () => enterFullscreenColor(0, false));
+
+      const customFsInput = document.getElementById('custom-fs-color');
+      const customHexLabel = document.getElementById('custom-hex-label');
+      customFsInput.addEventListener('input', () => {
+        customHexLabel.textContent = customFsInput.value.toUpperCase();
+      });
+      document.getElementById('launch-custom-color-btn').addEventListener('click', () => {
+        enterFullscreenColor(customFsInput.value, true);
+      });
+
+      fsOverlay.addEventListener('click', (e) => {
+        if (e.target.closest('button')) return;
+        cycleFullscreenColor(1);
+      });
+      document.getElementById('fs-prev-btn').addEventListener('click', (e) => {
+        e.stopPropagation();
+        cycleFullscreenColor(-1);
+      });
+      document.getElementById('fs-next-btn').addEventListener('click', (e) => {
+        e.stopPropagation();
+        cycleFullscreenColor(1);
+      });
+      document.getElementById('fs-exit-btn').addEventListener('click', (e) => {
+        e.stopPropagation();
+        exitFullscreenColor();
+      });
+
+      document.addEventListener('fullscreenchange', () => {
+        if (!document.fullscreenElement && fsActive) {
+          fsActive = false;
+          fsOverlay.classList.add('hidden');
+          fsOverlay.classList.remove('flex');
+        }
+      });
+
+      // =========================================================================
+      // 6. MOUSE DIAGNOSTICS: DOUBLE-CLICK, HOLD TIME, POLLING RATE & SCROLL
+      // =========================================================================
+      const clickPad = document.getElementById('mouse-click-pad');
+      const totalClicksEl = document.getElementById('mouse-total-clicks');
+      const faultClicksEl = document.getElementById('mouse-fault-clicks');
+      const doubleClicksEl = document.getElementById('mouse-double-clicks');
+      const cpsEl = document.getElementById('mouse-cps');
+      const lastIntervalPill = document.getElementById('last-interval-pill');
+      const lastHoldPill = document.getElementById('last-hold-pill');
+      const historyListEl = document.getElementById('mouse-history-list');
+      const healthBannerEl = document.getElementById('mouse-health-banner');
+      const faultCardEl = document.getElementById('fault-card');
+      const thresholdSelect = document.getElementById('bounce-threshold-select');
+
+      let totalClicks = 0;
+      let faultClicks = 0;
+      let systemDoubleClicks = 0;
+      let lastClickTimeByButton = {};
+      let activeDownByButton = {};
+      let recentClickTimestamps = [];
+      let clickHistory = [];
+
+      const buttonNames = {
+        0: 'Chuột Trái',
+        1: 'Chuột Giữa',
+        2: 'Chuột Phải',
+        3: 'Nút Hông 1 (Back)',
+        4: 'Nút Hông 2 (Forward)',
+      };
+
+      function highlightSvgMouseButton(btn, isDown, isFault = false) {
+        const svgEl = document.getElementById(`svg-mouse-btn-${btn}`);
+        if (!svgEl) return;
+        if (isDown) {
+          svgEl.classList.add('btn-down');
+          if (isFault) svgEl.classList.add('btn-fault');
+        } else {
+          svgEl.classList.remove('btn-down', 'btn-fault');
+        }
+      }
+
+      function spawnRipple(x, y, isFault) {
+        const ripple = document.createElement('span');
+        ripple.className = 'click-ripple';
+        ripple.style.left = `${x}px`;
+        ripple.style.top = `${y}px`;
+        ripple.style.backgroundColor = isFault ? 'rgba(244, 63, 94, 0.5)' : 'rgba(34, 211, 238, 0.35)';
+        clickPad.appendChild(ripple);
+        setTimeout(() => ripple.remove(), 600);
+      }
+
+      function updateMouseUI() {
+        totalClicksEl.textContent = totalClicks;
+        faultClicksEl.textContent = faultClicks;
+        doubleClicksEl.textContent = systemDoubleClicks;
+
+        if (faultClicks > 0) {
+          faultCardEl.classList.add('border-rose-500/60', 'bg-rose-950/30');
+          healthBannerEl.className = 'bg-rose-500/15 border border-rose-500/40 rounded-2xl p-4 text-xs text-rose-200 leading-relaxed';
+          healthBannerEl.innerHTML = `
+            <strong class="block text-sm text-rose-300 mb-0.5">⚠ CẢNH BÁO: Phát hiện ${faultClicks} lần lỗi Double Click!</strong>
+            Khoảng cách giữa 2 lần nhấn ngắn hơn ngưỡng ${thresholdSelect.value}ms. Đây là dấu hiệu đặc trưng của lỗi mòn/oxy hóa lá đồng switch chuột (Switch Bouncing).
+          `;
+        } else {
+          faultCardEl.classList.remove('border-rose-500/60', 'bg-rose-950/30');
+          healthBannerEl.className = 'bg-emerald-500/10 border border-emerald-500/30 rounded-2xl p-4 text-xs text-emerald-200 leading-relaxed';
+          healthBannerEl.innerHTML = `
+            <strong class="block text-sm text-emerald-300 mb-0.5">✓ Trạng thái Switch: Ổn định (0 lỗi)</strong>
+            Chưa phát hiện hiện tượng tự động nhảy đúp (&lt;${thresholdSelect.value}ms). Tiếp tục nhấn thử để kiểm tra độ bền switch.
+          `;
+        }
+
+        if (clickHistory.length === 0) {
+          historyListEl.innerHTML = '<div class="text-slate-500 text-center py-12">Chưa có dữ liệu nhấn chuột...</div>';
+        } else {
+          historyListEl.innerHTML = clickHistory.map((entry) => {
+            const rowClass = entry.isFault
+              ? 'bg-rose-500/20 border-rose-500/40 text-rose-200'
+              : 'bg-slate-950/80 border-slate-800/80 text-slate-300';
+            const badge = entry.isFault
+              ? '<span class="px-1.5 py-0.5 rounded bg-rose-600 text-white text-[10px] font-bold">LỖI DOUBLE CLICK</span>'
+              : '<span class="text-emerald-400 text-[10px]">OK</span>';
+
+            return `
+              <div class="flex items-center justify-between px-3 py-2 rounded-lg border ${rowClass}">
+                <div class="flex items-center gap-2">
+                  <span class="text-slate-500">#${entry.index}</span>
+                  <span class="font-semibold">${entry.btnName}</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <span>Δt: ${entry.deltaText}</span>
+                  <span class="text-amber-300">Hold: ${entry.holdText}</span>
+                  ${badge}
+                </div>
+              </div>
+            `;
+          }).join('');
+        }
+      }
+
+      clickPad.addEventListener('contextmenu', (e) => e.preventDefault());
+
+      clickPad.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+        const now = performance.now();
+        const btn = e.button;
+        const threshold = parseInt(thresholdSelect.value, 10);
+
+        totalClicks++;
+        recentClickTimestamps.push(now);
+
+        let delta = null;
+        let isFault = false;
+
+        if (lastClickTimeByButton[btn] !== undefined) {
+          delta = now - lastClickTimeByButton[btn];
+          if (delta < threshold) {
+            faultClicks++;
+            isFault = true;
+            showToast(`Phát hiện lỗi Double Click (${delta.toFixed(1)} ms)!`, 'danger');
+          }
+        }
+        lastClickTimeByButton[btn] = now;
+
+        highlightSvgMouseButton(btn, true, isFault);
+
+        const rect = clickPad.getBoundingClientRect();
+        spawnRipple(e.clientX - rect.left, e.clientY - rect.top, isFault);
+
+        if (isFault) {
+          clickPad.classList.add('border-rose-500', 'bg-rose-950/30');
+          setTimeout(() => clickPad.classList.remove('border-rose-500', 'bg-rose-950/30'), 350);
+        } else {
+          clickPad.classList.add('border-cyan-400');
+          setTimeout(() => clickPad.classList.remove('border-cyan-400'), 120);
+        }
+
+        const deltaText = delta !== null ? `${delta.toFixed(1)} ms` : 'Lần đầu';
+        lastIntervalPill.innerHTML = isFault
+          ? `Khoảng cách Δt: <strong class="text-rose-400">${deltaText} (LỖI!)</strong>`
+          : `Khoảng cách Δt: <strong class="text-cyan-400">${deltaText}</strong>`;
+
+        const entry = {
+          index: totalClicks,
+          btnName: buttonNames[btn] || `Nút ${btn}`,
+          deltaText,
+          holdText: 'Đang giữ...',
+          isFault,
+          downTime: now,
+        };
+        activeDownByButton[btn] = entry;
+        clickHistory.unshift(entry);
+        if (clickHistory.length > 15) clickHistory.pop();
+
+        updateMouseUI();
+      });
+
+      window.addEventListener('mouseup', (e) => {
+        highlightSvgMouseButton(e.button, false);
+        const entry = activeDownByButton[e.button];
+        if (entry) {
+          const holdMs = performance.now() - entry.downTime;
+          entry.holdText = `${holdMs.toFixed(1)} ms`;
+          lastHoldPill.innerHTML = `Thời gian giữ: <strong class="text-amber-400">${holdMs.toFixed(1)} ms</strong>`;
+          delete activeDownByButton[e.button];
+          updateMouseUI();
+        }
+      });
+
+      clickPad.addEventListener('dblclick', (e) => {
+        e.preventDefault();
+        systemDoubleClicks++;
+        updateMouseUI();
+      });
+
+      setInterval(() => {
+        const now = performance.now();
+        recentClickTimestamps = recentClickTimestamps.filter((t) => now - t <= 1000);
+        cpsEl.textContent = recentClickTimestamps.length.toFixed(1);
+      }, 100);
+
+      // Mouse Polling Rate (Hz) & Sensor Trajectory Canvas
+      const sensorCanvas = document.getElementById('mouse-sensor-canvas');
+      const sensorCtx = sensorCanvas.getContext('2d');
+      const pollingCurrentEl = document.getElementById('polling-current-hz');
+      const pollingPeakEl = document.getElementById('polling-peak-hz');
+      const mouseCoordsEl = document.getElementById('mouse-coords');
+      const mouseVelocityEl = document.getElementById('mouse-velocity');
+
+      let moveTimestamps = [];
+      let peakPollingHz = 0;
+      let lastMovePos = null;
+      let lastMoveTime = 0;
+      let sensorTrail = [];
+
+      function resizeSensorCanvas() {
+        const parent = sensorCanvas.parentElement;
+        if (!parent) return;
+        const rect = parent.getBoundingClientRect();
+        if (rect.width === 0 || rect.height === 0) return;
+        const dpr = window.devicePixelRatio || 1;
+        sensorCanvas.width = Math.floor(rect.width * dpr);
+        sensorCanvas.height = Math.floor(rect.height * dpr);
+        drawSensorCanvas();
+      }
+
+      function drawSensorCanvas() {
+        const w = sensorCanvas.width;
+        const h = sensorCanvas.height;
+        if (w === 0 || h === 0) return;
+        const dpr = window.devicePixelRatio || 1;
+
+        sensorCtx.clearRect(0, 0, w, h);
+
+        sensorCtx.strokeStyle = 'rgba(148, 163, 184, 0.08)';
+        sensorCtx.lineWidth = 1 * dpr;
+        const step = 28 * dpr;
+        for (let x = 0; x < w; x += step) {
+          sensorCtx.beginPath();
+          sensorCtx.moveTo(x, 0);
+          sensorCtx.lineTo(x, h);
+          sensorCtx.stroke();
+        }
+        for (let y = 0; y < h; y += step) {
+          sensorCtx.beginPath();
+          sensorCtx.moveTo(0, y);
+          sensorCtx.lineTo(w, y);
+          sensorCtx.stroke();
+        }
+
+        if (sensorTrail.length < 2) return;
+
+        for (let i = 1; i < sensorTrail.length; i++) {
+          const p0 = sensorTrail[i - 1];
+          const p1 = sensorTrail[i];
+          const alpha = i / sensorTrail.length;
+          sensorCtx.strokeStyle = `rgba(34, 211, 238, ${alpha * 0.85})`;
+          sensorCtx.lineWidth = 2.2 * dpr;
+          sensorCtx.beginPath();
+          sensorCtx.moveTo(p0.x * dpr, p0.y * dpr);
+          sensorCtx.lineTo(p1.x * dpr, p1.y * dpr);
+          sensorCtx.stroke();
+
+          sensorCtx.fillStyle = `rgba(52, 211, 153, ${alpha})`;
+          sensorCtx.beginPath();
+          sensorCtx.arc(p1.x * dpr, p1.y * dpr, 2 * dpr, 0, Math.PI * 2);
+          sensorCtx.fill();
+        }
+      }
+
+      function handleSensorMove(e) {
+        const rect = sensorCanvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        const now = e.timeStamp || performance.now();
+
+        const coalesced = typeof e.getCoalescedEvents === 'function' ? e.getCoalescedEvents() : [e];
+        const eventCount = Math.max(1, coalesced.length);
+
+        for (let i = 0; i < eventCount; i++) {
+          const ev = coalesced[i];
+          moveTimestamps.push(ev.timeStamp || now);
+          sensorTrail.push({
+            x: (ev.clientX - rect.left),
+            y: (ev.clientY - rect.top),
+          });
+        }
+        if (sensorTrail.length > 90) {
+          sensorTrail.splice(0, sensorTrail.length - 90);
+        }
+
+        const cutoff = now - 500;
+        moveTimestamps = moveTimestamps.filter((t) => t >= cutoff);
+        const estimatedHz = Math.round(moveTimestamps.length * 2);
+        if (estimatedHz > peakPollingHz) peakPollingHz = estimatedHz;
+
+        pollingCurrentEl.textContent = `${estimatedHz} Hz`;
+        pollingPeakEl.textContent = `${peakPollingHz} Hz`;
+        mouseCoordsEl.textContent = `${Math.round(x)}, ${Math.round(y)}`;
+
+        if (lastMovePos && now > lastMoveTime) {
+          const dist = Math.hypot(x - lastMovePos.x, y - lastMovePos.y);
+          const vel = Math.round((dist / (now - lastMoveTime)) * 1000);
+          mouseVelocityEl.textContent = `${vel} px/s`;
+        }
+        lastMovePos = { x, y };
+        lastMoveTime = now;
+
+        drawSensorCanvas();
+      }
+
+      sensorCanvas.addEventListener('pointermove', handleSensorMove);
+
+      // Scroll Wheel & Reverse-Step Bounce Tester
+      const scrollPad = document.getElementById('scroll-test-pad');
+      const scrollBadge = document.getElementById('scroll-direction-badge');
+      const scrollUpEl = document.getElementById('scroll-up-count');
+      const scrollDownEl = document.getElementById('scroll-down-count');
+      const scrollBounceEl = document.getElementById('scroll-bounce-count');
+      const scrollHealthEl = document.getElementById('scroll-health-banner');
+
+      let scrollUpCount = 0;
+      let scrollDownCount = 0;
+      let scrollBounceCount = 0;
+      let lastScrollDir = 0;
+      let lastScrollTime = 0;
+      let sameDirStreak = 0;
+
+      scrollPad.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        if (e.deltaY === 0) return;
+        const now = performance.now();
+        const dir = e.deltaY < 0 ? -1 : 1;
+
+        if (dir === -1) {
+          scrollUpCount++;
+          scrollBadge.textContent = '▲ CUỘN LÊN (SCROLL UP)';
+          scrollBadge.className = 'px-3.5 py-1.5 rounded-full bg-cyan-500/20 border border-cyan-500/40 font-mono text-xs font-bold text-cyan-300 mb-2';
+        } else {
+          scrollDownCount++;
+          scrollBadge.textContent = '▼ CUỘN XUỐNG (SCROLL DOWN)';
+          scrollBadge.className = 'px-3.5 py-1.5 rounded-full bg-amber-500/20 border border-amber-500/40 font-mono text-xs font-bold text-amber-300 mb-2';
+        }
+
+        if (lastScrollDir !== 0 && dir !== lastScrollDir && (now - lastScrollTime) < 65 && sameDirStreak >= 3) {
+          scrollBounceCount++;
+          scrollHealthEl.className = 'bg-rose-500/15 border border-rose-500/40 rounded-xl p-3 text-xs text-rose-200';
+          scrollHealthEl.innerHTML = `<strong>⚠ Cảnh báo Encoder (${scrollBounceCount} lỗi):</strong> Phát hiện bước cuộn giật ngược chiều trong ${(now - lastScrollTime).toFixed(0)}ms!`;
+        }
+
+        if (dir === lastScrollDir) {
+          sameDirStreak++;
+        } else {
+          sameDirStreak = 1;
+        }
+        lastScrollDir = dir;
+        lastScrollTime = now;
+
+        scrollUpEl.textContent = scrollUpCount;
+        scrollDownEl.textContent = scrollDownCount;
+        scrollBounceEl.textContent = scrollBounceCount;
+      }, { passive: false });
+
+      document.getElementById('reset-mouse-btn').addEventListener('click', () => {
+        totalClicks = 0;
+        faultClicks = 0;
+        systemDoubleClicks = 0;
+        lastClickTimeByButton = {};
+        activeDownByButton = {};
+        recentClickTimestamps = [];
+        clickHistory = [];
+        cpsEl.textContent = '0.0';
+        lastIntervalPill.innerHTML = 'Khoảng cách Δt: <strong class="text-cyan-400">-- ms</strong>';
+        lastHoldPill.innerHTML = 'Thời gian giữ: <strong class="text-amber-400">-- ms</strong>';
+
+        moveTimestamps = [];
+        peakPollingHz = 0;
+        sensorTrail = [];
+        pollingCurrentEl.textContent = '0 Hz';
+        pollingPeakEl.textContent = '0 Hz';
+        mouseCoordsEl.textContent = '0, 0';
+        mouseVelocityEl.textContent = '0 px/s';
+        drawSensorCanvas();
+
+        scrollUpCount = 0;
+        scrollDownCount = 0;
+        scrollBounceCount = 0;
+        lastScrollDir = 0;
+        sameDirStreak = 0;
+        scrollUpEl.textContent = '0';
+        scrollDownEl.textContent = '0';
+        scrollBounceEl.textContent = '0';
+        scrollBadge.textContent = 'Đang chờ cuộn chuột...';
+        scrollBadge.className = 'px-3.5 py-1.5 rounded-full bg-slate-900 border border-slate-800 font-mono text-xs font-bold text-slate-300 mb-2';
+        scrollHealthEl.className = 'bg-slate-950/90 border border-slate-800 rounded-xl p-3 text-xs text-slate-300';
+        scrollHealthEl.innerHTML = '<strong>Chẩn đoán Encoder:</strong> Hãy cuộn đều một hướng khoảng 15–20 nấc để kiểm tra xem con lăn có bị nhảy ngược chiều hay không.';
+
+        updateMouseUI();
+        showToast('Đã đặt lại toàn bộ dữ liệu kiểm tra chuột.', 'info');
+      });
+
+      // =========================================================================
+      // 7. KEYBOARD DIAGNOSTICS (104-KEY FULL LAYOUT, NKRO, CHATTER, TIMING)
+      // =========================================================================
+      const kbMainRows = [
+        [
+          { code: 'Escape', label: 'ESC', w: 'w-12' },
+          { spacer: 'w-5' },
+          { code: 'F1', label: 'F1', w: 'w-10' },
+          { code: 'F2', label: 'F2', w: 'w-10' },
+          { code: 'F3', label: 'F3', w: 'w-10' },
+          { code: 'F4', label: 'F4', w: 'w-10' },
+          { spacer: 'w-3' },
+          { code: 'F5', label: 'F5', w: 'w-10' },
+          { code: 'F6', label: 'F6', w: 'w-10' },
+          { code: 'F7', label: 'F7', w: 'w-10' },
+          { code: 'F8', label: 'F8', w: 'w-10' },
+          { spacer: 'w-3' },
+          { code: 'F9', label: 'F9', w: 'w-10' },
+          { code: 'F10', label: 'F10', w: 'w-10' },
+          { code: 'F11', label: 'F11', w: 'w-10' },
+          { code: 'F12', label: 'F12', w: 'w-10' },
+        ],
+        [
+          { code: 'Backquote', label: '~ `', w: 'w-10' },
+          { code: 'Digit1', label: '1', w: 'w-10' },
+          { code: 'Digit2', label: '2', w: 'w-10' },
+          { code: 'Digit3', label: '3', w: 'w-10' },
+          { code: 'Digit4', label: '4', w: 'w-10' },
+          { code: 'Digit5', label: '5', w: 'w-10' },
+          { code: 'Digit6', label: '6', w: 'w-10' },
+          { code: 'Digit7', label: '7', w: 'w-10' },
+          { code: 'Digit8', label: '8', w: 'w-10' },
+          { code: 'Digit9', label: '9', w: 'w-10' },
+          { code: 'Digit0', label: '0', w: 'w-10' },
+          { code: 'Minus', label: '-', w: 'w-10' },
+          { code: 'Equal', label: '=', w: 'w-10' },
+          { code: 'Backspace', label: 'Backspace', w: 'w-[84px]' },
+        ],
+        [
+          { code: 'Tab', label: 'Tab', w: 'w-14' },
+          { code: 'KeyQ', label: 'Q', w: 'w-10' },
+          { code: 'KeyW', label: 'W', w: 'w-10' },
+          { code: 'KeyE', label: 'E', w: 'w-10' },
+          { code: 'KeyR', label: 'R', w: 'w-10' },
+          { code: 'KeyT', label: 'T', w: 'w-10' },
+          { code: 'KeyY', label: 'Y', w: 'w-10' },
+          { code: 'KeyU', label: 'U', w: 'w-10' },
+          { code: 'KeyI', label: 'I', w: 'w-10' },
+          { code: 'KeyO', label: 'O', w: 'w-10' },
+          { code: 'KeyP', label: 'P', w: 'w-10' },
+          { code: 'BracketLeft', label: '[', w: 'w-10' },
+          { code: 'BracketRight', label: ']', w: 'w-10' },
+          { code: 'Backslash', label: '\\', w: 'w-[68px]' },
+        ],
+        [
+          { code: 'CapsLock', label: 'Caps', w: 'w-[68px]' },
+          { code: 'KeyA', label: 'A', w: 'w-10' },
+          { code: 'KeyS', label: 'S', w: 'w-10' },
+          { code: 'KeyD', label: 'D', w: 'w-10' },
+          { code: 'KeyF', label: 'F', w: 'w-10' },
+          { code: 'KeyG', label: 'G', w: 'w-10' },
+          { code: 'KeyH', label: 'H', w: 'w-10' },
+          { code: 'KeyJ', label: 'J', w: 'w-10' },
+          { code: 'KeyK', label: 'K', w: 'w-10' },
+          { code: 'KeyL', label: 'L', w: 'w-10' },
+          { code: 'Semicolon', label: ';', w: 'w-10' },
+          { code: 'Quote', label: "'", w: 'w-10' },
+          { code: 'Enter', label: 'Enter', w: 'w-[96px]' },
+        ],
+        [
+          { code: 'ShiftLeft', label: 'Shift', w: 'w-[90px]' },
+          { code: 'KeyZ', label: 'Z', w: 'w-10' },
+          { code: 'KeyX', label: 'X', w: 'w-10' },
+          { code: 'KeyC', label: 'C', w: 'w-10' },
+          { code: 'KeyV', label: 'V', w: 'w-10' },
+          { code: 'KeyB', label: 'B', w: 'w-10' },
+          { code: 'KeyN', label: 'N', w: 'w-10' },
+          { code: 'KeyM', label: 'M', w: 'w-10' },
+          { code: 'Comma', label: ',', w: 'w-10' },
+          { code: 'Period', label: '.', w: 'w-10' },
+          { code: 'Slash', label: '/', w: 'w-10' },
+          { code: 'ShiftRight', label: 'Shift', w: 'w-[118px]' },
+        ],
+        [
+          { code: 'ControlLeft', label: 'Ctrl', w: 'w-14' },
+          { code: 'MetaLeft', label: 'Win', w: 'w-12' },
+          { code: 'AltLeft', label: 'Alt', w: 'w-12' },
+          { code: 'Space', label: 'Space', w: 'w-[264px]' },
+          { code: 'AltRight', label: 'Alt', w: 'w-12' },
+          { code: 'MetaRight', label: 'Win', w: 'w-12' },
+          { code: 'ContextMenu', label: 'Menu', w: 'w-12' },
+          { code: 'ControlRight', label: 'Ctrl', w: 'w-14' },
+        ]
+      ];
+
+      const kbNavRows = [
+        [
+          { code: 'PrintScreen', label: 'PrtSc', w: 'w-10' },
+          { code: 'ScrollLock', label: 'ScrLk', w: 'w-10' },
+          { code: 'Pause', label: 'Pause', w: 'w-10' },
+        ],
+        [
+          { code: 'Insert', label: 'Ins', w: 'w-10' },
+          { code: 'Home', label: 'Home', w: 'w-10' },
+          { code: 'PageUp', label: 'PgUp', w: 'w-10' },
+        ],
+        [
+          { code: 'Delete', label: 'Del', w: 'w-10' },
+          { code: 'End', label: 'End', w: 'w-10' },
+          { code: 'PageDown', label: 'PgDn', w: 'w-10' },
+        ],
+        [ { spacer: 'h-9' } ],
+        [
+          { spacer: 'w-10' },
+          { code: 'ArrowUp', label: '↑', w: 'w-10' },
+          { spacer: 'w-10' },
+        ],
+        [
+          { code: 'ArrowLeft', label: '←', w: 'w-10' },
+          { code: 'ArrowDown', label: '↓', w: 'w-10' },
+          { code: 'ArrowRight', label: '→', w: 'w-10' },
+        ]
+      ];
+
+      const keyElementsMap = {};
+      let totalKeysOnBoard = 0;
+
+      function createKeyCap(k) {
+        if (k.spacer) {
+          const sp = document.createElement('div');
+          sp.className = k.spacer;
+          return sp;
+        }
+        totalKeysOnBoard++;
+        const el = document.createElement('div');
+        el.dataset.code = k.code;
+        el.className = `kb-key ${k.w} ${k.h || 'h-9'} rounded-lg bg-slate-900 border border-slate-800 flex items-center justify-center text-[11px] font-mono font-semibold text-slate-300 shadow-sm`;
+        el.textContent = k.label;
+        keyElementsMap[k.code] = el;
+        return el;
+      }
+
+      function createKeyBlock(rows) {
+        const block = document.createElement('div');
+        block.className = 'flex flex-col gap-1.5';
+        rows.forEach((row) => {
+          const rowEl = document.createElement('div');
+          rowEl.className = 'flex items-center gap-1';
+          row.forEach((k) => rowEl.appendChild(createKeyCap(k)));
+          block.appendChild(rowEl);
+        });
+        return block;
+      }
+
+      function createNumpadBlock() {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'flex flex-col gap-1.5';
+
+        // Spacer matching F-row height
+        const topSpacer = document.createElement('div');
+        topSpacer.className = 'h-9';
+        wrapper.appendChild(topSpacer);
+
+        // Row 1: Num, /, *, -
+        const r1 = document.createElement('div');
+        r1.className = 'flex items-center gap-1';
+        [
+          { code: 'NumLock', label: 'Num', w: 'w-10' },
+          { code: 'NumpadDivide', label: '/', w: 'w-10' },
+          { code: 'NumpadMultiply', label: '*', w: 'w-10' },
+          { code: 'NumpadSubtract', label: '-', w: 'w-10' },
+        ].forEach((k) => r1.appendChild(createKeyCap(k)));
+        wrapper.appendChild(r1);
+
+        // Middle 2 rows + tall '+' key
+        const midArea = document.createElement('div');
+        midArea.className = 'flex gap-1';
+        const midLeft = document.createElement('div');
+        midLeft.className = 'flex flex-col gap-1.5';
+        [
+          [
+            { code: 'Numpad7', label: '7', w: 'w-10' },
+            { code: 'Numpad8', label: '8', w: 'w-10' },
+            { code: 'Numpad9', label: '9', w: 'w-10' },
+          ],
+          [
+            { code: 'Numpad4', label: '4', w: 'w-10' },
+            { code: 'Numpad5', label: '5', w: 'w-10' },
+            { code: 'Numpad6', label: '6', w: 'w-10' },
+          ]
+        ].forEach((row) => {
+          const rEl = document.createElement('div');
+          rEl.className = 'flex items-center gap-1';
+          row.forEach((k) => rEl.appendChild(createKeyCap(k)));
+          midLeft.appendChild(rEl);
+        });
+        midArea.appendChild(midLeft);
+        midArea.appendChild(createKeyCap({ code: 'NumpadAdd', label: '+', w: 'w-10', h: 'h-[78px]' }));
+        wrapper.appendChild(midArea);
+
+        // Bottom 2 rows + tall 'Ent' key
+        const botArea = document.createElement('div');
+        botArea.className = 'flex gap-1';
+        const botLeft = document.createElement('div');
+        botLeft.className = 'flex flex-col gap-1.5';
+        [
+          [
+            { code: 'Numpad1', label: '1', w: 'w-10' },
+            { code: 'Numpad2', label: '2', w: 'w-10' },
+            { code: 'Numpad3', label: '3', w: 'w-10' },
+          ],
+          [
+            { code: 'Numpad0', label: '0', w: 'w-[84px]' },
+            { code: 'NumpadDecimal', label: '.', w: 'w-10' },
+          ]
+        ].forEach((row) => {
+          const rEl = document.createElement('div');
+          rEl.className = 'flex items-center gap-1';
+          row.forEach((k) => rEl.appendChild(createKeyCap(k)));
+          botLeft.appendChild(rEl);
+        });
+        botArea.appendChild(botLeft);
+        botArea.appendChild(createKeyCap({ code: 'NumpadEnter', label: 'Ent', w: 'w-10', h: 'h-[78px]' }));
+        wrapper.appendChild(botArea);
+
+        return wrapper;
+      }
+
+      function buildKeyboardBoard() {
+        const board = document.getElementById('keyboard-visual-board');
+        board.innerHTML = '';
+        totalKeysOnBoard = 0;
+        board.appendChild(createKeyBlock(kbMainRows));
+        board.appendChild(createKeyBlock(kbNavRows));
+        board.appendChild(createNumpadBlock());
+        document.getElementById('kb-tested-count').textContent = `0/${totalKeysOnBoard}`;
+      }
+
+      const activeHeldKeys = new Map();
+      const testedKeyCodes = new Set();
+      let maxNkroAchieved = 0;
+      let kbChatterCount = 0;
+      let lastKeyPressTimeByCode = {};
+      let lastAnyKeyDownTime = null;
+      let kbHistory = [];
+      let kbPressTimestamps = [];
+
+      function updateKeyboardUI() {
+        document.getElementById('kb-nkro-count').textContent = `${activeHeldKeys.size} / ${maxNkroAchieved}`;
+        document.getElementById('kb-tested-count').textContent = `${testedKeyCodes.size}/${totalKeysOnBoard}`;
+        document.getElementById('kb-chatter-count').textContent = kbChatterCount;
+
+        const heldListEl = document.getElementById('kb-held-list');
+        if (activeHeldKeys.size === 0) {
+          heldListEl.innerHTML = '<span class="text-slate-500 italic">Không có</span>';
+        } else {
+          heldListEl.innerHTML = Array.from(activeHeldKeys.keys()).map((code) => (
+            `<span class="px-2 py-0.5 rounded bg-cyan-500/20 border border-cyan-500/40 text-cyan-300 font-bold">${code}</span>`
+          )).join('');
+        }
+
+        const histEl = document.getElementById('kb-history-list');
+        if (kbHistory.length === 0) {
+          histEl.innerHTML = '<div class="text-slate-500 text-center py-4">Hãy bấm bất kỳ phím nào trên bàn phím của bạn để bắt đầu kiểm tra...</div>';
+        } else {
+          histEl.innerHTML = kbHistory.map((item) => {
+            const cls = item.isChatter
+              ? 'bg-rose-500/20 border-rose-500/40 text-rose-200'
+              : 'bg-slate-900/90 border-slate-800/80 text-slate-300';
+            const tag = item.isChatter
+              ? '<span class="px-1.5 py-0.5 rounded bg-rose-600 text-white text-[10px] font-bold">CHATTER!</span>'
+              : '<span class="text-emerald-400 text-[10px]">OK</span>';
+
+            return `
+              <div class="flex items-center justify-between px-3 py-1.5 rounded-lg border ${cls}">
+                <div class="flex items-center gap-2">
+                  <span class="font-bold text-cyan-300">${item.code}</span>
+                  <span class="text-slate-400">(${item.keyDisplay})</span>
+                </div>
+                <div class="flex items-center gap-2.5">
+                  <span>Dwell: <strong class="text-amber-300">${item.dwellText}</strong></span>
+                  <span>Flight: <strong class="text-slate-200">${item.flightText}</strong></span>
+                  ${tag}
+                </div>
+              </div>
+            `;
+          }).join('');
+        }
+      }
+
+      window.addEventListener('keydown', (e) => {
+        if (fsActive) {
+          e.preventDefault();
+          if (e.key === 'Escape') {
+            exitFullscreenColor();
+          } else if (e.key === 'ArrowRight' || e.key === ' ') {
+            cycleFullscreenColor(1);
+          } else if (e.key === 'ArrowLeft') {
+            cycleFullscreenColor(-1);
+          } else if (e.key === 'h' || e.key === 'H') {
+            fsHud.classList.toggle('opacity-0');
+            fsHud.classList.toggle('pointer-events-none');
+          }
+          return;
+        }
+
+        if (activeTab === 'motion' && e.code === 'Space') {
+          e.preventDefault();
+          triggerReactionAction();
+          return;
+        }
+
+        if (activeTab !== 'keyboard') return;
+
+        const preventDef = document.getElementById('kb-prevent-default-chk').checked;
+        if (preventDef) {
+          e.preventDefault();
+        }
+
+        if (e.repeat) return;
+
+        const now = performance.now();
+        const code = e.code || e.key;
+        const flightMs = lastAnyKeyDownTime !== null ? now - lastAnyKeyDownTime : null;
+        lastAnyKeyDownTime = now;
+
+        let isChatter = false;
+        if (lastKeyPressTimeByCode[code] !== undefined) {
+          const sameKeyGap = now - lastKeyPressTimeByCode[code];
+          if (sameKeyGap < 45) {
+            isChatter = true;
+            kbChatterCount++;
+            showToast(`Cảnh báo Key Chatter trên phím ${code} (${sameKeyGap.toFixed(1)} ms)!`, 'danger');
+          }
+        }
+        lastKeyPressTimeByCode[code] = now;
+
+        testedKeyCodes.add(code);
+
+        const keyEl = keyElementsMap[code];
+        if (keyEl) {
+          keyEl.classList.add('tested', 'active');
+          if (isChatter) keyEl.classList.add('chatter');
+        }
+
+        const keyDisplay = e.key === ' ' ? 'Space' : e.key;
+        document.getElementById('kb-insp-key').textContent = keyDisplay;
+        document.getElementById('kb-insp-code').textContent = code;
+        document.getElementById('kb-insp-keycode').textContent = e.keyCode || e.which || '--';
+        const locMap = { 0: 'Standard (0)', 1: 'Left (1)', 2: 'Right (2)', 3: 'Numpad (3)' };
+        document.getElementById('kb-insp-loc').textContent = locMap[e.location] || e.location;
+
+        const flightText = flightMs !== null ? `${flightMs.toFixed(0)} ms` : '--';
+        document.getElementById('kb-timing-last').textContent = `Giữ...`;
+
+        kbPressTimestamps.push(now);
+        kbPressTimestamps = kbPressTimestamps.filter((t) => now - t <= 5000);
+        const wpm = Math.round((kbPressTimestamps.length / 5) * 12);
+        document.getElementById('kb-wpm-display').textContent = `${wpm} WPM`;
+
+        const entry = {
+          code,
+          keyDisplay,
+          dwellText: 'Đang giữ...',
+          flightText,
+          isChatter,
+          downTime: now,
+        };
+        activeHeldKeys.set(code, entry);
+        if (activeHeldKeys.size > maxNkroAchieved) {
+          maxNkroAchieved = activeHeldKeys.size;
+        }
+
+        kbHistory.unshift(entry);
+        if (kbHistory.length > 20) kbHistory.pop();
+
+        updateKeyboardUI();
+      });
+
+      window.addEventListener('keyup', (e) => {
+        const code = e.code || e.key;
+        const entry = activeHeldKeys.get(code);
+        if (entry) {
+          const dwellMs = performance.now() - entry.downTime;
+          entry.dwellText = `${dwellMs.toFixed(1)} ms`;
+          document.getElementById('kb-timing-last').textContent = `${dwellMs.toFixed(0)} ms`;
+          activeHeldKeys.delete(code);
+        }
+
+        const keyEl = keyElementsMap[code];
+        if (keyEl) {
+          keyEl.classList.remove('active');
+        }
+
+        if (activeTab === 'keyboard') {
+          updateKeyboardUI();
+        }
+      });
+
+      window.addEventListener('blur', () => {
+        activeHeldKeys.clear();
+        Object.values(keyElementsMap).forEach((el) => el.classList.remove('active'));
+        if (activeTab === 'keyboard') updateKeyboardUI();
+      });
+
+      document.getElementById('kb-reset-btn').addEventListener('click', () => {
+        activeHeldKeys.clear();
+        testedKeyCodes.clear();
+        maxNkroAchieved = 0;
+        kbChatterCount = 0;
+        lastKeyPressTimeByCode = {};
+        lastAnyKeyDownTime = null;
+        kbHistory = [];
+        kbPressTimestamps = [];
+
+        Object.values(keyElementsMap).forEach((el) => {
+          el.classList.remove('tested', 'active', 'chatter');
+        });
+
+        document.getElementById('kb-insp-key').textContent = '--';
+        document.getElementById('kb-insp-code').textContent = '--';
+        document.getElementById('kb-insp-keycode').textContent = '--';
+        document.getElementById('kb-insp-loc').textContent = '--';
+        document.getElementById('kb-timing-last').textContent = '-- ms';
+        document.getElementById('kb-wpm-display').textContent = '0 WPM';
+
+        updateKeyboardUI();
+        showToast('Đã đặt lại trạng thái toàn bộ bàn phím.', 'info');
+      });
+
+      // =========================================================================
+      // INITIALIZATION
+      // =========================================================================
+      window.addEventListener('resize', () => {
+        detectDisplaySpecs();
+        resizeUfoCanvas();
+        resizeSensorCanvas();
+      });
+
+      detectGpuRenderer();
+      detectDisplaySpecs();
+      buildColorCheckerGrid();
+      buildGrayscaleGrid();
+      buildFullscreenGrid();
+      buildKeyboardBoard();
+      resizeUfoCanvas();
+      resizeSensorCanvas();
+      lastFrameTime = performance.now();
+      requestAnimationFrame(masterLoop);
+    });
+  </script>
+</body>
+</html>
