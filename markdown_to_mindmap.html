@@ -1,0 +1,3201 @@
+<!DOCTYPE html>
+<html lang="vi" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Markdown → Mindmap & Slide Studio</title>
+  <style>
+    /* ==========================================================================
+       1. DESIGN TOKENS & THEME SYSTEM (100% OFFLINE CSS VARIABLES)
+       ========================================================================== */
+    :root {
+      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      --font-mono: 'JetBrains Mono', 'Fira Code', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 14px;
+      --radius-xl: 20px;
+
+      --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+      --transition-smooth: 260ms cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    /* Dark Mode (Default) */
+    [data-theme="dark"] {
+      --bg-app: #0b0f19;
+      --bg-surface: #111827;
+      --bg-surface-2: #1a2234;
+      --bg-surface-3: #243049;
+      --bg-canvas: #0d1322;
+      --canvas-grid: rgba(148, 163, 184, 0.08);
+      --border-color: #263147;
+      --border-strong: #374666;
+      --text-primary: #f1f5f9;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      --accent-primary: #6366f1;
+      --accent-primary-hover: #818cf8;
+      --accent-soft: rgba(99, 102, 241, 0.16);
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.35);
+      --shadow-lg: 0 14px 36px rgba(0, 0, 0, 0.55);
+      --node-bg: #162035;
+      --node-text: #f8fafc;
+      --node-code-bg: #0f172a;
+      --node-code-text: #38bdf8;
+      --slide-bg: linear-gradient(145deg, #131c31 0%, #0d1323 100%);
+      --slide-card-bg: rgba(30, 41, 59, 0.65);
+    }
+
+    /* Light Mode */
+    [data-theme="light"] {
+      --bg-app: #f1f5f9;
+      --bg-surface: #ffffff;
+      --bg-surface-2: #f8fafc;
+      --bg-surface-3: #e2e8f0;
+      --bg-canvas: #f8fafc;
+      --canvas-grid: rgba(15, 23, 42, 0.07);
+      --border-color: #cbd5e1;
+      --border-strong: #94a3b8;
+      --text-primary: #0f172a;
+      --text-secondary: #475569;
+      --text-muted: #64748b;
+      --accent-primary: #4f46e5;
+      --accent-primary-hover: #4338ca;
+      --accent-soft: rgba(79, 70, 229, 0.1);
+      --success: #059669;
+      --warning: #d97706;
+      --danger: #dc2626;
+      --shadow-sm: 0 2px 8px rgba(15, 23, 42, 0.06);
+      --shadow-lg: 0 14px 34px rgba(15, 23, 42, 0.12);
+      --node-bg: #ffffff;
+      --node-text: #0f172a;
+      --node-code-bg: #f1f5f9;
+      --node-code-text: #0284c7;
+      --slide-bg: linear-gradient(145deg, #ffffff 0%, #f1f5f9 100%);
+      --slide-card-bg: rgba(241, 245, 249, 0.85);
+    }
+
+    /* Pastel Soft Mode */
+    [data-theme="pastel"] {
+      --bg-app: #fdf6f0;
+      --bg-surface: #fffbf7;
+      --bg-surface-2: #f7efe8;
+      --bg-surface-3: #ede0d4;
+      --bg-canvas: #fcf7f2;
+      --canvas-grid: rgba(120, 94, 78, 0.08);
+      --border-color: #e3d3c4;
+      --border-strong: #cbb49e;
+      --text-primary: #3b2f2f;
+      --text-secondary: #6d5959;
+      --text-muted: #937d7d;
+      --accent-primary: #d97757;
+      --accent-primary-hover: #c46243;
+      --accent-soft: rgba(217, 119, 87, 0.14);
+      --success: #2a9d8f;
+      --warning: #e9c46a;
+      --danger: #e76f51;
+      --shadow-sm: 0 2px 8px rgba(88, 63, 49, 0.06);
+      --shadow-lg: 0 14px 34px rgba(88, 63, 49, 0.12);
+      --node-bg: #ffffff;
+      --node-text: #3b2f2f;
+      --node-code-bg: #f7efe8;
+      --node-code-text: #b55336;
+      --slide-bg: linear-gradient(145deg, #fffdf9 0%, #f7ede2 100%);
+      --slide-card-bg: rgba(247, 237, 226, 0.75);
+    }
+
+    /* ==========================================================================
+       2. RESET & BASE LAYOUT
+       ========================================================================== */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      height: 100%;
+      width: 100%;
+      overflow: hidden;
+      font-family: var(--font-sans);
+      background-color: var(--bg-app);
+      color: var(--text-primary);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Custom Scrollbars */
+    ::-webkit-scrollbar {
+      width: 7px;
+      height: 7px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: var(--border-strong);
+      border-radius: 999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--text-muted);
+    }
+
+    button, select, input, textarea {
+      font-family: inherit;
+      color: inherit;
+    }
+
+    /* ==========================================================================
+       3. TOP NAVIGATION BAR
+       ========================================================================== */
+    .app-shell {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      width: 100vw;
+      overflow: hidden;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      min-height: 56px;
+      padding: 6px 14px;
+      background: var(--bg-surface);
+      border-bottom: 1px solid var(--border-color);
+      z-index: 30;
+      flex-wrap: wrap;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      font-size: 15px;
+      letter-spacing: -0.01em;
+      white-space: nowrap;
+    }
+
+    .brand-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: var(--radius-md);
+      background: linear-gradient(135deg, #6366f1, #ec4899);
+      display: grid;
+      place-items: center;
+      color: #fff;
+      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.35);
+      flex-shrink: 0;
+    }
+
+    .mode-tabs {
+      display: flex;
+      align-items: center;
+      background: var(--bg-surface-2);
+      padding: 3px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-color);
+      gap: 4px;
+    }
+
+    .mode-tab {
+      border: none;
+      background: transparent;
+      padding: 6px 13px;
+      border-radius: 7px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      white-space: nowrap;
+    }
+
+    .mode-tab:hover {
+      color: var(--text-primary);
+    }
+
+    .mode-tab.active {
+      background: var(--accent-primary);
+      color: #ffffff;
+      box-shadow: 0 2px 8px rgba(99, 102, 241, 0.35);
+    }
+
+    .topbar-controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .control-select {
+      background: var(--bg-surface-2);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      padding: 6px 10px;
+      font-size: 12.5px;
+      font-weight: 500;
+      cursor: pointer;
+      outline: none;
+      transition: border-color var(--transition-fast);
+      max-width: 225px;
+    }
+
+    .control-select:hover, .control-select:focus {
+      border-color: var(--accent-primary);
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 6px 11px;
+      font-size: 12.5px;
+      font-weight: 600;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-color);
+      background: var(--bg-surface-2);
+      color: var(--text-primary);
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      white-space: nowrap;
+      user-select: none;
+    }
+
+    .btn:hover {
+      background: var(--bg-surface-3);
+      border-color: var(--border-strong);
+    }
+
+    .btn:active {
+      transform: translateY(1px);
+    }
+
+    .btn-primary {
+      background: var(--accent-primary);
+      border-color: var(--accent-primary);
+      color: #ffffff;
+    }
+
+    .btn-primary:hover {
+      background: var(--accent-primary-hover);
+      border-color: var(--accent-primary-hover);
+    }
+
+    .btn-success {
+      background: var(--success);
+      border-color: var(--success);
+      color: #ffffff;
+    }
+
+    .btn-success:hover {
+      filter: brightness(1.08);
+    }
+
+    .btn-danger-outline {
+      color: var(--danger);
+      border-color: rgba(239, 68, 68, 0.35);
+    }
+
+    .btn-danger-outline:hover {
+      background: rgba(239, 68, 68, 0.12);
+      border-color: var(--danger);
+    }
+
+    .btn-icon {
+      padding: 6px 8px;
+    }
+
+    .save-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11.5px;
+      color: var(--text-muted);
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: var(--bg-surface-2);
+    }
+
+    .save-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--success);
+    }
+
+    /* ==========================================================================
+       4. SPLIT-PANE WORKSPACE
+       ========================================================================== */
+    .workspace {
+      display: flex;
+      flex: 1;
+      min-height: 0;
+      width: 100%;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Left Pane: Markdown Editor */
+    .editor-pane {
+      width: 37%;
+      min-width: 260px;
+      max-width: 75%;
+      display: flex;
+      flex-direction: column;
+      background: var(--bg-surface);
+      border-right: 1px solid var(--border-color);
+      position: relative;
+      z-index: 10;
+    }
+
+    .editor-pane.collapsed {
+      width: 0 !important;
+      min-width: 0 !important;
+      overflow: hidden;
+      border-right: none;
+    }
+
+    .editor-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 8px 10px;
+      background: var(--bg-surface-2);
+      border-bottom: 1px solid var(--border-color);
+      flex-wrap: wrap;
+    }
+
+    .fmt-btn {
+      padding: 4px 8px;
+      font-size: 11.5px;
+      font-weight: 600;
+      border-radius: 5px;
+      border: 1px solid var(--border-color);
+      background: var(--bg-surface);
+      color: var(--text-primary);
+      cursor: pointer;
+      transition: all var(--transition-fast);
+    }
+
+    .fmt-btn:hover {
+      border-color: var(--accent-primary);
+      background: var(--accent-soft);
+      color: var(--accent-primary);
+    }
+
+    .editor-container {
+      flex: 1;
+      display: flex;
+      position: relative;
+      min-height: 0;
+    }
+
+    #md-editor {
+      width: 100%;
+      height: 100%;
+      border: none;
+      outline: none;
+      resize: none;
+      padding: 16px 18px;
+      background: var(--bg-surface);
+      color: var(--text-primary);
+      font-family: var(--font-mono);
+      font-size: 13.5px;
+      line-height: 1.65;
+      tab-size: 2;
+      overflow-y: auto;
+    }
+
+    .editor-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 12px;
+      background: var(--bg-surface-2);
+      border-top: 1px solid var(--border-color);
+      font-size: 11.5px;
+      color: var(--text-secondary);
+      gap: 8px;
+    }
+
+    /* Draggable Vertical Resizer */
+    .resizer {
+      width: 6px;
+      background: transparent;
+      cursor: col-resize;
+      position: relative;
+      z-index: 20;
+      flex-shrink: 0;
+      margin-left: -3px;
+      margin-right: -3px;
+      transition: background var(--transition-fast);
+    }
+
+    .resizer:hover, .resizer.dragging {
+      background: var(--accent-primary);
+    }
+
+    /* Right Pane: Output Area */
+    .output-pane {
+      flex: 1;
+      min-width: 0;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      background: var(--bg-canvas);
+      overflow: hidden;
+    }
+
+    .view-panel {
+      display: none;
+      flex: 1;
+      min-height: 0;
+      width: 100%;
+      flex-direction: column;
+      position: relative;
+    }
+
+    .view-panel.active {
+      display: flex;
+    }
+
+    /* ==========================================================================
+       5. VIEW 1: INTERACTIVE MINDMAP STUDIO
+       ========================================================================== */
+    .mindmap-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 8px 12px;
+      background: var(--bg-surface);
+      border-bottom: 1px solid var(--border-color);
+      flex-wrap: wrap;
+      z-index: 15;
+    }
+
+    .toolbar-group {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .zoom-pill {
+      display: inline-flex;
+      align-items: center;
+      background: var(--bg-surface-2);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+    }
+
+    .zoom-pill button {
+      border: none;
+      background: transparent;
+      padding: 5px 9px;
+      font-size: 12.5px;
+      font-weight: 700;
+      cursor: pointer;
+      color: var(--text-primary);
+    }
+
+    .zoom-pill button:hover {
+      background: var(--bg-surface-3);
+    }
+
+    .zoom-pill span {
+      padding: 0 6px;
+      font-size: 12px;
+      font-weight: 600;
+      min-width: 46px;
+      text-align: center;
+      cursor: pointer;
+    }
+
+    .toggle-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 9px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-color);
+      background: var(--bg-surface-2);
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .toggle-chip.active {
+      background: var(--accent-soft);
+      border-color: var(--accent-primary);
+      color: var(--accent-primary);
+      font-weight: 600;
+    }
+
+    .mindmap-canvas-wrap {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+      background-color: var(--bg-canvas);
+      background-image: radial-gradient(var(--canvas-grid) 1.25px, transparent 1.25px);
+      background-size: 22px 22px;
+      touch-action: none;
+    }
+
+    #mindmap-svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+      cursor: grab;
+      user-select: none;
+    }
+
+    #mindmap-svg.panning {
+      cursor: grabbing;
+    }
+
+    .mm-node-group {
+      cursor: grab;
+    }
+
+    .mm-node-group:active {
+      cursor: grabbing;
+    }
+
+    .mm-node-rect {
+      transition: filter 120ms ease;
+    }
+
+    .mm-node-group:hover .mm-node-rect {
+      filter: brightness(1.06);
+    }
+
+    .mm-collapse-btn {
+      cursor: pointer;
+    }
+
+    .mm-collapse-btn:hover circle {
+      transform: scale(1.12);
+    }
+
+    /* Inline Node Quick-Edit Input */
+    #node-inline-editor {
+      position: absolute;
+      display: none;
+      z-index: 40;
+      border: 2px solid var(--accent-primary);
+      border-radius: 8px;
+      background: var(--bg-surface);
+      color: var(--text-primary);
+      padding: 6px 10px;
+      font-family: var(--font-sans);
+      font-size: 14px;
+      font-weight: 600;
+      box-shadow: var(--shadow-lg);
+      outline: none;
+      min-width: 180px;
+    }
+
+    .canvas-hint {
+      position: absolute;
+      bottom: 12px;
+      left: 12px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-size: 11.5px;
+      color: var(--text-secondary);
+      box-shadow: var(--shadow-sm);
+      pointer-events: none;
+      opacity: 0.92;
+      max-width: calc(100% - 24px);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* ==========================================================================
+       6. VIEW 2: SLIDE DECK CONVERTER & ACTIVE RECALL
+       ========================================================================== */
+    .slides-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 8px 14px;
+      background: var(--bg-surface);
+      border-bottom: 1px solid var(--border-color);
+      flex-wrap: wrap;
+    }
+
+    .slide-stage-container {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      overflow: hidden;
+      position: relative;
+      background: var(--bg-canvas);
+    }
+
+    .slide-frame {
+      width: 100%;
+      max-width: 980px;
+      aspect-ratio: 16 / 9;
+      max-height: 100%;
+      background: var(--slide-bg);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow-lg);
+      padding: clamp(20px, 4vw, 48px);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+      overflow: hidden;
+      transition: transform var(--transition-smooth), opacity var(--transition-fast);
+    }
+
+    .slide-frame::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 5px;
+      background: linear-gradient(90deg, #6366f1, #ec4899, #10b981);
+    }
+
+    /* Title Slide Variant */
+    .slide-frame.is-title-slide {
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+    }
+
+    .slide-kicker {
+      display: inline-block;
+      padding: 5px 14px;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: var(--accent-primary);
+      font-size: clamp(11px, 1.2vw, 13px);
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      margin-bottom: 14px;
+    }
+
+    .slide-hero-title {
+      font-size: clamp(24px, 3.6vw, 46px);
+      font-weight: 800;
+      line-height: 1.2;
+      letter-spacing: -0.02em;
+      max-width: 85%;
+      margin-bottom: 16px;
+    }
+
+    .slide-subtitle-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-width: 78%;
+      font-size: clamp(14px, 1.6vw, 20px);
+      color: var(--text-secondary);
+    }
+
+    /* Content Slide Variant */
+    .slide-header {
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 12px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .slide-heading {
+      font-size: clamp(19px, 2.4vw, 30px);
+      font-weight: 700;
+      letter-spacing: -0.015em;
+      color: var(--text-primary);
+    }
+
+    .slide-body {
+      flex: 1;
+      overflow-y: auto;
+      padding-right: 4px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .slide-cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 14px;
+      align-items: stretch;
+    }
+
+    .slide-card {
+      background: var(--slide-card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .slide-card-title {
+      font-size: clamp(14px, 1.45vw, 18px);
+      font-weight: 700;
+      color: var(--accent-primary);
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .slide-bullets {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: clamp(7px, 1.1vh, 12px);
+    }
+
+    .slide-bullet-item {
+      font-size: clamp(13.5px, 1.45vw, 18.5px);
+      line-height: 1.5;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 4px 8px;
+      border-radius: var(--radius-sm);
+      transition: all var(--transition-fast);
+    }
+
+    .slide-bullet-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent-primary);
+      margin-top: 0.48em;
+      flex-shrink: 0;
+    }
+
+    .slide-bullet-item.depth-1 {
+      margin-left: 22px;
+      font-size: 0.92em;
+      color: var(--text-secondary);
+    }
+
+    .slide-bullet-item.depth-1 .slide-bullet-dot {
+      background: transparent;
+      border: 2px solid var(--accent-primary);
+    }
+
+    .slide-bullet-item.depth-2 {
+      margin-left: 44px;
+      font-size: 0.88em;
+      color: var(--text-secondary);
+    }
+
+    /* Active Recall Masked State */
+    .recall-masked {
+      background: var(--bg-surface-3) !important;
+      color: transparent !important;
+      border: 1px dashed var(--accent-primary);
+      cursor: pointer;
+      position: relative;
+      user-select: none;
+    }
+
+    .recall-masked * {
+      opacity: 0 !important;
+    }
+
+    .recall-masked::after {
+      content: "👁️ Nhấn Space / ↓ hoặc click để nhớ lại ý này";
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      color: var(--accent-primary);
+      font-size: 12.5px;
+      font-weight: 600;
+      opacity: 1 !important;
+    }
+
+    .slide-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--text-muted);
+      padding-top: 10px;
+      border-top: 1px solid rgba(148, 163, 184, 0.15);
+    }
+
+    /* Inline Markdown Formatting inside Slides */
+    .md-bold {
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+    .md-italic {
+      font-style: italic;
+    }
+    .md-code {
+      font-family: var(--font-mono);
+      font-size: 0.88em;
+      background: var(--node-code-bg);
+      color: var(--node-code-text);
+      padding: 2px 6px;
+      border-radius: 5px;
+      border: 1px solid var(--border-color);
+    }
+
+    /* Slide Navigation Bar */
+    .slide-nav-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 10px 16px;
+      background: var(--bg-surface);
+      border-top: 1px solid var(--border-color);
+    }
+
+    .slide-progress-track {
+      flex: 1;
+      max-width: 280px;
+      height: 6px;
+      background: var(--bg-surface-3);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .slide-progress-fill {
+      height: 100%;
+      background: var(--accent-primary);
+      transition: width var(--transition-smooth);
+    }
+
+    /* Thumbnail Strip */
+    .slide-thumbnails {
+      display: none;
+      gap: 10px;
+      padding: 10px 14px;
+      background: var(--bg-surface-2);
+      border-top: 1px solid var(--border-color);
+      overflow-x: auto;
+    }
+
+    .slide-thumbnails.open {
+      display: flex;
+    }
+
+    .thumb-item {
+      flex: 0 0 148px;
+      height: 84px;
+      border-radius: var(--radius-sm);
+      border: 2px solid var(--border-color);
+      background: var(--bg-surface);
+      padding: 8px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: all var(--transition-fast);
+      overflow: hidden;
+    }
+
+    .thumb-item:hover {
+      border-color: var(--border-strong);
+    }
+
+    .thumb-item.active {
+      border-color: var(--accent-primary);
+      box-shadow: 0 0 0 2px var(--accent-soft);
+    }
+
+    .thumb-num {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--accent-primary);
+    }
+
+    .thumb-title {
+      font-size: 11px;
+      font-weight: 600;
+      line-height: 1.3;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    /* Fullscreen Slide Mode */
+    .view-panel:fullscreen {
+      background: var(--bg-app);
+    }
+    .view-panel:fullscreen .slide-frame {
+      max-width: 92vw;
+      max-height: 84vh;
+    }
+
+    /* ==========================================================================
+       7. TOAST NOTIFICATIONS & RESPONSIVE ADAPTATION
+       ========================================================================== */
+    #toast-container {
+      position: fixed;
+      bottom: 18px;
+      right: 18px;
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      pointer-events: none;
+    }
+
+    .toast {
+      pointer-events: auto;
+      background: var(--bg-surface);
+      color: var(--text-primary);
+      border: 1px solid var(--border-strong);
+      border-left: 4px solid var(--accent-primary);
+      padding: 10px 14px;
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-lg);
+      font-size: 13px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      animation: slideInToast 220ms ease-out;
+    }
+
+    @keyframes slideInToast {
+      from { transform: translateY(14px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    @media (max-width: 860px) {
+      .workspace {
+        flex-direction: column;
+      }
+      .editor-pane {
+        width: 100% !important;
+        max-width: 100% !important;
+        height: 38%;
+        min-height: 160px;
+        border-right: none;
+        border-bottom: 1px solid var(--border-color);
+      }
+      .editor-pane.collapsed {
+        height: 0 !important;
+        min-height: 0 !important;
+      }
+      .resizer {
+        display: none;
+      }
+      .canvas-hint {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <!-- ======================================================================
+         TOP NAVIGATION BAR
+         ====================================================================== -->
+    <header class="topbar">
+      <div class="brand">
+        <button class="btn btn-icon" id="btn-toggle-editor" title="Ẩn / Hiện khung soạn thảo Markdown">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="3" x2="9" y2="21"/>
+          </svg>
+        </button>
+        <div class="brand-icon" aria-hidden="true">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"/><path d="M12 3v6m0 6v6M3 12h6m6 0h6m-2.6-6.4-4.2 4.2m-4.4 4.4-4.2 4.2m0-12.8 4.2 4.2m4.4 4.4 4.2 4.2"/>
+          </svg>
+        </div>
+        <span>Markdown → Mindmap &amp; Slide Studio</span>
+      </div>
+
+      <!-- Mode Switcher Tabs -->
+      <nav class="mode-tabs" role="tablist" aria-label="Chế độ hiển thị">
+        <button class="mode-tab active" data-mode="mindmap" role="tab" aria-selected="true">
+          🧠 Sơ đồ tư duy (Mindmap)
+        </button>
+        <button class="mode-tab" data-mode="slides" role="tab" aria-selected="false">
+          📽️ Trình chiếu (Slides)
+        </button>
+      </nav>
+
+      <!-- Templates, Theme & File Actions -->
+      <div class="topbar-controls">
+        <select id="template-select" class="control-select" title="Chọn mẫu ghi chú học tập">
+          <option value="ai">1. Ôn tập Trí tuệ nhân tạo (AI)</option>
+          <option value="system">2. Kiến trúc Phần mềm &amp; Hệ thống</option>
+          <option value="english">3. Từ vựng &amp; Ngữ pháp Tiếng Anh</option>
+          <option value="project">4. Kế hoạch Dự án</option>
+        </select>
+
+        <select id="theme-select" class="control-select" title="Giao diện màu sắc">
+          <option value="dark">🌙 Dark Mode</option>
+          <option value="light">☀️ Light Mode</option>
+          <option value="pastel">🌸 Pastel Soft</option>
+        </select>
+
+        <button class="btn" id="btn-import-md" title="Mở tệp Markdown (.md)">
+          📂 Nhập .md
+        </button>
+        <button class="btn" id="btn-export-md" title="Tải xuống tệp Markdown (Ctrl+S)">
+          💾 Xuất .md
+        </button>
+
+        <span class="save-badge" id="save-status" title="Tự động lưu vào bộ nhớ trình duyệt">
+          <span class="save-dot"></span>
+          <span>Đã lưu</span>
+        </span>
+      </div>
+    </header>
+
+    <!-- ======================================================================
+         MAIN SPLIT-PANE WORKSPACE
+         ====================================================================== -->
+    <main class="workspace" id="workspace">
+      <!-- LEFT PANE: MARKDOWN EDITOR -->
+      <section class="editor-pane" id="editor-pane" aria-label="Trình soạn thảo Markdown">
+        <div class="editor-toolbar">
+          <button class="fmt-btn" data-insert="# " title="Thêm tiêu đề chính (Gốc)">+ # Chủ đề chính</button>
+          <button class="fmt-btn" data-insert="## " title="Thêm nhánh lớn / Slide mới">+ ## Nhánh lớn</button>
+          <button class="fmt-btn" data-insert="### " title="Thêm nhánh phụ">+ ### Nhánh phụ</button>
+          <button class="fmt-btn" data-insert="- " title="Thêm ý nhỏ">+ - Ý nhỏ</button>
+          <button class="fmt-btn" data-wrap="**" title="In đậm văn bản được chọn">**In đậm**</button>
+          <button class="fmt-btn" data-insert="\n---\n" title="Ngắt sang Slide mới">--- Ngắt Slide</button>
+          <button class="fmt-btn btn-danger-outline" id="btn-clear-editor" title="Xóa toàn bộ nội dung">Xóa trống</button>
+        </div>
+
+        <div class="editor-container">
+          <textarea
+            id="md-editor"
+            spellcheck="false"
+            placeholder="Nhập ghi chú Markdown của bạn tại đây (# Chủ đề, ## Nhánh lớn, - Ý nhỏ)..."
+          ></textarea>
+        </div>
+
+        <div class="editor-footer">
+          <span id="stat-counts">0 nút • 0 slide</span>
+          <span id="stat-chars">0 ký tự • Tab thụt lề</span>
+        </div>
+      </section>
+
+      <!-- DRAGGABLE VERTICAL RESIZER -->
+      <div class="resizer" id="pane-resizer" title="Kéo để thay đổi kích thước khung"></div>
+
+      <!-- RIGHT PANE: OUTPUT STUDIO -->
+      <section class="output-pane">
+        <!-- ==================================================================
+             VIEW 1: INTERACTIVE MINDMAP (PURE SVG ENGINE)
+             ================================================================== -->
+        <div class="view-panel active" id="view-mindmap">
+          <div class="mindmap-toolbar">
+            <div class="toolbar-group">
+              <select id="mm-layout-select" class="control-select" title="Kiểu bố cục cây sơ đồ">
+                <option value="horizontal">Cây ngang (Trái → Phải)</option>
+                <option value="symmetric">Cây đối xứng (2 bên)</option>
+                <option value="vertical">Sơ đồ cây dọc (Trên → Dưới)</option>
+              </select>
+
+              <select id="mm-line-select" class="control-select" title="Kiểu đường nối nhánh">
+                <option value="bezier">Đường cong mềm (Bezier)</option>
+                <option value="orthogonal">Đường gấp khúc (Orthogonal)</option>
+              </select>
+
+              <label class="toggle-chip active" id="chip-drag-subtree" title="Khi kéo 1 nút sẽ di chuyển toàn bộ nhánh con đi theo">
+                <input type="checkbox" id="chk-drag-subtree" checked style="display:none" />
+                <span>🔗 Kéo cả nhánh con</span>
+              </label>
+            </div>
+
+            <div class="toolbar-group">
+              <button class="btn" id="btn-mm-fit" title="Căn giữa toàn bộ sơ đồ">🎯 Căn giữa</button>
+              <button class="btn" id="btn-mm-reset-drag" title="Đặt lại vị trí các nút đã kéo thả">↺ Đặt lại vị trí</button>
+              <button class="btn" id="btn-mm-expand-all" title="Mở rộng tất cả các nhánh">➕ Mở rộng</button>
+              <button class="btn" id="btn-mm-collapse-l2" title="Thu gọn từ cấp 2 trở đi">➖ Thu gọn cấp 2</button>
+
+              <div class="zoom-pill" title="Thu phóng sơ đồ">
+                <button id="btn-zoom-out" aria-label="Thu nhỏ">−</button>
+                <span id="zoom-label" title="Nhấn để đặt lại 100%">100%</span>
+                <button id="btn-zoom-in" aria-label="Phóng to">+</button>
+              </div>
+
+              <button class="btn btn-success" id="btn-export-png" title="Xuất ảnh PNG độ phân giải cao 2x">
+                📥 Xuất ảnh PNG (HD 2x)
+              </button>
+              <button class="btn" id="btn-export-svg" title="Xuất tệp vector SVG">
+                📐 Xuất SVG
+              </button>
+            </div>
+          </div>
+
+          <div class="mindmap-canvas-wrap" id="mindmap-canvas-wrap">
+            <svg id="mindmap-svg" xmlns="http://www.w3.org/2000/svg">
+              <defs id="mindmap-defs"></defs>
+              <g id="mindmap-viewport">
+                <g id="mindmap-edges"></g>
+                <g id="mindmap-nodes"></g>
+              </g>
+            </svg>
+
+            <input type="text" id="node-inline-editor" aria-label="Chỉnh sửa nhanh nội dung nút" />
+
+            <div class="canvas-hint">
+              💡 Kéo nền để di chuyển • Lăn chuột để thu phóng • Kéo nút để sắp xếp • Nhấp đúp vào nút để sửa nhanh
+            </div>
+          </div>
+        </div>
+
+        <!-- ==================================================================
+             VIEW 2: SLIDE DECK CONVERTER & ACTIVE RECALL
+             ================================================================== -->
+        <div class="view-panel" id="view-slides">
+          <div class="slides-toolbar">
+            <div class="toolbar-group">
+              <button class="toggle-chip" id="btn-toggle-recall" title="Bật chế độ che nội dung để tự kiểm tra trí nhớ">
+                🧠 Chế độ ôn tập (Ẩn/Hiện từng ý): <strong id="recall-state-text">TẮT</strong>
+              </button>
+              <button class="btn" id="btn-recall-next" style="display:none" title="Hiện ý tiếp theo (Phím Space hoặc ↓)">
+                👁️ Hiện ý tiếp theo (+1)
+              </button>
+              <button class="btn" id="btn-recall-all" style="display:none" title="Hiện toàn bộ ý trên slide này">
+                Hiện tất cả
+              </button>
+            </div>
+
+            <div class="toolbar-group">
+              <button class="btn" id="btn-toggle-thumbs" title="Ẩn / Hiện danh sách slide thu nhỏ">
+                🎞️ Danh sách Slide
+              </button>
+              <button class="btn btn-primary" id="btn-slide-fullscreen" title="Trình chiếu toàn màn hình">
+                ⛶ Toàn màn hình
+              </button>
+            </div>
+          </div>
+
+          <div class="slide-stage-container" id="slide-stage-container">
+            <article class="slide-frame" id="slide-frame" aria-live="polite">
+              <!-- Dynamic Slide Content Rendered via JS -->
+            </article>
+          </div>
+
+          <div class="slide-thumbnails" id="slide-thumbnails"></div>
+
+          <div class="slide-nav-bar">
+            <button class="btn" id="btn-slide-prev" title="Slide trước (Mũi tên trái)">← Trước</button>
+            <div style="display:flex;align-items:center;gap:12px;flex:1;justify-content:center;">
+              <span id="slide-indicator" style="font-size:13px;font-weight:700;white-space:nowrap;">Slide 1 / 1</span>
+              <div class="slide-progress-track">
+                <div class="slide-progress-fill" id="slide-progress-fill" style="width:100%"></div>
+              </div>
+            </div>
+            <button class="btn btn-primary" id="btn-slide-next" title="Slide tiếp theo (Mũi tên phải)">Tiếp →</button>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Hidden file input for importing Markdown -->
+  <input type="file" id="md-file-input" accept=".md,.markdown,.txt" style="display:none" />
+
+  <!-- Non-blocking Toast Container -->
+  <div id="toast-container" aria-live="polite"></div>
+
+  <script>
+    /* ============================================================================
+       1. SAMPLE TEMPLATES (VIETNAMESE STUDY NOTES)
+       ============================================================================ */
+    const TEMPLATES = {
+      ai: `# Trí tuệ Nhân tạo (AI) & Machine Learning
+
+## 1. Học có giám sát (Supervised Learning)
+- **Khái niệm**: Huấn luyện mô hình trên tập dữ liệu đã được gắn nhãn \`(X, y)\`
+- Các bài toán cốt lõi
+  - **Hồi quy (Regression)**: Dự đoán giá trị liên tục (giá nhà, nhiệt độ)
+  - **Phân loại (Classification)**: Dự đoán nhãn rời rạc (*Spam / Không Spam*)
+- Thuật toán tiêu biểu
+  - \`Linear & Logistic Regression\`
+  - \`Decision Trees\` & \`Random Forest\`
+  - \`Support Vector Machines (SVM)\`
+
+---
+
+## 2. Học không giám sát (Unsupervised Learning)
+- **Khái niệm**: Khám phá cấu trúc ẩn trong dữ liệu *chưa gắn nhãn*
+- Phân cụm (Clustering)
+  - \`K-Means\`: Phân nhóm dựa trên khoảng cách tâm cụm
+  - \`DBSCAN\`: Phân cụm theo mật độ điểm dữ liệu
+- Giảm chiều dữ liệu (Dimensionality Reduction)
+  - \`PCA\`: Phân tích thành phần chính giữ lại phương sai lớn nhất
+  - \`t-SNE & UMAP\`: Trực quan hóa dữ liệu đa chiều
+
+---
+
+## 3. Deep Learning & Mạng Nơ-ron
+- **Kiến trúc nền tảng**
+  - \`MLP\`: Mạng nơ-ron truyền thẳng đa tầng
+  - \`CNN\`: Mạng tích chập chuyên xử lý hình ảnh & thị giác máy tính
+  - \`RNN / LSTM\`: Xử lý dữ liệu chuỗi thời gian & văn bản
+- **Kỷ nguyên Transformer & LLM**
+  - Cơ chế \`Self-Attention\` tính toán mối liên hệ giữa mọi token song song
+  - Mô hình ngôn ngữ lớn: *GPT, Gemini, Claude, LLaMA*
+  - Kỹ thuật tối ưu: \`RAG\`, \`Fine-tuning (LoRA)\`, \`Prompt Engineering\`
+
+---
+
+## 4. Đánh giá & Tối ưu Mô hình
+- **Vấn đề thường gặp**
+  - *Overfitting*: Học vẹt dữ liệu train, kém trên tập test
+  - *Underfitting*: Mô hình quá đơn giản, chưa nắm bắt được quy luật
+- **Chỉ số đánh giá (Metrics)**
+  - Phân loại: \`Accuracy\`, \`Precision\`, \`Recall\`, \`F1-Score\`, \`ROC-AUC\`
+  - Hồi quy: \`MSE\`, \`RMSE\`, \`MAE\`, \`R² Score\``,
+
+      system: `# Kiến trúc Phần mềm & Hệ thống Phân tán
+
+## 1. Phong cách Kiến trúc (Architecture Patterns)
+- **Monolithic (Nguyên khối)**
+  - Đóng gói toàn bộ tính năng vào một ứng dụng duy nhất
+  - *Ưu điểm*: Dễ phát triển, kiểm thử và triển khai giai đoạn đầu
+- **Microservices (Vi dịch vụ)**
+  - Chia nhỏ hệ thống thành các dịch vụ độc lập theo nghiệp vụ
+  - Giao tiếp qua \`REST API\`, \`gRPC\` hoặc \`Event Bus\`
+- **Event-Driven Architecture**
+  - Xử lý bất đồng bộ thông qua \`Apache Kafka\` hoặc \`RabbitMQ\`
+
+---
+
+## 2. Mở rộng & Hiệu năng (Scalability)
+- **Cân bằng tải (Load Balancing)**
+  - Phân phối lưu lượng đều tới nhiều máy chủ bằng \`Nginx\` hoặc \`HAProxy\`
+- **Chiến lược Caching**
+  - Lưu dữ liệu nóng trên RAM với \`Redis\` hoặc \`Memcached\`
+  - Mô hình *Cache-Aside*, *Write-Through*
+- **CDN (Content Delivery Network)**
+  - Phân phối tài nguyên tĩnh gần vị trí địa lý người dùng
+
+---
+
+## 3. Cơ sở dữ liệu & Lưu trữ
+- **SQL vs NoSQL**
+  - *Quan hệ (ACID)*: \`PostgreSQL\`, \`MySQL\` cho dữ liệu giao dịch chặt chẽ
+  - *Phi quan hệ (BASE)*: \`MongoDB\`, \`Cassandra\`, \`DynamoDB\`
+- **Kỹ thuật mở rộng DB**
+  - \`Replication\`: Tách luồng đọc (Read Replicas) và ghi (Primary)
+  - \`Sharding\`: Phân mảnh dữ liệu theo chiều ngang
+
+---
+
+## 4. Độ tin cậy & Giám sát (Observability)
+- **3 trụ cột giám sát**
+  - \`Logs\`: Nhật ký sự kiện chi tiết của hệ thống
+  - \`Metrics\`: Chỉ số CPU, RAM, Latency thu thập bằng *Prometheus*
+  - \`Tracing\`: Theo dõi luồng request xuyên suốt các dịch vụ`,
+
+      english: `# Từ vựng & Ngữ pháp Tiếng Anh Trọng tâm
+
+## 1. Câu điều kiện (Conditional Sentences)
+- **Loại 1 (Có thật ở hiện tại/tương lai)**
+  - Cấu trúc: \`If + S + V(s/es), S + will + V-inf\`
+  - Ví dụ: *If you study consistently, you will master English.*
+- **Loại 2 (Không có thật ở hiện tại)**
+  - Cấu trúc: \`If + S + V2/ed (were), S + would + V-inf\`
+  - Ví dụ: *If I had more time, I would travel around the world.*
+- **Loại 3 (Không có thật trong quá khứ)**
+  - Cấu trúc: \`If + S + had + V3/ed, S + would have + V3/ed\`
+
+---
+
+## 2. Cụm động từ thông dụng (Phrasal Verbs)
+- **Nhóm công việc & học tập**
+  - \`Carry out\`: Tiến hành, thực hiện (nghiên cứu, kế hoạch)
+  - \`Figure out\`: Tìm ra cách giải quyết, hiểu ra vấn đề
+  - \`Catch up on\`: Bắt kịp tiến độ, ôn lại kiến thức bị lỡ
+- **Nhóm giao tiếp & đời sống**
+  - \`Bring up\`: Đề cập đến một chủ đề trong cuộc trò chuyện
+  - \`Put off\`: Trì hoãn (= *postpone*)
+  - \`Turn down\`: Từ chối lời đề nghị hoặc giảm âm lượng
+
+---
+
+## 3. Từ nối học thuật (Academic Connectors)
+- **Bổ sung thông tin**
+  - \`Furthermore\`, \`Moreover\`, \`In addition to\`
+- **Chỉ sự tương phản**
+  - \`Nevertheless\`, \`On the other hand\`, \`Whereas\`
+- **Chỉ nguyên nhân & kết quả**
+  - \`Consequently\`, \`As a result\`, \`Therefore\``,
+
+      project: `# Kế hoạch Triển khai Sản phẩm Mới
+
+## 1. Giai đoạn 1: Khám phá & Thiết kế (Tuần 1–2)
+- **Nghiên cứu người dùng**
+  - Phỏng vấn 15 khách hàng mục tiêu để xác định *Pain Points*
+  - Phân tích 3 đối thủ cạnh tranh trực tiếp
+- **Thiết kế giải pháp**
+  - Xây dựng luồng trải nghiệm người dùng (\`User Flow\`)
+  - Hoàn thiện giao diện mẫu tương tác (\`Interactive Prototype\`)
+
+---
+
+## 2. Giai đoạn 2: Phát triển MVP (Tuần 3–6)
+- **Tính năng cốt lõi (Core Features)**
+  - Hệ thống xác thực & phân quyền người dùng
+  - Trình tạo sơ đồ tư duy & bài thuyết trình tự động
+  - Xuất dữ liệu đa định dạng (\`PNG\`, \`SVG\`, \`Markdown\`)
+- **Quy trình kỹ thuật**
+  - Áp dụng \`Agile Scrum\` với chu kỳ Sprint 1 tuần
+  - Thiết lập kiểm thử tự động \`CI/CD\`
+
+---
+
+## 3. Giai đoạn 3: Kiểm thử & Ra mắt (Tuần 7–8)
+- **Đảm bảo chất lượng (QA)**
+  - Kiểm thử hiệu năng chịu tải & tương thích thiết bị di động
+  - Khắc phục toàn bộ lỗi nghiêm trọng (\`Critical Bugs\`)
+- **Chiến dịch ra mắt (Launch)**
+  - Phát hành bản Beta cho nhóm 100 người dùng tiên phong
+  - Thu thập phản hồi và tối ưu hóa tỷ lệ chuyển đổi`
+    };
+
+    /* ============================================================================
+       2. APPLICATION STATE & STORAGE
+       ============================================================================ */
+    const STORAGE_KEY = 'md_mindmap_slide_studio_v1';
+
+    const BRANCH_COLORS = [
+      '#6366f1', // Indigo
+      '#ec4899', // Pink
+      '#10b981', // Emerald
+      '#f59e0b', // Amber
+      '#06b6d4', // Cyan
+      '#8b5cf6', // Violet
+      '#f97316', // Orange
+      '#14b8a6'  // Teal
+    ];
+
+    const state = {
+      markdown: TEMPLATES.ai,
+      mode: 'mindmap', // 'mindmap' | 'slides'
+      theme: 'dark',   // 'dark' | 'light' | 'pastel'
+      layout: 'horizontal', // 'horizontal' | 'symmetric' | 'vertical'
+      lineStyle: 'bezier',  // 'bezier' | 'orthogonal'
+      dragSubtree: true,
+      collapsedIds: new Set(),
+      manualOffsets: new Map(), // nodeId -> { dx, dy }
+      view: { x: 60, y: 260, scale: 1 },
+      slideIndex: 0,
+      recallMode: false,
+      revealedCount: 0,
+      showThumbnails: false,
+      treeRoot: null,
+      slides: [],
+      flatNodes: []
+    };
+
+    function saveToLocalStorage() {
+      try {
+        const payload = {
+          markdown: state.markdown,
+          theme: state.theme,
+          layout: state.layout,
+          lineStyle: state.lineStyle
+        };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+        const statusEl = document.getElementById('save-status');
+        if (statusEl) {
+          statusEl.innerHTML = '<span class="save-dot"></span><span>Đã lưu</span>';
+        }
+      } catch (err) {
+        // Ignore storage quota errors in restricted modes
+      }
+    }
+
+    function loadFromLocalStorage() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return;
+        const parsed = JSON.parse(raw);
+        if (typeof parsed.markdown === 'string' && parsed.markdown.trim().length > 0) {
+          state.markdown = parsed.markdown;
+        }
+        if (parsed.theme) state.theme = parsed.theme;
+        if (parsed.layout) state.layout = parsed.layout;
+        if (parsed.lineStyle) state.lineStyle = parsed.lineStyle;
+      } catch (err) {
+        // Fallback to defaults
+      }
+    }
+
+    /* ============================================================================
+       3. HIERARCHICAL MARKDOWN PARSER (MINDMAP TREE & SLIDE DECK)
+       ============================================================================ */
+
+    /**
+     * Parses inline formatting tokens: **bold**, *italic*, `code`
+     */
+    function parseInlineTokens(text) {
+      const tokens = [];
+      const regex = /(\*\*[^*]+\*\*|\*[^*]+\*|`[^`]+`)/g;
+      let lastIndex = 0;
+      let match;
+
+      while ((match = regex.exec(text)) !== null) {
+        if (match.index > lastIndex) {
+          tokens.push({ text: text.slice(lastIndex, match.index), bold: false, italic: false, code: false });
+        }
+        const raw = match[0];
+        if (raw.startsWith('**') && raw.endsWith('**')) {
+          tokens.push({ text: raw.slice(2, -2), bold: true, italic: false, code: false });
+        } else if (raw.startsWith('*') && raw.endsWith('*')) {
+          tokens.push({ text: raw.slice(1, -1), bold: false, italic: true, code: false });
+        } else if (raw.startsWith('`') && raw.endsWith('`')) {
+          tokens.push({ text: raw.slice(1, -1), bold: false, italic: false, code: true });
+        }
+        lastIndex = regex.lastIndex;
+      }
+
+      if (lastIndex < text.length) {
+        tokens.push({ text: text.slice(lastIndex), bold: false, italic: false, code: false });
+      }
+
+      return tokens.length ? tokens : [{ text, bold: false, italic: false, code: false }];
+    }
+
+    /**
+     * Renders inline Markdown formatting safely to HTML for Slide Deck view
+     */
+    function renderInlineHTML(text) {
+      const tokens = parseInlineTokens(text);
+      return tokens.map(t => {
+        const escaped = escapeHTML(t.text);
+        if (t.bold) return `<strong class="md-bold">${escaped}</strong>`;
+        if (t.italic) return `<em class="md-italic">${escaped}</em>`;
+        if (t.code) return `<code class="md-code">${escaped}</code>`;
+        return escaped;
+      }).join('');
+    }
+
+    function escapeHTML(str) {
+      return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    /**
+     * Parses Markdown text into a single rooted hierarchy for the Mindmap Engine.
+     * Supports #, ##, ###, ####, ##### and nested lists (-, *, +, 1.) at any indentation.
+     */
+    function parseMarkdownToTree(mdText) {
+      const lines = mdText.split(/\r?\n/);
+      const items = [];
+
+      lines.forEach((rawLine, lineIndex) => {
+        const trimmed = rawLine.trim();
+        if (!trimmed) return;
+        // Skip horizontal slide dividers in mindmap tree
+        if (/^---+$/.test(trimmed)) return;
+
+        // Check ATX Headings (# to #####)
+        const headingMatch = trimmed.match(/^(#{1,5})\s+(.+)$/);
+        if (headingMatch) {
+          const level = headingMatch[1].length; // 1..5
+          items.push({
+            level,
+            text: headingMatch[2].trim(),
+            lineIndex,
+            prefix: headingMatch[1] + ' '
+          });
+          return;
+        }
+
+        // Check Bullet or Numbered List Items
+        const listMatch = rawLine.match(/^(\s*)([-*+]|\d+\.)\s+(.+)$/);
+        if (listMatch) {
+          const indentSpaces = listMatch[1].replace(/\t/g, '  ').length;
+          const indentLevel = Math.floor(indentSpaces / 2);
+          items.push({
+            isList: true,
+            indentLevel,
+            text: listMatch[3].trim(),
+            lineIndex,
+            prefix: listMatch[1] + listMatch[2] + ' '
+          });
+          return;
+        }
+
+        // Plain paragraph line treated as a level-6 detail node
+        items.push({
+          isList: true,
+          indentLevel: 0,
+          text: trimmed,
+          lineIndex,
+          prefix: ''
+        });
+      });
+
+      // Determine root node
+      let rootNode;
+      let startIdx = 0;
+      const h1Count = items.filter(it => !it.isList && it.level === 1).length;
+
+      if (items.length === 0) {
+        rootNode = createTreeNode('root', 'Chủ đề chính', 0, -1, '');
+      } else if (h1Count === 1 && !items[0].isList && items[0].level === 1) {
+        rootNode = createTreeNode('root', items[0].text, 0, items[0].lineIndex, items[0].prefix);
+        startIdx = 1;
+      } else {
+        rootNode = createTreeNode('root', 'Sơ đồ Tư duy', 0, -1, '');
+      }
+
+      // Maintain a stack of { node, effectiveDepth }
+      const stack = [{ node: rootNode, effectiveDepth: 0 }];
+      let currentHeadingDepth = 0;
+
+      for (let i = startIdx; i < items.length; i++) {
+        const item = items[i];
+        let effectiveDepth;
+
+        if (!item.isList) {
+          // Heading level 1..5
+          effectiveDepth = h1Count === 1 ? item.level - 1 : item.level;
+          effectiveDepth = Math.max(1, effectiveDepth);
+          currentHeadingDepth = effectiveDepth;
+        } else {
+          // List item nests underneath the active heading depth
+          effectiveDepth = currentHeadingDepth + 1 + item.indentLevel;
+        }
+
+        while (stack.length > 1 && stack[stack.length - 1].effectiveDepth >= effectiveDepth) {
+          stack.pop();
+        }
+
+        const parent = stack[stack.length - 1].node;
+        const childIndex = parent.children.length;
+        const nodeId = `${parent.id}-${childIndex}`;
+        const newNode = createTreeNode(nodeId, item.text, parent.depth + 1, item.lineIndex, item.prefix);
+
+        parent.children.push(newNode);
+        stack.push({ node: newNode, effectiveDepth });
+      }
+
+      // Assign branch colors based on top-level children of root
+      rootNode.color = '#6366f1';
+      rootNode.children.forEach((branch, idx) => {
+        const branchColor = BRANCH_COLORS[idx % BRANCH_COLORS.length];
+        assignBranchColor(branch, branchColor);
+      });
+
+      return rootNode;
+    }
+
+    function createTreeNode(id, text, depth, lineIndex, prefix) {
+      return {
+        id,
+        text,
+        depth,
+        lineIndex,
+        prefix,
+        color: '#6366f1',
+        children: [],
+        width: 140,
+        height: 42,
+        lines: [],
+        x: 0,
+        y: 0,
+        side: 'right' // 'right' | 'left' | 'center'
+      };
+    }
+
+    function assignBranchColor(node, color) {
+      node.color = color;
+      node.children.forEach(child => assignBranchColor(child, color));
+    }
+
+    /**
+     * Parses Markdown into structured 16:9 Presentation Slides.
+     * Splits on #, ##, or ---
+     */
+    function parseMarkdownToSlides(mdText) {
+      const lines = mdText.split(/\r?\n/);
+      const slides = [];
+      let currentSlide = null;
+      let currentSection = null;
+
+      function pushCurrentSlide() {
+        if (currentSlide) {
+          slides.push(currentSlide);
+        }
+        currentSlide = null;
+        currentSection = null;
+      }
+
+      for (let i = 0; i < lines.length; i++) {
+        const raw = lines[i];
+        const trimmed = raw.trim();
+        if (!trimmed) continue;
+
+        // Manual Slide Break (---)
+        if (/^---+$/.test(trimmed)) {
+          pushCurrentSlide();
+          continue;
+        }
+
+        // H1: Title Slide
+        const h1Match = trimmed.match(/^#\s+(.+)$/);
+        if (h1Match) {
+          pushCurrentSlide();
+          currentSlide = {
+            type: 'title',
+            title: h1Match[1].trim(),
+            sections: [],
+            bullets: []
+          };
+          continue;
+        }
+
+        // H2: Content Slide
+        const h2Match = trimmed.match(/^##\s+(.+)$/);
+        if (h2Match) {
+          pushCurrentSlide();
+          currentSlide = {
+            type: 'content',
+            title: h2Match[1].trim(),
+            sections: [],
+            bullets: []
+          };
+          continue;
+        }
+
+        // Ensure a slide exists if user started with ### or bullets
+        if (!currentSlide) {
+          currentSlide = {
+            type: 'content',
+            title: 'Ghi chú trình bày',
+            sections: [],
+            bullets: []
+          };
+        }
+
+        // H3 / H4: Card Sub-section inside current slide
+        const h3Match = trimmed.match(/^#{3,5}\s+(.+)$/);
+        if (h3Match) {
+          currentSection = {
+            heading: h3Match[1].trim(),
+            bullets: []
+          };
+          currentSlide.sections.push(currentSection);
+          continue;
+        }
+
+        // List Item or Paragraph
+        const listMatch = raw.match(/^(\s*)([-*+]|\d+\.)\s+(.+)$/);
+        const itemObj = listMatch
+          ? {
+              text: listMatch[3].trim(),
+              depth: Math.min(2, Math.floor(listMatch[1].replace(/\t/g, '  ').length / 2))
+            }
+          : { text: trimmed, depth: 0 };
+
+        if (currentSection) {
+          currentSection.bullets.push(itemObj);
+        } else {
+          currentSlide.bullets.push(itemObj);
+        }
+      }
+
+      pushCurrentSlide();
+
+      if (slides.length === 0) {
+        slides.push({
+          type: 'title',
+          title: 'Trình chiếu Ghi chú',
+          sections: [],
+          bullets: [{ text: 'Nhập nội dung Markdown bên trái để tạo slide tự động.', depth: 0 }]
+        });
+      }
+
+      return slides;
+    }
+
+    /* ============================================================================
+       4. PURE SVG MINDMAP LAYOUT, RENDERING & EXPORT ENGINE
+       ============================================================================ */
+
+    // Offscreen Canvas context for pixel-accurate offline Vietnamese text measurement
+    const measureCanvas = document.createElement('canvas');
+    const measureCtx = measureCanvas.getContext('2d');
+
+    function measureSegmentWidth(text, fontSize, bold, italic, code) {
+      const style = italic ? 'italic ' : '';
+      const weight = bold ? '700 ' : '500 ';
+      const family = code
+        ? "'JetBrains Mono', 'Fira Code', ui-monospace, monospace"
+        : "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+      measureCtx.font = `${style}${weight}${fontSize}px ${family}`;
+      return measureCtx.measureText(text).width + (code ? 8 : 0);
+    }
+
+    /**
+     * Computes exact wrapped lines, width, and height for every visible node
+     */
+    function measureNodeGeometry(node) {
+      const isRoot = node.depth === 0;
+      const isBranch = node.depth === 1;
+      const fontSize = isRoot ? 16 : isBranch ? 14 : 13;
+      const maxContentWidth = isRoot ? 250 : isBranch ? 240 : 265;
+      const padX = isRoot ? 22 : isBranch ? 16 : 14;
+      const padY = isRoot ? 13 : isBranch ? 10 : 8;
+      const lineHeight = Math.round(fontSize * 1.45);
+
+      const tokens = parseInlineTokens(node.text);
+      const wordChunks = [];
+
+      tokens.forEach(tok => {
+        // Split preserving spaces so wrapping stays natural
+        const parts = tok.text.split(/(\s+)/);
+        parts.forEach(part => {
+          if (part.length > 0) {
+            wordChunks.push({
+              text: part,
+              bold: tok.bold || isRoot || isBranch,
+              italic: tok.italic,
+              code: tok.code
+            });
+          }
+        });
+      });
+
+      const wrappedLines = [];
+      let currentLine = [];
+      let currentWidth = 0;
+
+      wordChunks.forEach(chunk => {
+        const w = measureSegmentWidth(chunk.text, fontSize, chunk.bold, chunk.italic, chunk.code);
+        if (currentLine.length > 0 && currentWidth + w > maxContentWidth && chunk.text.trim() !== '') {
+          wrappedLines.push({ segments: currentLine, width: currentWidth });
+          currentLine = [];
+          currentWidth = 0;
+          if (chunk.text.trim() === '') return;
+        }
+        currentLine.push({ ...chunk, width: w });
+        currentWidth += w;
+      });
+
+      if (currentLine.length > 0) {
+        wrappedLines.push({ segments: currentLine, width: currentWidth });
+      }
+      if (wrappedLines.length === 0) {
+        wrappedLines.push({ segments: [{ text: ' ', bold: false, italic: false, code: false, width: 10 }], width: 10 });
+      }
+
+      const maxLineW = wrappedLines.reduce((acc, l) => Math.max(acc, l.width), 0);
+      node.fontSize = fontSize;
+      node.lineHeight = lineHeight;
+      node.padX = padX;
+      node.padY = padY;
+      node.lines = wrappedLines;
+      node.width = Math.max(isRoot ? 130 : 86, Math.ceil(maxLineW + padX * 2));
+      node.height = Math.ceil(wrappedLines.length * lineHeight + padY * 2);
+
+      if (!state.collapsedIds.has(node.id)) {
+        node.children.forEach(child => measureNodeGeometry(child));
+      }
+    }
+
+    /**
+     * Counts all hidden descendants of a collapsed node
+     */
+    function countDescendants(node) {
+      let total = node.children.length;
+      node.children.forEach(c => {
+        total += countDescendants(c);
+      });
+      return total;
+    }
+
+    /**
+     * Master Layout Dispatcher supporting 3 layouts:
+     * 1. Horizontal (Left -> Right)
+     * 2. Symmetric (Left & Right balanced around center root)
+     * 3. Vertical (Top -> Bottom)
+     */
+    function computeMindmapLayout(root) {
+      measureNodeGeometry(root);
+
+      if (state.layout === 'horizontal') {
+        layoutHorizontalSubtree(root, 0, 0, 'right');
+        // Shift so root is vertically centered around y = 0
+        const shiftY = -(root.y + root.height / 2);
+        shiftTreePositions(root, 0, shiftY);
+      } else if (state.layout === 'vertical') {
+        layoutVerticalSubtree(root, 0, 0);
+        const shiftX = -(root.x + root.width / 2);
+        shiftTreePositions(root, shiftX, 0);
+      } else if (state.layout === 'symmetric') {
+        layoutSymmetricTree(root);
+      }
+
+      // Apply user manual drag offsets
+      applyManualOffsets(root);
+    }
+
+    function shiftTreePositions(node, dx, dy) {
+      node.x += dx;
+      node.y += dy;
+      if (!state.collapsedIds.has(node.id)) {
+        node.children.forEach(c => shiftTreePositions(c, dx, dy));
+      }
+    }
+
+    function applyManualOffsets(node) {
+      const off = state.manualOffsets.get(node.id);
+      if (off) {
+        node.x += off.dx;
+        node.y += off.dy;
+      }
+      if (!state.collapsedIds.has(node.id)) {
+        node.children.forEach(c => applyManualOffsets(c));
+      }
+    }
+
+    /* --- Layout 1: Horizontal (Left -> Right or Right -> Left) --- */
+    function computeHorizontalSpan(node, gapY) {
+      const isCollapsed = state.collapsedIds.has(node.id);
+      if (isCollapsed || node.children.length === 0) {
+        node._span = node.height;
+        return node._span;
+      }
+      let sum = 0;
+      node.children.forEach((child, i) => {
+        sum += computeHorizontalSpan(child, gapY);
+        if (i > 0) sum += gapY;
+      });
+      node._span = Math.max(node.height, sum);
+      return node._span;
+    }
+
+    function layoutHorizontalSubtree(node, x, topY, direction) {
+      const gapX = 64;
+      const gapY = 18;
+      computeHorizontalSpan(node, gapY);
+
+      node.side = direction;
+      node.x = x;
+      node.y = topY + (node._span - node.height) / 2;
+
+      const isCollapsed = state.collapsedIds.has(node.id);
+      if (isCollapsed || node.children.length === 0) return;
+
+      let totalChildrenSpan = 0;
+      node.children.forEach((c, i) => {
+        totalChildrenSpan += c._span + (i > 0 ? gapY : 0);
+      });
+
+      let cursorY = topY + (node._span - totalChildrenSpan) / 2;
+      node.children.forEach(child => {
+        const childX = direction === 'right'
+          ? x + node.width + gapX
+          : x - gapX - child.width;
+        layoutHorizontalSubtree(child, childX, cursorY, direction);
+        cursorY += child._span + gapY;
+      });
+    }
+
+    /* --- Layout 2: Symmetric (Balanced 2-sided Mindmap) --- */
+    function layoutSymmetricTree(root) {
+      const gapX = 72;
+      const gapY = 20;
+      root.side = 'center';
+      root.x = -root.width / 2;
+      root.y = -root.height / 2;
+
+      const isCollapsed = state.collapsedIds.has(root.id);
+      if (isCollapsed || root.children.length === 0) return;
+
+      const rightBranches = [];
+      const leftBranches = [];
+
+      root.children.forEach((branch, idx) => {
+        computeHorizontalSpan(branch, gapY);
+        if (idx % 2 === 0) {
+          rightBranches.push(branch);
+        } else {
+          leftBranches.push(branch);
+        }
+      });
+
+      // Layout Right Side
+      if (rightBranches.length > 0) {
+        const totalRightH = rightBranches.reduce((acc, b, i) => acc + b._span + (i > 0 ? gapY : 0), 0);
+        let curY = -totalRightH / 2;
+        rightBranches.forEach(branch => {
+          layoutHorizontalSubtree(branch, root.x + root.width + gapX, curY, 'right');
+          curY += branch._span + gapY;
+        });
+      }
+
+      // Layout Left Side
+      if (leftBranches.length > 0) {
+        const totalLeftH = leftBranches.reduce((acc, b, i) => acc + b._span + (i > 0 ? gapY : 0), 0);
+        let curY = -totalLeftH / 2;
+        leftBranches.forEach(branch => {
+          layoutHorizontalSubtree(branch, root.x - gapX - branch.width, curY, 'left');
+          curY += branch._span + gapY;
+        });
+      }
+    }
+
+    /* --- Layout 3: Vertical Top-Down Org Tree --- */
+    function computeVerticalSpan(node, gapX) {
+      const isCollapsed = state.collapsedIds.has(node.id);
+      if (isCollapsed || node.children.length === 0) {
+        node._span = node.width;
+        return node._span;
+      }
+      let sum = 0;
+      node.children.forEach((child, i) => {
+        sum += computeVerticalSpan(child, gapX);
+        if (i > 0) sum += gapX;
+      });
+      node._span = Math.max(node.width, sum);
+      return node._span;
+    }
+
+    function layoutVerticalSubtree(node, leftX, y) {
+      const gapX = 24;
+      const gapY = 58;
+      computeVerticalSpan(node, gapX);
+
+      node.side = 'down';
+      node.x = leftX + (node._span - node.width) / 2;
+      node.y = y;
+
+      const isCollapsed = state.collapsedIds.has(node.id);
+      if (isCollapsed || node.children.length === 0) return;
+
+      let totalChildrenW = 0;
+      node.children.forEach((c, i) => {
+        totalChildrenW += c._span + (i > 0 ? gapX : 0);
+      });
+
+      let cursorX = leftX + (node._span - totalChildrenW) / 2;
+      node.children.forEach(child => {
+        layoutVerticalSubtree(child, cursorX, y + node.height + gapY);
+        cursorX += child._span + gapX;
+      });
+    }
+
+    /**
+     * Generates SVG path string connecting parent -> child based on layout & lineStyle
+     */
+    function buildEdgePath(parent, child) {
+      let x1, y1, x2, y2;
+
+      if (state.layout === 'vertical') {
+        x1 = parent.x + parent.width / 2;
+        y1 = parent.y + parent.height;
+        x2 = child.x + child.width / 2;
+        y2 = child.y;
+
+        if (state.lineStyle === 'orthogonal') {
+          const my = (y1 + y2) / 2;
+          return `M ${x1} ${y1} L ${x1} ${my} L ${x2} ${my} L ${x2} ${y2}`;
+        } else {
+          const my = (y1 + y2) / 2;
+          return `M ${x1} ${y1} C ${x1} ${my}, ${x2} ${my}, ${x2} ${y2}`;
+        }
+      } else {
+        // Horizontal or Symmetric
+        const goesLeft = child.side === 'left';
+        x1 = goesLeft ? parent.x : parent.x + parent.width;
+        y1 = parent.y + parent.height / 2;
+        x2 = goesLeft ? child.x + child.width : child.x;
+        y2 = child.y + child.height / 2;
+
+        if (state.lineStyle === 'orthogonal') {
+          const mx = (x1 + x2) / 2;
+          return `M ${x1} ${y1} L ${mx} ${y1} L ${mx} ${y2} L ${x2} ${y2}`;
+        } else {
+          const mx = (x1 + x2) / 2;
+          return `M ${x1} ${y1} C ${mx} ${y1}, ${mx} ${y2}, ${x2} ${y2}`;
+        }
+      }
+    }
+
+    /**
+     * Renders the Mindmap tree into the SVG stage
+     */
+    const edgeElementsMap = new Map(); // `${parentId}->${childId}` -> SVGPathElement
+    const nodeElementsMap = new Map(); // nodeId -> SVGGElement
+
+    function renderMindmapSVG() {
+      const edgesLayer = document.getElementById('mindmap-edges');
+      const nodesLayer = document.getElementById('mindmap-nodes');
+      edgesLayer.innerHTML = '';
+      nodesLayer.innerHTML = '';
+      edgeElementsMap.clear();
+      nodeElementsMap.clear();
+      state.flatNodes = [];
+
+      if (!state.treeRoot) return;
+      computeMindmapLayout(state.treeRoot);
+
+      const themeStyles = getThemePalette();
+
+      function traverseRender(node) {
+        state.flatNodes.push(node);
+        const isCollapsed = state.collapsedIds.has(node.id);
+
+        // Render edges to visible children first
+        if (!isCollapsed) {
+          node.children.forEach(child => {
+            const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            path.setAttribute('d', buildEdgePath(node, child));
+            path.setAttribute('fill', 'none');
+            path.setAttribute('stroke', child.color);
+            path.setAttribute('stroke-width', child.depth === 1 ? '2.8' : '2');
+            path.setAttribute('stroke-linecap', 'round');
+            path.setAttribute('stroke-opacity', '0.85');
+            edgesLayer.appendChild(path);
+            edgeElementsMap.set(`${node.id}->${child.id}`, { path, parent: node, child });
+          });
+        }
+
+        // Render Node Group
+        const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        g.setAttribute('class', 'mm-node-group');
+        g.setAttribute('data-node-id', node.id);
+        g.setAttribute('transform', `translate(${node.x}, ${node.y})`);
+
+        const isRoot = node.depth === 0;
+        const isBranch = node.depth === 1;
+        const rx = isRoot ? 14 : isBranch ? 10 : 8;
+
+        const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        rect.setAttribute('class', 'mm-node-rect');
+        rect.setAttribute('width', node.width);
+        rect.setAttribute('height', node.height);
+        rect.setAttribute('rx', rx);
+        rect.setAttribute('ry', rx);
+
+        if (isRoot) {
+          rect.setAttribute('fill', '#6366f1');
+          rect.setAttribute('stroke', '#818cf8');
+          rect.setAttribute('stroke-width', '2.5');
+        } else if (isBranch) {
+          rect.setAttribute('fill', themeStyles.nodeBg);
+          rect.setAttribute('stroke', node.color);
+          rect.setAttribute('stroke-width', '2.4');
+        } else {
+          rect.setAttribute('fill', themeStyles.nodeBg);
+          rect.setAttribute('stroke', node.color);
+          rect.setAttribute('stroke-width', '1.4');
+        }
+        g.appendChild(rect);
+
+        // Left color accent bar for level 2+ nodes
+        if (!isRoot) {
+          const accentStrip = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+          accentStrip.setAttribute('x', '0');
+          accentStrip.setAttribute('y', '4');
+          accentStrip.setAttribute('width', isBranch ? '5' : '3.5');
+          accentStrip.setAttribute('height', Math.max(8, node.height - 8));
+          accentStrip.setAttribute('rx', '2');
+          accentStrip.setAttribute('fill', node.color);
+          g.appendChild(accentStrip);
+        }
+
+        // Render Wrapped Rich Text (<text> + <tspan>)
+        const textEl = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        textEl.setAttribute('font-family', "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif");
+        textEl.setAttribute('font-size', node.fontSize);
+        textEl.setAttribute('fill', isRoot ? '#ffffff' : themeStyles.nodeText);
+
+        node.lines.forEach((lineObj, idx) => {
+          const lineY = node.padY + (idx + 0.78) * node.lineHeight;
+          let cursorX = node.padX;
+
+          lineObj.segments.forEach(seg => {
+            const tspan = document.createElementNS('http://www.w3.org/2000/svg', 'tspan');
+            tspan.setAttribute('x', cursorX);
+            tspan.setAttribute('y', lineY);
+            if (seg.bold) tspan.setAttribute('font-weight', '700');
+            if (seg.italic) tspan.setAttribute('font-style', 'italic');
+            if (seg.code) {
+              tspan.setAttribute('font-family', "'JetBrains Mono', 'Fira Code', ui-monospace, monospace");
+              tspan.setAttribute('fill', isRoot ? '#e0e7ff' : themeStyles.codeText);
+            }
+            tspan.textContent = seg.text;
+            textEl.appendChild(tspan);
+            cursorX += seg.width;
+          });
+        });
+        g.appendChild(textEl);
+
+        // Collapse / Expand Circular Badge if node has children
+        if (node.children.length > 0) {
+          let badgeX, badgeY;
+          if (state.layout === 'vertical') {
+            badgeX = node.width / 2;
+            badgeY = node.height;
+          } else if (node.side === 'left') {
+            badgeX = 0;
+            badgeY = node.height / 2;
+          } else {
+            badgeX = node.width;
+            badgeY = node.height / 2;
+          }
+
+          const badgeG = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+          badgeG.setAttribute('class', 'mm-collapse-btn');
+          badgeG.setAttribute('transform', `translate(${badgeX}, ${badgeY})`);
+
+          const hiddenCount = isCollapsed ? countDescendants(node) : 0;
+          const badgeRadius = isCollapsed && hiddenCount >= 10 ? 12 : 10;
+
+          const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+          circle.setAttribute('r', badgeRadius);
+          circle.setAttribute('fill', isCollapsed ? node.color : themeStyles.nodeBg);
+          circle.setAttribute('stroke', node.color);
+          circle.setAttribute('stroke-width', '2');
+          badgeG.appendChild(circle);
+
+          const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+          label.setAttribute('text-anchor', 'middle');
+          label.setAttribute('dominant-baseline', 'central');
+          label.setAttribute('font-size', '10.5');
+          label.setAttribute('font-weight', '700');
+          label.setAttribute('fill', isCollapsed ? '#ffffff' : node.color);
+          label.textContent = isCollapsed ? `+${hiddenCount}` : '−';
+          badgeG.appendChild(label);
+
+          badgeG.addEventListener('pointerdown', (e) => {
+            e.stopPropagation();
+          });
+          badgeG.addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleNodeCollapse(node.id);
+          });
+
+          g.appendChild(badgeG);
+        }
+
+        // Attach Node Drag & Double-Click Inline Edit handlers
+        attachNodeInteractions(g, node);
+
+        nodesLayer.appendChild(g);
+        nodeElementsMap.set(node.id, g);
+
+        if (!isCollapsed) {
+          node.children.forEach(child => traverseRender(child));
+        }
+      }
+
+      traverseRender(state.treeRoot);
+      updateViewportTransform();
+    }
+
+    function getThemePalette() {
+      if (state.theme === 'light') {
+        return {
+          canvasBg: '#f8fafc',
+          nodeBg: '#ffffff',
+          nodeText: '#0f172a',
+          codeText: '#0284c7'
+        };
+      }
+      if (state.theme === 'pastel') {
+        return {
+          canvasBg: '#fcf7f2',
+          nodeBg: '#ffffff',
+          nodeText: '#3b2f2f',
+          codeText: '#b55336'
+        };
+      }
+      return {
+        canvasBg: '#0d1322',
+        nodeBg: '#162035',
+        nodeText: '#f8fafc',
+        codeText: '#38bdf8'
+      };
+    }
+
+    function toggleNodeCollapse(nodeId) {
+      if (state.collapsedIds.has(nodeId)) {
+        state.collapsedIds.delete(nodeId);
+      } else {
+        state.collapsedIds.add(nodeId);
+      }
+      renderMindmapSVG();
+    }
+
+    /* ============================================================================
+       5. INTERACTIVE PAN, ZOOM, NODE DRAG & INLINE EDIT
+       ============================================================================ */
+
+    function updateViewportTransform() {
+      const vp = document.getElementById('mindmap-viewport');
+      vp.setAttribute('transform', `translate(${state.view.x}, ${state.view.y}) scale(${state.view.scale})`);
+      document.getElementById('zoom-label').textContent = `${Math.round(state.view.scale * 100)}%`;
+    }
+
+    function fitMindmapToView() {
+      if (!state.flatNodes || state.flatNodes.length === 0) return;
+      const wrap = document.getElementById('mindmap-canvas-wrap');
+      const rect = wrap.getBoundingClientRect();
+      if (rect.width === 0 || rect.height === 0) return;
+
+      let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+      state.flatNodes.forEach(n => {
+        minX = Math.min(minX, n.x - 16);
+        minY = Math.min(minY, n.y - 16);
+        maxX = Math.max(maxX, n.x + n.width + 16);
+        maxY = Math.max(maxY, n.y + n.height + 16);
+      });
+
+      const contentW = Math.max(100, maxX - minX);
+      const contentH = Math.max(100, maxY - minY);
+      const pad = 48;
+
+      const scaleX = (rect.width - pad * 2) / contentW;
+      const scaleY = (rect.height - pad * 2) / contentH;
+      const newScale = Math.max(0.22, Math.min(1.15, Math.min(scaleX, scaleY)));
+
+      const centerX = (minX + maxX) / 2;
+      const centerY = (minY + maxY) / 2;
+
+      state.view.scale = newScale;
+      state.view.x = rect.width / 2 - centerX * newScale;
+      state.view.y = rect.height / 2 - centerY * newScale;
+      updateViewportTransform();
+    }
+
+    function zoomAtPoint(factor, clientX, clientY) {
+      const wrap = document.getElementById('mindmap-canvas-wrap');
+      const rect = wrap.getBoundingClientRect();
+      const pointerX = clientX - rect.left;
+      const pointerY = clientY - rect.top;
+
+      const worldX = (pointerX - state.view.x) / state.view.scale;
+      const worldY = (pointerY - state.view.y) / state.view.scale;
+
+      const nextScale = Math.max(0.2, Math.min(3.0, state.view.scale * factor));
+      state.view.scale = nextScale;
+      state.view.x = pointerX - worldX * nextScale;
+      state.view.y = pointerY - worldY * nextScale;
+      updateViewportTransform();
+    }
+
+    /**
+     * Collects a node and all its currently visible descendants for Subtree Dragging
+     */
+    function collectSubtreeNodes(rootNode) {
+      const list = [rootNode];
+      if (!state.collapsedIds.has(rootNode.id)) {
+        rootNode.children.forEach(c => {
+          list.push(...collectSubtreeNodes(c));
+        });
+      }
+      return list;
+    }
+
+    function attachNodeInteractions(groupEl, node) {
+      let dragging = false;
+      let startClientX = 0;
+      let startClientY = 0;
+      let movedNodes = [];
+
+      groupEl.addEventListener('pointerdown', (e) => {
+        if (e.button !== 0 && e.pointerType === 'mouse') return;
+        e.stopPropagation();
+        dragging = true;
+        startClientX = e.clientX;
+        startClientY = e.clientY;
+        movedNodes = state.dragSubtree ? collectSubtreeNodes(node) : [node];
+        groupEl.setPointerCapture(e.pointerId);
+      });
+
+      groupEl.addEventListener('pointermove', (e) => {
+        if (!dragging) return;
+        const dxScreen = e.clientX - startClientX;
+        const dyScreen = e.clientY - startClientY;
+        startClientX = e.clientX;
+        startClientY = e.clientY;
+
+        const dxWorld = dxScreen / state.view.scale;
+        const dyWorld = dyScreen / state.view.scale;
+
+        movedNodes.forEach(n => {
+          n.x += dxWorld;
+          n.y += dyWorld;
+          const prev = state.manualOffsets.get(n.id) || { dx: 0, dy: 0 };
+          state.manualOffsets.set(n.id, { dx: prev.dx + dxWorld, dy: prev.dy + dyWorld });
+
+          const el = nodeElementsMap.get(n.id);
+          if (el) {
+            el.setAttribute('transform', `translate(${n.x}, ${n.y})`);
+          }
+        });
+
+        // Dynamically update all connected branch curves in real time
+        edgeElementsMap.forEach(({ path, parent, child }) => {
+          path.setAttribute('d', buildEdgePath(parent, child));
+        });
+      });
+
+      const endDrag = (e) => {
+        if (!dragging) return;
+        dragging = false;
+        try { groupEl.releasePointerCapture(e.pointerId); } catch (_) {}
+      };
+      groupEl.addEventListener('pointerup', endDrag);
+      groupEl.addEventListener('pointercancel', endDrag);
+
+      // Double-click to inline quick-edit node text & sync back to Markdown
+      groupEl.addEventListener('dblclick', (e) => {
+        e.stopPropagation();
+        openInlineNodeEditor(node);
+      });
+    }
+
+    function openInlineNodeEditor(node) {
+      const input = document.getElementById('node-inline-editor');
+      const wrap = document.getElementById('mindmap-canvas-wrap');
+      const wrapRect = wrap.getBoundingClientRect();
+
+      const screenX = state.view.x + node.x * state.view.scale;
+      const screenY = state.view.y + node.y * state.view.scale;
+
+      input.value = node.text;
+      input.style.display = 'block';
+      input.style.left = `${Math.max(8, Math.min(wrapRect.width - 220, screenX))}px`;
+      input.style.top = `${Math.max(8, Math.min(wrapRect.height - 46, screenY))}px`;
+      input.style.width = `${Math.max(180, node.width * state.view.scale)}px`;
+      input.focus();
+      input.select();
+
+      const commitEdit = () => {
+        if (input.style.display === 'none') return;
+        const newText = input.value.trim();
+        input.style.display = 'none';
+        input.onkeydown = null;
+        input.onblur = null;
+
+        if (!newText || newText === node.text) return;
+
+        const editor = document.getElementById('md-editor');
+        const lines = editor.value.split(/\r?\n/);
+
+        if (node.lineIndex >= 0 && node.lineIndex < lines.length) {
+          lines[node.lineIndex] = `${node.prefix}${newText}`;
+        } else {
+          // Virtual root was edited -> prepend # Heading
+          lines.unshift(`# ${newText}`, '');
+        }
+
+        editor.value = lines.join('\n');
+        handleMarkdownChange();
+        showToast('Đã cập nhật nội dung nút & đồng bộ Markdown');
+      };
+
+      input.onkeydown = (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          commitEdit();
+        } else if (e.key === 'Escape') {
+          input.style.display = 'none';
+          input.onkeydown = null;
+          input.onblur = null;
+        }
+      };
+
+      input.onblur = commitEdit;
+    }
+
+    /**
+     * Setup Canvas Panning & Wheel / Touch Pinch Zooming
+     */
+    function initCanvasPanZoom() {
+      const svg = document.getElementById('mindmap-svg');
+      const wrap = document.getElementById('mindmap-canvas-wrap');
+
+      let isPanning = false;
+      let panStartX = 0;
+      let panStartY = 0;
+      let lastPinchDist = null;
+
+      svg.addEventListener('pointerdown', (e) => {
+        if (e.button !== 0 && e.pointerType === 'mouse') return;
+        isPanning = true;
+        panStartX = e.clientX - state.view.x;
+        panStartY = e.clientY - state.view.y;
+        svg.classList.add('panning');
+        svg.setPointerCapture(e.pointerId);
+      });
+
+      svg.addEventListener('pointermove', (e) => {
+        if (!isPanning) return;
+        state.view.x = e.clientX - panStartX;
+        state.view.y = e.clientY - panStartY;
+        updateViewportTransform();
+      });
+
+      const stopPan = (e) => {
+        if (!isPanning) return;
+        isPanning = false;
+        svg.classList.remove('panning');
+        try { svg.releasePointerCapture(e.pointerId); } catch (_) {}
+      };
+      svg.addEventListener('pointerup', stopPan);
+      svg.addEventListener('pointercancel', stopPan);
+
+      // Mouse Wheel Zoom anchored on cursor
+      wrap.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        const factor = e.deltaY < 0 ? 1.1 : 0.91;
+        zoomAtPoint(factor, e.clientX, e.clientY);
+      }, { passive: false });
+
+      // Touch Pinch-to-Zoom support
+      wrap.addEventListener('touchmove', (e) => {
+        if (e.touches.length === 2) {
+          e.preventDefault();
+          const t1 = e.touches[0];
+          const t2 = e.touches[1];
+          const dist = Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
+          const midX = (t1.clientX + t2.clientX) / 2;
+          const midY = (t1.clientY + t2.clientY) / 2;
+
+          if (lastPinchDist !== null && lastPinchDist > 0) {
+            const factor = dist / lastPinchDist;
+            zoomAtPoint(factor, midX, midY);
+          }
+          lastPinchDist = dist;
+        }
+      }, { passive: false });
+
+      wrap.addEventListener('touchend', () => {
+        lastPinchDist = null;
+      });
+    }
+
+    /* ============================================================================
+       6. 100% OFFLINE HIGH-DPI PNG (2X) & SVG EXPORT
+       ============================================================================ */
+
+    function buildStandaloneSVGPayload() {
+      const palette = getThemePalette();
+      let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+
+      state.flatNodes.forEach(n => {
+        minX = Math.min(minX, n.x - 20);
+        minY = Math.min(minY, n.y - 20);
+        maxX = Math.max(maxX, n.x + n.width + 20);
+        maxY = Math.max(maxY, n.y + n.height + 20);
+      });
+
+      if (!isFinite(minX)) {
+        minX = 0; minY = 0; maxX = 800; maxY = 500;
+      }
+
+      const padding = 54;
+      const vbX = Math.floor(minX - padding);
+      const vbY = Math.floor(minY - padding);
+      const width = Math.ceil(maxX - minX + padding * 2);
+      const height = Math.ceil(maxY - minY + padding * 2);
+
+      const originalSvg = document.getElementById('mindmap-svg');
+      const clonedSvg = originalSvg.cloneNode(true);
+
+      clonedSvg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+      clonedSvg.setAttribute('viewBox', `${vbX} ${vbY} ${width} ${height}`);
+      clonedSvg.setAttribute('width', width);
+      clonedSvg.setAttribute('height', height);
+
+      // Reset interactive viewport transform so full diagram renders cleanly
+      const vp = clonedSvg.querySelector('#mindmap-viewport');
+      if (vp) vp.removeAttribute('transform');
+
+      // Inject solid theme background rectangle
+      const bgRect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+      bgRect.setAttribute('x', vbX);
+      bgRect.setAttribute('y', vbY);
+      bgRect.setAttribute('width', width);
+      bgRect.setAttribute('height', height);
+      bgRect.setAttribute('fill', palette.canvasBg);
+      clonedSvg.insertBefore(bgRect, clonedSvg.firstChild);
+
+      // Inject embedded font styles for standalone rendering
+      const styleEl = document.createElementNS('http://www.w3.org/2000/svg', 'style');
+      styleEl.textContent = `
+        text { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+      `;
+      const defs = clonedSvg.querySelector('#mindmap-defs') || clonedSvg;
+      defs.appendChild(styleEl);
+
+      const svgString = new XMLSerializer().serializeToString(clonedSvg);
+      return { svgString, width, height, bgColor: palette.canvasBg };
+    }
+
+    function exportMindmapSVG() {
+      const { svgString } = buildStandaloneSVGPayload();
+      const blob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+      triggerFileDownload(blob, 'mindmap.svg');
+      showToast('📐 Đã xuất tệp vector mindmap.svg');
+    }
+
+    function exportMindmapPNG() {
+      const { svgString, width, height, bgColor } = buildStandaloneSVGPayload();
+      const svgBlob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+      const url = URL.createObjectURL(svgBlob);
+
+      const img = new Image();
+      img.onload = () => {
+        try {
+          // 2x High-DPI resolution (safely capped for huge diagrams)
+          const maxDim = 8192;
+          const scale = Math.min(2, maxDim / Math.max(width, height));
+
+          const canvas = document.createElement('canvas');
+          canvas.width = Math.round(width * scale);
+          canvas.height = Math.round(height * scale);
+
+          const ctx = canvas.getContext('2d');
+          ctx.scale(scale, scale);
+          ctx.fillStyle = bgColor;
+          ctx.fillRect(0, 0, width, height);
+          ctx.drawImage(img, 0, 0, width, height);
+
+          canvas.toBlob((pngBlob) => {
+            URL.revokeObjectURL(url);
+            if (!pngBlob) {
+              showToast('Không thể tạo ảnh PNG. Vui lòng thử lại.');
+              return;
+            }
+            triggerFileDownload(pngBlob, 'mindmap.png');
+            showToast('📥 Đã xuất ảnh mindmap.png (HD 2x) thành công!');
+          }, 'image/png');
+        } catch (err) {
+          URL.revokeObjectURL(url);
+          showToast('Lỗi khi xuất ảnh PNG.');
+        }
+      };
+
+      img.onerror = () => {
+        URL.revokeObjectURL(url);
+        showToast('Không thể kết xuất SVG sang ảnh PNG.');
+      };
+
+      img.src = url;
+    }
+
+    function triggerFileDownload(blob, filename) {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+
+    /* ============================================================================
+       7. SLIDE DECK RENDERER & ACTIVE RECALL STUDY ENGINE
+       ============================================================================ */
+
+    function renderActiveSlide() {
+      const frame = document.getElementById('slide-frame');
+      const total = state.slides.length;
+      if (state.slideIndex >= total) state.slideIndex = Math.max(0, total - 1);
+      if (state.slideIndex < 0) state.slideIndex = 0;
+
+      const slide = state.slides[state.slideIndex];
+      const slideNum = state.slideIndex + 1;
+
+      // Update Navigation Bar & Progress
+      document.getElementById('slide-indicator').textContent = `Slide ${slideNum} / ${total}`;
+      document.getElementById('slide-progress-fill').style.width = `${(slideNum / total) * 100}%`;
+      document.getElementById('btn-slide-prev').disabled = state.slideIndex === 0;
+      document.getElementById('btn-slide-next').disabled = state.slideIndex === total - 1;
+
+      // Track recall items on this slide
+      let recallCounter = 0;
+      const getRecallAttr = () => {
+        if (!state.recallMode) return '';
+        const idx = recallCounter++;
+        const isHidden = idx >= state.revealedCount;
+        return `data-recall-idx="${idx}" class="${isHidden ? 'recall-masked' : ''}"`;
+      };
+
+      if (slide.type === 'title') {
+        frame.className = 'slide-frame is-title-slide';
+        const subItems = [
+          ...slide.bullets,
+          ...slide.sections.flatMap(s => [{ text: `**${s.heading}**`, depth: 0 }, ...s.bullets])
+        ];
+
+        const subHTML = subItems.length > 0
+          ? `<ul class="slide-subtitle-list">
+              ${subItems.map(b => {
+                const idx = recallCounter++;
+                const masked = state.recallMode && idx >= state.revealedCount ? 'recall-masked' : '';
+                return `<li data-recall-idx="${idx}" class="${masked}" style="padding:4px 10px;border-radius:6px;">${renderInlineHTML(b.text)}</li>`;
+              }).join('')}
+            </ul>`
+          : `<p style="color:var(--text-secondary);font-size:15px;">Sử dụng phím ← / → để chuyển slide • Bật Chế độ ôn tập để kiểm tra trí nhớ</p>`;
+
+        frame.innerHTML = `
+          <span class="slide-kicker">Chủ đề chính • Slide ${slideNum}/${total}</span>
+          <h1 class="slide-hero-title">${renderInlineHTML(slide.title)}</h1>
+          ${subHTML}
+        `;
+      } else {
+        frame.className = 'slide-frame';
+
+        // Build body HTML: either structured cards (if ### subsections exist) or clean bullet list
+        let bodyHTML = '';
+
+        if (slide.sections.length > 0) {
+          const introBulletsHTML = slide.bullets.length > 0
+            ? `<ul class="slide-bullets" style="margin-bottom:14px;">
+                ${slide.bullets.map(b => renderSlideBullet(b, () => {
+                  const idx = recallCounter++;
+                  return { idx, masked: state.recallMode && idx >= state.revealedCount };
+                })).join('')}
+              </ul>`
+            : '';
+
+          const cardsHTML = slide.sections.map(sec => `
+            <div class="slide-card">
+              <div class="slide-card-title">
+                <span>▸</span>
+                <span>${renderInlineHTML(sec.heading)}</span>
+              </div>
+              <ul class="slide-bullets">
+                ${sec.bullets.map(b => renderSlideBullet(b, () => {
+                  const idx = recallCounter++;
+                  return { idx, masked: state.recallMode && idx >= state.revealedCount };
+                })).join('')}
+              </ul>
+            </div>
+          `).join('');
+
+          bodyHTML = `${introBulletsHTML}<div class="slide-cards-grid">${cardsHTML}</div>`;
+        } else {
+          bodyHTML = `
+            <ul class="slide-bullets">
+              ${slide.bullets.map(b => renderSlideBullet(b, () => {
+                const idx = recallCounter++;
+                return { idx, masked: state.recallMode && idx >= state.revealedCount };
+              })).join('')}
+            </ul>
+          `;
+        }
+
+        frame.innerHTML = `
+          <div class="slide-header">
+            <h2 class="slide-heading">${renderInlineHTML(slide.title)}</h2>
+            <span class="slide-kicker" style="margin:0;">Slide ${slideNum}/${total}</span>
+          </div>
+          <div class="slide-body">${bodyHTML}</div>
+          <div class="slide-footer">
+            <span>Markdown → Mindmap &amp; Slide Studio</span>
+            <span>${state.recallMode ? `Đã hiện ${Math.min(state.revealedCount, recallCounter)} / ${recallCounter} ý` : 'Chế độ trình chiếu'}</span>
+          </div>
+        `;
+      }
+
+      // Click handler on any masked item to reveal it individually
+      frame.querySelectorAll('.recall-masked').forEach(el => {
+        el.addEventListener('click', () => {
+          el.classList.remove('recall-masked');
+          state.revealedCount = Math.max(state.revealedCount, Number(el.dataset.recallIdx) + 1);
+        });
+      });
+
+      renderSlideThumbnails();
+    }
+
+    function renderSlideBullet(bullet, nextRecallMeta) {
+      const meta = nextRecallMeta();
+      const maskedClass = meta.masked ? 'recall-masked' : '';
+      return `
+        <li class="slide-bullet-item depth-${bullet.depth} ${maskedClass}" data-recall-idx="${meta.idx}">
+          <span class="slide-bullet-dot"></span>
+          <span>${renderInlineHTML(bullet.text)}</span>
+        </li>
+      `;
+    }
+
+    function renderSlideThumbnails() {
+      const strip = document.getElementById('slide-thumbnails');
+      if (!state.showThumbnails) {
+        strip.classList.remove('open');
+        return;
+      }
+      strip.classList.add('open');
+      strip.innerHTML = state.slides.map((s, idx) => `
+        <div class="thumb-item ${idx === state.slideIndex ? 'active' : ''}" data-slide-idx="${idx}">
+          <span class="thumb-num">SLIDE ${idx + 1}</span>
+          <span class="thumb-title">${escapeHTML(s.title)}</span>
+        </div>
+      `).join('');
+
+      strip.querySelectorAll('.thumb-item').forEach(el => {
+        el.addEventListener('click', () => {
+          goToSlide(Number(el.dataset.slideIdx));
+        });
+      });
+    }
+
+    function goToSlide(index) {
+      const clamped = Math.max(0, Math.min(state.slides.length - 1, index));
+      state.slideIndex = clamped;
+      state.revealedCount = 0; // Reset active recall mask on slide change
+      renderActiveSlide();
+    }
+
+    function revealNextRecallItem() {
+      if (!state.recallMode) return;
+      state.revealedCount += 1;
+      renderActiveSlide();
+    }
+
+    /* ============================================================================
+       8. UI CONTROLLERS, EDITOR TOOLBAR & EVENT WIRING
+       ============================================================================ */
+
+    function handleMarkdownChange() {
+      const editor = document.getElementById('md-editor');
+      state.markdown = editor.value;
+
+      state.treeRoot = parseMarkdownToTree(state.markdown);
+      state.slides = parseMarkdownToSlides(state.markdown);
+
+      renderMindmapSVG();
+      renderActiveSlide();
+      updateEditorStats();
+      saveToLocalStorage();
+    }
+
+    function updateEditorStats() {
+      const chars = state.markdown.length;
+      const nodeCount = state.flatNodes ? state.flatNodes.length : 0;
+      const slideCount = state.slides ? state.slides.length : 0;
+      document.getElementById('stat-counts').textContent = `${nodeCount} nút • ${slideCount} slide`;
+      document.getElementById('stat-chars').textContent = `${chars.toLocaleString('vi-VN')} ký tự • Tab thụt lề`;
+    }
+
+    function showToast(message) {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      toast.className = 'toast';
+      toast.textContent = message;
+      container.appendChild(toast);
+
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(8px)';
+        toast.style.transition = 'all 200ms ease';
+        setTimeout(() => toast.remove(), 220);
+      }, 2800);
+    }
+
+    function initEditorHelpers() {
+      const editor = document.getElementById('md-editor');
+
+      // Tab / Shift+Tab 2-space indentation support
+      editor.addEventListener('keydown', (e) => {
+        if (e.key === 'Tab') {
+          e.preventDefault();
+          const start = editor.selectionStart;
+          const end = editor.selectionEnd;
+          const val = editor.value;
+
+          if (!e.shiftKey) {
+            editor.value = val.substring(0, start) + '  ' + val.substring(end);
+            editor.selectionStart = editor.selectionEnd = start + 2;
+          } else {
+            const lineStart = val.lastIndexOf('\n', start - 1) + 1;
+            if (val.substring(lineStart, lineStart + 2) === '  ') {
+              editor.value = val.substring(0, lineStart) + val.substring(lineStart + 2);
+              editor.selectionStart = Math.max(lineStart, start - 2);
+              editor.selectionEnd = Math.max(lineStart, end - 2);
+            }
+          }
+          handleMarkdownChange();
+        }
+      });
+
+      editor.addEventListener('input', handleMarkdownChange);
+
+      // Formatting Toolbar Buttons
+      document.querySelectorAll('.fmt-btn[data-insert]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const snippet = btn.dataset.insert.replace(/\\n/g, '\n');
+          const start = editor.selectionStart;
+          const val = editor.value;
+          const needNewline = start > 0 && val[start - 1] !== '\n' && !snippet.startsWith('\n');
+          const insertion = (needNewline ? '\n' : '') + snippet;
+
+          editor.value = val.substring(0, start) + insertion + val.substring(editor.selectionEnd);
+          editor.focus();
+          editor.selectionStart = editor.selectionEnd = start + insertion.length;
+          handleMarkdownChange();
+        });
+      });
+
+      document.querySelectorAll('.fmt-btn[data-wrap]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const wrapper = btn.dataset.wrap;
+          const start = editor.selectionStart;
+          const end = editor.selectionEnd;
+          const selected = editor.value.substring(start, end) || 'văn bản in đậm';
+          const replacement = `${wrapper}${selected}${wrapper}`;
+
+          editor.value = editor.value.substring(0, start) + replacement + editor.value.substring(end);
+          editor.focus();
+          editor.selectionStart = start + wrapper.length;
+          editor.selectionEnd = start + wrapper.length + selected.length;
+          handleMarkdownChange();
+        });
+      });
+
+      // Safe 2-step Clear Button (No alert/confirm!)
+      const clearBtn = document.getElementById('btn-clear-editor');
+      let clearConfirmTimer = null;
+      clearBtn.addEventListener('click', () => {
+        if (clearBtn.dataset.armed !== 'true') {
+          clearBtn.dataset.armed = 'true';
+          clearBtn.textContent = '⚠️ Nhấn lại để xóa';
+          clearConfirmTimer = setTimeout(() => {
+            clearBtn.dataset.armed = 'false';
+            clearBtn.textContent = 'Xóa trống';
+          }, 3000);
+        } else {
+          clearTimeout(clearConfirmTimer);
+          clearBtn.dataset.armed = 'false';
+          clearBtn.textContent = 'Xóa trống';
+          editor.value = '# Chủ đề mới\n\n## Nhánh 1\n- Ý chính 1\n- Ý chính 2\n';
+          state.collapsedIds.clear();
+          state.manualOffsets.clear();
+          handleMarkdownChange();
+          fitMindmapToView();
+          showToast('Đã làm mới khung soạn thảo');
+        }
+      });
+    }
+
+    function initResizer() {
+      const resizer = document.getElementById('pane-resizer');
+      const editorPane = document.getElementById('editor-pane');
+      const workspace = document.getElementById('workspace');
+      let dragging = false;
+
+      resizer.addEventListener('pointerdown', (e) => {
+        dragging = true;
+        resizer.classList.add('dragging');
+        resizer.setPointerCapture(e.pointerId);
+      });
+
+      resizer.addEventListener('pointermove', (e) => {
+        if (!dragging) return;
+        const rect = workspace.getBoundingClientRect();
+        const pct = ((e.clientX - rect.left) / rect.width) * 100;
+        const clamped = Math.max(20, Math.min(72, pct));
+        editorPane.style.width = `${clamped}%`;
+      });
+
+      const stopResize = (e) => {
+        if (!dragging) return;
+        dragging = false;
+        resizer.classList.remove('dragging');
+        try { resizer.releasePointerCapture(e.pointerId); } catch (_) {}
+      };
+      resizer.addEventListener('pointerup', stopResize);
+      resizer.addEventListener('pointercancel', stopResize);
+    }
+
+    function bindUIEvents() {
+      // Mode Switcher Tabs
+      document.querySelectorAll('.mode-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+          const mode = tab.dataset.mode;
+          state.mode = mode;
+
+          document.querySelectorAll('.mode-tab').forEach(t => {
+            const active = t.dataset.mode === mode;
+            t.classList.toggle('active', active);
+            t.setAttribute('aria-selected', active ? 'true' : 'false');
+          });
+
+          document.getElementById('view-mindmap').classList.toggle('active', mode === 'mindmap');
+          document.getElementById('view-slides').classList.toggle('active', mode === 'slides');
+
+          if (mode === 'mindmap') {
+            renderMindmapSVG();
+          } else {
+            renderActiveSlide();
+          }
+        });
+      });
+
+      // Toggle Left Editor Pane
+      document.getElementById('btn-toggle-editor').addEventListener('click', () => {
+        document.getElementById('editor-pane').classList.toggle('collapsed');
+      });
+
+      // Sample Templates Dropdown
+      document.getElementById('template-select').addEventListener('change', (e) => {
+        const key = e.target.value;
+        if (TEMPLATES[key]) {
+          document.getElementById('md-editor').value = TEMPLATES[key];
+          state.collapsedIds.clear();
+          state.manualOffsets.clear();
+          state.slideIndex = 0;
+          state.revealedCount = 0;
+          handleMarkdownChange();
+          fitMindmapToView();
+          showToast('Đã nạp mẫu ghi chú học tập');
+        }
+      });
+
+      // Theme Switcher
+      const themeSelect = document.getElementById('theme-select');
+      themeSelect.value = state.theme;
+      document.documentElement.setAttribute('data-theme', state.theme);
+
+      themeSelect.addEventListener('change', (e) => {
+        state.theme = e.target.value;
+        document.documentElement.setAttribute('data-theme', state.theme);
+        renderMindmapSVG();
+        saveToLocalStorage();
+      });
+
+      // Import & Export .md
+      const fileInput = document.getElementById('md-file-input');
+      document.getElementById('btn-import-md').addEventListener('click', () => fileInput.click());
+      fileInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          document.getElementById('md-editor').value = ev.target.result;
+          state.collapsedIds.clear();
+          state.manualOffsets.clear();
+          state.slideIndex = 0;
+          handleMarkdownChange();
+          fitMindmapToView();
+          showToast(`📂 Đã nhập tệp "${file.name}"`);
+        };
+        reader.readAsText(file, 'UTF-8');
+        fileInput.value = '';
+      });
+
+      document.getElementById('btn-export-md').addEventListener('click', () => {
+        const blob = new Blob([state.markdown], { type: 'text/markdown;charset=utf-8' });
+        triggerFileDownload(blob, 'ghi-chu-mindmap.md');
+        showToast('💾 Đã xuất tệp ghi-chu-mindmap.md');
+      });
+
+      // Mindmap Controls
+      const layoutSelect = document.getElementById('mm-layout-select');
+      layoutSelect.value = state.layout;
+      layoutSelect.addEventListener('change', (e) => {
+        state.layout = e.target.value;
+        state.manualOffsets.clear();
+        renderMindmapSVG();
+        fitMindmapToView();
+        saveToLocalStorage();
+      });
+
+      const lineSelect = document.getElementById('mm-line-select');
+      lineSelect.value = state.lineStyle;
+      lineSelect.addEventListener('change', (e) => {
+        state.lineStyle = e.target.value;
+        renderMindmapSVG();
+        saveToLocalStorage();
+      });
+
+      const chkSubtree = document.getElementById('chk-drag-subtree');
+      const chipSubtree = document.getElementById('chip-drag-subtree');
+      chkSubtree.addEventListener('change', () => {
+        state.dragSubtree = chkSubtree.checked;
+        chipSubtree.classList.toggle('active', state.dragSubtree);
+      });
+
+      document.getElementById('btn-mm-fit').addEventListener('click', fitMindmapToView);
+      document.getElementById('btn-mm-reset-drag').addEventListener('click', () => {
+        state.manualOffsets.clear();
+        renderMindmapSVG();
+        fitMindmapToView();
+        showToast('↺ Đã đặt lại vị trí các nút');
+      });
+
+      document.getElementById('btn-mm-expand-all').addEventListener('click', () => {
+        state.collapsedIds.clear();
+        renderMindmapSVG();
+        fitMindmapToView();
+      });
+
+      document.getElementById('btn-mm-collapse-l2').addEventListener('click', () => {
+        state.collapsedIds.clear();
+        if (state.treeRoot) {
+          state.treeRoot.children.forEach(branch => {
+            if (branch.children.length > 0) {
+              state.collapsedIds.add(branch.id);
+            }
+          });
+        }
+        renderMindmapSVG();
+        fitMindmapToView();
+      });
+
+      document.getElementById('btn-zoom-in').addEventListener('click', () => {
+        const wrap = document.getElementById('mindmap-canvas-wrap').getBoundingClientRect();
+        zoomAtPoint(1.18, wrap.left + wrap.width / 2, wrap.top + wrap.height / 2);
+      });
+
+      document.getElementById('btn-zoom-out').addEventListener('click', () => {
+        const wrap = document.getElementById('mindmap-canvas-wrap').getBoundingClientRect();
+        zoomAtPoint(0.84, wrap.left + wrap.width / 2, wrap.top + wrap.height / 2);
+      });
+
+      document.getElementById('zoom-label').addEventListener('click', () => {
+        state.view.scale = 1;
+        updateViewportTransform();
+      });
+
+      document.getElementById('btn-export-png').addEventListener('click', exportMindmapPNG);
+      document.getElementById('btn-export-svg').addEventListener('click', exportMindmapSVG);
+
+      // Slide Controls
+      document.getElementById('btn-slide-prev').addEventListener('click', () => goToSlide(state.slideIndex - 1));
+      document.getElementById('btn-slide-next').addEventListener('click', () => goToSlide(state.slideIndex + 1));
+
+      const recallBtn = document.getElementById('btn-toggle-recall');
+      const recallStateText = document.getElementById('recall-state-text');
+      const recallNextBtn = document.getElementById('btn-recall-next');
+      const recallAllBtn = document.getElementById('btn-recall-all');
+
+      recallBtn.addEventListener('click', () => {
+        state.recallMode = !state.recallMode;
+        state.revealedCount = 0;
+        recallBtn.classList.toggle('active', state.recallMode);
+        recallStateText.textContent = state.recallMode ? 'BẬT' : 'TẮT';
+        recallNextBtn.style.display = state.recallMode ? 'inline-flex' : 'none';
+        recallAllBtn.style.display = state.recallMode ? 'inline-flex' : 'none';
+        renderActiveSlide();
+      });
+
+      recallNextBtn.addEventListener('click', revealNextRecallItem);
+      recallAllBtn.addEventListener('click', () => {
+        state.revealedCount = 9999;
+        renderActiveSlide();
+      });
+
+      document.getElementById('btn-toggle-thumbs').addEventListener('click', () => {
+        state.showThumbnails = !state.showThumbnails;
+        renderSlideThumbnails();
+      });
+
+      document.getElementById('btn-slide-fullscreen').addEventListener('click', () => {
+        const slidePanel = document.getElementById('view-slides');
+        if (!document.fullscreenElement) {
+          if (slidePanel.requestFullscreen) {
+            slidePanel.requestFullscreen().catch(() => {
+              showToast('Trình duyệt giới hạn chế độ toàn màn hình');
+            });
+          }
+        } else {
+          document.exitFullscreen();
+        }
+      });
+
+      // Global Keyboard Shortcuts
+      document.addEventListener('keydown', (e) => {
+        // Ctrl/Cmd + S -> Export .md file
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+          e.preventDefault();
+          document.getElementById('btn-export-md').click();
+          return;
+        }
+
+        const activeTag = document.activeElement ? document.activeElement.tagName : '';
+        if (activeTag === 'TEXTAREA' || activeTag === 'INPUT' || activeTag === 'SELECT') return;
+
+        if (state.mode === 'slides') {
+          if (e.key === 'ArrowRight') {
+            e.preventDefault();
+            goToSlide(state.slideIndex + 1);
+          } else if (e.key === 'ArrowLeft') {
+            e.preventDefault();
+            goToSlide(state.slideIndex - 1);
+          } else if ((e.key === ' ' || e.key === 'ArrowDown') && state.recallMode) {
+            e.preventDefault();
+            revealNextRecallItem();
+          }
+        }
+      });
+
+      window.addEventListener('resize', () => {
+        if (state.mode === 'mindmap') {
+          updateViewportTransform();
+        }
+      });
+    }
+
+    /* ============================================================================
+       9. BOOTSTRAP APPLICATION
+       ============================================================================ */
+    window.addEventListener('DOMContentLoaded', () => {
+      loadFromLocalStorage();
+
+      const editor = document.getElementById('md-editor');
+      editor.value = state.markdown;
+
+      initEditorHelpers();
+      initResizer();
+      initCanvasPanZoom();
+      bindUIEvents();
+
+      handleMarkdownChange();
+      requestAnimationFrame(() => fitMindmapToView());
+    });
+  </script>
+</body>
+</html>
