@@ -1,0 +1,3081 @@
+<!DOCTYPE html>
+<html lang="vi" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OCR Offline Pro</title>
+
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+          },
+        },
+      },
+    };
+  </script>
+
+  <!-- Tesseract.js v5 CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+
+  <!-- Initialize Theme Before First Paint -->
+  <script>
+    (function () {
+      try {
+        const saved = localStorage.getItem('ocr-pro-theme');
+        const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        if (saved === 'dark' || (!saved && prefersDark)) {
+          document.documentElement.classList.add('dark');
+        }
+      } catch (e) {
+        // Ignore storage errors in sandboxed iframes
+      }
+    })();
+  </script>
+</head>
+<body class="bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 font-sans antialiased min-h-screen flex flex-col overflow-x-hidden selection:bg-indigo-500/20 selection:text-indigo-700 dark:selection:text-indigo-300">
+
+  <!-- Full-Page Drag & Drop Overlay -->
+  <div id="global-drag-overlay" class="fixed inset-0 z-50 hidden bg-indigo-600/15 dark:bg-indigo-500/20 backdrop-blur-sm border-4 border-dashed border-indigo-500 flex items-center justify-center p-6 pointer-events-none">
+    <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl px-8 py-7 text-center border border-indigo-200 dark:border-indigo-800 max-w-md">
+      <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
+        <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+        </svg>
+      </div>
+      <p class="text-xl font-bold text-slate-900 dark:text-white">Thả ảnh vào đây để trích xuất chữ</p>
+      <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Tự động tối ưu ảnh &amp; nhận diện 100% cục bộ bằng Tesseract Best</p>
+    </div>
+  </div>
+
+  <!-- Top Sticky Navigation Bar -->
+  <header class="sticky top-0 z-30 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800">
+    <div class="max-w-[1440px] mx-auto px-3.5 sm:px-6 py-3 flex flex-wrap items-center justify-between gap-3">
+      <!-- Brand Identity -->
+      <div class="flex items-center gap-3 min-w-0">
+        <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-gradient-to-br from-indigo-600 via-violet-600 to-fuchsia-600 text-white flex items-center justify-center shadow-md shadow-indigo-500/25 shrink-0">
+          <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M7 3H5a2 2 0 00-2 2v2m14-4h2a2 2 0 012 2v2M7 21H5a2 2 0 01-2-2v-2m14 4h2a2 2 0 002-2v-2M8 9h8M8 13h6M8 17h4" />
+          </svg>
+        </div>
+        <div class="min-w-0">
+          <div class="flex items-center gap-2 flex-wrap">
+            <h1 class="text-sm sm:text-lg font-extrabold tracking-tight text-slate-900 dark:text-white truncate">
+              OCR Offline Pro
+            </h1>
+            <span class="px-2 py-0.5 rounded-full text-[10px] sm:text-[11px] font-bold bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 shrink-0">
+              Tesseract Best
+            </span>
+          </div>
+          <p class="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 truncate">
+            Chuẩn hóa Tiếng Việt • Cắt vùng • Tiền xử lý ảnh thông minh 100% cục bộ
+          </p>
+        </div>
+      </div>
+
+      <!-- Status Indicators & Theme Toggle -->
+      <div class="flex items-center gap-2 sm:gap-2.5">
+        <div class="hidden xl:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200/80 dark:bg-emerald-950/50 dark:text-emerald-300 dark:border-emerald-800/60">
+          <svg class="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+          </svg>
+          <span>100% Cục bộ • Cache IndexedDB</span>
+        </div>
+
+        <div id="network-status-badge" class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700">
+          <span id="network-dot" class="w-2 h-2 rounded-full bg-emerald-500"></span>
+          <span id="network-label">Trực tuyến</span>
+        </div>
+
+        <button id="theme-toggle-btn" type="button" aria-label="Chuyển chế độ Sáng/Tối" title="Chuyển chế độ Sáng / Tối" class="p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 transition">
+          <svg class="w-4 h-4 sm:w-5 sm:h-5 hidden dark:block" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+          </svg>
+          <svg class="w-4 h-4 sm:w-5 sm:h-5 block dark:hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+          </svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Workspace -->
+  <main class="flex-1 max-w-[1440px] w-full mx-auto px-3.5 sm:px-6 py-4 sm:py-6 space-y-5">
+
+    <!-- Quick Tip Bar -->
+    <div class="rounded-2xl bg-gradient-to-r from-indigo-50 via-white to-violet-50 dark:from-indigo-950/40 dark:via-slate-900 dark:to-violet-950/40 border border-indigo-200/70 dark:border-indigo-900/60 px-4 py-2.5 flex flex-col md:flex-row md:items-center justify-between gap-2 text-xs sm:text-[13px]">
+      <div class="flex items-start sm:items-center gap-2 text-slate-700 dark:text-slate-300">
+        <svg class="w-4 h-4 text-indigo-600 dark:text-indigo-400 shrink-0 mt-0.5 sm:mt-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+        </svg>
+        <span>
+          <strong>Dán ảnh tức thì:</strong> Nhấn
+          <kbd class="px-1.5 py-0.5 mx-0.5 text-[11px] font-semibold rounded-md bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 shadow-sm text-indigo-700 dark:text-indigo-300">Ctrl+V</kbd> /
+          <kbd class="px-1.5 py-0.5 mx-0.5 text-[11px] font-semibold rounded-md bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 shadow-sm text-indigo-700 dark:text-indigo-300">Cmd+V</kbd>
+          ở bất kỳ đâu. Kéo trực tiếp trên ảnh để <strong>cắt đúng đoạn chữ</strong> giúp tăng độ chính xác vượt trội!
+        </span>
+      </div>
+      <div class="flex items-center gap-3 shrink-0">
+        <label class="inline-flex items-center gap-2 cursor-pointer select-none">
+          <span class="text-xs font-medium text-slate-600 dark:text-slate-300">Tự quét khi dán/tải</span>
+          <div class="relative">
+            <input id="auto-ocr-toggle" type="checkbox" checked class="sr-only peer" />
+            <div class="w-9 h-5 bg-slate-200 dark:bg-slate-700 rounded-full peer peer-checked:bg-indigo-600 transition-colors"></div>
+            <div class="absolute left-0.5 top-0.5 w-4 h-4 bg-white rounded-full shadow-sm transition-transform peer-checked:translate-x-4"></div>
+          </div>
+        </label>
+      </div>
+    </div>
+
+    <!-- Primary 2-Column Adaptive Layout (Optimized for 16:9 Desktop & 16:10 iPad Landscape) -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-6 items-start">
+
+      <!-- =====================================================================
+           LEFT COLUMN (7/12): Image Viewer, Interactive Crop & Auto-Enhancement
+           ===================================================================== -->
+      <section class="lg:col-span-7 space-y-5 min-w-0">
+
+        <!-- Hidden File Input -->
+        <input id="file-input" type="file" accept="image/png,image/jpeg,image/webp,image/bmp,image/gif" class="hidden" />
+
+        <!-- CARD 1: Image Input, Interactive Cropper & Enhancement Pipeline -->
+        <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-4 sm:p-5 space-y-4">
+
+          <!-- Header Row: View Switch & Bounding Box Toggle -->
+          <div class="flex flex-wrap items-center justify-between gap-2.5">
+            <div class="flex items-center gap-2">
+              <div class="w-8 h-8 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+              </div>
+              <h2 class="text-sm font-bold text-slate-900 dark:text-white">Ảnh đầu vào, Cắt vùng &amp; Tiền xử lý</h2>
+            </div>
+
+            <!-- View Mode Segmented Control (Shown when image is loaded) -->
+            <div id="viewer-mode-bar" class="hidden flex flex-wrap items-center gap-2">
+              <div class="inline-flex p-1 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-semibold">
+                <button id="view-original-btn" type="button" class="px-2.5 py-1.5 rounded-lg bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-sm transition">
+                  Ảnh gốc / Chọn vùng
+                </button>
+                <button id="view-processed-btn" type="button" class="px-2.5 py-1.5 rounded-lg text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition">
+                  Ảnh gửi cho AI
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Empty Dropzone (Shown before an image is loaded) -->
+          <div id="dropzone" class="group relative rounded-2xl border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-indigo-400 dark:hover:border-indigo-500 bg-slate-50/80 dark:bg-slate-950/50 transition-all p-7 sm:p-10 text-center cursor-pointer">
+            <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-sm flex items-center justify-center text-indigo-600 dark:text-indigo-400 group-hover:scale-105 transition-transform">
+              <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+              </svg>
+            </div>
+            <p class="text-sm sm:text-base font-bold text-slate-800 dark:text-slate-100">
+              Kéo thả ảnh, chọn tệp, hoặc nhấn <span class="text-indigo-600 dark:text-indigo-400">Ctrl+V</span> để dán ảnh chụp màn hình
+            </p>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1.5 max-w-md mx-auto">
+              Tự động phóng to 2.5x, làm nét dấu tiếng Việt, phát hiện nền tối Dark Mode và thêm viền trắng giúp Tesseract Best đọc chuẩn hơn rõ rệt.
+            </p>
+            <div class="mt-5 flex flex-wrap items-center justify-center gap-2.5">
+              <button id="select-file-btn" type="button" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 active:scale-[0.98] text-white text-xs sm:text-sm font-semibold shadow-sm shadow-indigo-500/25 transition">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                </svg>
+                <span>Chọn tệp ảnh</span>
+              </button>
+              <button id="paste-clipboard-btn" type="button" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 text-xs sm:text-sm font-semibold shadow-sm transition">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                </svg>
+                <span>Dán từ Clipboard</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Active Image Workspace (Shown when an image is loaded) -->
+          <div id="workspace-section" class="hidden space-y-3.5">
+
+            <!-- File Meta & Quick Replace Controls -->
+            <div class="flex flex-wrap items-center justify-between gap-2 text-xs">
+              <div class="flex flex-wrap items-center gap-1.5 min-w-0">
+                <span id="image-meta-name" class="font-semibold text-slate-700 dark:text-slate-200 truncate max-w-[180px] sm:max-w-[260px]">anh.png</span>
+                <span id="image-dim-badge" class="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-mono">0×0</span>
+                <span id="crop-dim-badge" class="hidden px-2 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-950/70 text-indigo-700 dark:text-indigo-300 border border-indigo-200/80 dark:border-indigo-800 font-mono font-semibold">Vùng cắt: 0×0 px</span>
+              </div>
+              <div class="flex items-center gap-1.5">
+                <button id="replace-paste-btn" type="button" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-medium transition">
+                  <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2" />
+                  </svg>
+                  <span>Dán mới</span>
+                </button>
+                <button id="replace-file-btn" type="button" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-medium transition">
+                  <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                  </svg>
+                  <span>Đổi ảnh</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Interactive Canvas Stage (Crop + Processed Preview + Confidence Overlay) -->
+            <div id="stage-container" class="relative rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-950 flex items-center justify-center h-[320px] sm:h-[400px] lg:h-[430px] select-none">
+              <canvas id="stage-canvas" class="w-full h-full block touch-none cursor-crosshair"></canvas>
+
+              <!-- Floating Pipeline Summary Pill (Top-Left) -->
+              <div id="pipeline-status-pill" class="pointer-events-none absolute top-2.5 left-2.5 max-w-[85%] truncate px-2.5 py-1 rounded-full text-[11px] font-semibold bg-slate-900/80 text-white backdrop-blur-sm shadow-sm">
+                Đang sẵn sàng
+              </div>
+
+              <!-- Floating Confidence Legend (Bottom-Left, visible when Bounding Boxes shown) -->
+              <div id="bbox-legend-pill" class="hidden pointer-events-none absolute bottom-2.5 left-2.5 flex items-center gap-2.5 px-2.5 py-1 rounded-full text-[11px] font-medium bg-slate-900/85 text-white backdrop-blur-sm shadow-sm">
+                <span class="inline-flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-400"></span>≥85%</span>
+                <span class="inline-flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-amber-400"></span>65–84%</span>
+                <span class="inline-flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-rose-400"></span>&lt;65%</span>
+              </div>
+            </div>
+
+            <!-- Crop, Rotation & Confidence Overlay Toolbar -->
+            <div class="flex flex-wrap items-center gap-2">
+              <button id="btn-toggle-crop" type="button" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold bg-indigo-600 text-white border border-indigo-600 shadow-sm transition">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M6 2v14a2 2 0 002 2h14M18 22V8a2 2 0 00-2-2H2" />
+                </svg>
+                <span id="btn-toggle-crop-label">Cắt vùng: Bật</span>
+              </button>
+
+              <button id="btn-reset-crop" type="button" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 transition">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                </svg>
+                <span>Toàn ảnh</span>
+              </button>
+
+              <button id="btn-rotate-left" type="button" title="Xoay trái 90 độ" class="inline-flex items-center gap-1 px-2.5 py-2 rounded-xl text-xs font-medium bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 transition">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                </svg>
+                <span class="hidden sm:inline">Xoay trái</span>
+              </button>
+
+              <button id="btn-rotate-right" type="button" title="Xoay phải 90 độ" class="inline-flex items-center gap-1 px-2.5 py-2 rounded-xl text-xs font-medium bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 transition">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M21 10H11a8 8 0 00-8 8v2m18-10l-6 6m6-6l-6-6" />
+                </svg>
+                <span class="hidden sm:inline">Xoay phải</span>
+              </button>
+
+              <button id="btn-toggle-bbox" type="button" disabled class="ml-auto inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-45 disabled:cursor-not-allowed text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 transition">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 14l2 2 4-4" />
+                </svg>
+                <span>Khung tin cậy</span>
+              </button>
+            </div>
+
+            <!-- Contextual PSM 6 Suggestion Banner (Shown when user crops a small sub-region while PSM is 3) -->
+            <div id="psm6-suggestion-banner" class="hidden rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/70 px-3.5 py-2.5 flex flex-wrap items-center justify-between gap-2 text-xs">
+              <div class="flex items-center gap-2 text-amber-900 dark:text-amber-200">
+                <svg class="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span>Bạn vừa cắt một vùng chữ cụ thể. Dùng <strong>PSM 6 (Một khối văn bản)</strong> thường cho độ chính xác cao hơn!</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <button id="btn-apply-psm6" type="button" class="px-2.5 py-1 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-semibold transition">
+                  Áp dụng PSM 6 &amp; Quét lại
+                </button>
+                <button id="btn-dismiss-psm6" type="button" class="text-amber-700 dark:text-amber-300 hover:underline font-medium">
+                  Bỏ qua
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Auto-Enhancement 1-Touch Presets + Collapsible Advanced Controls -->
+          <div class="rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200/80 dark:border-slate-800 p-3.5 space-y-3">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <span class="text-xs font-bold text-slate-700 dark:text-slate-200">Chế độ tiền xử lý ảnh thông minh (Auto-Enhancement)</span>
+              <button id="btn-toggle-advanced" type="button" class="inline-flex items-center gap-1 text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:underline">
+                <span>Tinh chỉnh thủ công</span>
+                <svg id="advanced-chevron" class="w-3.5 h-3.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+            </div>
+
+            <!-- 4 One-Touch Preset Cards -->
+            <div id="enhance-presets-grid" class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              <button type="button" data-preset="screenshot" class="preset-card text-left p-2.5 rounded-xl border transition">
+                <div class="text-xs font-bold leading-tight">Ảnh màn hình</div>
+                <div class="text-[11px] opacity-80 mt-0.5">2.5x • Nét • Auto Dark</div>
+              </button>
+              <button type="button" data-preset="document" class="preset-card text-left p-2.5 rounded-xl border transition">
+                <div class="text-xs font-bold leading-tight">Hóa đơn / Sách</div>
+                <div class="text-[11px] opacity-80 mt-0.5">2x • Otsu đen trắng</div>
+              </button>
+              <button type="button" data-preset="darkmode" class="preset-card text-left p-2.5 rounded-xl border transition">
+                <div class="text-xs font-bold leading-tight">Nền tối (Dark)</div>
+                <div class="text-[11px] opacity-80 mt-0.5">Đảo màu • 2.5x • Nét</div>
+              </button>
+              <button type="button" data-preset="original" class="preset-card text-left p-2.5 rounded-xl border transition">
+                <div class="text-xs font-bold leading-tight">Ảnh gốc</div>
+                <div class="text-[11px] opacity-80 mt-0.5">Tắt xử lý ảnh</div>
+              </button>
+            </div>
+
+            <!-- Collapsible Manual Fine-Tuning Panel -->
+            <div id="advanced-enhance-panel" class="hidden pt-3 border-t border-slate-200 dark:border-slate-800 space-y-3.5">
+              <!-- Upscale Ratio Selector -->
+              <div class="space-y-1.5">
+                <div class="flex items-center justify-between text-xs">
+                  <span class="font-semibold text-slate-700 dark:text-slate-300">Phóng to ảnh (Upscale — giúp nhận diện dấu tiếng Việt nhỏ)</span>
+                  <span id="upscale-val-label" class="font-mono font-bold text-indigo-600 dark:text-indigo-400">2.5x</span>
+                </div>
+                <div class="grid grid-cols-5 gap-1.5" id="upscale-buttons">
+                  <button type="button" data-scale="1" class="scale-btn py-1.5 rounded-lg text-xs font-semibold border transition">1x</button>
+                  <button type="button" data-scale="1.5" class="scale-btn py-1.5 rounded-lg text-xs font-semibold border transition">1.5x</button>
+                  <button type="button" data-scale="2" class="scale-btn py-1.5 rounded-lg text-xs font-semibold border transition">2x</button>
+                  <button type="button" data-scale="2.5" class="scale-btn py-1.5 rounded-lg text-xs font-semibold border transition">2.5x</button>
+                  <button type="button" data-scale="3" class="scale-btn py-1.5 rounded-lg text-xs font-semibold border transition">3x</button>
+                </div>
+              </div>
+
+              <!-- Enhancement Toggles Grid -->
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                <label class="flex items-center justify-between gap-2 p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 cursor-pointer">
+                  <span class="font-medium text-slate-700 dark:text-slate-200">Tự đảo màu nền tối</span>
+                  <input id="chk-auto-dark" type="checkbox" class="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 cursor-pointer" />
+                </label>
+                <label class="flex items-center justify-between gap-2 p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 cursor-pointer">
+                  <span class="font-medium text-slate-700 dark:text-slate-200">Bắt buộc đảo màu</span>
+                  <input id="chk-force-invert" type="checkbox" class="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 cursor-pointer" />
+                </label>
+                <label class="flex items-center justify-between gap-2 p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 cursor-pointer">
+                  <span class="font-medium text-slate-700 dark:text-slate-200">Làm nét dấu (Sharpen)</span>
+                  <input id="chk-sharpen" type="checkbox" class="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 cursor-pointer" />
+                </label>
+                <label class="flex items-center justify-between gap-2 p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 cursor-pointer">
+                  <span class="font-medium text-slate-700 dark:text-slate-200">Thêm viền trắng 28px</span>
+                  <input id="chk-padding" type="checkbox" class="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 cursor-pointer" />
+                </label>
+                <label class="flex items-center justify-between gap-2 p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 cursor-pointer">
+                  <span class="font-medium text-slate-700 dark:text-slate-200">Chuyển thang xám</span>
+                  <input id="chk-grayscale" type="checkbox" class="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 cursor-pointer" />
+                </label>
+                <label class="flex items-center justify-between gap-2 p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 cursor-pointer">
+                  <span class="font-medium text-slate-700 dark:text-slate-200">Nhị phân hóa (Đen trắng)</span>
+                  <input id="chk-binarize" type="checkbox" class="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 cursor-pointer" />
+                </label>
+              </div>
+
+              <!-- Contrast & Binarize Sliders -->
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div class="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 space-y-1.5">
+                  <div class="flex items-center justify-between text-xs">
+                    <span class="font-medium text-slate-600 dark:text-slate-300">Độ tương phản</span>
+                    <span id="contrast-val-label" class="font-mono font-bold text-indigo-600 dark:text-indigo-400">1.25x</span>
+                  </div>
+                  <input id="slider-contrast" type="range" min="1.0" max="2.2" step="0.05" value="1.25" class="w-full accent-indigo-600 cursor-pointer" />
+                </div>
+
+                <div id="binarize-controls-box" class="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 space-y-1.5 opacity-50 pointer-events-none transition">
+                  <div class="flex items-center justify-between text-xs">
+                    <span class="font-medium text-slate-600 dark:text-slate-300">Ngưỡng nhị phân: <strong id="threshold-val-label" class="font-mono text-indigo-600 dark:text-indigo-400">145</strong></span>
+                    <button id="btn-auto-otsu" type="button" class="px-2 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 font-semibold hover:bg-indigo-100 transition">
+                      Otsu
+                    </button>
+                  </div>
+                  <input id="slider-threshold" type="range" min="40" max="225" step="1" value="145" class="w-full accent-indigo-600 cursor-pointer" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- =====================================================================
+           RIGHT COLUMN (5/12): OCR Settings, Progress, Result Tabs & History
+           ===================================================================== -->
+      <section class="lg:col-span-5 space-y-5 min-w-0">
+
+        <!-- CARD 2: Engine Quality, Language Selector, PSM & Scan Trigger -->
+        <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-4 sm:p-5 space-y-4">
+
+          <!-- 1. Model Quality Selector -->
+          <div class="space-y-2">
+            <div class="flex items-center justify-between gap-2">
+              <h2 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">1. Chất lượng mô hình AI (OEM 1 • LSTM)</h2>
+              <span class="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">Lưu cache offline</span>
+            </div>
+            <div id="model-quality-grid" class="grid grid-cols-3 gap-2">
+              <button type="button" data-model="best" class="model-btn p-2.5 rounded-xl border text-left transition">
+                <div class="text-xs font-bold leading-tight">Chính xác cao</div>
+                <div class="text-[10px] opacity-80 mt-0.5">tessdata_best</div>
+              </button>
+              <button type="button" data-model="standard" class="model-btn p-2.5 rounded-xl border text-left transition">
+                <div class="text-xs font-bold leading-tight">Cân bằng</div>
+                <div class="text-[10px] opacity-80 mt-0.5">Standard 4.0</div>
+              </button>
+              <button type="button" data-model="fast" class="model-btn p-2.5 rounded-xl border text-left transition">
+                <div class="text-xs font-bold leading-tight">Nhanh</div>
+                <div class="text-[10px] opacity-80 mt-0.5">tessdata_fast</div>
+              </button>
+            </div>
+          </div>
+
+          <!-- 2. Multi-Language Selector (115+ Languages) -->
+          <div class="space-y-2.5 pt-2 border-t border-slate-100 dark:border-slate-800">
+            <div class="flex items-center justify-between gap-2">
+              <h2 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">2. Ngôn ngữ nhận diện (115+)</h2>
+              <span id="selected-lang-code-badge" class="text-[11px] font-mono font-bold px-2 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-950/70 text-indigo-700 dark:text-indigo-300 border border-indigo-200/70 dark:border-indigo-800">vie+eng</span>
+            </div>
+
+            <!-- Active Language Chips -->
+            <div id="selected-langs-container" class="flex flex-wrap items-center gap-1.5 min-h-[34px] p-2 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200/80 dark:border-slate-800"></div>
+
+            <!-- Quick Language Presets -->
+            <div id="quick-presets-container" class="flex flex-wrap gap-1.5"></div>
+
+            <!-- Pure Vietnamese Accuracy Tip -->
+            <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed flex items-start gap-1.5">
+              <svg class="w-3.5 h-3.5 text-indigo-500 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+              </svg>
+              <span><strong>Mẹo chuẩn dấu:</strong> Với văn bản thuần tiếng Việt, chọn riêng <strong>Thuần Việt (vie)</strong> đôi khi ít bị nhầm dấu thanh hơn so với ghép <code>vie+eng</code>.</span>
+            </p>
+
+            <!-- Searchable 115+ Language Dropdown -->
+            <div class="relative" id="lang-dropdown-wrapper">
+              <div class="relative flex items-center">
+                <svg class="w-4 h-4 text-slate-400 absolute left-3 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+                <input
+                  id="lang-search-input"
+                  type="text"
+                  autocomplete="off"
+                  placeholder="Tìm trong 115+ ngôn ngữ (Nhật, Hàn, Pháp, jpn...)"
+                  class="w-full pl-9 pr-20 py-2 text-xs sm:text-sm rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition"
+                />
+                <button id="toggle-lang-list-btn" type="button" class="absolute right-1.5 px-2 py-1 rounded-lg text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/60 transition flex items-center gap-0.5">
+                  <span id="toggle-lang-list-text">Danh sách</span>
+                  <svg id="toggle-lang-chevron" class="w-3.5 h-3.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+              </div>
+              <div id="lang-dropdown-panel" class="hidden mt-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-xl overflow-hidden z-20">
+                <div class="px-3 py-1.5 bg-slate-50 dark:bg-slate-800/70 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400">
+                  <span id="lang-match-count">115+ ngôn ngữ</span>
+                  <button id="clear-search-btn" type="button" class="text-indigo-600 dark:text-indigo-400 hover:underline hidden">Xóa tìm</button>
+                </div>
+                <div id="lang-options-list" class="max-h-52 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800 p-1"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3. Page Segmentation Mode (PSM) Selector -->
+          <div class="space-y-1.5 pt-2 border-t border-slate-100 dark:border-slate-800">
+            <label for="psm-select" class="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+              3. Chế độ phân đoạn trang (PSM)
+            </label>
+            <select id="psm-select" class="w-full px-3 py-2.5 text-xs sm:text-sm font-medium rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition cursor-pointer">
+              <option value="3" selected>PSM 3 — Tự động toàn trang (Mặc định khi quét cả ảnh)</option>
+              <option value="6">PSM 6 — Một khối văn bản (Khuyên dùng khi cắt vùng / đoạn văn)</option>
+              <option value="11">PSM 11 — Chữ rải rác (Tốt cho slide, giao diện app, bảng điều khiển)</option>
+              <option value="4">PSM 4 — Một cột văn bản (Tốt cho hóa đơn, danh sách dọc)</option>
+              <option value="7">PSM 7 — Một dòng duy nhất (Tiêu đề, biển số, mã code)</option>
+            </select>
+          </div>
+
+          <!-- Primary Scan Button + Cancel + Detailed Progress -->
+          <div class="space-y-3 pt-1">
+            <div class="flex items-center gap-2">
+              <button id="start-ocr-btn" type="button" disabled class="flex-1 inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-gradient-to-r from-indigo-600 via-violet-600 to-indigo-600 hover:from-indigo-700 hover:via-violet-700 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-bold shadow-md shadow-indigo-500/25 transition active:scale-[0.99]">
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span id="ocr-btn-text">Bắt đầu quét (OCR Best)</span>
+              </button>
+
+              <button id="cancel-ocr-btn" type="button" class="hidden inline-flex items-center justify-center gap-1 px-4 py-3 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/60 dark:hover:bg-rose-900/60 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800 text-sm font-semibold transition">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+                <span>Hủy</span>
+              </button>
+            </div>
+
+            <!-- Detailed Vietnamese Progress Box -->
+            <div id="progress-container" class="hidden rounded-xl bg-slate-50 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 p-3.5 space-y-2">
+              <div class="flex items-center justify-between gap-2 text-xs">
+                <div class="flex items-center gap-2 min-w-0">
+                  <svg class="w-4 h-4 text-indigo-600 dark:text-indigo-400 animate-spin shrink-0" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                  </svg>
+                  <span id="progress-status-text" class="font-semibold text-slate-700 dark:text-slate-200 truncate">Đang khởi tạo...</span>
+                </div>
+                <span id="progress-percent-text" class="font-mono font-bold text-indigo-600 dark:text-indigo-400 shrink-0">0%</span>
+              </div>
+              <div class="w-full h-2.5 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
+                <div id="progress-bar-fill" class="h-full bg-gradient-to-r from-indigo-600 via-violet-500 to-fuchsia-500 rounded-full transition-all duration-200" style="width: 0%"></div>
+              </div>
+              <p id="progress-subnote" class="text-[11px] text-slate-500 dark:text-slate-400 hidden">
+                Lần đầu tải gói tessdata_best (~12–15MB) sẽ mất vài giây; các lần sau chạy từ bộ nhớ đệm IndexedDB hoàn toàn ngoại tuyến.
+              </p>
+            </div>
+
+            <!-- Friendly Inline Error Box -->
+            <div id="ocr-error-box" class="hidden rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/70 p-3.5 text-xs text-rose-800 dark:text-rose-200 flex items-start gap-2.5">
+              <svg class="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <div class="space-y-1">
+                <p id="ocr-error-title" class="font-bold">Không thể thực hiện quét OCR</p>
+                <p id="ocr-error-detail" class="opacity-90 leading-relaxed"></p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- CARD 3: Extracted Result & Suspect Word Review Tabs -->
+        <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-4 sm:p-5 space-y-3.5">
+
+          <!-- Header + Tabs + Metrics -->
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <!-- 2 Smooth Result Tabs -->
+            <div class="inline-flex p-1 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-semibold">
+              <button id="tab-edit-btn" type="button" class="px-3 py-1.5 rounded-lg bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-sm transition">
+                Văn bản (Chỉnh sửa)
+              </button>
+              <button id="tab-review-btn" type="button" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition">
+                <span>Kiểm tra từ nghi sai</span>
+                <span id="suspect-count-badge" class="hidden px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-900/70 dark:text-amber-200">0</span>
+              </button>
+            </div>
+
+            <!-- Confidence & Duration Badges -->
+            <div id="result-metrics" class="hidden flex items-center gap-1.5">
+              <span id="confidence-badge" class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold border">--%</span>
+              <span id="duration-badge" class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-600 border border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700">0.0s</span>
+            </div>
+          </div>
+
+          <!-- Utility Action Buttons -->
+          <div class="flex flex-wrap items-center gap-1.5">
+            <button id="btn-copy-text" type="button" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold shadow-sm shadow-indigo-500/20 transition active:scale-[0.98]">
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+              </svg>
+              <span>Sao chép</span>
+            </button>
+
+            <button id="btn-download-txt" type="button" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 text-xs font-semibold transition">
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+              <span>Tải .txt</span>
+            </button>
+
+            <button id="btn-clean-merge" type="button" title="Xóa khoảng trắng thừa trước dấu câu và gộp các dòng bị ngắt giữa câu thông minh" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/50 dark:hover:bg-amber-900/50 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800/70 text-xs font-semibold transition">
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h10" />
+              </svg>
+              <span>Dọn lỗi &amp; Gộp dòng</span>
+            </button>
+
+            <button id="btn-undo-text" type="button" disabled title="Khôi phục nguyên văn bản gốc ngay sau khi quét OCR" class="hidden inline-flex items-center gap-1 px-2.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 text-xs font-semibold transition">
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+              </svg>
+              <span>Khôi phục gốc</span>
+            </button>
+
+            <button id="btn-clear-text" type="button" class="ml-auto inline-flex items-center gap-1 px-2.5 py-2 rounded-xl bg-white hover:bg-rose-50 dark:bg-slate-900 dark:hover:bg-rose-950/50 text-slate-500 hover:text-rose-600 dark:text-slate-400 dark:hover:text-rose-400 border border-slate-200 dark:border-slate-700 text-xs font-semibold transition">
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+              <span>Xóa</span>
+            </button>
+          </div>
+
+          <!-- TAB PANEL 1: Editable Textarea -->
+          <div id="panel-edit">
+            <textarea
+              id="ocr-output-textarea"
+              rows="11"
+              spellcheck="false"
+              placeholder="Kết quả văn bản trích xuất sẽ xuất hiện tại đây...&#10;&#10;• Mặc định dùng bộ mô hình tessdata_best + tự phóng to 2.5x + làm nét dấu tiếng Việt&#10;• Kéo trực tiếp trên ảnh để cắt đúng vùng chữ cần lấy&#10;• Chuyển sang tab 'Kiểm tra từ nghi sai' sau khi quét để soát lỗi dấu tức thì"
+              class="w-full rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 p-3.5 text-sm leading-relaxed text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 resize-y transition"
+            ></textarea>
+          </div>
+
+          <!-- TAB PANEL 2: Suspect Word Confidence Reviewer -->
+          <div id="panel-review" class="hidden space-y-3">
+            <!-- Review Legend & Summary -->
+            <div id="review-summary-bar" class="flex flex-wrap items-center justify-between gap-2 px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 text-[11px] text-slate-600 dark:text-slate-300">
+              <span id="review-stats-text">Chưa có dữ liệu kiểm tra từ.</span>
+              <div class="flex items-center gap-2.5">
+                <span class="inline-flex items-center gap-1"><span class="w-2.5 h-2.5 rounded bg-amber-300 dark:bg-amber-600"></span>65–79%</span>
+                <span class="inline-flex items-center gap-1"><span class="w-2.5 h-2.5 rounded bg-rose-300 dark:bg-rose-600"></span>&lt;65%</span>
+              </div>
+            </div>
+
+            <!-- Inline Word Inspector & Quick Fix Bar (Visible when hovering/tapping a word) -->
+            <div id="word-inspector-bar" class="hidden rounded-xl bg-indigo-50/90 dark:bg-indigo-950/50 border border-indigo-200 dark:border-indigo-800 p-2.5 flex flex-wrap items-center gap-2 text-xs">
+              <span class="text-slate-600 dark:text-slate-300">Từ đang chọn (<strong id="inspector-conf" class="font-mono">--%</strong>):</span>
+              <input id="inspector-edit-input" type="text" class="flex-1 min-w-[120px] px-2.5 py-1 rounded-lg bg-white dark:bg-slate-900 border border-indigo-300 dark:border-indigo-700 text-slate-900 dark:text-white font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+              <button id="inspector-save-btn" type="button" class="px-3 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-semibold transition">
+                Sửa từ này
+              </button>
+            </div>
+
+            <!-- Highlighted Words Canvas Container -->
+            <div id="review-words-container" class="min-h-[220px] max-h-[340px] overflow-y-auto rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 p-3.5 text-sm leading-loose text-slate-800 dark:text-slate-100">
+              <p class="text-xs text-slate-400 dark:text-slate-500 text-center py-12">
+                Hãy quét một hình ảnh để xem báo cáo độ tin cậy từng từ và phát hiện nhanh lỗi dấu tiếng Việt.
+              </p>
+            </div>
+          </div>
+
+          <!-- Live Stats Footer -->
+          <div class="flex flex-wrap items-center justify-between gap-2 pt-1 text-xs text-slate-500 dark:text-slate-400 border-t border-slate-100 dark:border-slate-800">
+            <div class="flex items-center gap-4">
+              <span><strong id="stat-chars" class="text-slate-800 dark:text-slate-200">0</strong> ký tự</span>
+              <span><strong id="stat-words" class="text-slate-800 dark:text-slate-200">0</strong> từ</span>
+              <span><strong id="stat-lines" class="text-slate-800 dark:text-slate-200">0</strong> dòng</span>
+            </div>
+            <span class="text-[11px] text-slate-400 dark:text-slate-500">Chạm vào từ tô màu để sửa nhanh</span>
+          </div>
+        </div>
+
+        <!-- CARD 4: Session Scan History -->
+        <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-4 sm:p-5 space-y-3">
+          <div class="flex items-center justify-between gap-2">
+            <div class="flex items-center gap-2">
+              <div class="w-8 h-8 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 flex items-center justify-center">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <div>
+                <h2 class="text-sm font-bold text-slate-900 dark:text-white">Lịch sử quét gần đây</h2>
+                <p class="text-[11px] text-slate-500 dark:text-slate-400">Lưu tạm trong phiên hiện tại</p>
+              </div>
+            </div>
+            <button id="btn-clear-history" type="button" class="hidden text-xs font-medium text-slate-500 hover:text-rose-600 dark:text-slate-400 dark:hover:text-rose-400 transition">
+              Xóa lịch sử
+            </button>
+          </div>
+
+          <div id="history-empty-state" class="rounded-xl border border-dashed border-slate-200 dark:border-slate-800 p-4 text-center text-xs text-slate-500 dark:text-slate-400">
+            Chưa có bản ghi nào. Các lần quét thành công sẽ lưu tại đây kèm ảnh thu nhỏ &amp; độ chính xác.
+          </div>
+
+          <div id="history-list" class="hidden space-y-2 max-h-64 overflow-y-auto pr-1"></div>
+        </div>
+
+      </section>
+    </div>
+  </main>
+
+  <!-- Privacy & Offline Footer -->
+  <footer class="mt-auto border-t border-slate-200/80 dark:border-slate-800 bg-white/75 dark:bg-slate-900/75">
+    <div class="max-w-[1440px] mx-auto px-4 sm:px-6 py-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-3 text-xs text-slate-600 dark:text-slate-400">
+      <div class="flex items-start gap-2.5 max-w-4xl">
+        <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+        </svg>
+        <p class="leading-relaxed">
+          <strong class="text-slate-800 dark:text-slate-200">100% Riêng tư &amp; Ngoại tuyến:</strong>
+          Ảnh của bạn chỉ xử lý cục bộ trên trình duyệt bằng HTML5 Canvas và Tesseract.js v5 WebAssembly — không bao giờ gửi lên máy chủ. Bộ mô hình ngôn ngữ (<code>tessdata_best</code>) tải một lần và lưu tự động trong <strong>IndexedDB</strong> để hoạt động hoàn toàn offline.
+        </p>
+      </div>
+      <span class="text-[11px] text-slate-400 dark:text-slate-500 shrink-0">OCR Offline Pro • Tesseract Best</span>
+    </div>
+  </footer>
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2 max-w-sm w-[calc(100vw-2rem)] pointer-events-none"></div>
+
+  <!-- =========================================================================
+       COMPLETE CLIENT-SIDE APPLICATION SCRIPT
+       ========================================================================= -->
+  <script>
+    (function () {
+      'use strict';
+
+      /* =========================================================================
+       * 1. CONFIGURATION: MODELS, 115+ LANGUAGES & ENHANCEMENT PRESETS
+       * ========================================================================= */
+      const MODEL_CONFIGS = {
+        best: {
+          id: 'best',
+          label: 'Chính xác cao (Best)',
+          shortLabel: 'Best',
+          langPath: 'https://tessdata.projectnaptha.com/4.0.0_best'
+        },
+        standard: {
+          id: 'standard',
+          label: 'Cân bằng (Standard)',
+          shortLabel: 'Standard',
+          langPath: 'https://tessdata.projectnaptha.com/4.0.0'
+        },
+        fast: {
+          id: 'fast',
+          label: 'Nhanh (Fast)',
+          shortLabel: 'Fast',
+          langPath: 'https://tessdata.projectnaptha.com/4.0.0_fast'
+        }
+      };
+
+      const ENHANCE_PRESETS = {
+        screenshot: {
+          label: 'Ảnh màn hình (Auto Pro)',
+          upscale: 2.5,
+          autoDarkInvert: true,
+          forceInvert: false,
+          sharpen: true,
+          grayscale: true,
+          contrast: 1.25,
+          binarize: false,
+          autoOtsu: true,
+          threshold: 145,
+          addPadding: true
+        },
+        document: {
+          label: 'Hóa đơn / Trang sách',
+          upscale: 2,
+          autoDarkInvert: false,
+          forceInvert: false,
+          sharpen: true,
+          grayscale: true,
+          contrast: 1.45,
+          binarize: true,
+          autoOtsu: true,
+          threshold: 145,
+          addPadding: true
+        },
+        darkmode: {
+          label: 'Nền tối / Dark Mode',
+          upscale: 2.5,
+          autoDarkInvert: false,
+          forceInvert: true,
+          sharpen: true,
+          grayscale: true,
+          contrast: 1.25,
+          binarize: false,
+          autoOtsu: true,
+          threshold: 145,
+          addPadding: true
+        },
+        original: {
+          label: 'Ảnh gốc (Tắt xử lý)',
+          upscale: 1,
+          autoDarkInvert: false,
+          forceInvert: false,
+          sharpen: false,
+          grayscale: false,
+          contrast: 1.0,
+          binarize: false,
+          autoOtsu: false,
+          threshold: 145,
+          addPadding: false
+        }
+      };
+
+      const ALL_LANGUAGES = [
+        { code: 'vie', name: 'Tiếng Việt', native: 'Vietnamese' },
+        { code: 'eng', name: 'Tiếng Anh', native: 'English' },
+        { code: 'chi_sim', name: 'Tiếng Trung (Giản thể)', native: 'Chinese Simplified' },
+        { code: 'chi_tra', name: 'Tiếng Trung (Phồn thể)', native: 'Chinese Traditional' },
+        { code: 'jpn', name: 'Tiếng Nhật', native: 'Japanese' },
+        { code: 'kor', name: 'Tiếng Hàn', native: 'Korean' },
+        { code: 'fra', name: 'Tiếng Pháp', native: 'French' },
+        { code: 'deu', name: 'Tiếng Đức', native: 'German' },
+        { code: 'spa', name: 'Tiếng Tây Ban Nha', native: 'Spanish' },
+        { code: 'rus', name: 'Tiếng Nga', native: 'Russian' },
+        { code: 'tha', name: 'Tiếng Thái', native: 'Thai' },
+        { code: 'ara', name: 'Tiếng Ả Rập', native: 'Arabic' },
+        { code: 'ita', name: 'Tiếng Ý', native: 'Italian' },
+        { code: 'por', name: 'Tiếng Bồ Đào Nha', native: 'Portuguese' },
+        { code: 'nld', name: 'Tiếng Hà Lan', native: 'Dutch' },
+        { code: 'pol', name: 'Tiếng Ba Lan', native: 'Polish' },
+        { code: 'tur', name: 'Tiếng Thổ Nhĩ Kỳ', native: 'Turkish' },
+        { code: 'ind', name: 'Tiếng Indonesia', native: 'Indonesian' },
+        { code: 'msa', name: 'Tiếng Mã Lai', native: 'Malay' },
+        { code: 'hin', name: 'Tiếng Hindi', native: 'Hindi' },
+        { code: 'afr', name: 'Tiếng Afrikaans', native: 'Afrikaans' },
+        { code: 'amh', name: 'Tiếng Amhara', native: 'Amharic' },
+        { code: 'asm', name: 'Tiếng Assam', native: 'Assamese' },
+        { code: 'aze', name: 'Tiếng Azerbaijan', native: 'Azerbaijani' },
+        { code: 'aze_cyrl', name: 'Tiếng Azerbaijan (Kirin)', native: 'Azerbaijani Cyrillic' },
+        { code: 'bel', name: 'Tiếng Belarus', native: 'Belarusian' },
+        { code: 'ben', name: 'Tiếng Bengal', native: 'Bengali' },
+        { code: 'bod', name: 'Tiếng Tây Tạng', native: 'Tibetan' },
+        { code: 'bos', name: 'Tiếng Bosnia', native: 'Bosnian' },
+        { code: 'bre', name: 'Tiếng Breton', native: 'Breton' },
+        { code: 'bul', name: 'Tiếng Bulgaria', native: 'Bulgarian' },
+        { code: 'cat', name: 'Tiếng Catalan', native: 'Catalan' },
+        { code: 'ceb', name: 'Tiếng Cebuano', native: 'Cebuano' },
+        { code: 'ces', name: 'Tiếng Séc', native: 'Czech' },
+        { code: 'chr', name: 'Tiếng Cherokee', native: 'Cherokee' },
+        { code: 'cos', name: 'Tiếng Corsica', native: 'Corsican' },
+        { code: 'cym', name: 'Tiếng Wales', native: 'Welsh' },
+        { code: 'dan', name: 'Tiếng Đan Mạch', native: 'Danish' },
+        { code: 'div', name: 'Tiếng Dhivehi', native: 'Divehi' },
+        { code: 'dzo', name: 'Tiếng Dzongkha', native: 'Dzongkha' },
+        { code: 'ell', name: 'Tiếng Hy Lạp', native: 'Greek' },
+        { code: 'enm', name: 'Tiếng Anh trung đại', native: 'Middle English' },
+        { code: 'epo', name: 'Quốc tế ngữ (Esperanto)', native: 'Esperanto' },
+        { code: 'est', name: 'Tiếng Estonia', native: 'Estonian' },
+        { code: 'eus', name: 'Tiếng Basque', native: 'Basque' },
+        { code: 'fao', name: 'Tiếng Faroe', native: 'Faroese' },
+        { code: 'fas', name: 'Tiếng Ba Tư (Farsi)', native: 'Persian' },
+        { code: 'fil', name: 'Tiếng Filipino', native: 'Filipino' },
+        { code: 'fin', name: 'Tiếng Phần Lan', native: 'Finnish' },
+        { code: 'frk', name: 'Tiếng Đức Fraktur', native: 'German Fraktur' },
+        { code: 'frm', name: 'Tiếng Pháp trung đại', native: 'Middle French' },
+        { code: 'fry', name: 'Tiếng Tây Frisia', native: 'Western Frisian' },
+        { code: 'gla', name: 'Tiếng Gael Scotland', native: 'Scottish Gaelic' },
+        { code: 'gle', name: 'Tiếng Ireland', native: 'Irish' },
+        { code: 'glg', name: 'Tiếng Galicia', native: 'Galician' },
+        { code: 'grc', name: 'Tiếng Hy Lạp cổ đại', native: 'Ancient Greek' },
+        { code: 'guj', name: 'Tiếng Gujarat', native: 'Gujarati' },
+        { code: 'hat', name: 'Tiếng Haiti Creole', native: 'Haitian' },
+        { code: 'heb', name: 'Tiếng Do Thái', native: 'Hebrew' },
+        { code: 'hrv', name: 'Tiếng Croatia', native: 'Croatian' },
+        { code: 'hun', name: 'Tiếng Hungary', native: 'Hungarian' },
+        { code: 'hye', name: 'Tiếng Armenia', native: 'Armenian' },
+        { code: 'iku', name: 'Tiếng Inuktitut', native: 'Inuktitut' },
+        { code: 'isl', name: 'Tiếng Iceland', native: 'Icelandic' },
+        { code: 'ita_old', name: 'Tiếng Ý cổ', native: 'Italian Old' },
+        { code: 'jav', name: 'Tiếng Java', native: 'Javanese' },
+        { code: 'kan', name: 'Tiếng Kannada', native: 'Kannada' },
+        { code: 'kat', name: 'Tiếng Gruzia', native: 'Georgian' },
+        { code: 'kat_old', name: 'Tiếng Gruzia cổ', native: 'Georgian Old' },
+        { code: 'kaz', name: 'Tiếng Kazakh', native: 'Kazakh' },
+        { code: 'khm', name: 'Tiếng Khmer', native: 'Khmer' },
+        { code: 'kir', name: 'Tiếng Kyrgyz', native: 'Kyrgyz' },
+        { code: 'kmr', name: 'Tiếng Kurd (Kurmanji)', native: 'Northern Kurdish' },
+        { code: 'kur', name: 'Tiếng Kurd', native: 'Kurdish' },
+        { code: 'lao', name: 'Tiếng Lào', native: 'Lao' },
+        { code: 'lat', name: 'Tiếng Latin', native: 'Latin' },
+        { code: 'lav', name: 'Tiếng Latvia', native: 'Latvian' },
+        { code: 'lit', name: 'Tiếng Litva', native: 'Lithuanian' },
+        { code: 'ltz', name: 'Tiếng Luxembourg', native: 'Luxembourgish' },
+        { code: 'mal', name: 'Tiếng Malayalam', native: 'Malayalam' },
+        { code: 'mar', name: 'Tiếng Marathi', native: 'Marathi' },
+        { code: 'mkd', name: 'Tiếng Macedonia', native: 'Macedonian' },
+        { code: 'mlt', name: 'Tiếng Malta', native: 'Maltese' },
+        { code: 'mon', name: 'Tiếng Mông Cổ', native: 'Mongolian' },
+        { code: 'mri', name: 'Tiếng Maori', native: 'Maori' },
+        { code: 'mya', name: 'Tiếng Miến Điện', native: 'Burmese' },
+        { code: 'nep', name: 'Tiếng Nepal', native: 'Nepali' },
+        { code: 'nor', name: 'Tiếng Na Uy', native: 'Norwegian' },
+        { code: 'oci', name: 'Tiếng Occitan', native: 'Occitan' },
+        { code: 'ori', name: 'Tiếng Oriya', native: 'Oriya' },
+        { code: 'pan', name: 'Tiếng Punjab', native: 'Punjabi' },
+        { code: 'pus', name: 'Tiếng Pashto', native: 'Pashto' },
+        { code: 'que', name: 'Tiếng Quechua', native: 'Quechua' },
+        { code: 'ron', name: 'Tiếng Romania', native: 'Romanian' },
+        { code: 'san', name: 'Tiếng Phạn (Sanskrit)', native: 'Sanskrit' },
+        { code: 'sin', name: 'Tiếng Sinhala', native: 'Sinhala' },
+        { code: 'slk', name: 'Tiếng Slovakia', native: 'Slovak' },
+        { code: 'slv', name: 'Tiếng Slovenia', native: 'Slovenian' },
+        { code: 'snd', name: 'Tiếng Sindhi', native: 'Sindhi' },
+        { code: 'spa_old', name: 'Tiếng Tây Ban Nha cổ', native: 'Spanish Old' },
+        { code: 'sqi', name: 'Tiếng Albania', native: 'Albanian' },
+        { code: 'srp', name: 'Tiếng Serbia (Kirin)', native: 'Serbian' },
+        { code: 'srp_latn', name: 'Tiếng Serbia (Latin)', native: 'Serbian Latin' },
+        { code: 'sun', name: 'Tiếng Sunda', native: 'Sundanese' },
+        { code: 'swa', name: 'Tiếng Swahili', native: 'Swahili' },
+        { code: 'swe', name: 'Tiếng Thụy Điển', native: 'Swedish' },
+        { code: 'syr', name: 'Tiếng Syriac', native: 'Syriac' },
+        { code: 'tam', name: 'Tiếng Tamil', native: 'Tamil' },
+        { code: 'tat', name: 'Tiếng Tatar', native: 'Tatar' },
+        { code: 'tel', name: 'Tiếng Telugu', native: 'Telugu' },
+        { code: 'tgk', name: 'Tiếng Tajik', native: 'Tajik' },
+        { code: 'tgl', name: 'Tiếng Tagalog', native: 'Tagalog' },
+        { code: 'tir', name: 'Tiếng Tigrinya', native: 'Tigrinya' },
+        { code: 'ton', name: 'Tiếng Tonga', native: 'Tonga' },
+        { code: 'uig', name: 'Tiếng Duy Ngô Nhĩ', native: 'Uyghur' },
+        { code: 'ukr', name: 'Tiếng Ukraina', native: 'Ukrainian' },
+        { code: 'urd', name: 'Tiếng Urdu', native: 'Urdu' },
+        { code: 'uzb', name: 'Tiếng Uzbek', native: 'Uzbek' },
+        { code: 'uzb_cyrl', name: 'Tiếng Uzbek (Kirin)', native: 'Uzbek Cyrillic' },
+        { code: 'yid', name: 'Tiếng Yiddish', native: 'Yiddish' },
+        { code: 'yor', name: 'Tiếng Yoruba', native: 'Yoruba' }
+      ];
+
+      const QUICK_PRESETS = [
+        { label: 'Việt + Anh', codes: ['vie', 'eng'] },
+        { label: 'Thuần Việt (vie)', codes: ['vie'] },
+        { label: 'Anh', codes: ['eng'] },
+        { label: 'Nhật', codes: ['jpn'] },
+        { label: 'Hàn', codes: ['kor'] },
+        { label: 'Trung Giản', codes: ['chi_sim'] },
+        { label: 'Pháp', codes: ['fra'] },
+        { label: 'Đức', codes: ['deu'] },
+        { label: 'Tây Ban Nha', codes: ['spa'] },
+        { label: 'Nga', codes: ['rus'] },
+        { label: 'Thái', codes: ['tha'] }
+      ];
+
+      const LANG_MAP = new Map(ALL_LANGUAGES.map((l) => [l.code, l]));
+
+      /* =========================================================================
+       * 2. APPLICATION STATE & OFFSCREEN CANVASES
+       * ========================================================================= */
+      const rotatedCanvas = document.createElement('canvas');
+      const processedCanvas = document.createElement('canvas');
+
+      const state = {
+        // OCR Engine Config
+        modelQuality: 'best', // 'best' | 'standard' | 'fast'
+        selectedLangs: ['vie', 'eng'],
+        psm: '3',
+        dropdownOpen: false,
+
+        // Image & Rotation
+        originalImage: null,
+        imageFileName: '',
+        rotation: 0, // 0, 90, 180, 270
+
+        // Interactive Crop (Normalized 0..1 relative to rotatedCanvas)
+        cropMode: true,
+        crop: { x: 0, y: 0, w: 1, h: 1 },
+        hasCustomCrop: false,
+        psm6Dismissed: false,
+
+        // Stage Display & Pointer Dragging State
+        viewMode: 'original', // 'original' | 'processed'
+        showBboxes: true,
+        stageDrawRect: { x: 0, y: 0, w: 0, h: 0 }, // Drawn image rect in CSS pixels on stageCanvas
+        pointerOp: null, // { type: 'draw'|'move'|'nw'|'ne'|'sw'|'se'|'n'|'s'|'e'|'w', startX, startY, startCrop, pointerId }
+
+        // Enhancement Pipeline Settings (Default: Screenshot Auto Pro)
+        activePreset: 'screenshot',
+        enhance: { ...ENHANCE_PRESETS.screenshot },
+        lastPipelineMeta: {
+          autoInverted: false,
+          avgBrightness: 255,
+          paddingOffset: 28,
+          scaledW: 0,
+          scaledH: 0
+        },
+
+        // Tesseract Worker Management
+        isScanning: false,
+        activeWorker: null,
+        activeWorkerLangs: '',
+        activeWorkerModel: '',
+        scanRunId: 0,
+
+        // OCR Result, Bounding Boxes & Review
+        lastRawText: '',
+        lastOcrData: null, // { words: [...], lines: [...], procW, procH, paddingOffset, scaledW, scaledH, cropSnapshot, rotationSnapshot }
+        activeResultTab: 'edit', // 'edit' | 'review'
+        selectedReviewWordIdx: -1,
+
+        // Session History
+        history: []
+      };
+
+      /* =========================================================================
+       * 3. DOM ELEMENT REFERENCES
+       * ========================================================================= */
+      const els = {
+        themeToggleBtn: document.getElementById('theme-toggle-btn'),
+        networkDot: document.getElementById('network-dot'),
+        networkLabel: document.getElementById('network-label'),
+        globalDragOverlay: document.getElementById('global-drag-overlay'),
+        autoOcrToggle: document.getElementById('auto-ocr-toggle'),
+
+        // Left Column: Input, Viewer, Crop & Enhancement
+        fileInput: document.getElementById('file-input'),
+        dropzone: document.getElementById('dropzone'),
+        selectFileBtn: document.getElementById('select-file-btn'),
+        pasteClipboardBtn: document.getElementById('paste-clipboard-btn'),
+        viewerModeBar: document.getElementById('viewer-mode-bar'),
+        viewOriginalBtn: document.getElementById('view-original-btn'),
+        viewProcessedBtn: document.getElementById('view-processed-btn'),
+        workspaceSection: document.getElementById('workspace-section'),
+        imageMetaName: document.getElementById('image-meta-name'),
+        imageDimBadge: document.getElementById('image-dim-badge'),
+        cropDimBadge: document.getElementById('crop-dim-badge'),
+        replacePasteBtn: document.getElementById('replace-paste-btn'),
+        replaceFileBtn: document.getElementById('replace-file-btn'),
+        stageContainer: document.getElementById('stage-container'),
+        stageCanvas: document.getElementById('stage-canvas'),
+        pipelineStatusPill: document.getElementById('pipeline-status-pill'),
+        bboxLegendPill: document.getElementById('bbox-legend-pill'),
+        btnToggleCrop: document.getElementById('btn-toggle-crop'),
+        btnToggleCropLabel: document.getElementById('btn-toggle-crop-label'),
+        btnResetCrop: document.getElementById('btn-reset-crop'),
+        btnRotateLeft: document.getElementById('btn-rotate-left'),
+        btnRotateRight: document.getElementById('btn-rotate-right'),
+        btnToggleBbox: document.getElementById('btn-toggle-bbox'),
+        psm6SuggestionBanner: document.getElementById('psm6-suggestion-banner'),
+        btnApplyPsm6: document.getElementById('btn-apply-psm6'),
+        btnDismissPsm6: document.getElementById('btn-dismiss-psm6'),
+
+        // Enhancement UI
+        enhancePresetsGrid: document.getElementById('enhance-presets-grid'),
+        btnToggleAdvanced: document.getElementById('btn-toggle-advanced'),
+        advancedChevron: document.getElementById('advanced-chevron'),
+        advancedEnhancePanel: document.getElementById('advanced-enhance-panel'),
+        upscaleValLabel: document.getElementById('upscale-val-label'),
+        upscaleButtons: document.getElementById('upscale-buttons'),
+        chkAutoDark: document.getElementById('chk-auto-dark'),
+        chkForceInvert: document.getElementById('chk-force-invert'),
+        chkSharpen: document.getElementById('chk-sharpen'),
+        chkPadding: document.getElementById('chk-padding'),
+        chkGrayscale: document.getElementById('chk-grayscale'),
+        chkBinarize: document.getElementById('chk-binarize'),
+        sliderContrast: document.getElementById('slider-contrast'),
+        contrastValLabel: document.getElementById('contrast-val-label'),
+        binarizeControlsBox: document.getElementById('binarize-controls-box'),
+        sliderThreshold: document.getElementById('slider-threshold'),
+        thresholdValLabel: document.getElementById('threshold-val-label'),
+        btnAutoOtsu: document.getElementById('btn-auto-otsu'),
+
+        // Right Column: Engine Settings & Progress
+        modelQualityGrid: document.getElementById('model-quality-grid'),
+        selectedLangCodeBadge: document.getElementById('selected-lang-code-badge'),
+        selectedLangsContainer: document.getElementById('selected-langs-container'),
+        quickPresetsContainer: document.getElementById('quick-presets-container'),
+        langDropdownWrapper: document.getElementById('lang-dropdown-wrapper'),
+        langSearchInput: document.getElementById('lang-search-input'),
+        toggleLangListBtn: document.getElementById('toggle-lang-list-btn'),
+        toggleLangListText: document.getElementById('toggle-lang-list-text'),
+        toggleLangChevron: document.getElementById('toggle-lang-chevron'),
+        langDropdownPanel: document.getElementById('lang-dropdown-panel'),
+        langMatchCount: document.getElementById('lang-match-count'),
+        clearSearchBtn: document.getElementById('clear-search-btn'),
+        langOptionsList: document.getElementById('lang-options-list'),
+        psmSelect: document.getElementById('psm-select'),
+        startOcrBtn: document.getElementById('start-ocr-btn'),
+        ocrBtnText: document.getElementById('ocr-btn-text'),
+        cancelOcrBtn: document.getElementById('cancel-ocr-btn'),
+        progressContainer: document.getElementById('progress-container'),
+        progressStatusText: document.getElementById('progress-status-text'),
+        progressPercentText: document.getElementById('progress-percent-text'),
+        progressBarFill: document.getElementById('progress-bar-fill'),
+        progressSubnote: document.getElementById('progress-subnote'),
+        ocrErrorBox: document.getElementById('ocr-error-box'),
+        ocrErrorTitle: document.getElementById('ocr-error-title'),
+        ocrErrorDetail: document.getElementById('ocr-error-detail'),
+
+        // Result Tabs & Review
+        tabEditBtn: document.getElementById('tab-edit-btn'),
+        tabReviewBtn: document.getElementById('tab-review-btn'),
+        suspectCountBadge: document.getElementById('suspect-count-badge'),
+        resultMetrics: document.getElementById('result-metrics'),
+        confidenceBadge: document.getElementById('confidence-badge'),
+        durationBadge: document.getElementById('duration-badge'),
+        btnCopyText: document.getElementById('btn-copy-text'),
+        btnDownloadTxt: document.getElementById('btn-download-txt'),
+        btnCleanMerge: document.getElementById('btn-clean-merge'),
+        btnUndoText: document.getElementById('btn-undo-text'),
+        btnClearText: document.getElementById('btn-clear-text'),
+        panelEdit: document.getElementById('panel-edit'),
+        panelReview: document.getElementById('panel-review'),
+        outputTextarea: document.getElementById('ocr-output-textarea'),
+        reviewStatsText: document.getElementById('review-stats-text'),
+        wordInspectorBar: document.getElementById('word-inspector-bar'),
+        inspectorConf: document.getElementById('inspector-conf'),
+        inspectorEditInput: document.getElementById('inspector-edit-input'),
+        inspectorSaveBtn: document.getElementById('inspector-save-btn'),
+        reviewWordsContainer: document.getElementById('review-words-container'),
+        statChars: document.getElementById('stat-chars'),
+        statWords: document.getElementById('stat-words'),
+        statLines: document.getElementById('stat-lines'),
+
+        // History & Toasts
+        historyEmptyState: document.getElementById('history-empty-state'),
+        historyList: document.getElementById('history-list'),
+        btnClearHistory: document.getElementById('btn-clear-history'),
+        toastContainer: document.getElementById('toast-container')
+      };
+
+      /* =========================================================================
+       * 4. CORE UTILITIES (Toasts, Text Normalization, Clipboard, Theme)
+       * ========================================================================= */
+      function showToast(message, type = 'info', durationMs = 3400) {
+        const colors = {
+          success: 'bg-emerald-600 text-white border-emerald-500',
+          info: 'bg-slate-900 dark:bg-slate-800 text-white border-slate-700',
+          warning: 'bg-amber-600 text-white border-amber-500',
+          error: 'bg-rose-600 text-white border-rose-500'
+        };
+        const icons = {
+          success: '<path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />',
+          info: '<path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />',
+          warning: '<path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />',
+          error: '<path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />'
+        };
+
+        const toast = document.createElement('div');
+        toast.className = `pointer-events-auto flex items-start gap-2.5 px-4 py-3 rounded-xl border shadow-lg text-xs sm:text-sm font-medium transition-all duration-300 translate-y-2 opacity-0 ${colors[type] || colors.info}`;
+        toast.innerHTML = `
+          <svg class="w-4 h-4 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+            ${icons[type] || icons.info}
+          </svg>
+          <span class="leading-snug flex-1"></span>
+        `;
+        toast.querySelector('span').textContent = message;
+        els.toastContainer.appendChild(toast);
+
+        requestAnimationFrame(() => toast.classList.remove('translate-y-2', 'opacity-0'));
+        setTimeout(() => {
+          toast.classList.add('translate-y-2', 'opacity-0');
+          setTimeout(() => toast.remove(), 300);
+        }, durationMs);
+      }
+
+      function normalizeSearch(str) {
+        return (str || '')
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '')
+          .replace(/đ/g, 'd')
+          .replace(/Đ/g, 'd')
+          .toLowerCase()
+          .trim();
+      }
+
+      function copyTextToClipboard(text) {
+        if (!text) {
+          showToast('Chưa có văn bản để sao chép.', 'warning');
+          return;
+        }
+        try {
+          const temp = document.createElement('textarea');
+          temp.value = text;
+          temp.setAttribute('readonly', '');
+          temp.style.position = 'fixed';
+          temp.style.top = '-9999px';
+          temp.style.left = '-9999px';
+          document.body.appendChild(temp);
+          temp.select();
+          temp.setSelectionRange(0, text.length);
+          const ok = document.execCommand('copy');
+          document.body.removeChild(temp);
+          if (ok) {
+            showToast('Đã sao chép văn bản vào clipboard!', 'success');
+            return;
+          }
+        } catch (err) {
+          // Fall back to modern Clipboard API
+        }
+
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard
+            .writeText(text)
+            .then(() => showToast('Đã sao chép văn bản vào clipboard!', 'success'))
+            .catch(() => showToast('Không thể sao chép tự động. Hãy chọn văn bản và nhấn Ctrl+C.', 'error'));
+        } else {
+          showToast('Trình duyệt chặn sao chép tự động. Hãy chọn văn bản và nhấn Ctrl+C.', 'warning');
+        }
+      }
+
+      function updateNetworkStatus() {
+        const online = navigator.onLine;
+        els.networkDot.className = `w-2 h-2 rounded-full ${online ? 'bg-emerald-500' : 'bg-amber-500'}`;
+        els.networkLabel.textContent = online ? 'Trực tuyến' : 'Ngoại tuyến';
+      }
+
+      els.themeToggleBtn.addEventListener('click', () => {
+        const isDark = document.documentElement.classList.toggle('dark');
+        try {
+          localStorage.setItem('ocr-pro-theme', isDark ? 'dark' : 'light');
+        } catch (e) {}
+        if (state.originalImage) renderStageCanvas();
+      });
+
+      window.addEventListener('online', () => {
+        updateNetworkStatus();
+        showToast('Đã kết nối mạng trở lại.', 'success', 2400);
+      });
+      window.addEventListener('offline', () => {
+        updateNetworkStatus();
+        showToast('Đang ngoại tuyến. Các bộ mô hình đã cache trong IndexedDB vẫn quét bình thường!', 'warning', 4200);
+      });
+      updateNetworkStatus();
+
+      /* =========================================================================
+       * 5. MODEL QUALITY, LANGUAGE SELECTOR (115+) & PSM CONTROLS
+       * ========================================================================= */
+      function renderModelQualityUI() {
+        const buttons = els.modelQualityGrid.querySelectorAll('.model-btn');
+        buttons.forEach((btn) => {
+          const active = btn.dataset.model === state.modelQuality;
+          btn.className = active
+            ? 'model-btn p-2.5 rounded-xl border text-left transition bg-indigo-600 text-white border-indigo-600 shadow-sm'
+            : 'model-btn p-2.5 rounded-xl border text-left transition bg-slate-50 hover:bg-slate-100 dark:bg-slate-950/60 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-700';
+        });
+        const cfg = MODEL_CONFIGS[state.modelQuality];
+        if (!state.isScanning) {
+          els.ocrBtnText.textContent = `Bắt đầu quét (OCR ${cfg.shortLabel})`;
+        }
+      }
+
+      els.modelQualityGrid.addEventListener('click', (e) => {
+        const btn = e.target.closest('.model-btn');
+        if (!btn) return;
+        const nextModel = btn.dataset.model;
+        if (nextModel && nextModel !== state.modelQuality) {
+          state.modelQuality = nextModel;
+          renderModelQualityUI();
+          showToast(`Đã chuyển sang mô hình ${MODEL_CONFIGS[nextModel].label}.`, 'info', 2500);
+        }
+      });
+
+      function renderSelectedLanguages() {
+        els.selectedLangCodeBadge.textContent = state.selectedLangs.join('+');
+        els.selectedLangsContainer.innerHTML = '';
+
+        state.selectedLangs.forEach((code) => {
+          const info = LANG_MAP.get(code) || { code, name: code };
+          const chip = document.createElement('span');
+          chip.className = 'inline-flex items-center gap-1 pl-2.5 pr-1 py-1 rounded-lg text-xs font-semibold bg-indigo-600 text-white shadow-sm';
+          chip.innerHTML = `
+            <span>${info.name} <span class="opacity-75 font-mono text-[10px]">(${info.code})</span></span>
+            <button type="button" data-remove-code="${info.code}" aria-label="Bỏ ${info.name}" class="p-0.5 rounded hover:bg-white/20 transition">
+              <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          `;
+          els.selectedLangsContainer.appendChild(chip);
+        });
+
+        renderQuickPresets();
+        renderLanguageOptions(els.langSearchInput.value);
+      }
+
+      function renderQuickPresets() {
+        const currentKey = [...state.selectedLangs].sort().join('+');
+        els.quickPresetsContainer.innerHTML = '';
+
+        QUICK_PRESETS.forEach((preset) => {
+          const key = [...preset.codes].sort().join('+');
+          const active = key === currentKey;
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.textContent = preset.label;
+          btn.className = active
+            ? 'px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-indigo-100 text-indigo-800 border border-indigo-300 dark:bg-indigo-900/60 dark:text-indigo-200 dark:border-indigo-700 transition'
+            : 'px-2.5 py-1 rounded-lg text-[11px] font-medium bg-slate-100 hover:bg-slate-200 text-slate-700 border border-transparent dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300 transition';
+          btn.addEventListener('click', () => {
+            state.selectedLangs = [...preset.codes];
+            renderSelectedLanguages();
+          });
+          els.quickPresetsContainer.appendChild(btn);
+        });
+      }
+
+      function renderLanguageOptions(query = '') {
+        const q = normalizeSearch(query);
+        const filtered = ALL_LANGUAGES.filter((l) => {
+          if (!q) return true;
+          return (
+            normalizeSearch(l.name).includes(q) ||
+            normalizeSearch(l.native).includes(q) ||
+            l.code.toLowerCase().includes(q)
+          );
+        });
+
+        els.clearSearchBtn.classList.toggle('hidden', !q);
+        els.langMatchCount.textContent = q
+          ? `Tìm thấy ${filtered.length} / ${ALL_LANGUAGES.length} ngôn ngữ`
+          : `Tất cả ${ALL_LANGUAGES.length} ngôn ngữ`;
+
+        els.langOptionsList.innerHTML = '';
+        if (filtered.length === 0) {
+          els.langOptionsList.innerHTML = `<div class="p-3 text-center text-xs text-slate-500">Không tìm thấy ngôn ngữ phù hợp.</div>`;
+          return;
+        }
+
+        const frag = document.createDocumentFragment();
+        filtered.forEach((lang) => {
+          const checked = state.selectedLangs.includes(lang.code);
+          const row = document.createElement('label');
+          row.className = `flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-lg cursor-pointer transition text-xs ${
+            checked
+              ? 'bg-indigo-50 dark:bg-indigo-950/60 text-indigo-900 dark:text-indigo-100'
+              : 'hover:bg-slate-50 dark:hover:bg-slate-800/70 text-slate-700 dark:text-slate-200'
+          }`;
+          row.innerHTML = `
+            <div class="flex items-center gap-2 min-w-0">
+              <input type="checkbox" value="${lang.code}" ${checked ? 'checked' : ''} class="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 cursor-pointer shrink-0" />
+              <div class="min-w-0">
+                <div class="font-semibold truncate">${lang.name}</div>
+                <div class="text-[10px] text-slate-500 dark:text-slate-400 truncate">${lang.native}</div>
+              </div>
+            </div>
+            <span class="px-1.5 py-0.5 rounded font-mono text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 shrink-0">${lang.code}</span>
+          `;
+          row.querySelector('input').addEventListener('change', (e) => toggleLanguageCode(lang.code, e.target.checked));
+          frag.appendChild(row);
+        });
+        els.langOptionsList.appendChild(frag);
+      }
+
+      function toggleLanguageCode(code, shouldSelect) {
+        if (shouldSelect) {
+          if (!state.selectedLangs.includes(code)) {
+            if (state.selectedLangs.length >= 3) {
+              showToast('Khuyến nghị chọn 1–3 ngôn ngữ cùng lúc để đạt độ chính xác cao nhất.', 'warning', 3200);
+            }
+            state.selectedLangs.push(code);
+          }
+        } else {
+          if (state.selectedLangs.length <= 1) {
+            showToast('Cần giữ lại ít nhất 1 ngôn ngữ để nhận diện.', 'warning');
+            renderSelectedLanguages();
+            return;
+          }
+          state.selectedLangs = state.selectedLangs.filter((c) => c !== code);
+        }
+        renderSelectedLanguages();
+      }
+
+      function setDropdownOpen(open) {
+        state.dropdownOpen = open;
+        els.langDropdownPanel.classList.toggle('hidden', !open);
+        els.toggleLangListText.textContent = open ? 'Đóng' : 'Danh sách';
+        els.toggleLangChevron.style.transform = open ? 'rotate(180deg)' : 'rotate(0deg)';
+      }
+
+      els.selectedLangsContainer.addEventListener('click', (e) => {
+        const btn = e.target.closest('[data-remove-code]');
+        if (btn) toggleLanguageCode(btn.dataset.removeCode, false);
+      });
+      els.toggleLangListBtn.addEventListener('click', () => setDropdownOpen(!state.dropdownOpen));
+      els.langSearchInput.addEventListener('focus', () => setDropdownOpen(true));
+      els.langSearchInput.addEventListener('input', (e) => {
+        if (!state.dropdownOpen) setDropdownOpen(true);
+        renderLanguageOptions(e.target.value);
+      });
+      els.clearSearchBtn.addEventListener('click', () => {
+        els.langSearchInput.value = '';
+        renderLanguageOptions('');
+        els.langSearchInput.focus();
+      });
+      document.addEventListener('click', (e) => {
+        if (state.dropdownOpen && !els.langDropdownWrapper.contains(e.target)) {
+          setDropdownOpen(false);
+        }
+      });
+
+      els.psmSelect.addEventListener('change', (e) => {
+        state.psm = e.target.value;
+        if (state.psm === '6') {
+          els.psm6SuggestionBanner.classList.add('hidden');
+        }
+      });
+
+      renderModelQualityUI();
+      renderSelectedLanguages();
+
+      /* =========================================================================
+       * 6. ENHANCEMENT PIPELINE ENGINE (Upscale, Auto Dark, Unsharp Mask, Otsu, Pad)
+       * ========================================================================= */
+
+      /**
+       * Rebuild the offscreen rotatedCanvas from originalImage + rotation.
+       */
+      function rebuildRotatedCanvas() {
+        const img = state.originalImage;
+        if (!img) return;
+        const w = img.naturalWidth || img.width;
+        const h = img.naturalHeight || img.height;
+        const quarter = state.rotation === 90 || state.rotation === 270;
+
+        rotatedCanvas.width = quarter ? h : w;
+        rotatedCanvas.height = quarter ? w : h;
+
+        const ctx = rotatedCanvas.getContext('2d');
+        ctx.save();
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, rotatedCanvas.width, rotatedCanvas.height);
+        ctx.translate(rotatedCanvas.width / 2, rotatedCanvas.height / 2);
+        ctx.rotate((state.rotation * Math.PI) / 180);
+        ctx.drawImage(img, -w / 2, -h / 2, w, h);
+        ctx.restore();
+
+        els.imageDimBadge.textContent = `${rotatedCanvas.width}×${rotatedCanvas.height}`;
+      }
+
+      /**
+       * Compute Otsu's optimal binarization threshold from a Uint8Array luminance buffer.
+       */
+      function computeOtsuThreshold(grayBuf) {
+        const hist = new Int32Array(256);
+        for (let i = 0; i < grayBuf.length; i++) hist[grayBuf[i]]++;
+
+        const total = grayBuf.length;
+        let sum = 0;
+        for (let i = 0; i < 256; i++) sum += i * hist[i];
+
+        let sumB = 0;
+        let wB = 0;
+        let maxVar = 0;
+        let threshold = 128;
+
+        for (let t = 0; t < 256; t++) {
+          wB += hist[t];
+          if (wB === 0) continue;
+          const wF = total - wB;
+          if (wF === 0) break;
+          sumB += t * hist[t];
+          const mB = sumB / wB;
+          const mF = (sum - sumB) / wF;
+          const betweenVar = wB * wF * (mB - mF) * (mB - mF);
+          if (betweenVar > maxVar) {
+            maxVar = betweenVar;
+            threshold = t;
+          }
+        }
+        return Math.min(225, Math.max(40, threshold));
+      }
+
+      /**
+       * Fast 3x3 Unsharp Mask on RGBA ImageData (crisp Vietnamese diacritics without heavy noise).
+       */
+      function applyUnsharpMask(data, width, height, amount = 0.65) {
+        const src = new Uint8ClampedArray(data);
+        const rowStride = width * 4;
+
+        for (let y = 1; y < height - 1; y++) {
+          const rowOff = y * rowStride;
+          for (let x = 1; x < width - 1; x++) {
+            const idx = rowOff + x * 4;
+            for (let c = 0; c < 3; c++) {
+              const i = idx + c;
+              // 3x3 Gaussian-weighted blur kernel (weights sum to 16)
+              const blur =
+                (src[i - rowStride - 4] +
+                  2 * src[i - rowStride] +
+                  src[i - rowStride + 4] +
+                  2 * src[i - 4] +
+                  4 * src[i] +
+                  2 * src[i + 4] +
+                  src[i + rowStride - 4] +
+                  2 * src[i + rowStride] +
+                  src[i + rowStride + 4]) / 16;
+
+              const sharp = src[i] + amount * (src[i] - blur);
+              data[i] = sharp < 0 ? 0 : sharp > 255 ? 255 : sharp;
+            }
+          }
+        }
+      }
+
+      /**
+       * Build the final processedCanvas sent to Tesseract.js (Cropped -> Upscaled -> Filtered -> White Bordered).
+       */
+      function buildProcessedCanvas(forceRecalcOtsu = false) {
+        if (!state.originalImage) return;
+
+        const rotW = rotatedCanvas.width;
+        const rotH = rotatedCanvas.height;
+
+        // Extract exact pixel crop bounds
+        const sx = Math.max(0, Math.round(state.crop.x * rotW));
+        const sy = Math.max(0, Math.round(state.crop.y * rotH));
+        const sw = Math.max(1, Math.min(rotW - sx, Math.round(state.crop.w * rotW)));
+        const sh = Math.max(1, Math.min(rotH - sy, Math.round(state.crop.h * rotH)));
+
+        // Update crop dimension badge
+        if (state.hasCustomCrop) {
+          els.cropDimBadge.textContent = `Vùng cắt: ${sw}×${sh} px`;
+          els.cropDimBadge.classList.remove('hidden');
+        } else {
+          els.cropDimBadge.classList.add('hidden');
+        }
+
+        // Safe Upscale capped at max 3200px to preserve crispness without browser lag
+        const MAX_DIM = 3200;
+        const desiredScale = state.enhance.upscale || 1;
+        let scaledW = Math.round(sw * desiredScale);
+        let scaledH = Math.round(sh * desiredScale);
+        if (scaledW > MAX_DIM || scaledH > MAX_DIM) {
+          const capRatio = Math.min(MAX_DIM / scaledW, MAX_DIM / scaledH);
+          scaledW = Math.max(1, Math.round(scaledW * capRatio));
+          scaledH = Math.max(1, Math.round(scaledH * capRatio));
+        }
+
+        // Working canvas before white padding
+        const workCanvas = document.createElement('canvas');
+        workCanvas.width = scaledW;
+        workCanvas.height = scaledH;
+        const wCtx = workCanvas.getContext('2d', { willReadFrequently: true });
+        wCtx.fillStyle = '#ffffff';
+        wCtx.fillRect(0, 0, scaledW, scaledH);
+        wCtx.imageSmoothingEnabled = true;
+        wCtx.imageSmoothingQuality = 'high';
+        wCtx.drawImage(rotatedCanvas, sx, sy, sw, sh, 0, 0, scaledW, scaledH);
+
+        const cfg = state.enhance;
+        let avgBrightness = 255;
+        let autoInverted = false;
+
+        // Check if any pixel filter needs to run
+        const needsPixelPass =
+          cfg.autoDarkInvert ||
+          cfg.forceInvert ||
+          cfg.grayscale ||
+          cfg.contrast !== 1.0 ||
+          cfg.sharpen ||
+          cfg.binarize;
+
+        if (needsPixelPass) {
+          const imgData = wCtx.getImageData(0, 0, scaledW, scaledH);
+          const data = imgData.data;
+          const totalPixels = scaledW * scaledH;
+
+          // Step A: Estimate average luminance (fast stride sampling)
+          let lumSum = 0;
+          let samples = 0;
+          const stride = Math.max(1, Math.floor(totalPixels / 25000)) * 4;
+          for (let i = 0; i < data.length; i += stride) {
+            lumSum += 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+            samples++;
+          }
+          avgBrightness = samples > 0 ? lumSum / samples : 255;
+
+          const shouldInvert = cfg.forceInvert || (cfg.autoDarkInvert && avgBrightness < 115);
+          autoInverted = !cfg.forceInvert && cfg.autoDarkInvert && avgBrightness < 115;
+
+          // Step B: Invert + Grayscale + Contrast
+          const contrastFactor = cfg.contrast;
+          const applyGray = cfg.grayscale || cfg.binarize;
+
+          for (let i = 0; i < data.length; i += 4) {
+            let r = data[i];
+            let g = data[i + 1];
+            let b = data[i + 2];
+
+            if (shouldInvert) {
+              r = 255 - r;
+              g = 255 - g;
+              b = 255 - b;
+            }
+
+            if (applyGray) {
+              let gray = 0.299 * r + 0.587 * g + 0.114 * b;
+              if (contrastFactor !== 1.0) {
+                gray = (gray - 128) * contrastFactor + 128;
+                gray = gray < 0 ? 0 : gray > 255 ? 255 : gray;
+              }
+              data[i] = data[i + 1] = data[i + 2] = gray;
+            } else if (contrastFactor !== 1.0) {
+              r = (r - 128) * contrastFactor + 128;
+              g = (g - 128) * contrastFactor + 128;
+              b = (b - 128) * contrastFactor + 128;
+              data[i] = r < 0 ? 0 : r > 255 ? 255 : r;
+              data[i + 1] = g < 0 ? 0 : g > 255 ? 255 : g;
+              data[i + 2] = b < 0 ? 0 : b > 255 ? 255 : b;
+            }
+          }
+
+          // Step C: Unsharp Mask (Sharpen Vietnamese diacritics)
+          if (cfg.sharpen && scaledW > 4 && scaledH > 4) {
+            applyUnsharpMask(data, scaledW, scaledH, 0.65);
+          }
+
+          // Step D: Binarize (Auto Otsu or Manual Threshold)
+          if (cfg.binarize) {
+            if (cfg.autoOtsu || forceRecalcOtsu) {
+              const grayBuf = new Uint8Array(totalPixels);
+              for (let i = 0, p = 0; i < data.length; i += 4, p++) {
+                grayBuf[p] = data[i];
+              }
+              cfg.threshold = computeOtsuThreshold(grayBuf);
+              els.sliderThreshold.value = cfg.threshold;
+              els.thresholdValLabel.textContent = cfg.threshold;
+            }
+            const t = cfg.threshold;
+            for (let i = 0; i < data.length; i += 4) {
+              const v = data[i] >= t ? 255 : 0;
+              data[i] = data[i + 1] = data[i + 2] = v;
+            }
+          }
+
+          wCtx.putImageData(imgData, 0, 0);
+        }
+
+        // Step E: White Padding Border (28px) — prevents Tesseract clipping edge letters
+        const pad = cfg.addPadding ? 28 : 0;
+        processedCanvas.width = scaledW + pad * 2;
+        processedCanvas.height = scaledH + pad * 2;
+        const pCtx = processedCanvas.getContext('2d');
+        pCtx.fillStyle = '#ffffff';
+        pCtx.fillRect(0, 0, processedCanvas.width, processedCanvas.height);
+        pCtx.drawImage(workCanvas, pad, pad);
+
+        state.lastPipelineMeta = {
+          autoInverted,
+          avgBrightness: Math.round(avgBrightness),
+          paddingOffset: pad,
+          scaledW,
+          scaledH
+        };
+
+        // Update floating status pill
+        const effectiveScale = (scaledW / sw).toFixed(1);
+        const tags = [];
+        if (state.viewMode === 'processed') tags.push('Xem ảnh gửi AI');
+        if (effectiveScale !== '1.0') tags.push(`${effectiveScale}x`);
+        if (autoInverted) tags.push('Tự đảo màu nền tối');
+        else if (cfg.forceInvert) tags.push('Đảo màu');
+        if (cfg.sharpen) tags.push('Làm nét');
+        if (cfg.binarize) tags.push(`Nhị phân (${cfg.threshold})`);
+        if (pad > 0) tags.push('Viền +28px');
+        if (tags.length === 0) tags.push('Ảnh gốc');
+
+        els.pipelineStatusPill.textContent = `${tags.join(' • ')} (${processedCanvas.width}×${processedCanvas.height})`;
+      }
+
+      /* =========================================================================
+       * 7. INTERACTIVE STAGE CANVAS (Display, Touch/Mouse Crop & Confidence Boxes)
+       * ========================================================================= */
+      function renderStageCanvas() {
+        if (!state.originalImage) return;
+
+        const canvas = els.stageCanvas;
+        const rect = els.stageContainer.getBoundingClientRect();
+        const cssW = Math.max(200, Math.floor(rect.width));
+        const cssH = Math.max(200, Math.floor(rect.height));
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+        canvas.width = Math.round(cssW * dpr);
+        canvas.height = Math.round(cssH * dpr);
+        canvas.style.width = `${cssW}px`;
+        canvas.style.height = `${cssH}px`;
+
+        const ctx = canvas.getContext('2d');
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+        // Background fill
+        const isDark = document.documentElement.classList.contains('dark');
+        ctx.fillStyle = isDark ? '#020617' : '#f1f5f9';
+        ctx.fillRect(0, 0, cssW, cssH);
+
+        const sourceCanvas = state.viewMode === 'processed' ? processedCanvas : rotatedCanvas;
+        if (!sourceCanvas.width || !sourceCanvas.height) return;
+
+        // Leave 16px breathing margin so edge/corner crop handles are easy to grab on touchscreens
+        const margin = 16;
+        const availW = Math.max(40, cssW - margin * 2);
+        const availH = Math.max(40, cssH - margin * 2);
+        const fitScale = Math.min(availW / sourceCanvas.width, availH / sourceCanvas.height);
+
+        const drawW = sourceCanvas.width * fitScale;
+        const drawH = sourceCanvas.height * fitScale;
+        const drawX = (cssW - drawW) / 2;
+        const drawY = (cssH - drawH) / 2;
+
+        state.stageDrawRect = { x: drawX, y: drawY, w: drawW, h: drawH };
+
+        // Subtle card shadow behind image
+        ctx.save();
+        ctx.shadowColor = isDark ? 'rgba(0,0,0,0.45)' : 'rgba(15,23,42,0.14)';
+        ctx.shadowBlur = 12;
+        ctx.drawImage(sourceCanvas, drawX, drawY, drawW, drawH);
+        ctx.restore();
+
+        // Draw Confidence Bounding Boxes Overlay if enabled & valid
+        const canDrawBboxes =
+          state.showBboxes &&
+          state.lastOcrData &&
+          state.lastOcrData.words &&
+          state.lastOcrData.words.length > 0 &&
+          state.lastOcrData.rotationSnapshot === state.rotation;
+
+        els.bboxLegendPill.classList.toggle('hidden', !canDrawBboxes);
+
+        if (canDrawBboxes) {
+          drawConfidenceBoxesOnStage(ctx, drawX, drawY, drawW, drawH);
+        }
+
+        // Draw Interactive Crop Overlay when viewing Original image & Crop Mode or Custom Crop active
+        if (state.viewMode === 'original' && (state.cropMode || state.hasCustomCrop)) {
+          drawCropOverlayOnStage(ctx, drawX, drawY, drawW, drawH);
+        }
+      }
+
+      function drawConfidenceBoxesOnStage(ctx, drawX, drawY, drawW, drawH) {
+        const ocr = state.lastOcrData;
+        ctx.save();
+        ctx.lineWidth = 1.5;
+
+        ocr.words.forEach((w) => {
+          if (!w.bbox) return;
+          const { x0, y0, x1, y1 } = w.bbox;
+          let rx0, ry0, rx1, ry1;
+
+          if (state.viewMode === 'processed') {
+            rx0 = drawX + (x0 / ocr.procW) * drawW;
+            ry0 = drawY + (y0 / ocr.procH) * drawH;
+            rx1 = drawX + (x1 / ocr.procW) * drawW;
+            ry1 = drawY + (y1 / ocr.procH) * drawH;
+          } else {
+            // Map from processedCanvas coordinates back into rotatedCanvas normalized space
+            const pad = ocr.paddingOffset;
+            const lx0 = (x0 - pad) / ocr.scaledW;
+            const ly0 = (y0 - pad) / ocr.scaledH;
+            const lx1 = (x1 - pad) / ocr.scaledW;
+            const ly1 = (y1 - pad) / ocr.scaledH;
+
+            const c = ocr.cropSnapshot;
+            const nx0 = c.x + lx0 * c.w;
+            const ny0 = c.y + ly0 * c.h;
+            const nx1 = c.x + lx1 * c.w;
+            const ny1 = c.y + ly1 * c.h;
+
+            rx0 = drawX + nx0 * drawW;
+            ry0 = drawY + ny0 * drawH;
+            rx1 = drawX + nx1 * drawW;
+            ry1 = drawY + ny1 * drawH;
+          }
+
+          const conf = typeof w.confidence === 'number' ? w.confidence : 0;
+          let stroke, fill;
+          if (conf >= 85) {
+            stroke = 'rgba(16, 185, 129, 0.9)';
+            fill = 'rgba(16, 185, 129, 0.14)';
+          } else if (conf >= 65) {
+            stroke = 'rgba(245, 158, 11, 0.95)';
+            fill = 'rgba(245, 158, 11, 0.22)';
+          } else {
+            stroke = 'rgba(239, 68, 68, 0.95)';
+            fill = 'rgba(239, 68, 68, 0.26)';
+          }
+
+          const bw = Math.max(2, rx1 - rx0);
+          const bh = Math.max(2, ry1 - ry0);
+          ctx.fillStyle = fill;
+          ctx.strokeStyle = stroke;
+          ctx.fillRect(rx0, ry0, bw, bh);
+          ctx.strokeRect(rx0, ry0, bw, bh);
+        });
+
+        ctx.restore();
+      }
+
+      function drawCropOverlayOnStage(ctx, drawX, drawY, drawW, drawH) {
+        const cx = drawX + state.crop.x * drawW;
+        const cy = drawY + state.crop.y * drawH;
+        const cw = state.crop.w * drawW;
+        const ch = state.crop.h * drawH;
+
+        ctx.save();
+
+        // Darkened mask outside crop area if a custom crop is active
+        if (state.hasCustomCrop) {
+          ctx.fillStyle = 'rgba(15, 23, 42, 0.56)';
+          // Top strip
+          ctx.fillRect(drawX, drawY, drawW, Math.max(0, cy - drawY));
+          // Bottom strip
+          ctx.fillRect(drawX, cy + ch, drawW, Math.max(0, drawY + drawH - (cy + ch)));
+          // Left strip
+          ctx.fillRect(drawX, cy, Math.max(0, cx - drawX), ch);
+          // Right strip
+          ctx.fillRect(cx + cw, cy, Math.max(0, drawX + drawW - (cx + cw)), ch);
+
+          // Rule of thirds subtle guide lines inside crop box
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)';
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(cx + cw / 3, cy);
+          ctx.lineTo(cx + cw / 3, cy + ch);
+          ctx.moveTo(cx + (2 * cw) / 3, cy);
+          ctx.lineTo(cx + (2 * cw) / 3, cy + ch);
+          ctx.moveTo(cx, cy + ch / 3);
+          ctx.lineTo(cx + cw, cy + ch / 3);
+          ctx.moveTo(cx, cy + (2 * ch) / 3);
+          ctx.lineTo(cx + cw, cy + (2 * ch) / 3);
+          ctx.stroke();
+
+          // Crisp crop border
+          ctx.strokeStyle = '#6366f1';
+          ctx.lineWidth = 2;
+          ctx.strokeRect(cx, cy, cw, ch);
+        } else if (state.cropMode) {
+          // Subtle dashed frame showing user can drag anywhere to crop
+          ctx.strokeStyle = 'rgba(99, 102, 241, 0.55)';
+          ctx.setLineDash([6, 4]);
+          ctx.lineWidth = 1.5;
+          ctx.strokeRect(cx + 1, cy + 1, cw - 2, ch - 2);
+          ctx.setLineDash([]);
+        }
+
+        // Draw 4 Corner + 4 Edge Grab Handles when Crop Mode is ON
+        if (state.cropMode) {
+          const corners = [
+            [cx, cy],
+            [cx + cw, cy],
+            [cx, cy + ch],
+            [cx + cw, cy + ch]
+          ];
+          const edges = [
+            [cx + cw / 2, cy],
+            [cx + cw / 2, cy + ch],
+            [cx, cy + ch / 2],
+            [cx + cw, cy + ch / 2]
+          ];
+
+          // Corner handles (round & touch-friendly)
+          corners.forEach(([hx, hy]) => {
+            ctx.beginPath();
+            ctx.arc(hx, hy, 7, 0, Math.PI * 2);
+            ctx.fillStyle = '#ffffff';
+            ctx.fill();
+            ctx.lineWidth = 2.5;
+            ctx.strokeStyle = '#4f46e5';
+            ctx.stroke();
+          });
+
+          // Edge midpoint handles (only if box is wide/tall enough)
+          if (cw > 44 && ch > 44) {
+            edges.forEach(([hx, hy]) => {
+              ctx.beginPath();
+              ctx.arc(hx, hy, 5, 0, Math.PI * 2);
+              ctx.fillStyle = '#6366f1';
+              ctx.fill();
+              ctx.lineWidth = 1.5;
+              ctx.strokeStyle = '#ffffff';
+              ctx.stroke();
+            });
+          }
+        }
+
+        ctx.restore();
+      }
+
+      /* -------------------------------------------------------------------------
+       * Pointer Events for Interactive Crop (Unified Mouse & iPad Touch Support)
+       * ------------------------------------------------------------------------- */
+      function getCanvasPoint(e) {
+        const rect = els.stageCanvas.getBoundingClientRect();
+        return {
+          x: e.clientX - rect.left,
+          y: e.clientY - rect.top
+        };
+      }
+
+      function hitTestCropHandle(px, py) {
+        const { x: drawX, y: drawY, w: drawW, h: drawH } = state.stageDrawRect;
+        const cx = drawX + state.crop.x * drawW;
+        const cy = drawY + state.crop.y * drawH;
+        const cw = state.crop.w * drawW;
+        const ch = state.crop.h * drawH;
+        const hitR = 18; // Generous radius for iPad fingers
+
+        const near = (tx, ty) => Math.hypot(px - tx, py - ty) <= hitR;
+
+        if (near(cx, cy)) return 'nw';
+        if (near(cx + cw, cy)) return 'ne';
+        if (near(cx, cy + ch)) return 'sw';
+        if (near(cx + cw, cy + ch)) return 'se';
+
+        if (near(cx + cw / 2, cy)) return 'n';
+        if (near(cx + cw / 2, cy + ch)) return 's';
+        if (near(cx, cy + ch / 2)) return 'w';
+        if (near(cx + cw, cy + ch / 2)) return 'e';
+
+        if (state.hasCustomCrop && px >= cx && px <= cx + cw && py >= cy && py <= cy + ch) {
+          return 'move';
+        }
+        return 'draw';
+      }
+
+      function getCursorForHit(hit) {
+        const map = {
+          nw: 'nwse-resize',
+          se: 'nwse-resize',
+          ne: 'nesw-resize',
+          sw: 'nesw-resize',
+          n: 'ns-resize',
+          s: 'ns-resize',
+          e: 'ew-resize',
+          w: 'ew-resize',
+          move: 'move',
+          draw: 'crosshair'
+        };
+        return map[hit] || 'crosshair';
+      }
+
+      function clamp01(v) {
+        return Math.max(0, Math.min(1, v));
+      }
+
+      els.stageCanvas.addEventListener('pointerdown', (e) => {
+        if (!state.originalImage || state.viewMode !== 'original' || !state.cropMode) return;
+        const pt = getCanvasPoint(e);
+        const { x: drawX, y: drawY, w: drawW, h: drawH } = state.stageDrawRect;
+        if (drawW <= 0 || drawH <= 0) return;
+
+        // Ignore clicks far outside drawn image area
+        if (pt.x < drawX - 20 || pt.x > drawX + drawW + 20 || pt.y < drawY - 20 || pt.y > drawY + drawH + 20) {
+          return;
+        }
+
+        const opType = hitTestCropHandle(pt.x, pt.y);
+        state.pointerOp = {
+          type: opType,
+          startX: pt.x,
+          startY: pt.y,
+          startNormX: clamp01((pt.x - drawX) / drawW),
+          startNormY: clamp01((pt.y - drawY) / drawH),
+          startCrop: { ...state.crop },
+          moved: false,
+          pointerId: e.pointerId
+        };
+
+        try {
+          els.stageCanvas.setPointerCapture(e.pointerId);
+        } catch (err) {}
+      });
+
+      els.stageCanvas.addEventListener('pointermove', (e) => {
+        if (!state.originalImage || state.viewMode !== 'original' || !state.cropMode) return;
+        const pt = getCanvasPoint(e);
+
+        if (!state.pointerOp) {
+          const hit = hitTestCropHandle(pt.x, pt.y);
+          els.stageCanvas.style.cursor = getCursorForHit(hit);
+          return;
+        }
+
+        const op = state.pointerOp;
+        const { x: drawX, y: drawY, w: drawW, h: drawH } = state.stageDrawRect;
+        const nx = clamp01((pt.x - drawX) / drawW);
+        const ny = clamp01((pt.y - drawY) / drawH);
+
+        if (!op.moved && Math.hypot(pt.x - op.startX, pt.y - op.startY) < 5) {
+          return;
+        }
+        op.moved = true;
+
+        const minNormW = Math.min(0.2, 20 / Math.max(1, rotatedCanvas.width));
+        const minNormH = Math.min(0.2, 20 / Math.max(1, rotatedCanvas.height));
+        const sc = op.startCrop;
+        let x0 = sc.x;
+        let y0 = sc.y;
+        let x1 = sc.x + sc.w;
+        let y1 = sc.y + sc.h;
+
+        if (op.type === 'draw') {
+          x0 = Math.min(op.startNormX, nx);
+          y0 = Math.min(op.startNormY, ny);
+          x1 = Math.max(op.startNormX, nx);
+          y1 = Math.max(op.startNormY, ny);
+        } else if (op.type === 'move') {
+          const dx = nx - op.startNormX;
+          const dy = ny - op.startNormY;
+          let newX = sc.x + dx;
+          let newY = sc.y + dy;
+          newX = Math.max(0, Math.min(1 - sc.w, newX));
+          newY = Math.max(0, Math.min(1 - sc.h, newY));
+          x0 = newX;
+          y0 = newY;
+          x1 = newX + sc.w;
+          y1 = newY + sc.h;
+        } else {
+          if (op.type.includes('w')) x0 = Math.min(nx, x1 - minNormW);
+          if (op.type.includes('e')) x1 = Math.max(nx, x0 + minNormW);
+          if (op.type.includes('n')) y0 = Math.min(ny, y1 - minNormH);
+          if (op.type.includes('s')) y1 = Math.max(ny, y0 + minNormH);
+        }
+
+        state.crop = {
+          x: clamp01(x0),
+          y: clamp01(y0),
+          w: Math.max(minNormW, clamp01(x1) - clamp01(x0)),
+          h: Math.max(minNormH, clamp01(y1) - clamp01(y0))
+        };
+        state.hasCustomCrop = !(
+          state.crop.x < 0.008 &&
+          state.crop.y < 0.008 &&
+          state.crop.w > 0.985 &&
+          state.crop.h > 0.985
+        );
+
+        // Hide stale bounding boxes when user modifies crop region
+        state.lastOcrData = null;
+        els.btnToggleBbox.disabled = true;
+
+        renderStageCanvas();
+      });
+
+      function finishPointerCrop() {
+        if (!state.pointerOp) return;
+        const wasMoved = state.pointerOp.moved;
+        try {
+          els.stageCanvas.releasePointerCapture(state.pointerOp.pointerId);
+        } catch (err) {}
+        state.pointerOp = null;
+
+        if (!wasMoved) return;
+
+        // If drawn rectangle is tiny, treat as accidental click and keep previous/full
+        const cropPxW = state.crop.w * rotatedCanvas.width;
+        const cropPxH = state.crop.h * rotatedCanvas.height;
+        if (cropPxW < 14 || cropPxH < 14) {
+          resetCropToFull(false);
+          return;
+        }
+
+        buildProcessedCanvas();
+        renderStageCanvas();
+
+        // Suggest PSM 6 if user cropped a smaller focused area while on PSM 3
+        const areaRatio = state.crop.w * state.crop.h;
+        if (state.hasCustomCrop && areaRatio < 0.72 && state.psm === '3' && !state.psm6Dismissed) {
+          els.psm6SuggestionBanner.classList.remove('hidden');
+        } else {
+          els.psm6SuggestionBanner.classList.add('hidden');
+        }
+      }
+
+      els.stageCanvas.addEventListener('pointerup', finishPointerCrop);
+      els.stageCanvas.addEventListener('pointercancel', finishPointerCrop);
+
+      function resetCropToFull(notify = true) {
+        state.crop = { x: 0, y: 0, w: 1, h: 1 };
+        state.hasCustomCrop = false;
+        state.lastOcrData = null;
+        els.btnToggleBbox.disabled = true;
+        els.psm6SuggestionBanner.classList.add('hidden');
+        if (state.originalImage) {
+          buildProcessedCanvas();
+          renderStageCanvas();
+        }
+        if (notify) showToast('Đã đặt lại vùng quét về toàn bộ ảnh.', 'info', 2000);
+      }
+
+      function syncCropModeUI() {
+        if (state.cropMode && state.viewMode === 'original') {
+          els.btnToggleCrop.className = 'inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold bg-indigo-600 text-white border border-indigo-600 shadow-sm transition';
+          els.btnToggleCropLabel.textContent = 'Cắt vùng: Bật';
+          els.stageCanvas.classList.add('touch-none', 'cursor-crosshair');
+          els.stageCanvas.classList.remove('cursor-default');
+        } else {
+          els.btnToggleCrop.className = 'inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 transition';
+          els.btnToggleCropLabel.textContent = 'Cắt vùng: Tắt';
+          els.stageCanvas.classList.remove('touch-none', 'cursor-crosshair');
+          els.stageCanvas.classList.add('cursor-default');
+          els.stageCanvas.style.cursor = 'default';
+        }
+      }
+
+      function setViewMode(mode) {
+        state.viewMode = mode;
+        const origActive = mode === 'original';
+        els.viewOriginalBtn.className = origActive
+          ? 'px-2.5 py-1.5 rounded-lg bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-sm transition'
+          : 'px-2.5 py-1.5 rounded-lg text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition';
+        els.viewProcessedBtn.className = !origActive
+          ? 'px-2.5 py-1.5 rounded-lg bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-sm transition'
+          : 'px-2.5 py-1.5 rounded-lg text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition';
+
+        syncCropModeUI();
+        if (state.originalImage) {
+          buildProcessedCanvas();
+          renderStageCanvas();
+        }
+      }
+
+      els.viewOriginalBtn.addEventListener('click', () => setViewMode('original'));
+      els.viewProcessedBtn.addEventListener('click', () => setViewMode('processed'));
+
+      els.btnToggleCrop.addEventListener('click', () => {
+        if (state.viewMode !== 'original') {
+          state.cropMode = true;
+          setViewMode('original');
+        } else {
+          state.cropMode = !state.cropMode;
+          syncCropModeUI();
+          renderStageCanvas();
+        }
+      });
+
+      els.btnResetCrop.addEventListener('click', () => resetCropToFull(true));
+
+      els.btnRotateLeft.addEventListener('click', () => {
+        if (!state.originalImage) return;
+        state.rotation = (state.rotation + 270) % 360;
+        state.crop = { x: 0, y: 0, w: 1, h: 1 };
+        state.hasCustomCrop = false;
+        state.lastOcrData = null;
+        els.btnToggleBbox.disabled = true;
+        rebuildRotatedCanvas();
+        buildProcessedCanvas();
+        renderStageCanvas();
+      });
+
+      els.btnRotateRight.addEventListener('click', () => {
+        if (!state.originalImage) return;
+        state.rotation = (state.rotation + 90) % 360;
+        state.crop = { x: 0, y: 0, w: 1, h: 1 };
+        state.hasCustomCrop = false;
+        state.lastOcrData = null;
+        els.btnToggleBbox.disabled = true;
+        rebuildRotatedCanvas();
+        buildProcessedCanvas();
+        renderStageCanvas();
+      });
+
+      function syncBboxButtonUI() {
+        if (state.showBboxes && !els.btnToggleBbox.disabled) {
+          els.btnToggleBbox.className = 'ml-auto inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold bg-emerald-600 text-white border border-emerald-600 shadow-sm transition';
+        } else {
+          els.btnToggleBbox.className = 'ml-auto inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-45 disabled:cursor-not-allowed text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 transition';
+        }
+      }
+
+      els.btnToggleBbox.addEventListener('click', () => {
+        state.showBboxes = !state.showBboxes;
+        syncBboxButtonUI();
+        renderStageCanvas();
+      });
+
+      els.btnApplyPsm6.addEventListener('click', () => {
+        state.psm = '6';
+        els.psmSelect.value = '6';
+        els.psm6SuggestionBanner.classList.add('hidden');
+        runOcr();
+      });
+
+      els.btnDismissPsm6.addEventListener('click', () => {
+        state.psm6Dismissed = true;
+        els.psm6SuggestionBanner.classList.add('hidden');
+      });
+
+      // Responsive canvas redraw on window/iPad orientation resize
+      let resizeTimer = null;
+      window.addEventListener('resize', () => {
+        if (!state.originalImage) return;
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(() => renderStageCanvas(), 80);
+      });
+
+      /* =========================================================================
+       * 8. ENHANCEMENT PRESETS & MANUAL CONTROLS SYNC
+       * ========================================================================= */
+      function syncEnhancementUI() {
+        // Highlight preset cards
+        els.enhancePresetsGrid.querySelectorAll('.preset-card').forEach((card) => {
+          const active = card.dataset.preset === state.activePreset;
+          card.className = active
+            ? 'preset-card text-left p-2.5 rounded-xl border transition bg-indigo-600 text-white border-indigo-600 shadow-sm'
+            : 'preset-card text-left p-2.5 rounded-xl border transition bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-700';
+        });
+
+        // Upscale buttons
+        els.upscaleValLabel.textContent = `${state.enhance.upscale}x`;
+        els.upscaleButtons.querySelectorAll('.scale-btn').forEach((btn) => {
+          const active = Number(btn.dataset.scale) === state.enhance.upscale;
+          btn.className = active
+            ? 'scale-btn py-1.5 rounded-lg text-xs font-bold border transition bg-indigo-600 text-white border-indigo-600'
+            : 'scale-btn py-1.5 rounded-lg text-xs font-semibold border transition bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-700';
+        });
+
+        // Checkboxes & sliders
+        els.chkAutoDark.checked = state.enhance.autoDarkInvert;
+        els.chkForceInvert.checked = state.enhance.forceInvert;
+        els.chkSharpen.checked = state.enhance.sharpen;
+        els.chkPadding.checked = state.enhance.addPadding;
+        els.chkGrayscale.checked = state.enhance.grayscale;
+        els.chkBinarize.checked = state.enhance.binarize;
+
+        els.sliderContrast.value = state.enhance.contrast;
+        els.contrastValLabel.textContent = `${Number(state.enhance.contrast).toFixed(2)}x`;
+
+        els.sliderThreshold.value = state.enhance.threshold;
+        els.thresholdValLabel.textContent = state.enhance.threshold;
+        els.binarizeControlsBox.classList.toggle('opacity-50', !state.enhance.binarize);
+        els.binarizeControlsBox.classList.toggle('pointer-events-none', !state.enhance.binarize);
+      }
+
+      function onManualEnhancementChange(recalcOtsu = false) {
+        state.activePreset = 'custom';
+        syncEnhancementUI();
+        if (state.originalImage) {
+          buildProcessedCanvas(recalcOtsu);
+          renderStageCanvas();
+        }
+      }
+
+      els.enhancePresetsGrid.addEventListener('click', (e) => {
+        const card = e.target.closest('.preset-card');
+        if (!card) return;
+        const presetId = card.dataset.preset;
+        if (!ENHANCE_PRESETS[presetId]) return;
+
+        state.activePreset = presetId;
+        state.enhance = { ...ENHANCE_PRESETS[presetId] };
+        syncEnhancementUI();
+        if (state.originalImage) {
+          buildProcessedCanvas(state.enhance.binarize && state.enhance.autoOtsu);
+          renderStageCanvas();
+        }
+        showToast(`Đã chọn chế độ: ${ENHANCE_PRESETS[presetId].label}`, 'info', 2200);
+      });
+
+      els.btnToggleAdvanced.addEventListener('click', () => {
+        const hidden = els.advancedEnhancePanel.classList.toggle('hidden');
+        els.advancedChevron.style.transform = hidden ? 'rotate(0deg)' : 'rotate(180deg)';
+      });
+
+      els.upscaleButtons.addEventListener('click', (e) => {
+        const btn = e.target.closest('.scale-btn');
+        if (!btn) return;
+        state.enhance.upscale = Number(btn.dataset.scale);
+        onManualEnhancementChange();
+      });
+
+      els.chkAutoDark.addEventListener('change', (e) => {
+        state.enhance.autoDarkInvert = e.target.checked;
+        if (e.target.checked) state.enhance.forceInvert = false;
+        onManualEnhancementChange();
+      });
+      els.chkForceInvert.addEventListener('change', (e) => {
+        state.enhance.forceInvert = e.target.checked;
+        if (e.target.checked) state.enhance.autoDarkInvert = false;
+        onManualEnhancementChange();
+      });
+      els.chkSharpen.addEventListener('change', (e) => {
+        state.enhance.sharpen = e.target.checked;
+        onManualEnhancementChange();
+      });
+      els.chkPadding.addEventListener('change', (e) => {
+        state.enhance.addPadding = e.target.checked;
+        onManualEnhancementChange();
+      });
+      els.chkGrayscale.addEventListener('change', (e) => {
+        state.enhance.grayscale = e.target.checked;
+        onManualEnhancementChange();
+      });
+      els.chkBinarize.addEventListener('change', (e) => {
+        state.enhance.binarize = e.target.checked;
+        if (e.target.checked) {
+          state.enhance.grayscale = true;
+          state.enhance.autoOtsu = true;
+        }
+        onManualEnhancementChange(e.target.checked);
+      });
+      els.sliderContrast.addEventListener('input', (e) => {
+        state.enhance.contrast = Number(e.target.value);
+        onManualEnhancementChange();
+      });
+      els.sliderThreshold.addEventListener('input', (e) => {
+        state.enhance.autoOtsu = false;
+        state.enhance.threshold = Number(e.target.value);
+        onManualEnhancementChange(false);
+      });
+      els.btnAutoOtsu.addEventListener('click', () => {
+        state.enhance.autoOtsu = true;
+        onManualEnhancementChange(true);
+        showToast(`Đã tự tính ngưỡng Otsu: ${state.enhance.threshold}`, 'info', 2000);
+      });
+
+      syncEnhancementUI();
+
+      /* =========================================================================
+       * 9. IMAGE INPUT (File Picker, Drag & Drop, Ctrl+V Paste, Clipboard Button)
+       * ========================================================================= */
+      function loadImageFromBlob(blob, fileName = 'anh-chup-man-hinh.png') {
+        if (!blob || !blob.type.startsWith('image/')) {
+          showToast('Vui lòng chọn hoặc dán tệp hình ảnh hợp lệ (PNG, JPG, WEBP, BMP, GIF).', 'error');
+          return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = (evt) => {
+          const img = new Image();
+          img.onload = () => {
+            state.originalImage = img;
+            state.imageFileName = fileName;
+            state.rotation = 0;
+            state.crop = { x: 0, y: 0, w: 1, h: 1 };
+            state.hasCustomCrop = false;
+            state.psm6Dismissed = false;
+            state.lastOcrData = null;
+
+            els.dropzone.classList.add('hidden');
+            els.workspaceSection.classList.remove('hidden');
+            els.viewerModeBar.classList.remove('hidden');
+            els.psm6SuggestionBanner.classList.add('hidden');
+            els.startOcrBtn.disabled = false;
+            els.btnToggleBbox.disabled = true;
+            els.imageMetaName.textContent = fileName;
+            hideOcrError();
+
+            rebuildRotatedCanvas();
+            buildProcessedCanvas(state.enhance.binarize && state.enhance.autoOtsu);
+            syncCropModeUI();
+            syncBboxButtonUI();
+
+            // Wait one frame for container dimensions before rendering stage canvas
+            requestAnimationFrame(() => renderStageCanvas());
+
+            if (els.autoOcrToggle.checked) {
+              runOcr();
+            } else {
+              showToast('Đã nạp ảnh! Bạn có thể kéo cắt vùng chữ rồi nhấn Bắt đầu quét.', 'info');
+            }
+          };
+          img.onerror = () => showToast('Không thể giải mã hình ảnh này.', 'error');
+          img.src = evt.target.result;
+        };
+        reader.onerror = () => showToast('Lỗi đọc tệp ảnh từ thiết bị.', 'error');
+        reader.readAsDataURL(blob);
+      }
+
+      els.selectFileBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        els.fileInput.click();
+      });
+      els.replaceFileBtn.addEventListener('click', () => els.fileInput.click());
+      els.dropzone.addEventListener('click', (e) => {
+        if (e.target.closest('button')) return;
+        els.fileInput.click();
+      });
+
+      els.fileInput.addEventListener('change', (e) => {
+        const file = e.target.files && e.target.files[0];
+        if (file) loadImageFromBlob(file, file.name);
+        e.target.value = '';
+      });
+
+      async function pasteImageViaButton() {
+        if (!navigator.clipboard || typeof navigator.clipboard.read !== 'function') {
+          showToast('Trình duyệt không hỗ trợ nút đọc Clipboard trực tiếp. Hãy nhấn Ctrl+V (hoặc Cmd+V) để dán ảnh ngay!', 'warning', 4500);
+          return;
+        }
+        try {
+          const items = await navigator.clipboard.read();
+          for (const item of items) {
+            const imgType = item.types.find((t) => t.startsWith('image/'));
+            if (imgType) {
+              const blob = await item.getType(imgType);
+              const ext = imgType.split('/')[1] || 'png';
+              loadImageFromBlob(blob, `clipboard-${Date.now()}.${ext}`);
+              return;
+            }
+          }
+          showToast('Clipboard chưa có ảnh. Hãy chụp màn hình hoặc sao chép ảnh trước nhé!', 'warning', 3800);
+        } catch (err) {
+          showToast('Trình duyệt chặn nút đọc Clipboard tự động — bạn chỉ cần nhấn Ctrl+V (hoặc Cmd+V) là dán được ngay!', 'warning', 4800);
+        }
+      }
+
+      els.pasteClipboardBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        pasteImageViaButton();
+      });
+      els.replacePasteBtn.addEventListener('click', pasteImageViaButton);
+
+      // Global Ctrl+V / Cmd+V listener
+      document.addEventListener('paste', (e) => {
+        const items = e.clipboardData && e.clipboardData.items;
+        if (!items) return;
+
+        for (let i = 0; i < items.length; i++) {
+          const item = items[i];
+          if (item.type && item.type.startsWith('image/')) {
+            e.preventDefault();
+            const blob = item.getAsFile();
+            if (blob) {
+              const ext = (item.type.split('/')[1] || 'png').replace('jpeg', 'jpg');
+              const timeStr = new Date().toLocaleTimeString('vi-VN').replace(/:/g, '-');
+              loadImageFromBlob(blob, `anh-dan-${timeStr}.${ext}`);
+            }
+            return;
+          }
+        }
+        const tag = document.activeElement && document.activeElement.tagName;
+        if (tag !== 'INPUT' && tag !== 'TEXTAREA') {
+          showToast('Clipboard hiện không có ảnh. Hãy chụp màn hình hoặc copy ảnh rồi nhấn Ctrl+V.', 'info', 3400);
+        }
+      });
+
+      // Global Drag & Drop
+      let dragDepth = 0;
+      window.addEventListener('dragenter', (e) => {
+        if (e.dataTransfer && Array.from(e.dataTransfer.types).includes('Files')) {
+          e.preventDefault();
+          dragDepth++;
+          els.globalDragOverlay.classList.remove('hidden');
+        }
+      });
+      window.addEventListener('dragover', (e) => {
+        if (e.dataTransfer && Array.from(e.dataTransfer.types).includes('Files')) {
+          e.preventDefault();
+          e.dataTransfer.dropEffect = 'copy';
+        }
+      });
+      window.addEventListener('dragleave', () => {
+        dragDepth = Math.max(0, dragDepth - 1);
+        if (dragDepth === 0) els.globalDragOverlay.classList.add('hidden');
+      });
+      window.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dragDepth = 0;
+        els.globalDragOverlay.classList.add('hidden');
+        const file = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+        if (file) loadImageFromBlob(file, file.name);
+      });
+
+      /* =========================================================================
+       * 10. TESSERACT.JS v5 OCR ENGINE (tessdata_best + OEM 1 + PSM + Cache)
+       * ========================================================================= */
+      function translateStatus(status, modelId) {
+        const modelTag = MODEL_CONFIGS[modelId] ? MODEL_CONFIGS[modelId].shortLabel : 'Best';
+        const map = {
+          'loading tesseract core': 'Đang nạp lõi xử lý Tesseract WebAssembly...',
+          'initializing tesseract': 'Đang khởi tạo bộ máy LSTM (OEM 1)...',
+          'initialized tesseract': 'Đã khởi tạo bộ máy LSTM',
+          'loading language traineddata': `Đang tải gói mô hình ${modelTag} (lưu cache IndexedDB)...`,
+          'loading language traineddata (from cache)': `Đang nạp gói mô hình ${modelTag} từ cache ngoại tuyến...`,
+          'loaded language traineddata': 'Đã nạp xong gói ngôn ngữ',
+          'initializing api': 'Đang cấu hình tham số phân đoạn trang...',
+          'initialized api': 'Bộ máy OCR đã sẵn sàng',
+          'recognizing text': 'Đang nhận diện chữ từ ảnh đã chuẩn hóa...'
+        };
+        return map[status] || `Đang xử lý (${status})...`;
+      }
+
+      function updateProgress(statusText, ratio, showBestNote = false) {
+        const pct = Math.min(100, Math.max(0, Math.round((ratio || 0) * 100)));
+        els.progressStatusText.textContent = statusText;
+        els.progressPercentText.textContent = `${pct}%`;
+        els.progressBarFill.style.width = `${pct}%`;
+        els.progressSubnote.classList.toggle('hidden', !showBestNote);
+      }
+
+      function showOcrError(title, detail) {
+        els.ocrErrorTitle.textContent = title;
+        els.ocrErrorDetail.textContent = detail;
+        els.ocrErrorBox.classList.remove('hidden');
+      }
+
+      function hideOcrError() {
+        els.ocrErrorBox.classList.add('hidden');
+      }
+
+      function setScanningUI(scanning) {
+        state.isScanning = scanning;
+        els.startOcrBtn.disabled = scanning || !state.originalImage;
+        const cfg = MODEL_CONFIGS[state.modelQuality];
+        els.ocrBtnText.textContent = scanning ? 'Đang nhận diện...' : `Bắt đầu quét (OCR ${cfg.shortLabel})`;
+        els.cancelOcrBtn.classList.toggle('hidden', !scanning);
+        els.progressContainer.classList.toggle('hidden', !scanning);
+      }
+
+      async function terminateActiveWorker() {
+        if (state.activeWorker) {
+          const workerRef = state.activeWorker;
+          state.activeWorker = null;
+          state.activeWorkerLangs = '';
+          state.activeWorkerModel = '';
+          try {
+            await workerRef.terminate();
+          } catch (err) {}
+        }
+      }
+
+      /**
+       * Extract structured words and lines cleanly from Tesseract.js v5 response.
+       */
+      function extractWordsAndLines(data) {
+        const words = [];
+        const lines = [];
+
+        if (data && Array.isArray(data.lines) && data.lines.length > 0) {
+          data.lines.forEach((line) => {
+            const lineWordIndices = [];
+            if (Array.isArray(line.words)) {
+              line.words.forEach((w) => {
+                const txt = (w.text || '').trim();
+                if (!txt) return;
+                const idx = words.length;
+                words.push({
+                  text: txt,
+                  confidence: typeof w.confidence === 'number' ? w.confidence : 0,
+                  bbox: w.bbox || null
+                });
+                lineWordIndices.push(idx);
+              });
+            }
+            if (lineWordIndices.length > 0) {
+              lines.push(lineWordIndices);
+            }
+          });
+        } else if (data && Array.isArray(data.words) && data.words.length > 0) {
+          const singleLine = [];
+          data.words.forEach((w) => {
+            const txt = (w.text || '').trim();
+            if (!txt) return;
+            const idx = words.length;
+            words.push({
+              text: txt,
+              confidence: typeof w.confidence === 'number' ? w.confidence : 0,
+              bbox: w.bbox || null
+            });
+            singleLine.push(idx);
+          });
+          if (singleLine.length > 0) lines.push(singleLine);
+        }
+
+        return { words, lines };
+      }
+
+      async function runOcr() {
+        if (!state.originalImage) {
+          showToast('Vui lòng dán hoặc tải ảnh lên trước khi quét.', 'warning');
+          return;
+        }
+        if (typeof Tesseract === 'undefined') {
+          showOcrError(
+            'Chưa tải được thư viện Tesseract.js',
+            'Vui lòng kiểm tra kết nối mạng ở lần mở đầu tiên để trình duyệt tải thư viện Tesseract.js v5.'
+          );
+          return;
+        }
+
+        if (state.isScanning) {
+          await cancelOcr(true);
+        }
+
+        const runId = ++state.scanRunId;
+        const langStr = state.selectedLangs.join('+');
+        const modelKey = state.modelQuality;
+        const modelCfg = MODEL_CONFIGS[modelKey];
+        const psmVal = state.psm;
+        const startTime = performance.now();
+
+        hideOcrError();
+        setScanningUI(true);
+        updateProgress('Đang tiền xử lý ảnh (phóng to, làm nét, chuẩn hóa)...', 0.06, false);
+
+        // Always rebuild processedCanvas fresh right before recognizing
+        buildProcessedCanvas(false);
+        renderStageCanvas();
+
+        // Snapshot geometry for accurate bounding box projection
+        const cropSnapshot = { ...state.crop };
+        const rotationSnapshot = state.rotation;
+        const procW = processedCanvas.width;
+        const procH = processedCanvas.height;
+        const { paddingOffset, scaledW, scaledH } = state.lastPipelineMeta;
+
+        try {
+          // Reuse worker if language & model quality match; otherwise create clean worker
+          const needsNewWorker =
+            !state.activeWorker ||
+            state.activeWorkerLangs !== langStr ||
+            state.activeWorkerModel !== modelKey;
+
+          if (needsNewWorker) {
+            await terminateActiveWorker();
+            if (runId !== state.scanRunId) return;
+
+            const worker = await Tesseract.createWorker(langStr, 1, {
+              langPath: modelCfg.langPath,
+              logger: (m) => {
+                if (runId !== state.scanRunId) return;
+                const isDownloadingBest =
+                  modelKey === 'best' && m.status === 'loading language traineddata';
+                updateProgress(
+                  translateStatus(m.status, modelKey),
+                  typeof m.progress === 'number' ? m.progress : 0,
+                  isDownloadingBest
+                );
+              },
+              errorHandler: (err) => console.error('Tesseract Worker Error:', err)
+            });
+
+            if (runId !== state.scanRunId) {
+              try {
+                await worker.terminate();
+              } catch (e) {}
+              return;
+            }
+
+            state.activeWorker = worker;
+            state.activeWorkerLangs = langStr;
+            state.activeWorkerModel = modelKey;
+          } else {
+            updateProgress('Đang cấu hình PSM & nhận diện văn bản...', 0.18, false);
+          }
+
+          // Configure Page Segmentation Mode (PSM) & spacing preservation
+          await state.activeWorker.setParameters({
+            tessedit_pageseg_mode: String(psmVal),
+            preserve_interword_spaces: '1'
+          });
+
+          if (runId !== state.scanRunId) return;
+
+          // Recognize from preprocessed canvas
+          const result = await state.activeWorker.recognize(
+            processedCanvas,
+            {},
+            { text: true, blocks: true }
+          );
+
+          if (runId !== state.scanRunId) return;
+
+          const elapsedSec = ((performance.now() - startTime) / 1000).toFixed(1);
+          const data = result && result.data ? result.data : {};
+          const extractedText = (data.text || '').trim();
+          const confidence = typeof data.confidence === 'number' ? data.confidence : 0;
+          const { words, lines } = extractWordsAndLines(data);
+
+          // Save structured result for Confidence Overlay & Word Review
+          state.lastRawText = extractedText;
+          state.lastOcrData = {
+            words,
+            lines,
+            procW,
+            procH,
+            paddingOffset,
+            scaledW,
+            scaledH,
+            cropSnapshot,
+            rotationSnapshot
+          };
+
+          els.outputTextarea.value = extractedText;
+          els.btnUndoText.classList.add('hidden');
+          els.btnUndoText.disabled = true;
+          updateTextStats();
+          updateResultMetrics(confidence, elapsedSec);
+
+          // Enable Confidence Overlay button & redraw canvas with colored boxes
+          els.btnToggleBbox.disabled = words.length === 0;
+          syncBboxButtonUI();
+          renderStageCanvas();
+
+          // Render Suspect Word Review tab
+          renderWordReviewer();
+
+          // Add to session history
+          addHistoryEntry({
+            text: extractedText,
+            langs: [...state.selectedLangs],
+            modelLabel: modelCfg.shortLabel,
+            psm: psmVal,
+            confidence,
+            duration: elapsedSec
+          });
+
+          if (extractedText) {
+            showToast(`Quét xong trong ${elapsedSec}s • Độ tin cậy ~${confidence.toFixed(0)}%.`, 'success');
+          } else {
+            showToast('Không thấy văn bản rõ ràng. Hãy thử cắt sát vùng chữ hoặc đổi chế độ tiền xử lý!', 'warning', 4600);
+          }
+        } catch (err) {
+          if (runId !== state.scanRunId) return;
+          console.error('OCR Error:', err);
+          await terminateActiveWorker();
+
+          const offline = !navigator.onLine;
+          showOcrError(
+            offline ? 'Không thể tải gói ngôn ngữ khi đang Ngoại tuyến' : 'Lỗi tải mô hình hoặc nhận diện',
+            offline
+              ? `Gói ${modelCfg.label} cho (${langStr}) chưa có trong cache IndexedDB. Hãy kết nối mạng 1 lần để tải về, sau đó bạn có thể quét hoàn toàn offline.`
+              : `Chi tiết: ${err && err.message ? err.message : 'Kết nối tới kho dữ liệu tessdata bị gián đoạn. Hãy thử lại hoặc chuyển tạm sang Cân bằng / Nhanh.'}`
+          );
+          showToast('Quét OCR thất bại. Xem chi tiết thông báo lỗi.', 'error');
+        } finally {
+          if (runId === state.scanRunId) {
+            setScanningUI(false);
+          }
+        }
+      }
+
+      async function cancelOcr(silent = false) {
+        state.scanRunId++;
+        await terminateActiveWorker();
+        setScanningUI(false);
+        if (!silent) showToast('Đã hủy quá trình quét OCR.', 'info');
+      }
+
+      els.startOcrBtn.addEventListener('click', runOcr);
+      els.cancelOcrBtn.addEventListener('click', () => cancelOcr(false));
+
+      /* =========================================================================
+       * 11. RESULT TABS, SUSPECT WORD REVIEWER, TEXT CLEANUP & UNDO
+       * ========================================================================= */
+      function setResultTab(tab) {
+        state.activeResultTab = tab;
+        const isEdit = tab === 'edit';
+
+        els.panelEdit.classList.toggle('hidden', !isEdit);
+        els.panelReview.classList.toggle('hidden', isEdit);
+
+        els.tabEditBtn.className = isEdit
+          ? 'px-3 py-1.5 rounded-lg bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-sm transition'
+          : 'px-3 py-1.5 rounded-lg text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition';
+
+        els.tabReviewBtn.className = !isEdit
+          ? 'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-sm transition'
+          : 'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition';
+      }
+
+      els.tabEditBtn.addEventListener('click', () => setResultTab('edit'));
+      els.tabReviewBtn.addEventListener('click', () => setResultTab('review'));
+
+      function renderWordReviewer() {
+        const ocr = state.lastOcrData;
+        els.wordInspectorBar.classList.add('hidden');
+        state.selectedReviewWordIdx = -1;
+
+        if (!ocr || !ocr.words || ocr.words.length === 0) {
+          els.suspectCountBadge.classList.add('hidden');
+          els.reviewStatsText.textContent = 'Chưa có dữ liệu từ để kiểm tra.';
+          els.reviewWordsContainer.innerHTML = `<p class="text-xs text-slate-400 text-center py-10">Chưa có từ nào được nhận diện.</p>`;
+          return;
+        }
+
+        let redCount = 0;
+        let amberCount = 0;
+        ocr.words.forEach((w) => {
+          if (w.confidence < 65) redCount++;
+          else if (w.confidence < 80) amberCount++;
+        });
+        const totalSuspect = redCount + amberCount;
+
+        if (totalSuspect > 0) {
+          els.suspectCountBadge.textContent = totalSuspect;
+          els.suspectCountBadge.classList.remove('hidden');
+        } else {
+          els.suspectCountBadge.classList.add('hidden');
+        }
+
+        els.reviewStatsText.textContent = `Tổng ${ocr.words.length} từ • ${redCount} nghi sai cao (<65%) • ${amberCount} cần xem (65–79%)`;
+
+        els.reviewWordsContainer.innerHTML = '';
+        const frag = document.createDocumentFragment();
+
+        ocr.lines.forEach((lineIndices) => {
+          const lineDiv = document.createElement('div');
+          lineDiv.className = 'mb-1.5 flex flex-wrap items-baseline gap-x-1 gap-y-1';
+
+          lineIndices.forEach((wordIdx) => {
+            const w = ocr.words[wordIdx];
+            const conf = Math.round(w.confidence);
+            const span = document.createElement('button');
+            span.type = 'button';
+            span.dataset.wordIdx = String(wordIdx);
+            span.title = `Độ tin cậy: ${conf}% — Nhấn để sửa từ này`;
+            span.textContent = w.text;
+
+            let styleCls = 'px-1 py-0.5 rounded-md transition cursor-pointer hover:bg-indigo-100 dark:hover:bg-indigo-900/50';
+            if (w.edited) {
+              styleCls = 'px-1.5 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-900/50 text-emerald-900 dark:text-emerald-100 border-b-2 border-emerald-500 font-medium cursor-pointer';
+            } else if (conf < 65) {
+              styleCls = 'px-1.5 py-0.5 rounded-md bg-rose-100 dark:bg-rose-900/50 text-rose-900 dark:text-rose-100 border-b-2 border-rose-500 font-medium cursor-pointer hover:brightness-95';
+            } else if (conf < 80) {
+              styleCls = 'px-1.5 py-0.5 rounded-md bg-amber-100 dark:bg-amber-900/50 text-amber-900 dark:text-amber-100 border-b-2 border-amber-500 font-medium cursor-pointer hover:brightness-95';
+            }
+            span.className = styleCls;
+
+            span.addEventListener('click', () => openWordInspector(wordIdx));
+            lineDiv.appendChild(span);
+          });
+
+          frag.appendChild(lineDiv);
+        });
+
+        els.reviewWordsContainer.appendChild(frag);
+      }
+
+      function openWordInspector(wordIdx) {
+        const ocr = state.lastOcrData;
+        if (!ocr || !ocr.words[wordIdx]) return;
+        const w = ocr.words[wordIdx];
+        state.selectedReviewWordIdx = wordIdx;
+
+        els.inspectorConf.textContent = w.edited ? 'Đã sửa' : `${Math.round(w.confidence)}%`;
+        els.inspectorEditInput.value = w.text;
+        els.wordInspectorBar.classList.remove('hidden');
+        els.inspectorEditInput.focus();
+        els.inspectorEditInput.select();
+      }
+
+      function saveInspectedWord() {
+        const idx = state.selectedReviewWordIdx;
+        const ocr = state.lastOcrData;
+        if (idx < 0 || !ocr || !ocr.words[idx]) return;
+
+        const newVal = els.inspectorEditInput.value.trim();
+        if (!newVal) return;
+
+        ocr.words[idx].text = newVal;
+        ocr.words[idx].confidence = 100;
+        ocr.words[idx].edited = true;
+
+        // Rebuild full text from updated lines and sync textarea
+        const rebuilt = ocr.lines
+          .map((lineIndices) => lineIndices.map((i) => ocr.words[i].text).join(' '))
+          .join('\n');
+
+        els.outputTextarea.value = rebuilt;
+        updateTextStats();
+        showUndoButtonIfChanged();
+        renderWordReviewer();
+        showToast('Đã cập nhật từ đã sửa vào văn bản!', 'success', 2000);
+      }
+
+      els.inspectorSaveBtn.addEventListener('click', saveInspectedWord);
+      els.inspectorEditInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          saveInspectedWord();
+        }
+      });
+
+      function updateResultMetrics(confidence, elapsedSec) {
+        els.resultMetrics.classList.remove('hidden');
+        els.confidenceBadge.textContent = `Tin cậy: ${confidence.toFixed(1)}%`;
+        els.confidenceBadge.className = 'inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold border';
+
+        if (confidence >= 85) {
+          els.confidenceBadge.classList.add('bg-emerald-50', 'text-emerald-700', 'border-emerald-200', 'dark:bg-emerald-950/60', 'dark:text-emerald-300', 'dark:border-emerald-800');
+        } else if (confidence >= 65) {
+          els.confidenceBadge.classList.add('bg-amber-50', 'text-amber-700', 'border-amber-200', 'dark:bg-amber-950/60', 'dark:text-amber-300', 'dark:border-amber-800');
+        } else {
+          els.confidenceBadge.classList.add('bg-rose-50', 'text-rose-700', 'border-rose-200', 'dark:bg-rose-950/60', 'dark:text-rose-300', 'dark:border-rose-800');
+        }
+        els.durationBadge.textContent = `${elapsedSec}s`;
+      }
+
+      function updateTextStats() {
+        const text = els.outputTextarea.value;
+        const chars = text.length;
+        const trimmed = text.trim();
+        const words = trimmed ? trimmed.split(/\s+/).length : 0;
+        const lines = text ? text.split(/\r\n|\r|\n/).length : 0;
+
+        els.statChars.textContent = chars.toLocaleString('vi-VN');
+        els.statWords.textContent = words.toLocaleString('vi-VN');
+        els.statLines.textContent = lines.toLocaleString('vi-VN');
+      }
+
+      function showUndoButtonIfChanged() {
+        const hasDiff = state.lastRawText && els.outputTextarea.value !== state.lastRawText;
+        els.btnUndoText.classList.toggle('hidden', !hasDiff);
+        els.btnUndoText.disabled = !hasDiff;
+      }
+
+      els.outputTextarea.addEventListener('input', () => {
+        updateTextStats();
+        showUndoButtonIfChanged();
+      });
+
+      els.btnCopyText.addEventListener('click', () => copyTextToClipboard(els.outputTextarea.value));
+
+      els.btnDownloadTxt.addEventListener('click', () => {
+        const text = els.outputTextarea.value;
+        if (!text.trim()) {
+          showToast('Chưa có văn bản để tải xuống.', 'warning');
+          return;
+        }
+        const now = new Date();
+        const stamp = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}-${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}`;
+        const blob = new Blob(['\uFEFF' + text], { type: 'text/plain;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `ocr-pro-${stamp}.txt`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        showToast('Đã tải tệp .txt (UTF-8) thành công!', 'success');
+      });
+
+      // Clean OCR spacing errors & Smart Line Merge
+      els.btnCleanMerge.addEventListener('click', () => {
+        const original = els.outputTextarea.value;
+        if (!original.trim()) {
+          showToast('Chưa có văn bản để dọn lỗi.', 'warning');
+          return;
+        }
+        if (!state.lastRawText) {
+          state.lastRawText = original;
+        }
+
+        const normalized = original.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+        const paragraphs = normalized.split(/\n\s*\n+/);
+        const listPattern = /^\s*(?:[-•*–+▪▸]|\d+[.)]|[a-zA-Z][.)]|[IVX]+\.)\s+/;
+
+        const cleanedParagraphs = paragraphs.map((para) => {
+          const lines = para.split('\n').map((l) => l.trim()).filter(Boolean);
+          if (lines.length === 0) return '';
+
+          let merged = lines[0];
+          for (let i = 1; i < lines.length; i++) {
+            const cur = lines[i];
+            if (listPattern.test(cur)) {
+              merged += '\n' + cur;
+            } else if (/[\p{L}]-$/u.test(merged) && /^[\p{L}]/u.test(cur)) {
+              merged = merged.slice(0, -1) + cur;
+            } else {
+              merged += ' ' + cur;
+            }
+          }
+
+          return merged
+            .replace(/[ \t]+([,.;:!?)\]}])/g, '$1')
+            .replace(/([(\[{])[ \t]+/g, '$1')
+            .replace(/[ \t]{2,}/g, ' ')
+            .trim();
+        });
+
+        els.outputTextarea.value = cleanedParagraphs.filter(Boolean).join('\n\n');
+        updateTextStats();
+        showUndoButtonIfChanged();
+        showToast('Đã dọn khoảng trắng thừa & gộp dòng thông minh! (Nhấn Khôi phục gốc nếu cần hoàn tác)', 'success', 3600);
+      });
+
+      els.btnUndoText.addEventListener('click', () => {
+        if (!state.lastRawText) return;
+        els.outputTextarea.value = state.lastRawText;
+        updateTextStats();
+        showUndoButtonIfChanged();
+        showToast('Đã khôi phục nguyên bản văn bản gốc sau khi quét.', 'info', 2400);
+      });
+
+      els.btnClearText.addEventListener('click', () => {
+        els.outputTextarea.value = '';
+        state.lastRawText = '';
+        state.lastOcrData = null;
+        els.resultMetrics.classList.add('hidden');
+        els.btnUndoText.classList.add('hidden');
+        els.btnToggleBbox.disabled = true;
+        syncBboxButtonUI();
+        renderWordReviewer();
+        if (state.originalImage) renderStageCanvas();
+        updateTextStats();
+        showToast('Đã xóa kết quả văn bản.', 'info', 2000);
+      });
+
+      /* =========================================================================
+       * 12. SESSION HISTORY (With Cropped Preview Thumbnail)
+       * ========================================================================= */
+      function createThumbnail() {
+        const src = processedCanvas.width ? processedCanvas : rotatedCanvas;
+        const maxSide = 112;
+        const scale = Math.min(maxSide / src.width, maxSide / src.height, 1);
+        const tCanvas = document.createElement('canvas');
+        tCanvas.width = Math.max(1, Math.round(src.width * scale));
+        tCanvas.height = Math.max(1, Math.round(src.height * scale));
+        const tCtx = tCanvas.getContext('2d');
+        tCtx.drawImage(src, 0, 0, tCanvas.width, tCanvas.height);
+        return tCanvas.toDataURL('image/jpeg', 0.72);
+      }
+
+      function addHistoryEntry({ text, langs, modelLabel, psm, confidence, duration }) {
+        state.history.unshift({
+          id: Date.now() + Math.random(),
+          thumb: createThumbnail(),
+          rawText: text || '',
+          displayText: text || '(Không phát hiện văn bản)',
+          langs,
+          modelLabel,
+          psm,
+          confidence,
+          duration,
+          timestamp: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+        });
+        if (state.history.length > 15) state.history.pop();
+        renderHistory();
+      }
+
+      function renderHistory() {
+        const has = state.history.length > 0;
+        els.historyEmptyState.classList.toggle('hidden', has);
+        els.historyList.classList.toggle('hidden', !has);
+        els.btnClearHistory.classList.toggle('hidden', !has);
+
+        els.historyList.innerHTML = '';
+        if (!has) return;
+
+        state.history.forEach((item) => {
+          const card = document.createElement('div');
+          card.className = 'flex items-start gap-2.5 p-2.5 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950/50 hover:border-indigo-300 dark:hover:border-indigo-700 transition cursor-pointer';
+          card.innerHTML = `
+            <img src="${item.thumb}" alt="Ảnh quét" class="w-12 h-12 rounded-lg object-cover border border-slate-200 dark:border-slate-700 bg-white shrink-0" />
+            <div class="flex-1 min-w-0 space-y-0.5">
+              <div class="flex items-center justify-between gap-2 text-[10px] text-slate-500 dark:text-slate-400">
+                <span class="font-mono font-bold text-indigo-600 dark:text-indigo-400 truncate">${item.langs.join('+')} • ${item.modelLabel} • PSM ${item.psm}</span>
+                <span class="shrink-0">${item.confidence.toFixed(0)}% • ${item.timestamp}</span>
+              </div>
+              <p class="text-xs text-slate-700 dark:text-slate-200 line-clamp-2 leading-relaxed break-words"></p>
+            </div>
+            <button type="button" title="Sao chép nhanh" class="history-copy-btn p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/60 transition shrink-0">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+              </svg>
+            </button>
+          `;
+          card.querySelector('p').textContent = item.displayText;
+          card.querySelector('.history-copy-btn').addEventListener('click', (e) => {
+            e.stopPropagation();
+            copyTextToClipboard(item.rawText);
+          });
+          card.addEventListener('click', () => {
+            els.outputTextarea.value = item.rawText;
+            state.lastRawText = item.rawText;
+            updateTextStats();
+            showUndoButtonIfChanged();
+            updateResultMetrics(item.confidence, item.duration);
+            setResultTab('edit');
+            showToast('Đã nạp lại văn bản từ lịch sử phiên.', 'info', 2000);
+          });
+          els.historyList.appendChild(card);
+        });
+      }
+
+      els.btnClearHistory.addEventListener('click', () => {
+        state.history = [];
+        renderHistory();
+        showToast('Đã xóa lịch sử quét.', 'info', 2000);
+      });
+
+      window.addEventListener('beforeunload', () => {
+        if (state.activeWorker) {
+          try {
+            state.activeWorker.terminate();
+          } catch (e) {}
+        }
+      });
+
+    })();
+  </script>
+</body>
+</html>

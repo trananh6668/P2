@@ -136,6 +136,9 @@
 
     /* Tactile rectangular Pioneer buttons */
     .hw-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
       background: linear-gradient(180deg, #252b38 0%, #171b24 100%);
       border: 1px solid #353f54;
       border-radius: 6px;
@@ -143,8 +146,18 @@
       color: #cbd5e1;
       font-weight: 700;
       letter-spacing: 0.04em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      min-width: 0;
+      line-height: 1.1;
       transition: all 0.08s ease;
       cursor: pointer;
+    }
+    .hw-btn-multiline {
+      flex-direction: column;
+      white-space: normal;
+      line-height: 1.1;
     }
     .hw-btn:active { transform: translateY(1px) scale(0.97); }
     .hw-btn.active-cyan {
@@ -230,20 +243,35 @@
         0 0 0 3px #0a0c10;
     }
 
-    /* Rotary Knob styling */
+    /* Rotary Knob styling (CSS variable driven so scaling never overlaps labels) */
     .knob-wrap {
+      --knob-sz: var(--knob-default-sz, 40px);
       display: flex;
       flex-direction: column;
       align-items: center;
+      flex-shrink: 0;
       touch-action: none;
       cursor: ns-resize;
     }
+    .knob-ring {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: calc(var(--knob-sz) + 8px);
+      height: calc(var(--knob-sz) + 8px);
+    }
     .knob-cap {
+      width: var(--knob-sz);
+      height: var(--knob-sz);
       background: radial-gradient(circle at 35% 30%, #3a4254 0%, #191d26 65%, #0d1016 100%);
       box-shadow:
         0 4px 8px rgba(0,0,0,0.75),
         inset 0 1px 1px rgba(255,255,255,0.22);
       border: 1px solid #3c465c;
+    }
+    .knob-pointer {
+      height: calc(var(--knob-sz) * 0.34);
     }
 
     /* Custom Fader Track & Hardware Cap */
@@ -337,61 +365,426 @@
     ::-webkit-scrollbar { width: 6px; height: 6px; }
     ::-webkit-scrollbar-track { background: #0c0e12; }
     ::-webkit-scrollbar-thumb { background: #2d3648; border-radius: 3px; }
+
+    /* =========================================================================
+       AUTO-FIT SINGLE-SCREEN LANDSCAPE MODE (Windows 16:9 & iPad 16:10)
+       & ANTI-OVERLAP RESPONSIVE SYSTEM ACROSS DEVICE SWITCHES
+       ========================================================================= */
+    #djStage {
+      width: 100%;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      transform-origin: 0 0;
+    }
+
+    html.autofit-lock,
+    body.autofit-landscape {
+      width: 100vw !important;
+      height: 100dvh !important;
+      min-height: 0 !important;
+      overflow: hidden !important;
+      position: fixed;
+      inset: 0;
+    }
+
+    body.autofit-landscape #djStage {
+      position: absolute;
+      top: 0;
+      left: 0;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    /* Header in Landscape Auto-Fit: decoupled from raw viewport breakpoints */
+    body.autofit-landscape #djHeader {
+      height: 42px;
+      padding: 0 12px !important;
+      flex-wrap: nowrap !important;
+      gap: 8px !important;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+    body.autofit-landscape #djHeader > div {
+      flex-wrap: nowrap !important;
+    }
+    body.autofit-landscape #audioStatusBadge {
+      display: flex !important;
+    }
+    body.autofit-landscape .hdr-btn-label,
+    body.autofit-landscape .hdr-studio-tag {
+      display: inline !important;
+    }
+
+    /* Waveform Section in Landscape Auto-Fit */
+    body.autofit-landscape #waveformSection {
+      padding: 4px 10px 4px 10px !important;
+      flex-shrink: 0;
+    }
+    body.autofit-landscape #waveformSection > .lcd-screen {
+      padding: 6px 8px !important;
+      gap: 4px !important;
+    }
+    body.autofit-landscape .wf-info-grid {
+      display: grid !important;
+      grid-template-columns: minmax(0, 5fr) minmax(116px, 1.8fr) minmax(0, 5fr) !important;
+      gap: 8px !important;
+      align-items: center;
+    }
+    body.autofit-landscape #dualWaveformWrap {
+      height: 70px !important;
+    }
+    body.autofit-landscape.stage-tall #dualWaveformWrap {
+      height: 88px !important;
+    }
+    body.autofit-landscape #overviewWrapA,
+    body.autofit-landscape #overviewWrapB {
+      height: 22px !important;
+    }
+
+    /* 3-Column Console Grid in Landscape Auto-Fit (16:9 PC & 16:10 iPad) */
+    body.autofit-landscape #djMain {
+      display: grid !important;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1.08fr) minmax(0, 1fr) !important;
+      flex: 1 1 0% !important;
+      min-height: 0 !important;
+      gap: 8px !important;
+      padding: 4px 10px 8px 10px !important;
+    }
+    body.autofit-landscape #deckA,
+    body.autofit-landscape #centerMixer,
+    body.autofit-landscape #deckB {
+      grid-column: auto !important;
+      min-width: 0 !important;
+      min-height: 0 !important;
+      height: 100% !important;
+      padding: 8px !important;
+      gap: 6px !important;
+      overflow: hidden;
+    }
+
+    /* Deck Controls in Landscape Auto-Fit */
+    body.autofit-landscape .deck-mid-grid {
+      display: grid !important;
+      grid-template-columns: minmax(0, 1fr) 112px !important;
+      gap: 8px !important;
+      align-items: stretch;
+    }
+    body.autofit-landscape #deckB .deck-mid-grid {
+      grid-template-columns: 112px minmax(0, 1fr) !important;
+    }
+    body.autofit-landscape #jogWheelA,
+    body.autofit-landscape #jogWheelB {
+      width: 204px !important;
+      height: 204px !important;
+    }
+    body.autofit-landscape.stage-tall #jogWheelA,
+    body.autofit-landscape.stage-tall #jogWheelB {
+      width: 218px !important;
+      height: 218px !important;
+    }
+    body.autofit-landscape .pitch-fader-wrap {
+      height: 146px !important;
+    }
+    body.autofit-landscape.stage-tall .pitch-fader-wrap {
+      height: 160px !important;
+    }
+    body.autofit-landscape #btnCueA,
+    body.autofit-landscape #btnPlayA,
+    body.autofit-landscape #btnCueB,
+    body.autofit-landscape #btnPlayB {
+      width: 64px !important;
+      height: 64px !important;
+      flex-shrink: 0;
+    }
+    body.autofit-landscape .deck-pad-box {
+      padding: 7px !important;
+      gap: 6px !important;
+    }
+    body.autofit-landscape .perf-pad {
+      min-height: 46px !important;
+      padding: 2px 3px !important;
+    }
+    body.autofit-landscape.stage-tall .perf-pad {
+      min-height: 52px !important;
+    }
+    body.autofit-landscape #padModesA button,
+    body.autofit-landscape #padModesB button {
+      padding: 5px 4px !important;
+      font-size: 10px !important;
+      letter-spacing: 0.02em;
+    }
+    body.autofit-landscape .deck-util-row button {
+      padding: 5px 3px !important;
+      font-size: 10px !important;
+      letter-spacing: 0.02em;
+    }
+    body.autofit-landscape .deck-select-row select,
+    body.autofit-landscape .deck-select-row label,
+    body.autofit-landscape .deck-select-row button {
+      padding-top: 5px !important;
+      padding-bottom: 5px !important;
+    }
+    body.autofit-landscape .deck-transport-grid button {
+      padding-top: 7px !important;
+      padding-bottom: 7px !important;
+    }
+
+    /* Center Pro Mixer in Landscape Auto-Fit (Exact Pixel Budget, Zero Overlap) */
+    body.autofit-landscape .mixer-top-box {
+      display: grid !important;
+      grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr) minmax(0, 1fr) !important;
+      gap: 8px !important;
+      padding: 5px 8px !important;
+      align-items: center;
+    }
+    body.autofit-landscape .mixer-top-box .knob-wrap {
+      --knob-sz: 36px;
+    }
+    body.autofit-landscape .mixer-mid-grid {
+      display: grid !important;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1.08fr) minmax(0, 1fr) !important;
+      gap: 6px !important;
+      flex: 1 1 0% !important;
+      min-height: 298px !important;
+      align-items: stretch;
+    }
+    body.autofit-landscape .mixer-eq-strip {
+      padding: 6px 4px !important;
+      gap: 2px !important;
+      min-width: 0;
+      justify-content: space-between;
+    }
+    body.autofit-landscape .mixer-eq-strip .knob-wrap {
+      --knob-sz: 32px;
+    }
+    body.autofit-landscape .mixer-eq-strip .mixer-color-knob .knob-wrap {
+      --knob-sz: 40px;
+    }
+    body.autofit-landscape .vu-meters-wrap {
+      height: 104px !important;
+    }
+    body.autofit-landscape.stage-tall .vu-meters-wrap {
+      height: 122px !important;
+    }
+    body.autofit-landscape .vu-seg {
+      height: 4px !important;
+    }
+    body.autofit-landscape .beatfx-box {
+      padding: 6px !important;
+      gap: 3px !important;
+      min-width: 0;
+    }
+    body.autofit-landscape .beatfx-box .knob-wrap {
+      --knob-sz: 32px;
+    }
+    body.autofit-landscape #btnBeatFxOn {
+      width: 46px !important;
+      height: 46px !important;
+      font-size: 8.5px !important;
+      letter-spacing: 0 !important;
+      flex-shrink: 0;
+    }
+    body.autofit-landscape .mixer-fader-box {
+      display: grid !important;
+      grid-template-columns: minmax(0, 1fr) 86px minmax(0, 1fr) !important;
+      gap: 8px !important;
+      padding: 6px 8px !important;
+      align-items: center;
+    }
+    body.autofit-landscape #volFaderA,
+    body.autofit-landscape #volFaderB {
+      height: 92px !important;
+    }
+    body.autofit-landscape.stage-tall #volFaderA,
+    body.autofit-landscape.stage-tall #volFaderB {
+      height: 110px !important;
+    }
+    body.autofit-landscape .crossfader-box {
+      padding: 5px 12px 7px 12px !important;
+      gap: 3px !important;
+    }
+    body.autofit-landscape #crossfader {
+      height: 36px !important;
+    }
+    body.autofit-landscape .crossfader-thumb {
+      height: 32px !important;
+    }
+
+    /* =========================================================================
+       PORTRAIT / SCROLL MODE SAFETY RULES (iPad Portrait, Narrow Split, Mobile)
+       ========================================================================= */
+    body:not(.autofit-landscape) .wf-info-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 5fr) minmax(116px, 1.8fr) minmax(0, 5fr);
+      gap: 8px;
+      align-items: center;
+    }
+    body:not(.autofit-landscape) .deck-mid-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 112px;
+      gap: 8px;
+      align-items: stretch;
+    }
+    body:not(.autofit-landscape) #deckB .deck-mid-grid {
+      grid-template-columns: 112px minmax(0, 1fr);
+    }
+    body:not(.autofit-landscape) .mixer-top-box {
+      display: grid;
+      grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr) minmax(0, 1fr);
+      gap: 8px;
+      align-items: center;
+    }
+    body:not(.autofit-landscape) .mixer-mid-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1.08fr) minmax(0, 1fr);
+      gap: 6px;
+      align-items: stretch;
+    }
+    body:not(.autofit-landscape) .mixer-fader-box {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(76px, 90px) minmax(0, 1fr);
+      gap: 6px;
+      align-items: center;
+    }
+
+    @media (max-width: 767px) {
+      body:not(.autofit-landscape) .wf-info-grid {
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        gap: 6px;
+      }
+      body:not(.autofit-landscape) .wf-info-phase {
+        grid-column: 1 / -1;
+        order: 3;
+      }
+    }
+
+    @media (max-width: 519px) {
+      body:not(.autofit-landscape) .wf-info-grid {
+        grid-template-columns: minmax(0, 1fr);
+      }
+      body:not(.autofit-landscape) .wf-info-phase {
+        grid-column: auto;
+        order: 0;
+      }
+      body:not(.autofit-landscape) .mixer-top-box {
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      }
+      body:not(.autofit-landscape) .mixer-cfx-col {
+        grid-column: 1 / -1;
+      }
+      body:not(.autofit-landscape) .deck-mid-grid {
+        grid-template-columns: minmax(0, 1fr) 96px;
+      }
+      body:not(.autofit-landscape) #deckB .deck-mid-grid {
+        grid-template-columns: 96px minmax(0, 1fr);
+      }
+    }
+
+    @media (max-width: 479px) {
+      body:not(.autofit-landscape) .mixer-eq-strip .knob-wrap {
+        --knob-sz: 30px;
+      }
+      body:not(.autofit-landscape) .mixer-eq-strip .mixer-color-knob .knob-wrap {
+        --knob-sz: 36px;
+      }
+      body:not(.autofit-landscape) .mixer-top-box .knob-wrap {
+        --knob-sz: 36px;
+      }
+      body:not(.autofit-landscape) .beatfx-box .knob-wrap {
+        --knob-sz: 30px;
+      }
+      body:not(.autofit-landscape) #btnBeatFxOn {
+        width: 42px;
+        height: 42px;
+        font-size: 8.5px;
+      }
+      body:not(.autofit-landscape) #jogWheelA,
+      body:not(.autofit-landscape) #jogWheelB {
+        width: 152px !important;
+        height: 152px !important;
+      }
+      body:not(.autofit-landscape) #btnCueA,
+      body:not(.autofit-landscape) #btnPlayA,
+      body:not(.autofit-landscape) #btnCueB,
+      body:not(.autofit-landscape) #btnPlayB {
+        width: 54px !important;
+        height: 54px !important;
+      }
+    }
+
+    /* Smooth touch scroll inside modals even when stage is locked */
+    .modal-scroll {
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior: contain;
+      touch-action: pan-y;
+    }
+
+    /* Genre Filter Pill styling inside Track Browser */
+    .genre-pill.active-cyan {
+      background: linear-gradient(180deg, #007ea7 0%, #004e6b 100%);
+      border-color: #00d2ff;
+      color: #ffffff;
+      box-shadow: 0 0 10px rgba(0, 210, 255, 0.5);
+    }
   </style>
 </head>
 <body class="chassis-bg min-h-screen w-full flex flex-col select-none">
 
   <!-- =========================================================================
-       STARTUP OVERLAY (Unlocks Web Audio API on Desktop & iPad Safari + Renders 4 EDM Demos)
+       STARTUP OVERLAY (Unlocks Web Audio API on Desktop & iPad Safari + 12 Instant EDM Demos)
        ========================================================================= -->
-  <div id="startupOverlay" class="fixed inset-0 z-50 flex items-center justify-center bg-[#07090d]/95 backdrop-blur-md p-4">
-    <div class="hardware-panel rounded-2xl max-w-xl w-full p-6 sm:p-8 text-center border border-cyan-500/30 relative overflow-hidden">
+  <div id="startupOverlay" class="fixed inset-0 z-50 flex items-center justify-center bg-[#07090d]/95 backdrop-blur-md p-3">
+    <div class="hardware-panel modal-scroll rounded-2xl max-w-3xl w-full max-h-[94dvh] p-5 sm:p-6 text-center border border-cyan-500/30 relative">
       <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#00d2ff] via-[#a855f7] to-[#ff5500]"></div>
-      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 text-xs font-tech tracking-widest mb-4">
+      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 text-[11px] font-tech tracking-widest mb-2.5">
         <span class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
-        CLUB PERFORMANCE SYSTEM // CDJ-3000 + DJM-A9
+        CLUB PERFORMANCE SYSTEM // CDJ-3000 + DJM-A9 // AUTO-FIT 16:9 &amp; IPAD 16:10
       </div>
-      <h1 class="font-tech text-3xl sm:text-4xl font-black tracking-wider text-white mb-2">
+      <h1 class="font-tech text-2xl sm:text-3xl font-black tracking-wider text-white mb-1.5">
         PIONEER <span class="text-[#00d2ff]">PRO</span> <span class="text-[#ff5500]">DJ</span>
       </h1>
-      <p class="text-slate-400 text-sm sm:text-base mb-5">
-        Bàn trình diễn EDM chuyên nghiệp tối ưu cho chuột & cảm ứng đa điểm iPad. Tích hợp sẵn <strong class="text-white">4 bản EDM Demo</strong> tổng hợp bằng Web Audio Engine + hỗ trợ nạp nhạc MP3/WAV cá nhân.
+      <p class="text-slate-400 text-xs sm:text-sm mb-3.5">
+        Bàn trình diễn EDM chuyên nghiệp tự động căn vừa màn ngang Windows 16:9 &amp; iPad 16:10. Tích hợp sẵn <strong class="text-white">12 bản EDM Club</strong> nạp nền siêu tốc (mở không cần chờ) + hỗ trợ nạp nhạc MP3/WAV cá nhân.
       </p>
 
-      <div class="grid grid-cols-2 gap-2.5 text-left text-xs mb-6">
-        <div class="bg-[#0c0f16] border border-slate-800 rounded-lg p-2.5">
-          <div class="text-cyan-400 font-bold">01. NEON PULSE</div>
-          <div class="text-slate-400">Big Room House • 128 BPM • F#m</div>
-        </div>
-        <div class="bg-[#0c0f16] border border-slate-800 rounded-lg p-2.5">
-          <div class="text-purple-400 font-bold">02. CYBER DRIFT</div>
-          <div class="text-slate-400">Peak-Time Techno • 132 BPM • Am</div>
-        </div>
-        <div class="bg-[#0c0f16] border border-slate-800 rounded-lg p-2.5">
-          <div class="text-emerald-400 font-bold">03. HYPERDRIVE</div>
-          <div class="text-slate-400">Future Bass EDM • 126 BPM • Cm</div>
-        </div>
-        <div class="bg-[#0c0f16] border border-slate-800 rounded-lg p-2.5">
-          <div class="text-orange-400 font-bold">04. SUB ZERO</div>
-          <div class="text-slate-400">Bass House Drop • 128 BPM • Gm</div>
-        </div>
+      <div id="startupTrackGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-1.5 text-left text-[11px] mb-3.5">
+        <div id="startupCard_0" class="bg-[#0c0f16] border border-slate-800 rounded-lg px-2.5 py-1.5 transition-colors"><div class="flex items-center justify-between gap-1"><span class="text-cyan-400 font-bold truncate">01. NEON PULSE</span><span id="startupDot_0" class="w-1.5 h-1.5 rounded-full bg-slate-600 shrink-0"></span></div><div class="text-slate-400 text-[10px] truncate">Big Room • 128 BPM • F#m</div></div>
+        <div id="startupCard_1" class="bg-[#0c0f16] border border-slate-800 rounded-lg px-2.5 py-1.5 transition-colors"><div class="flex items-center justify-between gap-1"><span class="text-purple-400 font-bold truncate">02. CYBER DRIFT</span><span id="startupDot_1" class="w-1.5 h-1.5 rounded-full bg-slate-600 shrink-0"></span></div><div class="text-slate-400 text-[10px] truncate">Peak Techno • 132 BPM • Am</div></div>
+        <div id="startupCard_2" class="bg-[#0c0f16] border border-slate-800 rounded-lg px-2.5 py-1.5 transition-colors"><div class="flex items-center justify-between gap-1"><span class="text-emerald-400 font-bold truncate">03. HYPERDRIVE</span><span id="startupDot_2" class="w-1.5 h-1.5 rounded-full bg-slate-600 shrink-0"></span></div><div class="text-slate-400 text-[10px] truncate">Future Bass • 126 BPM • Cm</div></div>
+        <div id="startupCard_3" class="bg-[#0c0f16] border border-slate-800 rounded-lg px-2.5 py-1.5 transition-colors"><div class="flex items-center justify-between gap-1"><span class="text-orange-400 font-bold truncate">04. SUB ZERO</span><span id="startupDot_3" class="w-1.5 h-1.5 rounded-full bg-slate-600 shrink-0"></span></div><div class="text-slate-400 text-[10px] truncate">Bass House • 128 BPM • Gm</div></div>
+        <div id="startupCard_4" class="bg-[#0c0f16] border border-slate-800 rounded-lg px-2.5 py-1.5 transition-colors"><div class="flex items-center justify-between gap-1"><span class="text-pink-400 font-bold truncate">05. VINAHAI BOUNCE</span><span id="startupDot_4" class="w-1.5 h-1.5 rounded-full bg-slate-600 shrink-0"></span></div><div class="text-slate-400 text-[10px] truncate">Vinahouse • 136 BPM • Am</div></div>
+        <div id="startupCard_5" class="bg-[#0c0f16] border border-slate-800 rounded-lg px-2.5 py-1.5 transition-colors"><div class="flex items-center justify-between gap-1"><span class="text-amber-400 font-bold truncate">06. SOLAR ECLIPSE</span><span id="startupDot_5" class="w-1.5 h-1.5 rounded-full bg-slate-600 shrink-0"></span></div><div class="text-slate-400 text-[10px] truncate">Prog House • 126 BPM • Em</div></div>
+        <div id="startupCard_6" class="bg-[#0c0f16] border border-slate-800 rounded-lg px-2.5 py-1.5 transition-colors"><div class="flex items-center justify-between gap-1"><span class="text-rose-400 font-bold truncate">07. ACID OVERLOAD</span><span id="startupDot_6" class="w-1.5 h-1.5 rounded-full bg-slate-600 shrink-0"></span></div><div class="text-slate-400 text-[10px] truncate">Hard Techno • 140 BPM • Fm</div></div>
+        <div id="startupCard_7" class="bg-[#0c0f16] border border-slate-800 rounded-lg px-2.5 py-1.5 transition-colors"><div class="flex items-center justify-between gap-1"><span class="text-sky-400 font-bold truncate">08. MIDNIGHT RUSH</span><span id="startupDot_7" class="w-1.5 h-1.5 rounded-full bg-slate-600 shrink-0"></span></div><div class="text-slate-400 text-[10px] truncate">Uplift Trance • 138 BPM • Dm</div></div>
+        <div id="startupCard_8" class="bg-[#0c0f16] border border-slate-800 rounded-lg px-2.5 py-1.5 transition-colors"><div class="flex items-center justify-between gap-1"><span class="text-lime-400 font-bold truncate">09. GALAXY DROP</span><span id="startupDot_8" class="w-1.5 h-1.5 rounded-full bg-slate-600 shrink-0"></span></div><div class="text-slate-400 text-[10px] truncate">Slap House • 124 BPM • Bm</div></div>
+        <div id="startupCard_9" class="bg-[#0c0f16] border border-slate-800 rounded-lg px-2.5 py-1.5 transition-colors"><div class="flex items-center justify-between gap-1"><span class="text-fuchsia-400 font-bold truncate">10. LASER STORM</span><span id="startupDot_9" class="w-1.5 h-1.5 rounded-full bg-slate-600 shrink-0"></span></div><div class="text-slate-400 text-[10px] truncate">Psytrance • 142 BPM • F#m</div></div>
+        <div id="startupCard_10" class="bg-[#0c0f16] border border-slate-800 rounded-lg px-2.5 py-1.5 transition-colors"><div class="flex items-center justify-between gap-1"><span class="text-teal-400 font-bold truncate">11. VELOCITY DNB</span><span id="startupDot_10" class="w-1.5 h-1.5 rounded-full bg-slate-600 shrink-0"></span></div><div class="text-slate-400 text-[10px] truncate">Drum &amp; Bass • 174 BPM • Cm</div></div>
+        <div id="startupCard_11" class="bg-[#0c0f16] border border-slate-800 rounded-lg px-2.5 py-1.5 transition-colors"><div class="flex items-center justify-between gap-1"><span class="text-yellow-400 font-bold truncate">12. GOLDEN HORIZON</span><span id="startupDot_11" class="w-1.5 h-1.5 rounded-full bg-slate-600 shrink-0"></span></div><div class="text-slate-400 text-[10px] truncate">Tech House • 125 BPM • G#m</div></div>
       </div>
 
-      <!-- Progress bar shown during offline audio rendering -->
-      <div id="initProgressWrap" class="hidden mb-5">
-        <div class="flex justify-between text-xs font-mono-lcd text-cyan-300 mb-1.5">
-          <span id="initProgressText">Đang khởi tạo bộ tổng hợp EDM...</span>
+      <!-- Instant Pre-Warm Live Status -->
+      <div id="prewarmStatusBadge" class="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-[11px] font-mono-lcd mb-3">
+        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+        <span id="prewarmStatusText">Đang chuẩn bị sẵn Deck A &amp; B ở chế độ nền...</span>
+      </div>
+
+      <!-- Progress bar shown only if clicked before Deck A/B finish pre-warming -->
+      <div id="initProgressWrap" class="hidden mb-3.5">
+        <div class="flex justify-between text-xs font-mono-lcd text-cyan-300 mb-1">
+          <span id="initProgressText">Đang mở hệ thống âm thanh...</span>
           <span id="initProgressPct">0%</span>
         </div>
-        <div class="w-full h-2.5 bg-slate-900 rounded-full overflow-hidden border border-slate-700">
+        <div class="w-full h-2 bg-slate-900 rounded-full overflow-hidden border border-slate-700">
           <div id="initProgressBar" class="h-full bg-gradient-to-r from-[#00d2ff] to-[#ff5500] transition-all duration-150" style="width: 0%"></div>
         </div>
       </div>
 
-      <button id="btnStartDJ" class="w-full py-4 rounded-xl font-tech text-base sm:text-lg font-extrabold tracking-widest text-white bg-gradient-to-r from-[#0099cc] via-[#00d2ff] to-[#ff5500] hover:brightness-110 active:scale-[0.98] transition shadow-[0_0_30px_rgba(0,210,255,0.45)] cursor-pointer">
-        BẮT ĐẦU TRÌNH DIỄN
+      <button id="btnStartDJ" class="w-full py-3.5 rounded-xl font-tech text-base sm:text-lg font-extrabold tracking-widest text-white bg-gradient-to-r from-[#0099cc] via-[#00d2ff] to-[#ff5500] hover:brightness-110 active:scale-[0.98] transition shadow-[0_0_30px_rgba(0,210,255,0.45)] cursor-pointer">
+        BẮT ĐẦU TRÌNH DIỄN NGAY
       </button>
-      <p class="text-[11px] text-slate-500 mt-3">
+      <p class="text-[11px] text-slate-500 mt-2.5">
         Mẹo: Chạm đúp (Double-Tap / Double-Click) vào bất kỳ núm xoay hoặc thanh Pitch nào để reset về mặc định.
       </p>
     </div>
@@ -403,44 +796,54 @@
   <div id="toastContainer" class="fixed top-14 left-1/2 -translate-x-1/2 z-50 pointer-events-none flex flex-col gap-2 items-center"></div>
 
   <!-- =========================================================================
+       AUTO-FIT STAGE WRAPPER (Scales cleanly to 16:9 Windows & 16:10 iPad)
+       ========================================================================= -->
+  <div id="djStage">
+
+  <!-- =========================================================================
        TOP HEADER BAR
        ========================================================================= -->
-  <header class="w-full px-2.5 sm:px-4 py-1.5 bg-[#0a0c10] border-b border-[#222938] flex flex-wrap items-center justify-between gap-2 z-30">
-    <div class="flex items-center gap-2.5">
-      <div class="w-2.5 h-7 rounded-sm bg-gradient-to-b from-[#00d2ff] to-[#ff5500]"></div>
-      <div>
-        <div class="font-tech font-black text-sm sm:text-base tracking-wider text-white leading-none">
-          PIONEER <span class="text-[#00d2ff]">PRO DJ</span> <span class="text-slate-500 font-normal text-xs hidden sm:inline">// STUDIO</span>
+  <header id="djHeader" class="w-full px-2.5 sm:px-4 py-1.5 bg-[#0a0c10] border-b border-[#222938] flex flex-wrap items-center justify-between gap-2 z-30">
+    <div class="flex items-center gap-2.5 min-w-0 shrink-0">
+      <div class="w-2.5 h-7 rounded-sm bg-gradient-to-b from-[#00d2ff] to-[#ff5500] shrink-0"></div>
+      <div class="min-w-0">
+        <div class="font-tech font-black text-sm sm:text-base tracking-wider text-white leading-none whitespace-nowrap">
+          PIONEER <span class="text-[#00d2ff]">PRO DJ</span> <span class="hdr-studio-tag text-slate-500 font-normal text-xs hidden sm:inline">// STUDIO</span>
         </div>
-        <div class="text-[10px] font-mono-lcd text-slate-400 tracking-wider">CDJ-3000 × DJM-A9 ENGINE</div>
+        <div class="text-[10px] font-mono-lcd text-slate-400 tracking-wider whitespace-nowrap">CDJ-3000 × DJM-A9 ENGINE</div>
       </div>
     </div>
 
-    <div class="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+    <div class="flex items-center gap-1.5 sm:gap-2 flex-wrap sm:flex-nowrap min-w-0">
       <!-- Audio Engine & Limiter Status -->
-      <div id="audioStatusBadge" class="hidden md:flex items-center gap-2 px-2.5 py-1 rounded-md bg-[#11151e] border border-slate-800 text-[11px] font-mono-lcd">
+      <div id="audioStatusBadge" class="hidden md:flex items-center gap-2 px-2.5 py-1 rounded-md bg-[#11151e] border border-slate-800 text-[11px] font-mono-lcd shrink-0 whitespace-nowrap">
         <span id="audioLed" class="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_#34d399]"></span>
-        <span class="text-slate-300">AUDIO: <strong class="text-emerald-400">44.1kHz</strong></span>
+        <span class="text-slate-300">AUDIO: <strong id="audioSrLabel" class="text-emerald-400">44.1kHz</strong></span>
         <span class="text-slate-600">|</span>
         <span class="text-slate-400">LIMITER: <strong id="limiterLed" class="text-emerald-400">OK</strong></span>
       </div>
 
       <!-- Track Browser Button -->
-      <button id="btnOpenBrowser" class="hw-btn px-3 py-1.5 text-xs flex items-center gap-1.5 border-cyan-500/40 text-cyan-300">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2z"/></svg>
-        <span>KHO NHẠC EDM</span>
+      <button id="btnOpenBrowser" class="hw-btn px-3 py-1.5 text-xs flex items-center gap-1.5 border-cyan-500/40 text-cyan-300 shrink-0">
+        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2z"/></svg>
+        <span>KHO EDM (<span id="hdrCacheCount">12</span>)</span>
+      </button>
+
+      <!-- Auto-Fit Screen Toggle -->
+      <button id="btnAutoFit" class="hw-btn active-cyan px-2.5 py-1.5 text-xs flex items-center gap-1.5 shrink-0" title="Tự động vừa khít 1 màn ngang Windows 16:9 / iPad 16:10">
+        <span id="autoFitLabel">AUTO FIT</span>
       </button>
 
       <!-- Help / Shortcuts Button -->
-      <button id="btnOpenHelp" class="hw-btn px-2.5 py-1.5 text-xs flex items-center gap-1.5">
-        <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-        <span class="hidden sm:inline">HƯỚNG DẪN</span>
+      <button id="btnOpenHelp" class="hw-btn px-2.5 py-1.5 text-xs flex items-center gap-1.5 shrink-0">
+        <svg class="w-4 h-4 text-amber-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        <span class="hdr-btn-label hidden sm:inline">HƯỚNG DẪN</span>
       </button>
 
       <!-- Fullscreen Button -->
-      <button id="btnFullscreen" class="hw-btn px-2.5 py-1.5 text-xs flex items-center gap-1.5" title="Toàn màn hình">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/></svg>
-        <span class="hidden sm:inline">FULLSCREEN</span>
+      <button id="btnFullscreen" class="hw-btn px-2.5 py-1.5 text-xs flex items-center gap-1.5 shrink-0" title="Toàn màn hình">
+        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/></svg>
+        <span class="hdr-btn-label hidden sm:inline">FULLSCREEN</span>
       </button>
     </div>
   </header>
@@ -448,64 +851,64 @@
   <!-- =========================================================================
        DUAL REKORDBOX RGB WAVEFORM DISPLAY (TOP CENTER)
        ========================================================================= -->
-  <section class="w-full px-2 sm:px-3 pt-2 pb-1">
+  <section id="waveformSection" class="w-full px-2 sm:px-3 pt-2 pb-1">
     <div class="lcd-screen rounded-xl p-2 flex flex-col gap-1.5">
       <!-- Track Info Headers (Deck A left | Phase Meter center | Deck B right) -->
-      <div class="grid grid-cols-12 gap-2 items-center text-xs">
+      <div class="wf-info-grid text-xs">
         <!-- Deck A Info -->
-        <div class="col-span-5 flex items-center justify-between gap-2 bg-[#0d1420] border border-cyan-500/30 rounded-lg px-2.5 py-1">
+        <div class="wf-info-a min-w-0 flex items-center justify-between gap-2 bg-[#0d1420] border border-cyan-500/30 rounded-lg px-2.5 py-1">
           <div class="min-w-0">
-            <div class="flex items-center gap-1.5">
-              <span class="px-1.5 py-0.5 rounded bg-cyan-500/20 text-[#00d2ff] font-tech font-bold text-[10px]">A</span>
+            <div class="flex items-center gap-1.5 min-w-0">
+              <span class="px-1.5 py-0.5 rounded bg-cyan-500/20 text-[#00d2ff] font-tech font-bold text-[10px] shrink-0">A</span>
               <span id="infoTitleA" class="font-bold text-white truncate text-xs sm:text-sm">NEON PULSE</span>
-              <span id="masterBadgeA" class="px-1.5 py-0.5 rounded bg-amber-500 text-black font-tech font-black text-[9px]">MASTER</span>
+              <span id="masterBadgeA" class="px-1.5 py-0.5 rounded bg-amber-500 text-black font-tech font-black text-[9px] shrink-0">MASTER</span>
             </div>
-            <div class="flex items-center gap-2 text-[10px] sm:text-[11px] text-slate-400 font-mono-lcd mt-0.5">
+            <div class="flex items-center gap-2 text-[10px] sm:text-[11px] text-slate-400 font-mono-lcd mt-0.5 min-w-0">
               <span id="infoArtistA" class="truncate text-cyan-200/70">Big Room House</span>
-              <span class="text-slate-600">•</span>
-              <span id="infoKeyA" class="text-cyan-300 font-bold">F#m (11A)</span>
+              <span class="text-slate-600 shrink-0">•</span>
+              <span id="infoKeyA" class="text-cyan-300 font-bold shrink-0">F#m (11A)</span>
             </div>
           </div>
           <div class="text-right shrink-0 font-mono-lcd">
-            <div class="text-sm sm:text-lg font-extrabold text-[#00d2ff] leading-none">
+            <div class="text-sm sm:text-lg font-extrabold text-[#00d2ff] leading-none whitespace-nowrap">
               <span id="infoBpmA">128.00</span> <span class="text-[9px] text-slate-400">BPM</span>
             </div>
-            <div class="text-[10px] text-slate-300 mt-0.5">
+            <div class="text-[10px] text-slate-300 mt-0.5 whitespace-nowrap">
               <span id="infoTimeA">00:00.0</span> <span class="text-slate-500">/</span> <span id="infoRemA" class="text-cyan-300">-00:30.0</span>
             </div>
           </div>
         </div>
 
         <!-- Beat Phase Alignment Meter (Center) -->
-        <div class="col-span-2 flex flex-col items-center justify-center px-1">
-          <div class="text-[9px] font-tech tracking-widest text-slate-400 mb-1">BEAT PHASE</div>
+        <div class="wf-info-phase min-w-0 flex flex-col items-center justify-center px-1">
+          <div class="text-[9px] font-tech tracking-widest text-slate-400 mb-1 whitespace-nowrap">BEAT PHASE</div>
           <div class="w-full h-3 bg-[#090c12] rounded border border-slate-800 relative overflow-hidden">
             <div class="absolute inset-y-0 left-1/2 w-0.5 bg-white/70 z-10"></div>
             <div id="phaseDotA" class="absolute top-0.5 h-1 w-2.5 rounded-full bg-[#00d2ff] shadow-[0_0_6px_#00d2ff]" style="left:50%; transform:translateX(-50%)"></div>
             <div id="phaseDotB" class="absolute bottom-0.5 h-1 w-2.5 rounded-full bg-[#ff5500] shadow-[0_0_6px_#ff5500]" style="left:50%; transform:translateX(-50%)"></div>
           </div>
-          <div id="phaseStatus" class="text-[9px] font-mono-lcd text-emerald-400 mt-0.5">PHASE LOCK</div>
+          <div id="phaseStatus" class="text-[9px] font-mono-lcd text-emerald-400 mt-0.5 whitespace-nowrap">PHASE LOCK</div>
         </div>
 
         <!-- Deck B Info -->
-        <div class="col-span-5 flex items-center justify-between gap-2 bg-[#1a110e] border border-orange-500/30 rounded-lg px-2.5 py-1">
+        <div class="wf-info-b min-w-0 flex items-center justify-between gap-2 bg-[#1a110e] border border-orange-500/30 rounded-lg px-2.5 py-1">
           <div class="text-left shrink-0 font-mono-lcd">
-            <div class="text-sm sm:text-lg font-extrabold text-[#ff5500] leading-none">
+            <div class="text-sm sm:text-lg font-extrabold text-[#ff5500] leading-none whitespace-nowrap">
               <span id="infoBpmB">128.00</span> <span class="text-[9px] text-slate-400">BPM</span>
             </div>
-            <div class="text-[10px] text-slate-300 mt-0.5">
+            <div class="text-[10px] text-slate-300 mt-0.5 whitespace-nowrap">
               <span id="infoTimeB">00:00.0</span> <span class="text-slate-500">/</span> <span id="infoRemB" class="text-orange-300">-00:30.0</span>
             </div>
           </div>
           <div class="min-w-0 text-right">
-            <div class="flex items-center justify-end gap-1.5">
-              <span id="masterBadgeB" class="hidden px-1.5 py-0.5 rounded bg-amber-500 text-black font-tech font-black text-[9px]">MASTER</span>
+            <div class="flex items-center justify-end gap-1.5 min-w-0">
+              <span id="masterBadgeB" class="hidden px-1.5 py-0.5 rounded bg-amber-500 text-black font-tech font-black text-[9px] shrink-0">MASTER</span>
               <span id="infoTitleB" class="font-bold text-white truncate text-xs sm:text-sm">SUB ZERO</span>
-              <span class="px-1.5 py-0.5 rounded bg-orange-500/20 text-[#ff5500] font-tech font-bold text-[10px]">B</span>
+              <span class="px-1.5 py-0.5 rounded bg-orange-500/20 text-[#ff5500] font-tech font-bold text-[10px] shrink-0">B</span>
             </div>
-            <div class="flex items-center justify-end gap-2 text-[10px] sm:text-[11px] text-slate-400 font-mono-lcd mt-0.5">
-              <span id="infoKeyB" class="text-orange-300 font-bold">Gm (6A)</span>
-              <span class="text-slate-600">•</span>
+            <div class="flex items-center justify-end gap-2 text-[10px] sm:text-[11px] text-slate-400 font-mono-lcd mt-0.5 min-w-0">
+              <span id="infoKeyB" class="text-orange-300 font-bold shrink-0">Gm (6A)</span>
+              <span class="text-slate-600 shrink-0">•</span>
               <span id="infoArtistB" class="truncate text-orange-200/70">Bass House Drop</span>
             </div>
           </div>
@@ -513,15 +916,15 @@
       </div>
 
       <!-- Stacked Dual RGB Scrolling Waveform Canvas -->
-      <div class="relative w-full h-24 sm:h-28 rounded-lg overflow-hidden bg-[#04060a] border border-slate-800">
+      <div id="dualWaveformWrap" class="relative w-full h-24 sm:h-28 rounded-lg overflow-hidden bg-[#04060a] border border-slate-800">
         <canvas id="dualWaveformCanvas" class="w-full h-full block touch-control"></canvas>
         <!-- Zoom & RGB Legend overlay -->
-        <div class="absolute top-1 left-2 flex items-center gap-1.5 pointer-events-none text-[9px] font-mono-lcd opacity-80">
+        <div class="absolute top-1 left-2 flex items-center gap-1.5 pointer-events-none text-[9px] font-mono-lcd bg-[#04060a]/80 px-1.5 py-0.5 rounded z-10">
           <span class="text-red-400">● LOW</span>
           <span class="text-emerald-400">● MID</span>
           <span class="text-cyan-300">● HIGH</span>
         </div>
-        <div class="absolute top-1 right-2 flex items-center gap-1">
+        <div class="absolute top-1 right-2 flex items-center gap-1 z-10">
           <button id="btnZoomOut" class="px-1.5 py-0.5 text-[10px] font-bold bg-slate-900/90 border border-slate-700 rounded text-slate-300 hover:text-white">-</button>
           <button id="btnZoomIn" class="px-1.5 py-0.5 text-[10px] font-bold bg-slate-900/90 border border-slate-700 rounded text-slate-300 hover:text-white">+</button>
         </div>
@@ -542,18 +945,26 @@
   <!-- =========================================================================
        MAIN CONSOLE: 3-COLUMN LAYOUT (DECK A | CENTER PRO MIXER | DECK B)
        ========================================================================= -->
-  <main class="flex-1 w-full px-2 sm:px-3 pb-3 pt-1 grid grid-cols-1 lg:grid-cols-12 gap-2.5 items-stretch">
+  <main id="djMain" class="flex-1 w-full px-2 sm:px-3 pb-3 pt-1 grid grid-cols-1 lg:grid-cols-12 gap-2.5 items-stretch">
 
     <!-- ======================= DECK A (LEFT: 4 COLS) ======================= -->
-    <section id="deckA" class="lg:col-span-4 hardware-panel rounded-2xl p-2.5 sm:p-3 flex flex-col justify-between gap-2.5 border-t-2 border-t-[#00d2ff]">
+    <section id="deckA" class="lg:col-span-4 hardware-panel rounded-2xl p-2.5 sm:p-3 flex flex-col justify-between gap-2.5 border-t-2 border-t-[#00d2ff] min-w-0">
       <!-- Top Load / Demo Selector Row -->
-      <div class="flex items-center justify-between gap-1.5">
+      <div class="deck-select-row flex items-center justify-between gap-1.5 min-w-0">
         <div class="flex items-center gap-1.5 flex-1 min-w-0">
           <select id="demoSelectA" class="flex-1 min-w-0 bg-[#0d111a] border border-cyan-500/40 rounded-lg px-2 py-2 text-xs font-bold text-cyan-200 focus:outline-none focus:border-cyan-400 cursor-pointer">
-            <option value="0">01. NEON PULSE (128 BPM)</option>
-            <option value="1">02. CYBER DRIFT (132 BPM)</option>
-            <option value="2">03. HYPERDRIVE (126 BPM)</option>
-            <option value="3">04. SUB ZERO (128 BPM)</option>
+            <option value="0">01. NEON PULSE (128 BPM • Big Room)</option>
+            <option value="1">02. CYBER DRIFT (132 BPM • Techno)</option>
+            <option value="2">03. HYPERDRIVE (126 BPM • Future Bass)</option>
+            <option value="3">04. SUB ZERO (128 BPM • Bass House)</option>
+            <option value="4">05. VINAHAI BOUNCE (136 BPM • Vinahouse)</option>
+            <option value="5">06. SOLAR ECLIPSE (126 BPM • Prog House)</option>
+            <option value="6">07. ACID OVERLOAD (140 BPM • Hard Techno)</option>
+            <option value="7">08. MIDNIGHT RUSH (138 BPM • Trance)</option>
+            <option value="8">09. GALAXY DROP (124 BPM • Slap House)</option>
+            <option value="9">10. LASER STORM (142 BPM • Psytrance)</option>
+            <option value="10">11. VELOCITY DNB (174 BPM • Drum &amp; Bass)</option>
+            <option value="11">12. GOLDEN HORIZON (125 BPM • Tech House)</option>
           </select>
           <label class="hw-btn px-2.5 py-2 text-[11px] flex items-center gap-1 text-cyan-300 border-cyan-500/40 shrink-0 cursor-pointer">
             <span>MP3/WAV</span>
@@ -564,19 +975,19 @@
       </div>
 
       <!-- Middle Section: Jog Wheel + Pitch Fader + Mode Toggles -->
-      <div class="grid grid-cols-12 gap-2 items-center">
-        <!-- Left mini controls + Transport below -->
-        <div class="col-span-8 flex flex-col items-center">
+      <div class="deck-mid-grid items-center">
+        <!-- Left mini controls + Jog -->
+        <div class="min-w-0 flex flex-col items-center justify-between h-full">
           <!-- Deck Utility Switches -->
-          <div class="w-full grid grid-cols-4 gap-1.5 mb-2">
-            <button id="btnVinylA" class="hw-btn active-cyan py-1.5 text-[10px]">VINYL</button>
-            <button id="btnSyncA" class="hw-btn py-1.5 text-[10px]">SYNC</button>
-            <button id="btnMasterA" class="hw-btn active-amber py-1.5 text-[10px]">MASTER</button>
-            <button id="btnRevA" class="hw-btn py-1.5 text-[10px]">REV</button>
+          <div class="deck-util-row w-full grid grid-cols-4 gap-1.5 mb-2">
+            <button id="btnVinylA" class="hw-btn active-cyan px-1 py-1.5 text-[10px]">VINYL</button>
+            <button id="btnSyncA" class="hw-btn px-1 py-1.5 text-[10px]">SYNC</button>
+            <button id="btnMasterA" class="hw-btn active-amber px-1 py-1.5 text-[10px]">MASTER</button>
+            <button id="btnRevA" class="hw-btn px-1 py-1.5 text-[10px]">REV</button>
           </div>
 
           <!-- Big Pioneer Jog Wheel A -->
-          <div id="jogWheelA" class="relative w-44 h-44 sm:w-52 sm:h-52 xl:w-56 xl:h-56 rounded-full jog-outer-ring flex items-center justify-center touch-control cursor-grab active:cursor-grabbing">
+          <div id="jogWheelA" class="relative w-44 h-44 sm:w-52 sm:h-52 xl:w-56 xl:h-56 rounded-full jog-outer-ring flex items-center justify-center touch-control cursor-grab active:cursor-grabbing shrink-0">
             <!-- Outer LED Ring -->
             <div id="jogLedA" class="absolute inset-1.5 rounded-full border-2 border-[#00d2ff]/60 pointer-events-none transition-all duration-100"></div>
             <!-- Inner Platter (Touch for Scratch in Vinyl mode) -->
@@ -588,13 +999,13 @@
         </div>
 
         <!-- Pitch / Tempo Fader Column (Right side of Deck A) -->
-        <div class="col-span-4 flex flex-col items-center h-full justify-between bg-[#0e1118] border border-slate-800/80 rounded-xl p-2">
+        <div class="min-w-0 flex flex-col items-center h-full justify-between bg-[#0e1118] border border-slate-800/80 rounded-xl p-2">
           <div class="w-full flex items-center justify-between gap-1">
             <button id="btnPitchRangeA" class="hw-btn px-1.5 py-1 text-[10px] w-full text-cyan-300">±8%</button>
           </div>
-          <div class="text-[11px] font-mono-lcd font-bold text-cyan-300 my-1" id="pitchValA">+0.00%</div>
+          <div class="text-[11px] font-mono-lcd font-bold text-cyan-300 my-1 whitespace-nowrap" id="pitchValA">+0.00%</div>
           <!-- Vertical Pitch Fader -->
-          <div class="relative flex items-center justify-center w-full h-36 sm:h-40">
+          <div class="pitch-fader-wrap relative flex items-center justify-center w-full h-36 sm:h-40">
             <div class="absolute left-1 inset-y-2 flex flex-col justify-between text-[8px] font-mono-lcd text-slate-500 pointer-events-none">
               <span>-</span>
               <span id="pitchZeroLedA" class="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_6px_#34d399]"></span>
@@ -606,42 +1017,42 @@
             </div>
           </div>
           <div class="w-full grid grid-cols-2 gap-1 mt-1.5">
-            <button id="btnKeyLockA" class="hw-btn active-cyan py-1 text-[9px]">MT</button>
-            <button id="btnResetBpmA" class="hw-btn py-1 text-[9px]">RST</button>
+            <button id="btnKeyLockA" class="hw-btn active-cyan px-1 py-1 text-[9px]">MT</button>
+            <button id="btnResetBpmA" class="hw-btn px-1 py-1 text-[9px]">RST</button>
           </div>
         </div>
       </div>
 
       <!-- Big Transport Buttons Row (CUE & PLAY + Beat Jump/Loop Exit) -->
-      <div class="flex items-center justify-between gap-3 px-1">
-        <div class="flex items-center gap-3">
-          <button id="btnCueA" class="btn-transport btn-cue-ready w-16 h-16 sm:w-[70px] sm:h-[70px] flex flex-col items-center justify-center font-tech text-xs font-extrabold touch-control">
+      <div class="flex items-center justify-between gap-2.5 px-1 min-w-0">
+        <div class="flex items-center gap-2.5 shrink-0">
+          <button id="btnCueA" class="btn-transport btn-cue-ready w-16 h-16 sm:w-[70px] sm:h-[70px] flex flex-col items-center justify-center font-tech text-xs font-extrabold touch-control shrink-0">
             <span>CUE</span>
             <span class="text-[8px] opacity-70 font-mono-lcd">W</span>
           </button>
-          <button id="btnPlayA" class="btn-transport btn-play-blink w-16 h-16 sm:w-[70px] sm:h-[70px] flex flex-col items-center justify-center font-tech text-xs font-extrabold touch-control">
+          <button id="btnPlayA" class="btn-transport btn-play-blink w-16 h-16 sm:w-[70px] sm:h-[70px] flex flex-col items-center justify-center font-tech text-xs font-extrabold touch-control shrink-0">
             <span class="text-lg leading-none">▶/❚❚</span>
             <span class="text-[8px] opacity-70 font-mono-lcd mt-0.5">Q</span>
           </button>
         </div>
 
         <!-- Quick Beat Jump & Loop Control -->
-        <div class="flex-1 grid grid-cols-2 gap-1.5">
-          <button id="btnJumpBackA" class="hw-btn py-2.5 text-[11px] font-mono-lcd">◀ 4 BEAT</button>
-          <button id="btnJumpFwdA" class="hw-btn py-2.5 text-[11px] font-mono-lcd">4 BEAT ▶</button>
-          <button id="btnLoopHalveA" class="hw-btn py-2 text-[10px] font-mono-lcd">LOOP ½×</button>
-          <button id="btnLoopDoubleA" class="hw-btn py-2 text-[10px] font-mono-lcd">LOOP 2×</button>
+        <div class="deck-transport-grid flex-1 min-w-0 grid grid-cols-2 gap-1.5">
+          <button id="btnJumpBackA" class="hw-btn px-1 py-2.5 text-[11px] font-mono-lcd">◀ 4 BEAT</button>
+          <button id="btnJumpFwdA" class="hw-btn px-1 py-2.5 text-[11px] font-mono-lcd">4 BEAT ▶</button>
+          <button id="btnLoopHalveA" class="hw-btn px-1 py-2 text-[10px] font-mono-lcd">LOOP ½×</button>
+          <button id="btnLoopDoubleA" class="hw-btn px-1 py-2 text-[10px] font-mono-lcd">LOOP 2×</button>
         </div>
       </div>
 
       <!-- 8 Performance Pads Section -->
-      <div class="bg-[#0d1017] border border-slate-800 rounded-xl p-2 flex flex-col gap-2">
+      <div class="deck-pad-box bg-[#0d1017] border border-slate-800 rounded-xl p-2 flex flex-col gap-2 min-w-0">
         <!-- 4 Mode Selector Tabs -->
         <div class="grid grid-cols-4 gap-1.5" id="padModesA">
-          <button class="hw-btn active-cyan py-1.5 text-[10px]" data-deck="A" data-mode="hotcue">HOT CUE</button>
-          <button class="hw-btn py-1.5 text-[10px]" data-deck="A" data-mode="loop">BEAT LOOP</button>
-          <button class="hw-btn py-1.5 text-[10px]" data-deck="A" data-mode="padfx">PAD FX</button>
-          <button class="hw-btn py-1.5 text-[10px]" data-deck="A" data-mode="sampler">SAMPLER</button>
+          <button class="hw-btn active-cyan px-1 py-1.5 text-[10px]" data-deck="A" data-mode="hotcue">HOT CUE</button>
+          <button class="hw-btn px-1 py-1.5 text-[10px]" data-deck="A" data-mode="loop">BEAT LOOP</button>
+          <button class="hw-btn px-1 py-1.5 text-[10px]" data-deck="A" data-mode="padfx">PAD FX</button>
+          <button class="hw-btn px-1 py-1.5 text-[10px]" data-deck="A" data-mode="sampler">SAMPLER</button>
         </div>
         <!-- 8 Big RGB Pads Grid -->
         <div id="padsGridA" class="grid grid-cols-4 gap-1.5"></div>
@@ -649,60 +1060,60 @@
     </section>
 
     <!-- ======================= CENTER PRO MIXER (4 COLS) ======================= -->
-    <section class="lg:col-span-4 mixer-panel rounded-2xl p-2.5 sm:p-3 flex flex-col justify-between gap-2.5">
+    <section id="centerMixer" class="lg:col-span-4 mixer-panel rounded-2xl p-2.5 sm:p-3 flex flex-col justify-between gap-2.5 min-w-0">
 
       <!-- Mixer Top: Master Level + Sound Color FX Mode + Sampler Volume -->
-      <div class="grid grid-cols-12 gap-2 items-center bg-[#0b0e14] border border-slate-800/90 rounded-xl p-2">
+      <div class="mixer-top-box bg-[#0b0e14] border border-slate-800/90 rounded-xl p-2">
         <!-- Sound Color FX Mode Selector -->
-        <div class="col-span-5 flex flex-col gap-1">
-          <div class="text-[9px] font-tech tracking-wider text-slate-400 text-center">SOUND COLOR FX</div>
+        <div class="mixer-cfx-col min-w-0 flex flex-col gap-1">
+          <div class="text-[9px] font-tech tracking-wider text-slate-400 text-center whitespace-nowrap">SOUND COLOR FX</div>
           <div class="grid grid-cols-3 gap-1" id="colorFxSelector">
-            <button class="hw-btn active-cyan py-1.5 text-[9px]" data-cfx="filter">FILTER</button>
-            <button class="hw-btn py-1.5 text-[9px]" data-cfx="crush">CRUSH</button>
-            <button class="hw-btn py-1.5 text-[9px]" data-cfx="jet">SWEEP</button>
+            <button class="hw-btn active-cyan px-1 py-1.5 text-[9px]" data-cfx="filter">FILTER</button>
+            <button class="hw-btn px-1 py-1.5 text-[9px]" data-cfx="crush">CRUSH</button>
+            <button class="hw-btn px-1 py-1.5 text-[9px]" data-cfx="jet">SWEEP</button>
           </div>
         </div>
 
         <!-- Master Volume Knob -->
-        <div class="col-span-3 flex flex-col items-center">
+        <div class="flex flex-col items-center min-w-0">
           <div class="knob-control" data-id="masterVol" data-label="MASTER" data-color="#ffffff" data-default="0.82" data-size="44"></div>
         </div>
 
         <!-- Sampler Volume Knob -->
-        <div class="col-span-4 flex flex-col items-center">
+        <div class="flex flex-col items-center min-w-0">
           <div class="knob-control" data-id="samplerVol" data-label="SAMPLER" data-color="#a855f7" data-default="0.75" data-size="44"></div>
         </div>
       </div>
 
       <!-- Mixer Middle: CH 1 EQ/Knobs | VU Meters | CH 2 EQ/Knobs -->
-      <div class="grid grid-cols-12 gap-1.5 items-stretch">
+      <div class="mixer-mid-grid items-stretch">
         <!-- CHANNEL 1 (DECK A) EQ STRIP -->
-        <div class="col-span-4 bg-[#0f131c] border border-cyan-500/20 rounded-xl p-2 flex flex-col items-center justify-between gap-2">
+        <div class="mixer-eq-strip min-w-0 bg-[#0f131c] border border-cyan-500/20 rounded-xl p-2 flex flex-col items-center justify-between gap-2">
           <div class="text-[10px] font-tech font-bold text-[#00d2ff] tracking-widest">CH 1</div>
           <div class="knob-control" data-id="trimA" data-label="TRIM" data-color="#00d2ff" data-default="0.5" data-size="40"></div>
-          <div class="flex items-center gap-1">
+          <div class="w-full flex items-center justify-center gap-1.5">
             <div class="knob-control" data-id="eqHiA" data-label="HI" data-color="#38bdf8" data-default="0.5" data-size="40"></div>
-            <button id="killHiA" class="hw-btn px-1 py-1 text-[8px] h-6" title="Kill High">K</button>
+            <button id="killHiA" class="hw-btn w-5 h-6 px-0 text-[8px] shrink-0" title="Kill High">K</button>
           </div>
-          <div class="flex items-center gap-1">
+          <div class="w-full flex items-center justify-center gap-1.5">
             <div class="knob-control" data-id="eqMidA" data-label="MID" data-color="#34d399" data-default="0.5" data-size="40"></div>
-            <button id="killMidA" class="hw-btn px-1 py-1 text-[8px] h-6" title="Kill Mid">K</button>
+            <button id="killMidA" class="hw-btn w-5 h-6 px-0 text-[8px] shrink-0" title="Kill Mid">K</button>
           </div>
-          <div class="flex items-center gap-1">
+          <div class="w-full flex items-center justify-center gap-1.5">
             <div class="knob-control" data-id="eqLowA" data-label="LOW" data-color="#f87171" data-default="0.5" data-size="40"></div>
-            <button id="killLowA" class="hw-btn px-1 py-1 text-[8px] h-6" title="Kill Low">K</button>
+            <button id="killLowA" class="hw-btn w-5 h-6 px-0 text-[8px] shrink-0" title="Kill Low">K</button>
           </div>
           <!-- Large Sound Color FX Knob -->
-          <div class="pt-1 border-t border-slate-800 w-full flex justify-center">
+          <div class="mixer-color-knob pt-1 border-t border-slate-800 w-full flex justify-center">
             <div class="knob-control" data-id="colorA" data-label="COLOR FX" data-color="#00d2ff" data-default="0.5" data-size="50"></div>
           </div>
         </div>
 
         <!-- CENTER VU METERS & BEAT FX MODULE -->
-        <div class="col-span-4 flex flex-col justify-between gap-2">
+        <div class="min-w-0 flex flex-col justify-between gap-2">
           <!-- Real-Time LED VU Meters (CH1 | MST | CH2) -->
           <div class="bg-[#090c11] border border-slate-800 rounded-xl p-2 flex flex-col items-center">
-            <div class="grid grid-cols-3 gap-2 w-full h-36 sm:h-40 px-1">
+            <div class="vu-meters-wrap grid grid-cols-3 gap-2 w-full h-36 sm:h-40 px-1">
               <div class="flex flex-col justify-between gap-0.5" id="vuMeterA"></div>
               <div class="flex flex-col justify-between gap-0.5" id="vuMeterM"></div>
               <div class="flex flex-col justify-between gap-0.5" id="vuMeterB"></div>
@@ -715,7 +1126,7 @@
           </div>
 
           <!-- PRO BEAT FX SECTION (DJM-A9 Style) -->
-          <div class="bg-[#0d1119] border border-cyan-500/30 rounded-xl p-2 flex flex-col gap-1.5 flex-1 justify-between">
+          <div class="beatfx-box bg-[#0d1119] border border-cyan-500/30 rounded-xl p-2 flex flex-col gap-1.5 flex-1 justify-between min-w-0">
             <div class="text-[9px] font-tech text-center text-cyan-300 tracking-widest">BEAT FX</div>
             <select id="beatFxType" class="w-full bg-[#07090e] border border-slate-700 rounded px-1.5 py-1 text-[10px] font-mono-lcd font-bold text-cyan-300 focus:outline-none">
               <option value="echo">ECHO</option>
@@ -728,55 +1139,55 @@
 
             <!-- Target & Beat Division -->
             <div class="grid grid-cols-3 gap-1" id="fxTargetGroup">
-              <button class="hw-btn py-1 text-[9px]" data-target="A">CH1</button>
-              <button class="hw-btn active-cyan py-1 text-[9px]" data-target="MST">MST</button>
-              <button class="hw-btn py-1 text-[9px]" data-target="B">CH2</button>
+              <button class="hw-btn px-0.5 py-1 text-[9px]" data-target="A">CH1</button>
+              <button class="hw-btn active-cyan px-0.5 py-1 text-[9px]" data-target="MST">MST</button>
+              <button class="hw-btn px-0.5 py-1 text-[9px]" data-target="B">CH2</button>
             </div>
             <div class="grid grid-cols-4 gap-0.5" id="fxBeatGroup">
-              <button class="hw-btn py-1 text-[9px] font-mono-lcd" data-beat="0.25">¼</button>
-              <button class="hw-btn active-cyan py-1 text-[9px] font-mono-lcd" data-beat="0.5">½</button>
-              <button class="hw-btn py-1 text-[9px] font-mono-lcd" data-beat="1">1</button>
-              <button class="hw-btn py-1 text-[9px] font-mono-lcd" data-beat="2">2</button>
+              <button class="hw-btn px-0.5 py-1 text-[9px] font-mono-lcd" data-beat="0.25">¼</button>
+              <button class="hw-btn active-cyan px-0.5 py-1 text-[9px] font-mono-lcd" data-beat="0.5">½</button>
+              <button class="hw-btn px-0.5 py-1 text-[9px] font-mono-lcd" data-beat="1">1</button>
+              <button class="hw-btn px-0.5 py-1 text-[9px] font-mono-lcd" data-beat="2">2</button>
             </div>
 
             <!-- FX Level/Depth Knob + Big ON/OFF -->
             <div class="flex items-center justify-around gap-1 pt-0.5">
               <div class="knob-control" data-id="fxDepth" data-label="DEPTH" data-color="#00d2ff" data-default="0.5" data-size="38"></div>
-              <button id="btnBeatFxOn" class="hw-btn w-12 h-12 rounded-full flex items-center justify-center font-tech text-[10px] font-black border-2 border-cyan-500/60 text-cyan-200">
-                ON/OFF
+              <button id="btnBeatFxOn" class="hw-btn hw-btn-multiline w-12 h-12 px-0 rounded-full flex items-center justify-center font-tech text-[10px] font-black border-2 border-cyan-500/60 text-cyan-200 shrink-0">
+                <span class="leading-none">ON<br><span class="text-[7px] opacity-75">OFF</span></span>
               </button>
             </div>
           </div>
         </div>
 
         <!-- CHANNEL 2 (DECK B) EQ STRIP -->
-        <div class="col-span-4 bg-[#14100f] border border-orange-500/20 rounded-xl p-2 flex flex-col items-center justify-between gap-2">
+        <div class="mixer-eq-strip min-w-0 bg-[#14100f] border border-orange-500/20 rounded-xl p-2 flex flex-col items-center justify-between gap-2">
           <div class="text-[10px] font-tech font-bold text-[#ff5500] tracking-widest">CH 2</div>
           <div class="knob-control" data-id="trimB" data-label="TRIM" data-color="#ff5500" data-default="0.5" data-size="40"></div>
-          <div class="flex items-center gap-1">
-            <button id="killHiB" class="hw-btn px-1 py-1 text-[8px] h-6" title="Kill High">K</button>
+          <div class="w-full flex items-center justify-center gap-1.5">
+            <button id="killHiB" class="hw-btn w-5 h-6 px-0 text-[8px] shrink-0" title="Kill High">K</button>
             <div class="knob-control" data-id="eqHiB" data-label="HI" data-color="#38bdf8" data-default="0.5" data-size="40"></div>
           </div>
-          <div class="flex items-center gap-1">
-            <button id="killMidB" class="hw-btn px-1 py-1 text-[8px] h-6" title="Kill Mid">K</button>
+          <div class="w-full flex items-center justify-center gap-1.5">
+            <button id="killMidB" class="hw-btn w-5 h-6 px-0 text-[8px] shrink-0" title="Kill Mid">K</button>
             <div class="knob-control" data-id="eqMidB" data-label="MID" data-color="#34d399" data-default="0.5" data-size="40"></div>
           </div>
-          <div class="flex items-center gap-1">
-            <button id="killLowB" class="hw-btn px-1 py-1 text-[8px] h-6" title="Kill Low">K</button>
+          <div class="w-full flex items-center justify-center gap-1.5">
+            <button id="killLowB" class="hw-btn w-5 h-6 px-0 text-[8px] shrink-0" title="Kill Low">K</button>
             <div class="knob-control" data-id="eqLowB" data-label="LOW" data-color="#f87171" data-default="0.5" data-size="40"></div>
           </div>
           <!-- Large Sound Color FX Knob -->
-          <div class="pt-1 border-t border-slate-800 w-full flex justify-center">
+          <div class="mixer-color-knob pt-1 border-t border-slate-800 w-full flex justify-center">
             <div class="knob-control" data-id="colorB" data-label="COLOR FX" data-color="#ff5500" data-default="0.5" data-size="50"></div>
           </div>
         </div>
       </div>
 
       <!-- Channel Volume Faders + CUE Monitor Buttons -->
-      <div class="grid grid-cols-12 gap-2 items-center bg-[#0c0f16] border border-slate-800 rounded-xl p-2.5">
+      <div class="mixer-fader-box bg-[#0c0f16] border border-slate-800 rounded-xl p-2.5">
         <!-- CH 1 CUE & Fader -->
-        <div class="col-span-5 flex items-center justify-around gap-2">
-          <button id="btnMonitorA" class="hw-btn px-2.5 py-3 text-[10px] font-tech">CUE<br>1</button>
+        <div class="mixer-fader-ch min-w-0 flex items-center justify-around gap-2">
+          <button id="btnMonitorA" class="hw-btn hw-btn-multiline px-2.5 py-2.5 text-[10px] font-tech shrink-0">CUE<br>1</button>
           <div class="flex flex-col items-center">
             <div id="volFaderA" class="fader-track w-12 h-32 sm:h-36" data-default="0.85">
               <div class="fader-slot"></div>
@@ -787,17 +1198,17 @@
         </div>
 
         <!-- Center Curve & AutoMix controls -->
-        <div class="col-span-2 flex flex-col items-center justify-center gap-2">
-          <button id="btnCfCurve" class="hw-btn active-cyan w-full py-2 text-[9px] leading-tight text-center" title="Chuyển đường cong Crossfader">
+        <div class="mixer-fader-mid min-w-0 flex flex-col items-center justify-center gap-2">
+          <button id="btnCfCurve" class="hw-btn hw-btn-multiline active-cyan w-full px-1 py-2 text-[9px] leading-tight text-center" title="Chuyển đường cong Crossfader">
             CURVE<br><span id="cfCurveText" class="text-white">BLEND</span>
           </button>
-          <button id="btnAutoMix" class="hw-btn w-full py-2.5 text-[9px] leading-tight text-center border-amber-500/50 text-amber-300" title="Tự động chuyển cảnh mượt 4 giây">
+          <button id="btnAutoMix" class="hw-btn hw-btn-multiline w-full px-1 py-2 text-[9px] leading-tight text-center border-amber-500/50 text-amber-300" title="Tự động chuyển cảnh mượt 4 giây">
             AUTO<br>MIX
           </button>
         </div>
 
         <!-- CH 2 Fader & CUE -->
-        <div class="col-span-5 flex items-center justify-around gap-2">
+        <div class="mixer-fader-ch min-w-0 flex items-center justify-around gap-2">
           <div class="flex flex-col items-center">
             <div id="volFaderB" class="fader-track w-12 h-32 sm:h-36" data-default="0.85">
               <div class="fader-slot"></div>
@@ -805,12 +1216,12 @@
             </div>
             <span class="text-[9px] font-mono-lcd text-orange-400 mt-1" id="volLabelB">85%</span>
           </div>
-          <button id="btnMonitorB" class="hw-btn px-2.5 py-3 text-[10px] font-tech">CUE<br>2</button>
+          <button id="btnMonitorB" class="hw-btn hw-btn-multiline px-2.5 py-2.5 text-[10px] font-tech shrink-0">CUE<br>2</button>
         </div>
       </div>
 
       <!-- Large Touch-Optimized Crossfader -->
-      <div class="bg-[#090c11] border border-slate-800 rounded-xl px-4 py-3 flex flex-col gap-1.5">
+      <div class="crossfader-box bg-[#090c11] border border-slate-800 rounded-xl px-4 py-3 flex flex-col gap-1.5">
         <div class="flex justify-between items-center text-[10px] font-tech">
           <span class="text-[#00d2ff] font-bold">&lt; DECK A</span>
           <span class="text-slate-500 tracking-widest">MAGVEL CROSSFADER</span>
@@ -826,9 +1237,9 @@
     </section>
 
     <!-- ======================= DECK B (RIGHT: 4 COLS) ======================= -->
-    <section id="deckB" class="lg:col-span-4 hardware-panel rounded-2xl p-2.5 sm:p-3 flex flex-col justify-between gap-2.5 border-t-2 border-t-[#ff5500]">
+    <section id="deckB" class="lg:col-span-4 hardware-panel rounded-2xl p-2.5 sm:p-3 flex flex-col justify-between gap-2.5 border-t-2 border-t-[#ff5500] min-w-0">
       <!-- Top Load / Demo Selector Row -->
-      <div class="flex items-center justify-between gap-1.5">
+      <div class="deck-select-row flex items-center justify-between gap-1.5 min-w-0">
         <button id="btnShiftB" class="hw-btn px-2.5 py-2 text-[11px] shrink-0" title="Giữ/bật SHIFT + chạm Pad để xóa Hot Cue">SHIFT</button>
         <div class="flex items-center gap-1.5 flex-1 min-w-0">
           <label class="hw-btn px-2.5 py-2 text-[11px] flex items-center gap-1 text-orange-300 border-orange-500/40 shrink-0 cursor-pointer">
@@ -836,24 +1247,32 @@
             <input type="file" id="fileInputB" accept="audio/*" class="hidden" />
           </label>
           <select id="demoSelectB" class="flex-1 min-w-0 bg-[#140e0d] border border-orange-500/40 rounded-lg px-2 py-2 text-xs font-bold text-orange-200 focus:outline-none focus:border-orange-400 cursor-pointer">
-            <option value="0">01. NEON PULSE (128 BPM)</option>
-            <option value="1">02. CYBER DRIFT (132 BPM)</option>
-            <option value="2">03. HYPERDRIVE (126 BPM)</option>
-            <option value="3" selected>04. SUB ZERO (128 BPM)</option>
+            <option value="0">01. NEON PULSE (128 BPM • Big Room)</option>
+            <option value="1">02. CYBER DRIFT (132 BPM • Techno)</option>
+            <option value="2">03. HYPERDRIVE (126 BPM • Future Bass)</option>
+            <option value="3" selected>04. SUB ZERO (128 BPM • Bass House)</option>
+            <option value="4">05. VINAHAI BOUNCE (136 BPM • Vinahouse)</option>
+            <option value="5">06. SOLAR ECLIPSE (126 BPM • Prog House)</option>
+            <option value="6">07. ACID OVERLOAD (140 BPM • Hard Techno)</option>
+            <option value="7">08. MIDNIGHT RUSH (138 BPM • Trance)</option>
+            <option value="8">09. GALAXY DROP (124 BPM • Slap House)</option>
+            <option value="9">10. LASER STORM (142 BPM • Psytrance)</option>
+            <option value="10">11. VELOCITY DNB (174 BPM • Drum &amp; Bass)</option>
+            <option value="11">12. GOLDEN HORIZON (125 BPM • Tech House)</option>
           </select>
         </div>
       </div>
 
       <!-- Middle Section: Pitch Fader (Left mirrored) + Jog Wheel B -->
-      <div class="grid grid-cols-12 gap-2 items-center">
+      <div class="deck-mid-grid items-center">
         <!-- Pitch / Tempo Fader Column (Mirrored on Left of Deck B) -->
-        <div class="col-span-4 flex flex-col items-center h-full justify-between bg-[#0e1118] border border-slate-800/80 rounded-xl p-2">
+        <div class="min-w-0 flex flex-col items-center h-full justify-between bg-[#0e1118] border border-slate-800/80 rounded-xl p-2">
           <div class="w-full flex items-center justify-between gap-1">
             <button id="btnPitchRangeB" class="hw-btn px-1.5 py-1 text-[10px] w-full text-orange-300">±8%</button>
           </div>
-          <div class="text-[11px] font-mono-lcd font-bold text-orange-300 my-1" id="pitchValB">+0.00%</div>
+          <div class="text-[11px] font-mono-lcd font-bold text-orange-300 my-1 whitespace-nowrap" id="pitchValB">+0.00%</div>
           <!-- Vertical Pitch Fader -->
-          <div class="relative flex items-center justify-center w-full h-36 sm:h-40">
+          <div class="pitch-fader-wrap relative flex items-center justify-center w-full h-36 sm:h-40">
             <div class="absolute right-1 inset-y-2 flex flex-col justify-between text-[8px] font-mono-lcd text-slate-500 pointer-events-none">
               <span>-</span>
               <span id="pitchZeroLedB" class="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_6px_#34d399]"></span>
@@ -865,22 +1284,22 @@
             </div>
           </div>
           <div class="w-full grid grid-cols-2 gap-1 mt-1.5">
-            <button id="btnKeyLockB" class="hw-btn active-orange py-1 text-[9px]">MT</button>
-            <button id="btnResetBpmB" class="hw-btn py-1 text-[9px]">RST</button>
+            <button id="btnKeyLockB" class="hw-btn active-orange px-1 py-1 text-[9px]">MT</button>
+            <button id="btnResetBpmB" class="hw-btn px-1 py-1 text-[9px]">RST</button>
           </div>
         </div>
 
         <!-- Right side: Utility Switches + Jog Wheel B -->
-        <div class="col-span-8 flex flex-col items-center">
-          <div class="w-full grid grid-cols-4 gap-1.5 mb-2">
-            <button id="btnRevB" class="hw-btn py-1.5 text-[10px]">REV</button>
-            <button id="btnMasterB" class="hw-btn py-1.5 text-[10px]">MASTER</button>
-            <button id="btnSyncB" class="hw-btn py-1.5 text-[10px]">SYNC</button>
-            <button id="btnVinylB" class="hw-btn active-orange py-1.5 text-[10px]">VINYL</button>
+        <div class="min-w-0 flex flex-col items-center justify-between h-full">
+          <div class="deck-util-row w-full grid grid-cols-4 gap-1.5 mb-2">
+            <button id="btnRevB" class="hw-btn px-1 py-1.5 text-[10px]">REV</button>
+            <button id="btnMasterB" class="hw-btn px-1 py-1.5 text-[10px]">MASTER</button>
+            <button id="btnSyncB" class="hw-btn px-1 py-1.5 text-[10px]">SYNC</button>
+            <button id="btnVinylB" class="hw-btn active-orange px-1 py-1.5 text-[10px]">VINYL</button>
           </div>
 
           <!-- Big Pioneer Jog Wheel B -->
-          <div id="jogWheelB" class="relative w-44 h-44 sm:w-52 sm:h-52 xl:w-56 xl:h-56 rounded-full jog-outer-ring flex items-center justify-center touch-control cursor-grab active:cursor-grabbing">
+          <div id="jogWheelB" class="relative w-44 h-44 sm:w-52 sm:h-52 xl:w-56 xl:h-56 rounded-full jog-outer-ring flex items-center justify-center touch-control cursor-grab active:cursor-grabbing shrink-0">
             <div id="jogLedB" class="absolute inset-1.5 rounded-full border-2 border-[#ff5500]/60 pointer-events-none transition-all duration-100"></div>
             <div id="jogPlatterB" class="w-[82%] h-[82%] rounded-full jog-platter flex items-center justify-center relative pointer-events-none">
               <canvas id="jogCanvasB" class="w-full h-full rounded-full block"></canvas>
@@ -890,20 +1309,20 @@
       </div>
 
       <!-- Big Transport Buttons Row (Beat Jump/Loop + CUE & PLAY mirrored) -->
-      <div class="flex items-center justify-between gap-3 px-1">
-        <div class="flex-1 grid grid-cols-2 gap-1.5">
-          <button id="btnJumpBackB" class="hw-btn py-2.5 text-[11px] font-mono-lcd">◀ 4 BEAT</button>
-          <button id="btnJumpFwdB" class="hw-btn py-2.5 text-[11px] font-mono-lcd">4 BEAT ▶</button>
-          <button id="btnLoopHalveB" class="hw-btn py-2 text-[10px] font-mono-lcd">LOOP ½×</button>
-          <button id="btnLoopDoubleB" class="hw-btn py-2 text-[10px] font-mono-lcd">LOOP 2×</button>
+      <div class="flex items-center justify-between gap-2.5 px-1 min-w-0">
+        <div class="deck-transport-grid flex-1 min-w-0 grid grid-cols-2 gap-1.5">
+          <button id="btnJumpBackB" class="hw-btn px-1 py-2.5 text-[11px] font-mono-lcd">◀ 4 BEAT</button>
+          <button id="btnJumpFwdB" class="hw-btn px-1 py-2.5 text-[11px] font-mono-lcd">4 BEAT ▶</button>
+          <button id="btnLoopHalveB" class="hw-btn px-1 py-2 text-[10px] font-mono-lcd">LOOP ½×</button>
+          <button id="btnLoopDoubleB" class="hw-btn px-1 py-2 text-[10px] font-mono-lcd">LOOP 2×</button>
         </div>
 
-        <div class="flex items-center gap-3">
-          <button id="btnCueB" class="btn-transport btn-cue-ready w-16 h-16 sm:w-[70px] sm:h-[70px] flex flex-col items-center justify-center font-tech text-xs font-extrabold touch-control">
+        <div class="flex items-center gap-2.5 shrink-0">
+          <button id="btnCueB" class="btn-transport btn-cue-ready w-16 h-16 sm:w-[70px] sm:h-[70px] flex flex-col items-center justify-center font-tech text-xs font-extrabold touch-control shrink-0">
             <span>CUE</span>
             <span class="text-[8px] opacity-70 font-mono-lcd">P</span>
           </button>
-          <button id="btnPlayB" class="btn-transport btn-play-blink w-16 h-16 sm:w-[70px] sm:h-[70px] flex flex-col items-center justify-center font-tech text-xs font-extrabold touch-control">
+          <button id="btnPlayB" class="btn-transport btn-play-blink w-16 h-16 sm:w-[70px] sm:h-[70px] flex flex-col items-center justify-center font-tech text-xs font-extrabold touch-control shrink-0">
             <span class="text-lg leading-none">▶/❚❚</span>
             <span class="text-[8px] opacity-70 font-mono-lcd mt-0.5">O</span>
           </button>
@@ -911,35 +1330,44 @@
       </div>
 
       <!-- 8 Performance Pads Section B -->
-      <div class="bg-[#0d1017] border border-slate-800 rounded-xl p-2 flex flex-col gap-2">
+      <div class="deck-pad-box bg-[#0d1017] border border-slate-800 rounded-xl p-2 flex flex-col gap-2 min-w-0">
         <div class="grid grid-cols-4 gap-1.5" id="padModesB">
-          <button class="hw-btn active-orange py-1.5 text-[10px]" data-deck="B" data-mode="hotcue">HOT CUE</button>
-          <button class="hw-btn py-1.5 text-[10px]" data-deck="B" data-mode="loop">BEAT LOOP</button>
-          <button class="hw-btn py-1.5 text-[10px]" data-deck="B" data-mode="padfx">PAD FX</button>
-          <button class="hw-btn py-1.5 text-[10px]" data-deck="B" data-mode="sampler">SAMPLER</button>
+          <button class="hw-btn active-orange px-1 py-1.5 text-[10px]" data-deck="B" data-mode="hotcue">HOT CUE</button>
+          <button class="hw-btn px-1 py-1.5 text-[10px]" data-deck="B" data-mode="loop">BEAT LOOP</button>
+          <button class="hw-btn px-1 py-1.5 text-[10px]" data-deck="B" data-mode="padfx">PAD FX</button>
+          <button class="hw-btn px-1 py-1.5 text-[10px]" data-deck="B" data-mode="sampler">SAMPLER</button>
         </div>
         <div id="padsGridB" class="grid grid-cols-4 gap-1.5"></div>
       </div>
     </section>
   </main>
+  </div><!-- /#djStage -->
 
   <!-- =========================================================================
        MODAL: TRACK BROWSER (KHO NHẠC EDM)
        ========================================================================= -->
   <div id="browserModal" class="fixed inset-0 z-40 hidden items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-    <div class="hardware-panel rounded-2xl max-w-2xl w-full max-h-[85vh] flex flex-col overflow-hidden border border-cyan-500/40">
-      <div class="px-5 py-3.5 bg-[#0e121a] border-b border-slate-800 flex items-center justify-between">
+    <div class="hardware-panel rounded-2xl max-w-2xl w-full max-h-[85dvh] flex flex-col overflow-hidden border border-cyan-500/40">
+      <div class="px-5 py-3.5 bg-[#0e121a] border-b border-slate-800 flex items-center justify-between shrink-0">
         <div class="font-tech font-bold text-cyan-300 tracking-wider text-sm sm:text-base">KHO NHẠC EDM & TẢI NHẠC CÁ NHÂN</div>
-        <button id="btnCloseBrowser" class="hw-btn px-3 py-1 text-xs">ĐÓNG ✕</button>
+        <button id="btnCloseBrowser" class="hw-btn px-3 py-1 text-xs shrink-0">ĐÓNG ✕</button>
       </div>
-      <div class="p-4 overflow-y-auto flex flex-col gap-3">
+      <div class="px-4 pt-3 pb-2 bg-[#0b0e14] border-b border-slate-800/80 flex flex-wrap items-center gap-1.5 shrink-0" id="genreFilterBar">
+        <button class="hw-btn genre-pill active-cyan px-2.5 py-1 text-[10px]" data-genre="ALL">TẤT CẢ (12)</button>
+        <button class="hw-btn genre-pill px-2.5 py-1 text-[10px]" data-genre="HOUSE">HOUSE</button>
+        <button class="hw-btn genre-pill px-2.5 py-1 text-[10px]" data-genre="VINAHOUSE">VINAHOUSE</button>
+        <button class="hw-btn genre-pill px-2.5 py-1 text-[10px]" data-genre="TECHNO">TECHNO</button>
+        <button class="hw-btn genre-pill px-2.5 py-1 text-[10px]" data-genre="TRANCE">TRANCE / PSY</button>
+        <button class="hw-btn genre-pill px-2.5 py-1 text-[10px]" data-genre="BASS">BASS / DNB</button>
+      </div>
+      <div class="p-4 modal-scroll flex flex-col gap-3">
         <div id="browserTrackList" class="flex flex-col gap-2"></div>
         <div class="mt-2 pt-3 border-t border-slate-800 grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-          <label class="hw-btn py-3 px-4 text-center text-xs text-cyan-300 border-cyan-500/40 cursor-pointer block">
+          <label class="hw-btn py-3 px-4 text-center text-xs text-cyan-300 border-cyan-500/40 cursor-pointer flex">
             + NẠP MP3 / WAV TỪ MÁY VÀO DECK A
             <input type="file" id="modalFileA" accept="audio/*" class="hidden" />
           </label>
-          <label class="hw-btn py-3 px-4 text-center text-xs text-orange-300 border-orange-500/40 cursor-pointer block">
+          <label class="hw-btn py-3 px-4 text-center text-xs text-orange-300 border-orange-500/40 cursor-pointer flex">
             + NẠP MP3 / WAV TỪ MÁY VÀO DECK B
             <input type="file" id="modalFileB" accept="audio/*" class="hidden" />
           </label>
@@ -952,12 +1380,12 @@
        MODAL: HƯỚNG DẪN NHANH & PHÍM TẮT (VIETNAMESE)
        ========================================================================= -->
   <div id="helpModal" class="fixed inset-0 z-40 hidden items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-    <div class="hardware-panel rounded-2xl max-w-2xl w-full max-h-[85vh] flex flex-col overflow-hidden border border-amber-500/40">
-      <div class="px-5 py-3.5 bg-[#0e121a] border-b border-slate-800 flex items-center justify-between">
+    <div class="hardware-panel rounded-2xl max-w-2xl w-full max-h-[85dvh] flex flex-col overflow-hidden border border-amber-500/40">
+      <div class="px-5 py-3.5 bg-[#0e121a] border-b border-slate-800 flex items-center justify-between shrink-0">
         <div class="font-tech font-bold text-amber-300 tracking-wider text-sm sm:text-base">HƯỚNG DẪN THAO TÁC CẢM ỨNG & PHÍM TẮT</div>
-        <button id="btnCloseHelp" class="hw-btn px-3 py-1 text-xs">ĐÓNG ✕</button>
+        <button id="btnCloseHelp" class="hw-btn px-3 py-1 text-xs shrink-0">ĐÓNG ✕</button>
       </div>
-      <div class="p-5 overflow-y-auto text-xs sm:text-sm text-slate-300 space-y-4">
+      <div class="p-5 modal-scroll text-xs sm:text-sm text-slate-300 space-y-4">
         <div>
           <h3 class="font-tech text-cyan-400 font-bold mb-1.5">1. THAO TÁC CẢM ỨNG IPAD & CHUỘT (MULTI-TOUCH)</h3>
           <ul class="list-disc pl-5 space-y-1 text-slate-300">
@@ -998,6 +1426,7 @@
         id: 0,
         title: 'NEON PULSE',
         artist: 'Electro / Big Room House',
+        genre: 'HOUSE',
         bpm: 128.0,
         key: 'F#m (11A)',
         bars: 16,
@@ -1008,6 +1437,7 @@
         id: 1,
         title: 'CYBER DRIFT',
         artist: 'Peak-Time Techno',
+        genre: 'TECHNO',
         bpm: 132.0,
         key: 'Am (8A)',
         bars: 16,
@@ -1018,6 +1448,7 @@
         id: 2,
         title: 'HYPERDRIVE',
         artist: 'Future Bass / Melodic EDM',
+        genre: 'BASS',
         bpm: 126.0,
         key: 'Cm (5A)',
         bars: 16,
@@ -1028,11 +1459,100 @@
         id: 3,
         title: 'SUB ZERO',
         artist: 'Bass House / Club Drop',
+        genre: 'BASS',
         bpm: 128.0,
         key: 'Gm (6A)',
         bars: 16,
         color: '#ff5500',
         desc: 'Bass FM wobble nảy cực sung, groove house hiện đại, synth chop năng lượng cao.'
+      },
+      {
+        id: 4,
+        title: 'VINAHAI BOUNCE',
+        artist: 'Vinahouse / Melbourne Bounce',
+        genre: 'VINAHOUSE',
+        bpm: 136.0,
+        key: 'Am (8A)',
+        bars: 16,
+        color: '#ec4899',
+        desc: 'Bass offbeat tưng bừng đặc trưng Vinahouse bar club, lead kèn sắc nét & build snare cuốn.'
+      },
+      {
+        id: 5,
+        title: 'SOLAR ECLIPSE',
+        artist: 'Progressive House Anthem',
+        genre: 'HOUSE',
+        bpm: 126.0,
+        key: 'Em (9A)',
+        bars: 16,
+        color: '#f59e0b',
+        desc: 'Hợp âm piano pluck kết hợp supersaw festival bay bổng đầy cảm xúc kiểu Mainstage.'
+      },
+      {
+        id: 6,
+        title: 'ACID OVERLOAD',
+        artist: 'Hard Techno / Industrial Rave',
+        genre: 'TECHNO',
+        bpm: 140.0,
+        key: 'Fm (4A)',
+        bars: 16,
+        color: '#f43f5e',
+        desc: 'Kick 140 BPM rền vang, rave stab gắt lửa, bass acid distortion cực căng.'
+      },
+      {
+        id: 7,
+        title: 'MIDNIGHT RUSH',
+        artist: 'Uplifting Trance / Euphoria',
+        genre: 'TRANCE',
+        bpm: 138.0,
+        key: 'Dm (7A)',
+        bars: 16,
+        color: '#38bdf8',
+        desc: 'Bassline rolling 1/16 tốc độ cao, gated pad huyền ảo và lead arp trance thăng hoa.'
+      },
+      {
+        id: 8,
+        title: 'GALAXY DROP',
+        artist: 'Slap House / Brazilian Bass',
+        genre: 'HOUSE',
+        bpm: 124.0,
+        key: 'Bm (10A)',
+        bars: 16,
+        color: '#84cc16',
+        desc: 'Slap bass FM giật nảy cực bắt tai, clap house gọn gàng và vocal-synth chop hiện đại.'
+      },
+      {
+        id: 9,
+        title: 'LASER STORM',
+        artist: 'Psytrance / Full-On Rolling',
+        genre: 'TRANCE',
+        bpm: 142.0,
+        key: 'F#m (11A)',
+        bars: 16,
+        color: '#d946ef',
+        desc: 'Nhịp K-B-B-B Psytrance 142 BPM thôi miên, laser FM zap và hiệu ứng sweep không gian.'
+      },
+      {
+        id: 10,
+        title: 'VELOCITY DNB',
+        artist: 'Liquid / Neuro Drum & Bass',
+        genre: 'BASS',
+        bpm: 174.0,
+        key: 'Cm (5A)',
+        bars: 16,
+        color: '#14b8a6',
+        desc: 'Breakbeat 174 BPM tốc độ cao, Reese bass dày mượt cùng giai điệu arpeggio lướt nhanh.'
+      },
+      {
+        id: 11,
+        title: 'GOLDEN HORIZON',
+        artist: 'Tech House / Ibiza Groove',
+        genre: 'HOUSE',
+        bpm: 125.0,
+        key: 'G#m (1A)',
+        bars: 16,
+        color: '#eab308',
+        desc: 'Groove sub-bass đảo phách cực cuốn, hi-hat 909 lắc nhẹ và hợp âm stab club tinh tế.'
       }
     ];
 
@@ -1088,9 +1608,29 @@
     }
 
     /* =========================================================================
-       2. OFFLINE EDM SYNTHESIZER (4 STUDIO-GRADE CLUB TRACKS IN PURE WEB AUDIO)
+       2. HIGH-SPEED OFFLINE EDM SYNTHESIZER + PRE-BAKED DRUM KIT + IDB CACHE
        ========================================================================= */
+    const DEMO_SR = 32000;
+    const DEMO_CACHE_VER = 2;
     const trackCache = new Map();
+    const trackPending = new Map();
+    const distortionCurveCache = new Map();
+    let demoDrumKit = null;
+
+    // Cross-context AudioBuffer allocator (works pre-gesture and post-gesture)
+    function allocAudioBuffer(channels, length, sampleRate) {
+      const len = Math.max(1, length);
+      if (audioCtx && audioCtx.createBuffer) {
+        return audioCtx.createBuffer(channels, len, sampleRate);
+      }
+      if (typeof AudioBuffer !== 'undefined') {
+        try {
+          return new AudioBuffer({ numberOfChannels: channels, length: len, sampleRate });
+        } catch {}
+      }
+      const tmp = new OfflineAudioContext(channels, len, sampleRate);
+      return tmp.createBuffer(channels, len, sampleRate);
+    }
 
     // Shared white noise buffer generator for Offline or Live context
     function createNoiseBuffer(ctx, duration = 2.0) {
@@ -1103,20 +1643,25 @@
       return buf;
     }
 
-    // Soft saturation curve for club warmth & punch
+    // Soft saturation curve for club warmth & punch (cached for instant reuse)
     function makeDistortionCurve(amount = 20) {
+      const key = Math.round(amount);
+      if (distortionCurveCache.has(key)) return distortionCurveCache.get(key);
       const n = 1024;
       const curve = new Float32Array(n);
       for (let i = 0; i < n; i++) {
         const x = (i * 2) / n - 1;
         curve[i] = ((3 + amount) * x * 20 * (Math.PI / 180)) / (Math.PI + amount * Math.abs(x));
       }
+      distortionCurveCache.set(key, curve);
       return curve;
     }
 
     // Helper: create reversed copy of an AudioBuffer for authentic REV button & reverse scratch
     function createReversedBuffer(ctx, buffer) {
-      const rev = ctx.createBuffer(buffer.numberOfChannels, buffer.length, buffer.sampleRate);
+      const rev = (ctx && ctx.createBuffer)
+        ? ctx.createBuffer(buffer.numberOfChannels, buffer.length, buffer.sampleRate)
+        : allocAudioBuffer(buffer.numberOfChannels, buffer.length, buffer.sampleRate);
       for (let ch = 0; ch < buffer.numberOfChannels; ch++) {
         const src = buffer.getChannelData(ch);
         const dst = rev.getChannelData(ch);
@@ -1127,15 +1672,16 @@
       return rev;
     }
 
-    // Fast 3-band RGB waveform extraction (Low=Red, Mid=Green, High=Cyan)
+    // Fast anti-aliased 3-band RGB waveform extraction (Low=Red, Mid=Green, High=Cyan)
     function analyzeRGBWaveform(buffer, numBins = 1600) {
       const left = buffer.getChannelData(0);
-      const right = buffer.numberOfChannels > 1 ? buffer.getChannelData(1) : left;
+      const isStereo = buffer.numberOfChannels > 1;
+      const right = isStereo ? buffer.getChannelData(1) : null;
       const total = left.length;
       const step = Math.max(1, Math.floor(total / numBins));
       const sr = buffer.sampleRate;
 
-      // Single-pole IIR filter coefficients for 250Hz lowpass & 2200Hz mid/high split
+      // Single-pole IIR filter coefficients for 250Hz lowpass & 2400Hz mid/high split
       const aLow = 1 - Math.exp((-2 * Math.PI * 250) / sr);
       const aMid = 1 - Math.exp((-2 * Math.PI * 2400) / sr);
 
@@ -1144,18 +1690,19 @@
       const highs = new Float32Array(numBins);
       const peaks = new Float32Array(numBins);
 
-      let lp1 = 0, lp2 = 0;
       let maxPeak = 0.001;
+      const winLen = Math.min(step, 160);
+      const peakInc = Math.max(1, Math.floor(step / 32));
 
       for (let b = 0; b < numBins; b++) {
         const start = Math.floor((b * total) / numBins);
         const end = Math.min(total, start + step);
-        let eL = 0, eM = 0, eH = 0, pk = 0;
-        // Stride by 2 samples for ultra-fast decoding on long user MP3s
-        const inc = step > 2000 ? 2 : 1;
-        let count = 0;
-        for (let i = start; i < end; i += inc) {
-          const s = (left[i] + right[i]) * 0.5;
+        const bandEnd = Math.min(end, start + winLen);
+
+        let lp1 = 0, lp2 = 0;
+        let eL = 0, eM = 0, eH = 0, count = 0;
+        for (let i = start; i < bandEnd; i++) {
+          const s = isStereo ? (left[i] + right[i]) * 0.5 : left[i];
           lp1 += aLow * (s - lp1);
           lp2 += aMid * (s - lp2);
           const low = lp1;
@@ -1164,10 +1711,15 @@
           eL += low * low;
           eM += mid * mid;
           eH += high * high;
-          const a = Math.abs(s);
-          if (a > pk) pk = a;
           count++;
         }
+
+        let pk = 0;
+        for (let i = start; i < end; i += peakInc) {
+          const a = isStereo ? Math.abs((left[i] + right[i]) * 0.5) : Math.abs(left[i]);
+          if (a > pk) pk = a;
+        }
+
         const inv = 1 / Math.max(1, count);
         lows[b] = Math.sqrt(eL * inv);
         mids[b] = Math.sqrt(eM * inv);
@@ -1230,18 +1782,350 @@
       }
     }
 
-    // Core EDM Synthesizer: renders each of the 4 tracks into a studio-quality stereo AudioBuffer
+    // Pre-baked EDM Drum Kit + Shared Mono Noise Buffer (synthesized once in pure JS < 2ms)
+    function applyRbjBiquad(dst, src, startIdx, len, type, fc, q, sr) {
+      const w0 = (2 * Math.PI * fc) / sr;
+      const alpha = Math.sin(w0) / (2 * q);
+      const cosw = Math.cos(w0);
+      const a0 = 1 + alpha;
+      let b0, b1, b2;
+      if (type === 'highpass') {
+        b0 = ((1 + cosw) * 0.5) / a0;
+        b1 = -(1 + cosw) / a0;
+        b2 = ((1 + cosw) * 0.5) / a0;
+      } else {
+        // bandpass (constant 0 dB peak gain)
+        b0 = alpha / a0;
+        b1 = 0;
+        b2 = -alpha / a0;
+      }
+      const a1 = (-2 * cosw) / a0;
+      const a2 = (1 - alpha) / a0;
+      let x1 = 0, x2 = 0, y1 = 0, y2 = 0;
+      for (let i = 0; i < len && startIdx + i < dst.length; i++) {
+        const x0 = src[i];
+        const y0 = b0 * x0 + b1 * x1 + b2 * x2 - a1 * y1 - a2 * y2;
+        x2 = x1; x1 = x0;
+        y2 = y1; y1 = y0;
+        dst[startIdx + i] += y0;
+      }
+    }
+
+    function getDemoDrumKit() {
+      if (demoDrumKit) return demoDrumKit;
+      const sr = DEMO_SR;
+
+      const bakeKick = (style) => {
+        const isTech = style === 'techno';
+        const dur = isTech ? 0.36 : 0.31;
+        const len = Math.ceil(dur * sr);
+        const buf = allocAudioBuffer(1, len, sr);
+        const d = buf.getChannelData(0);
+        const startF = isTech ? 170 : 155;
+        const endF = isTech ? 42 : 46;
+        const peak = isTech ? 1.15 : 1.05;
+        const decayDur = isTech ? 0.34 : 0.29;
+        let ph = 0, cPh = 0;
+
+        for (let i = 0; i < len; i++) {
+          const t = i / sr;
+          let f;
+          if (t <= 0.065) f = startF * Math.pow(endF / startF, t / 0.065);
+          else if (t <= 0.28) f = endF * Math.pow(34 / endF, (t - 0.065) / 0.215);
+          else f = 34;
+          ph += (2 * Math.PI * f) / sr;
+
+          let g = 0;
+          if (t < 0.003) g = 0.001 + (peak - 0.001) * (t / 0.003);
+          else if (t < decayDur) g = peak * Math.pow(0.001 / peak, (t - 0.003) / (decayDur - 0.003));
+          let sample = Math.sin(ph) * g;
+
+          if (t < 0.02) {
+            const cf = 1400 * Math.pow(120 / 1400, Math.min(1, t / 0.015));
+            cPh += (2 * Math.PI * cf) / sr;
+            const u = (cPh / (2 * Math.PI)) % 1;
+            const tri = u < 0.25 ? u * 4 : (u < 0.75 ? 2 - u * 4 : u * 4 - 4);
+            const cg = t < 0.018 ? 0.32 * Math.pow(0.001 / 0.32, t / 0.018) : 0;
+            sample += tri * cg;
+          }
+          d[i] = sample;
+        }
+        return buf;
+      };
+
+      const bakeClap = () => {
+        const dur = 0.21;
+        const len = Math.ceil(dur * sr);
+        const buf = allocAudioBuffer(1, len, sr);
+        const d = buf.getChannelData(0);
+        for (let k = 0; k < 3; k++) {
+          const dt = k * 0.011;
+          const startIdx = Math.floor(dt * sr);
+          const bDur = k === 2 ? 0.17 : 0.035;
+          const bLen = Math.min(len - startIdx, Math.ceil((bDur + 0.01) * sr));
+          const raw = new Float32Array(bLen);
+          const baseLv = k === 2 ? 1.0 : 0.65;
+          for (let i = 0; i < bLen; i++) {
+            const t = i / sr;
+            const env = t < bDur ? baseLv * Math.pow(0.001, t / bDur) : 0;
+            raw[i] = (Math.random() * 2 - 1) * env;
+          }
+          applyRbjBiquad(d, raw, startIdx, bLen, 'bandpass', 1350 + k * 220, 1.4, sr);
+        }
+        return buf;
+      };
+
+      const bakeHat = (open) => {
+        const dur = open ? 0.18 : 0.06;
+        const decay = open ? 0.16 : 0.045;
+        const len = Math.ceil(dur * sr);
+        const buf = allocAudioBuffer(1, len, sr);
+        const d = buf.getChannelData(0);
+        const raw = new Float32Array(len);
+        for (let i = 0; i < len; i++) {
+          const t = i / sr;
+          raw[i] = (Math.random() * 2 - 1) * Math.pow(0.001, t / decay);
+        }
+        applyRbjBiquad(d, raw, 0, len, 'highpass', open ? 7200 : 9200, 0.7071, sr);
+        return buf;
+      };
+
+      const bakeSnare = () => {
+        const dur = 0.18;
+        const len = Math.ceil(dur * sr);
+        const buf = allocAudioBuffer(1, len, sr);
+        const d = buf.getChannelData(0);
+        const raw = new Float32Array(len);
+        let ph = 0;
+        for (let i = 0; i < len; i++) {
+          const t = i / sr;
+          const f = 210 * Math.pow(95 / 210, Math.min(1, t / 0.08));
+          ph += (2 * Math.PI * f) / sr;
+          const u = (ph / (2 * Math.PI)) % 1;
+          const tri = u < 0.25 ? u * 4 : (u < 0.75 ? 2 - u * 4 : u * 4 - 4);
+          const og = t < 0.12 ? 0.8 * Math.pow(0.001 / 0.8, t / 0.12) : 0;
+          d[i] = tri * og;
+          const ng = t < 0.16 ? 0.75 * Math.pow(0.001 / 0.75, t / 0.16) : 0;
+          raw[i] = (Math.random() * 2 - 1) * ng;
+        }
+        applyRbjBiquad(d, raw, 0, len, 'highpass', 1800, 0.7071, sr);
+        return buf;
+      };
+
+      // Shared 1.5s mono noise buffer for risers
+      const noiseLen = Math.ceil(1.5 * sr);
+      const noise = allocAudioBuffer(1, noiseLen, sr);
+      const nd = noise.getChannelData(0);
+      for (let i = 0; i < noiseLen; i++) nd[i] = Math.random() * 2 - 1;
+
+      demoDrumKit = {
+        noise,
+        kickHouse: bakeKick('house'),
+        kickTechno: bakeKick('techno'),
+        clap: bakeClap(),
+        hatClosed: bakeHat(false),
+        hatOpen: bakeHat(true),
+        snare: bakeSnare()
+      };
+      return demoDrumKit;
+    }
+
+    // Reusable monophonic voice engine (replaces thousands of per-note Web Audio nodes with 1 voice!)
+    function createMonoSynth(offline, dest, opts = {}) {
+      const durTotal = opts.duration;
+      const osc = offline.createOscillator();
+      osc.type = opts.oscType || 'sawtooth';
+      const subRatio = opts.subRatio || 0;
+      let sub = null;
+      if (subRatio > 0) {
+        sub = offline.createOscillator();
+        sub.type = opts.subType || 'sine';
+      }
+      let filt = null;
+      if (opts.filterType && opts.filterType !== 'none') {
+        filt = offline.createBiquadFilter();
+        filt.type = opts.filterType;
+        filt.Q.value = opts.Q ?? 1.0;
+      }
+      const g = offline.createGain();
+      g.gain.setValueAtTime(0.0001, 0);
+
+      if (filt) osc.connect(filt).connect(g);
+      else osc.connect(g);
+      if (sub) sub.connect(g);
+      g.connect(dest);
+
+      osc.start(0);
+      osc.stop(durTotal);
+      if (sub) {
+        sub.start(0);
+        sub.stop(durTotal);
+      }
+
+      let lastEnd = 0;
+      const maxCut = DEMO_SR * 0.45;
+      return {
+        note(t, dur, freq, cutStart = 1200, cutEnd = 240, amp = 0.35, attack = 0.003, qVal = null, freqStart = null, glideDur = 0.045) {
+          const tStart = Math.max(t, lastEnd);
+          const tEnd = Math.min(durTotal - 0.004, t + dur);
+          if (tEnd <= tStart + 0.006) return;
+          lastEnd = tEnd;
+
+          const fTarget = clamp(freq, 24, maxCut);
+          if (freqStart && freqStart !== fTarget) {
+            const fStart = clamp(freqStart, 24, maxCut);
+            osc.frequency.setValueAtTime(fStart, tStart);
+            osc.frequency.exponentialRampToValueAtTime(fTarget, Math.min(tEnd, tStart + glideDur));
+          } else {
+            osc.frequency.setValueAtTime(fTarget, tStart);
+          }
+          if (sub) {
+            sub.frequency.setValueAtTime(clamp(fTarget * subRatio, 20, maxCut), tStart);
+          }
+          if (filt) {
+            if (qVal !== null) filt.Q.setValueAtTime(qVal, tStart);
+            const cs = clamp(cutStart, 40, maxCut);
+            const ce = clamp(cutEnd, 40, maxCut);
+            filt.frequency.setValueAtTime(cs, tStart);
+            if (ce !== cs) filt.frequency.exponentialRampToValueAtTime(ce, tEnd);
+          }
+          const peakAmp = Math.max(0.001, amp);
+          const tAtk = Math.min(tEnd - 0.003, tStart + Math.max(0.002, attack));
+          g.gain.setValueAtTime(0.0005, tStart);
+          if (tAtk > tStart + 0.001) {
+            g.gain.linearRampToValueAtTime(peakAmp, tAtk);
+          } else {
+            g.gain.setValueAtTime(peakAmp, tStart);
+          }
+          g.gain.exponentialRampToValueAtTime(0.0005, tEnd);
+        }
+      };
+    }
+
+    // Graceful IndexedDB persistent cache (Int16 quantized mono PCM + RGB waveform)
+    const idbCache = (() => {
+      const DB_NAME = 'PioneerDJProEDM_v2';
+      const STORE = 'tracks';
+      let dbPromise = null;
+
+      function open() {
+        if (dbPromise) return dbPromise;
+        dbPromise = new Promise((resolve) => {
+          try {
+            if (typeof indexedDB === 'undefined') return resolve(null);
+            const req = indexedDB.open(DB_NAME, 1);
+            req.onupgradeneeded = () => {
+              const db = req.result;
+              if (!db.objectStoreNames.contains(STORE)) db.createObjectStore(STORE);
+            };
+            req.onsuccess = () => resolve(req.result);
+            req.onerror = () => resolve(null);
+          } catch {
+            resolve(null);
+          }
+        });
+        return dbPromise;
+      }
+
+      async function get(trackId) {
+        try {
+          const db = await open();
+          if (!db) return null;
+          const rec = await new Promise((resolve) => {
+            try {
+              const tx = db.transaction(STORE, 'readonly');
+              const req = tx.objectStore(STORE).get(trackId);
+              req.onsuccess = () => resolve(req.result || null);
+              req.onerror = () => resolve(null);
+            } catch {
+              resolve(null);
+            }
+          });
+          if (!rec || rec.v !== DEMO_CACHE_VER || !rec.pcm16 || !rec.waveform || !rec.sr || !rec.len) return null;
+          const buf = allocAudioBuffer(1, rec.len, rec.sr);
+          const out = buf.getChannelData(0);
+          const pcm = rec.pcm16;
+          for (let i = 0; i < rec.len; i++) out[i] = pcm[i] / 32767;
+          const meta = DEMO_TRACKS[trackId];
+          let cachedRev = null;
+          return {
+            ...meta,
+            buffer: buf,
+            waveform: rec.waveform,
+            isDemo: true,
+            get reversedBuffer() {
+              if (!cachedRev) cachedRev = createReversedBuffer(audioCtx, buf);
+              return cachedRev;
+            }
+          };
+        } catch {
+          return null;
+        }
+      }
+
+      async function set(trackId, entry) {
+        try {
+          const db = await open();
+          if (!db || !entry || !entry.buffer) return;
+          const src = entry.buffer.getChannelData(0);
+          const len = src.length;
+          const pcm16 = new Int16Array(len);
+          for (let i = 0; i < len; i++) {
+            const v = src[i];
+            pcm16[i] = v >= 1 ? 32767 : (v <= -1 ? -32767 : Math.round(v * 32767));
+          }
+          await new Promise((resolve) => {
+            try {
+              const tx = db.transaction(STORE, 'readwrite');
+              tx.objectStore(STORE).put({
+                v: DEMO_CACHE_VER,
+                sr: entry.buffer.sampleRate,
+                len,
+                pcm16,
+                waveform: entry.waveform
+              }, trackId);
+              tx.oncomplete = () => resolve();
+              tx.onerror = () => resolve();
+            } catch {
+              resolve();
+            }
+          });
+        } catch {}
+      }
+
+      return { get, set };
+    })();
+
+    // Core EDM Synthesizer: returns cached/IDB track instantly or renders fast in mono OfflineAudioContext
     async function renderDemoTrack(trackId) {
       if (trackCache.has(trackId)) return trackCache.get(trackId);
+      if (trackPending.has(trackId)) return trackPending.get(trackId);
 
+      const promise = (async () => {
+        const cached = await idbCache.get(trackId);
+        if (cached) {
+          trackCache.set(trackId, cached);
+          updatePrewarmIndicators();
+          return cached;
+        }
+        return _synthesizeDemoTrack(trackId);
+      })().finally(() => {
+        trackPending.delete(trackId);
+      });
+      trackPending.set(trackId, promise);
+      return promise;
+    }
+
+    async function _synthesizeDemoTrack(trackId) {
       const meta = DEMO_TRACKS[trackId];
-      const sr = 44100;
+      const sr = DEMO_SR;
       const beatDur = 60 / meta.bpm;
       const totalBeats = meta.bars * 4; // 64 beats = 16 bars (~30s seamless club loop)
       const duration = totalBeats * beatDur;
 
-      const offline = new OfflineAudioContext(2, Math.ceil(duration * sr), sr);
-      const noiseBuf = createNoiseBuffer(offline, 3.0);
+      const offline = new OfflineAudioContext(1, Math.ceil(duration * sr), sr);
+      const kit = getDemoDrumKit();
+      const maxCut = sr * 0.45;
 
       // Master bus with gentle club compression & warmth
       const masterComp = offline.createDynamicsCompressor();
@@ -1259,127 +2143,88 @@
       const scBus = offline.createGain();
       scBus.connect(masterComp);
 
-      // Helper drum & synth builders
+      // Helper drum & synth builders powered by pre-baked buffers
       function triggerKick(t, style = 'house') {
-        const osc = offline.createOscillator();
-        const g = offline.createGain();
-        osc.type = 'sine';
-        const startF = style === 'techno' ? 170 : 155;
-        const endF = style === 'techno' ? 42 : 46;
-        osc.frequency.setValueAtTime(startF, t);
-        osc.frequency.exponentialRampToValueAtTime(endF, t + 0.065);
-        osc.frequency.exponentialRampToValueAtTime(34, t + 0.28);
-
-        g.gain.setValueAtTime(0.001, t);
-        g.gain.linearRampToValueAtTime(style === 'techno' ? 1.15 : 1.05, t + 0.003);
-        g.gain.exponentialRampToValueAtTime(0.001, t + (style === 'techno' ? 0.34 : 0.29));
-
-        // Punch click transient
-        const click = offline.createOscillator();
-        const cg = offline.createGain();
-        click.type = 'triangle';
-        click.frequency.setValueAtTime(1400, t);
-        click.frequency.exponentialRampToValueAtTime(120, t + 0.015);
-        cg.gain.setValueAtTime(0.32, t);
-        cg.gain.exponentialRampToValueAtTime(0.001, t + 0.018);
-
-        osc.connect(g).connect(masterComp);
-        click.connect(cg).connect(masterComp);
-        osc.start(t); osc.stop(t + 0.36);
-        click.start(t); click.stop(t + 0.02);
+        const src = offline.createBufferSource();
+        src.buffer = style === 'techno' ? kit.kickTechno : kit.kickHouse;
+        src.connect(masterComp);
+        src.start(t);
 
         // Apply sidechain pump to scBus
         scBus.gain.cancelScheduledValues(t);
         scBus.gain.setValueAtTime(0.22, t);
-        scBus.gain.exponentialRampToValueAtTime(1.0, t + beatDur * 0.72);
+        scBus.gain.exponentialRampToValueAtTime(1.0, Math.min(duration - 0.002, t + beatDur * 0.72));
       }
 
       function triggerClap(t, level = 0.42) {
-        for (let k = 0; k < 3; k++) {
-          const src = offline.createBufferSource();
-          src.buffer = noiseBuf;
-          const bp = offline.createBiquadFilter();
-          bp.type = 'bandpass';
-          bp.frequency.value = 1350 + k * 220;
-          bp.Q.value = 1.4;
-          const g = offline.createGain();
-          const dt = t + k * 0.011;
-          g.gain.setValueAtTime(level * (k === 2 ? 1 : 0.65), dt);
-          g.gain.exponentialRampToValueAtTime(0.001, dt + (k === 2 ? 0.17 : 0.035));
-          src.connect(bp).connect(g).connect(masterComp);
-          src.start(dt); src.stop(dt + 0.2);
-        }
+        const src = offline.createBufferSource();
+        src.buffer = kit.clap;
+        const g = offline.createGain();
+        g.gain.value = level;
+        src.connect(g).connect(masterComp);
+        src.start(t);
       }
 
       function triggerHat(t, open = false, level = 0.22) {
         const src = offline.createBufferSource();
-        src.buffer = noiseBuf;
-        const hp = offline.createBiquadFilter();
-        hp.type = 'highpass';
-        hp.frequency.value = open ? 7200 : 9200;
+        src.buffer = open ? kit.hatOpen : kit.hatClosed;
         const g = offline.createGain();
-        g.gain.setValueAtTime(level, t);
-        g.gain.exponentialRampToValueAtTime(0.001, t + (open ? 0.16 : 0.045));
-        src.connect(hp).connect(g).connect(masterComp);
-        src.start(t); src.stop(t + (open ? 0.18 : 0.06));
+        g.gain.value = level;
+        src.connect(g).connect(masterComp);
+        src.start(t);
       }
 
       function triggerSnare(t, pitch = 210, level = 0.45) {
-        const osc = offline.createOscillator();
-        const og = offline.createGain();
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(pitch, t);
-        osc.frequency.exponentialRampToValueAtTime(95, t + 0.08);
-        og.gain.setValueAtTime(level * 0.8, t);
-        og.gain.exponentialRampToValueAtTime(0.001, t + 0.12);
-        osc.connect(og).connect(masterComp);
-        osc.start(t); osc.stop(t + 0.14);
-
-        const n = offline.createBufferSource();
-        n.buffer = noiseBuf;
-        const hp = offline.createBiquadFilter();
-        hp.type = 'highpass';
-        hp.frequency.value = 1800;
-        const ng = offline.createGain();
-        ng.gain.setValueAtTime(level * 0.75, t);
-        ng.gain.exponentialRampToValueAtTime(0.001, t + 0.16);
-        n.connect(hp).connect(ng).connect(masterComp);
-        n.start(t); n.stop(t + 0.18);
+        const src = offline.createBufferSource();
+        src.buffer = kit.snare;
+        src.playbackRate.value = clamp(pitch / 210, 0.7, 2.2);
+        const g = offline.createGain();
+        g.gain.value = level;
+        src.connect(g).connect(masterComp);
+        src.start(t);
       }
 
       function triggerRiser(tStart, dur, level = 0.28) {
+        const tEnd = Math.min(duration - 0.004, tStart + dur);
+        if (tEnd <= tStart + 0.05) return;
         const n = offline.createBufferSource();
-        n.buffer = noiseBuf;
+        n.buffer = kit.noise;
         n.loop = true;
         const bp = offline.createBiquadFilter();
         bp.type = 'bandpass';
         bp.Q.value = 3.2;
         bp.frequency.setValueAtTime(280, tStart);
-        bp.frequency.exponentialRampToValueAtTime(7800, tStart + dur);
+        bp.frequency.exponentialRampToValueAtTime(Math.min(7800, maxCut), tEnd);
         const g = offline.createGain();
         g.gain.setValueAtTime(0.001, tStart);
-        g.gain.linearRampToValueAtTime(level, tStart + dur - 0.04);
-        g.gain.linearRampToValueAtTime(0.001, tStart + dur);
+        g.gain.linearRampToValueAtTime(level, Math.max(tStart + 0.01, tEnd - 0.04));
+        g.gain.linearRampToValueAtTime(0.0005, tEnd);
         n.connect(bp).connect(g).connect(masterComp);
-        n.start(tStart); n.stop(tStart + dur + 0.02);
+        n.start(tStart);
+        n.stop(Math.min(duration, tEnd + 0.01));
       }
 
       function triggerSupersaw(t, midiNotes, dur, cutoffStart, cutoffEnd, level = 0.14, dest = scBus) {
+        const tEnd = Math.min(duration - 0.003, t + dur);
+        if (tEnd <= t + 0.01) return;
         const filt = offline.createBiquadFilter();
         filt.type = 'lowpass';
         filt.Q.value = 1.8;
-        filt.frequency.setValueAtTime(cutoffStart, t);
-        filt.frequency.exponentialRampToValueAtTime(cutoffEnd, t + dur);
+        filt.frequency.setValueAtTime(clamp(cutoffStart, 40, maxCut), t);
+        filt.frequency.exponentialRampToValueAtTime(clamp(cutoffEnd, 40, maxCut), tEnd);
 
+        const scaledLv = level * 1.32;
         const g = offline.createGain();
+        const tAtk = Math.min(tEnd - 0.004, t + 0.015);
+        const tHold = Math.min(tEnd - 0.002, Math.max(tAtk + 0.001, tEnd - 0.04));
         g.gain.setValueAtTime(0.001, t);
-        g.gain.linearRampToValueAtTime(level, t + 0.015);
-        g.gain.setValueAtTime(level * 0.85, t + Math.max(0.02, dur - 0.04));
-        g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+        g.gain.linearRampToValueAtTime(scaledLv, tAtk);
+        g.gain.setValueAtTime(scaledLv * 0.85, tHold);
+        g.gain.exponentialRampToValueAtTime(0.001, tEnd);
 
         filt.connect(g).connect(dest);
 
-        const detunes = [-14, 0, 14];
+        const detunes = [-11, 11];
         for (const m of midiNotes) {
           const baseF = midiToFreq(m);
           for (const d of detunes) {
@@ -1388,7 +2233,8 @@
             osc.frequency.value = baseF;
             osc.detune.value = d;
             osc.connect(filt);
-            osc.start(t); osc.stop(t + dur + 0.02);
+            osc.start(t);
+            osc.stop(Math.min(duration, tEnd + 0.015));
           }
         }
       }
@@ -1410,6 +2256,14 @@
           66, 0, 66, 69, 0, 66, 64, 0,  61, 0, 64, 66, 0, 69, 66, 0,
           62, 0, 62, 66, 0, 69, 73, 0,  71, 0, 69, 66, 0, 64, 61, 0
         ];
+        const bassSynth = createMonoSynth(offline, scBus, {
+          oscType: 'sawtooth',
+          subType: 'sine',
+          subRatio: 0.5,
+          filterType: 'lowpass',
+          Q: 1.0,
+          duration
+        });
 
         for (let b = 0; b < totalBeats; b++) {
           const t = b * beatDur;
@@ -1443,26 +2297,10 @@
           const progIdx = Math.floor(bar / 2) % 4;
           const bassNote = bassProg[progIdx];
           if (!isBuild) {
-            for (let s = 0; s < 4; s++) {
-              if (s === 0) continue; // Leave room for kick punch
+            const bFreq = midiToFreq(bassNote);
+            for (let s = 1; s < 4; s++) {
               const st = t + s * (beatDur / 4);
-              const osc = offline.createOscillator();
-              const sub = offline.createOscillator();
-              const filt = offline.createBiquadFilter();
-              const g = offline.createGain();
-              osc.type = 'sawtooth';
-              sub.type = 'sine';
-              osc.frequency.value = midiToFreq(bassNote);
-              sub.frequency.value = midiToFreq(bassNote - 12);
-              filt.type = 'lowpass';
-              filt.frequency.setValueAtTime(isDrop ? 1600 : 850, st);
-              filt.frequency.exponentialRampToValueAtTime(220, st + beatDur * 0.24);
-              g.gain.setValueAtTime(isDrop ? 0.38 : 0.28, st);
-              g.gain.exponentialRampToValueAtTime(0.001, st + beatDur * 0.24);
-              osc.connect(filt).connect(g).connect(scBus);
-              sub.connect(g);
-              osc.start(st); osc.stop(st + beatDur * 0.25);
-              sub.start(st); sub.stop(st + beatDur * 0.25);
+              bassSynth.note(st, beatDur * 0.24, bFreq, isDrop ? 1600 : 850, 220, isDrop ? 0.38 : 0.28, 0.002);
             }
           }
 
@@ -1497,31 +2335,29 @@
         shaper.curve = makeDistortionCurve(35);
         shaper.connect(scBus);
 
+        const rumSynth = createMonoSynth(offline, masterComp, {
+          oscType: 'sawtooth',
+          filterType: 'lowpass',
+          Q: 1.0,
+          duration
+        });
+        const acidSynth = createMonoSynth(offline, shaper, {
+          oscType: 'sawtooth',
+          filterType: 'lowpass',
+          Q: 8.0,
+          duration
+        });
+
         for (let b = 0; b < totalBeats; b++) {
           const t = b * beatDur;
           const bar = Math.floor(b / 4);
           const beatInBar = b % 4;
           const intense = bar >= 8;
 
-          // Heavy techno kick
+          // Heavy techno kick & dark techno rumble tail
           if (!(bar === 7 && beatInBar >= 2)) {
             triggerKick(t, 'techno');
-          }
-
-          // Dark techno rumble tail on offbeat
-          if (!(bar === 7 && beatInBar >= 2)) {
-            const rum = offline.createOscillator();
-            const rf = offline.createBiquadFilter();
-            const rg = offline.createGain();
-            rum.type = 'sawtooth';
-            rum.frequency.value = 55;
-            rf.type = 'lowpass';
-            rf.frequency.value = 135;
-            rg.gain.setValueAtTime(0.001, t + beatDur * 0.2);
-            rg.gain.linearRampToValueAtTime(0.32, t + beatDur * 0.45);
-            rg.gain.exponentialRampToValueAtTime(0.001, t + beatDur * 0.95);
-            rum.connect(rf).connect(rg).connect(masterComp);
-            rum.start(t + beatDur * 0.18); rum.stop(t + beatDur);
+            rumSynth.note(t + beatDur * 0.2, beatDur * 0.75, 55, 135, 135, 0.32, beatDur * 0.25);
           }
 
           // 909 sharp offbeat hats & 16th rides
@@ -1533,24 +2369,13 @@
 
           // Acid 303 resonant 16th bassline with evolving filter cutoff across bars
           const barMod = Math.sin((bar / 16) * Math.PI * 2) * 0.5 + 0.5;
+          const peakF = (intense ? 2600 : 1200) + barMod * 1800;
+          const acidQ = intense ? 11.5 : 8.0;
           for (let s = 0; s < 4; s++) {
             const step = (beatInBar * 4 + s) % 16;
             const note = acidSeq[step] + (bar >= 12 && step % 4 === 2 ? 12 : 0);
             const st = t + s * (beatDur / 4);
-            const osc = offline.createOscillator();
-            const filt = offline.createBiquadFilter();
-            const g = offline.createGain();
-            osc.type = 'sawtooth';
-            osc.frequency.setValueAtTime(midiToFreq(note), st);
-            filt.type = 'lowpass';
-            filt.Q.value = intense ? 11.5 : 8.0;
-            const peakF = (intense ? 2600 : 1200) + barMod * 1800;
-            filt.frequency.setValueAtTime(peakF, st);
-            filt.frequency.exponentialRampToValueAtTime(240, st + beatDur * 0.22);
-            g.gain.setValueAtTime(0.24, st);
-            g.gain.exponentialRampToValueAtTime(0.001, st + beatDur * 0.23);
-            osc.connect(filt).connect(g).connect(shaper);
-            osc.start(st); osc.stop(st + beatDur * 0.24);
+            acidSynth.note(st, beatDur * 0.23, midiToFreq(note), peakF, 240, 0.24, 0.002, acidQ);
           }
 
           // Dark Techno Minor Chord Stab with Dub Delay Echoes
@@ -1581,6 +2406,9 @@
         const subs = [36, 32, 39, 34];
         const arpNotes = [60, 63, 67, 70, 72, 70, 67, 63];
 
+        const subSynth = createMonoSynth(offline, scBus, { oscType: 'sine', filterType: 'none', duration });
+        const arpSynth = createMonoSynth(offline, scBus, { oscType: 'triangle', filterType: 'none', duration });
+
         for (let b = 0; b < totalBeats; b++) {
           const t = b * beatDur;
           const bar = Math.floor(b / 4);
@@ -1608,21 +2436,12 @@
           // Lush pumping Supersaw Chord hits (syncopated Future Bass rhythm in drop)
           const hits = isDrop ? [0, 0.75, 1.5, 2.25, 3.0] : [0, 2.0];
           if (beatInBar === 0) {
+            const subFreq = midiToFreq(subs[progIdx]);
             for (let h = 0; h < hits.length; h++) {
               const ht = t + hits[h] * beatDur;
               const hDur = (h < hits.length - 1 ? (hits[h + 1] - hits[h]) : (4 - hits[h])) * beatDur * 0.92;
               triggerSupersaw(ht, chords[progIdx], hDur, isDrop ? 5400 : 2200, isDrop ? 1800 : 700, isDrop ? 0.14 : 0.09);
-
-              // Deep Warm Sub Bass
-              const sub = offline.createOscillator();
-              const sg = offline.createGain();
-              sub.type = 'sine';
-              sub.frequency.value = midiToFreq(subs[progIdx]);
-              sg.gain.setValueAtTime(0.001, ht);
-              sg.gain.linearRampToValueAtTime(0.45, ht + 0.02);
-              sg.gain.exponentialRampToValueAtTime(0.001, ht + hDur);
-              sub.connect(sg).connect(scBus);
-              sub.start(ht); sub.stop(ht + hDur + 0.02);
+              subSynth.note(ht, hDur, subFreq, 0, 0, 0.45, 0.02);
             }
           }
 
@@ -1630,14 +2449,7 @@
           for (let s = 0; s < 4; s++) {
             const st = t + s * (beatDur / 4);
             const note = arpNotes[(beatInBar * 4 + s) % arpNotes.length] + (progIdx === 1 ? -4 : progIdx === 2 ? 3 : 0);
-            const osc = offline.createOscillator();
-            const g = offline.createGain();
-            osc.type = 'triangle';
-            osc.frequency.value = midiToFreq(note + 12);
-            g.gain.setValueAtTime(isDrop ? 0.15 : 0.11, st);
-            g.gain.exponentialRampToValueAtTime(0.001, st + beatDur * 0.28);
-            osc.connect(g).connect(scBus);
-            osc.start(st); osc.stop(st + beatDur * 0.3);
+            arpSynth.note(st, beatDur * 0.24, midiToFreq(note + 12), 0, 0, isDrop ? 0.15 : 0.11, 0.002);
           }
         }
         triggerRiser(7 * 4 * beatDur, 4 * beatDur, 0.30);
@@ -1646,7 +2458,7 @@
       // =======================================================================
       // TRACK 3: SUB ZERO — Bass House / Club Drop (128 BPM, Gm)
       // =======================================================================
-      else {
+      else if (trackId === 3) {
         // Gm Bass House FM wobble riff (16th notes)
         const wobblePattern = [
           43, 0, 43, 46, 0, 43, 50, 0,  43, 0, 46, 48, 0, 46, 41, 0
@@ -1654,6 +2466,8 @@
         const dist = offline.createWaveShaper();
         dist.curve = makeDistortionCurve(28);
         dist.connect(scBus);
+
+        const subBass = createMonoSynth(offline, scBus, { oscType: 'sine', filterType: 'none', duration });
 
         for (let b = 0; b < totalBeats; b++) {
           const t = b * beatDur;
@@ -1696,32 +2510,27 @@
               mod.frequency.value = baseF * (isDrop ? 2 : 1);
 
               // FM wobble envelope
+              const fmEnd = Math.min(duration - 0.002, st + beatDur * 0.35);
               modGain.gain.setValueAtTime(isDrop ? baseF * 5.2 : baseF * 2.2, st);
-              modGain.gain.exponentialRampToValueAtTime(baseF * 0.4, st + beatDur * 0.35);
+              modGain.gain.exponentialRampToValueAtTime(Math.max(10, baseF * 0.4), fmEnd);
 
               filt.type = 'bandpass';
               filt.Q.value = 2.2;
               filt.frequency.setValueAtTime(isDrop ? 1600 : 750, st);
-              filt.frequency.exponentialRampToValueAtTime(190, st + beatDur * 0.32);
+              filt.frequency.exponentialRampToValueAtTime(190, Math.min(duration - 0.002, st + beatDur * 0.32));
 
               outG.gain.setValueAtTime(0.42, st);
-              outG.gain.exponentialRampToValueAtTime(0.001, st + beatDur * 0.36);
+              outG.gain.exponentialRampToValueAtTime(0.001, Math.min(duration - 0.002, st + beatDur * 0.36));
 
               mod.connect(modGain).connect(carrier.frequency);
               carrier.connect(filt).connect(outG).connect(dist);
 
-              // Clean sub layer underneath FM bass
-              const sub = offline.createOscillator();
-              const subG = offline.createGain();
-              sub.type = 'sine';
-              sub.frequency.value = baseF;
-              subG.gain.setValueAtTime(0.32, st);
-              subG.gain.exponentialRampToValueAtTime(0.001, st + beatDur * 0.34);
-              sub.connect(subG).connect(scBus);
+              const stopT = Math.min(duration, st + beatDur * 0.38);
+              carrier.start(st); carrier.stop(stopT);
+              mod.start(st); mod.stop(stopT);
 
-              carrier.start(st); carrier.stop(st + beatDur * 0.38);
-              mod.start(st); mod.stop(st + beatDur * 0.38);
-              sub.start(st); sub.stop(st + beatDur * 0.38);
+              // Clean sub layer underneath FM bass (non-overlapping step duration)
+              subBass.note(st, beatDur * 0.24, baseF, 0, 0, 0.32, 0.002);
             }
           }
 
@@ -1735,18 +2544,506 @@
         triggerRiser(7 * 4 * beatDur, 4 * beatDur, 0.25);
       }
 
-      const rendered = await offline.startRendering();
-      const reversed = createReversedBuffer(offline, rendered);
-      const waveform = analyzeRGBWaveform(rendered, 1400);
+      // =======================================================================
+      // TRACK 4: VINAHAI BOUNCE — Vinahouse / Melbourne Bounce (136 BPM, Am)
+      // =======================================================================
+      else if (trackId === 4) {
+        // Am - F - C - G bounce progression
+        const bassProg = [45, 41, 48, 43];
+        const leadHook = [
+          69, 0, 72, 0, 76, 74, 72, 0,  69, 0, 72, 76, 79, 0, 76, 0,
+          77, 0, 76, 0, 72, 0, 74, 0,   76, 0, 74, 72, 69, 0, 67, 0
+        ];
+        const bounceBass = createMonoSynth(offline, masterComp, {
+          oscType: 'sawtooth',
+          subType: 'sine',
+          subRatio: 0.5,
+          filterType: 'lowpass',
+          Q: 3.2,
+          duration
+        });
 
+        for (let b = 0; b < totalBeats; b++) {
+          const t = b * beatDur;
+          const bar = Math.floor(b / 4);
+          const beatInBar = b % 4;
+          const progIdx = Math.floor(bar / 2) % 4;
+          const isBuild = (bar === 7);
+          const isDrop = (bar >= 8);
+
+          if (!isBuild) {
+            triggerKick(t, 'house');
+            // Signature Vinahouse / Melbourne Bounce offbeat bouncy bass!
+            const offT = t + beatDur * 0.5;
+            const bf = midiToFreq(bassProg[progIdx]);
+            bounceBass.note(offT, beatDur * 0.44, bf, isDrop ? 2400 : 1400, 240, isDrop ? 0.52 : 0.40, 0.008, null, bf * 1.03, 0.045);
+          } else {
+            const subDiv = beatInBar < 2 ? 2 : 4;
+            for (let s = 0; s < subDiv; s++) {
+              triggerSnare(t + (s * beatDur) / subDiv, 240 + beatInBar * 40 + s * 18, 0.44);
+            }
+          }
+
+          if (!isBuild && (beatInBar === 1 || beatInBar === 3)) triggerClap(t, 0.46);
+          if (!isBuild) {
+            triggerHat(t + beatDur * 0.5, true, 0.25);
+            triggerHat(t + beatDur * 0.75, false, 0.12);
+          }
+
+          // Catchy Vinahouse bright brassy lead
+          if ((bar >= 2 && bar < 7) || isDrop) {
+            for (let s = 0; s < 4; s++) {
+              const idx = ((bar % 2) * 16) + beatInBar * 4 + s;
+              const n = leadHook[idx];
+              if (n) {
+                const st = t + s * (beatDur / 4);
+                triggerSupersaw(st, [n, n + 12], beatDur * 0.36, isDrop ? 7200 : 3800, 1600, isDrop ? 0.14 : 0.09);
+              }
+            }
+          }
+        }
+        triggerRiser(7 * 4 * beatDur, 4 * beatDur, 0.34);
+      }
+
+      // =======================================================================
+      // TRACK 5: SOLAR ECLIPSE — Progressive House Anthem (126 BPM, Em)
+      // =======================================================================
+      else if (trackId === 5) {
+        // Em - C - G - D festival anthem chords
+        const chords = [
+          [52, 55, 59, 64],
+          [48, 52, 55, 60],
+          [55, 59, 62, 67],
+          [50, 54, 57, 62]
+        ];
+        const subs = [40, 36, 43, 38];
+        const melody = [
+          76, 0, 74, 71, 0, 71, 74, 0,  72, 0, 71, 67, 0, 67, 71, 0,
+          74, 0, 71, 67, 0, 71, 74, 0,  78, 0, 76, 74, 0, 71, 74, 0
+        ];
+        const progSub = createMonoSynth(offline, scBus, { oscType: 'triangle', filterType: 'none', duration });
+
+        for (let b = 0; b < totalBeats; b++) {
+          const t = b * beatDur;
+          const bar = Math.floor(b / 4);
+          const beatInBar = b % 4;
+          const progIdx = Math.floor(bar / 2) % 4;
+          const isDrop = bar >= 8;
+
+          if (!(bar === 7 && beatInBar >= 2)) triggerKick(t, 'house');
+          if (beatInBar === 1 || beatInBar === 3) triggerClap(t, isDrop ? 0.44 : 0.30);
+          triggerHat(t + beatDur * 0.5, true, isDrop ? 0.22 : 0.14);
+          triggerHat(t + beatDur * 0.25, false, 0.08);
+          triggerHat(t + beatDur * 0.75, false, 0.10);
+
+          // Progressive rhythmic chord plucks (dotted-eighth / syncopated club feel)
+          const pluckSteps = [0, 0.75, 1.5, 2.0, 2.75, 3.5];
+          if (beatInBar === 0) {
+            for (const ps of pluckSteps) {
+              const pt = t + ps * beatDur;
+              triggerSupersaw(pt, chords[progIdx], beatDur * 0.48, isDrop ? 5200 : 2400, 650, isDrop ? 0.12 : 0.08);
+            }
+            // Rolling warm progressive sub bass
+            const sf = midiToFreq(subs[progIdx]);
+            for (let k = 0; k < 8; k++) {
+              const st = t + k * beatDur * 0.5;
+              progSub.note(st, beatDur * 0.46, sf, 0, 0, 0.36, 0.002);
+            }
+          }
+
+          // Soaring Euphoric Lead Melody in bars 4-15
+          if (bar >= 4) {
+            for (let s = 0; s < 4; s++) {
+              const idx = ((bar % 2) * 16) + beatInBar * 4 + s;
+              const note = melody[idx];
+              if (note) {
+                const st = t + s * (beatDur / 4);
+                triggerSupersaw(st, [note, note - 12], beatDur * 0.45, isDrop ? 6800 : 3400, 1500, isDrop ? 0.13 : 0.08);
+              }
+            }
+          }
+        }
+        triggerRiser(7 * 4 * beatDur, 4 * beatDur, 0.30);
+      }
+
+      // =======================================================================
+      // TRACK 6: ACID OVERLOAD — Hard Techno / Industrial Rave (140 BPM, Fm)
+      // =======================================================================
+      else if (trackId === 6) {
+        const raveDist = offline.createWaveShaper();
+        raveDist.curve = makeDistortionCurve(55);
+        raveDist.connect(scBus);
+        const acidNotes = [41, 41, 53, 44, 41, 48, 41, 46, 41, 53, 44, 41, 51, 48, 44, 41];
+
+        const tailSynth = createMonoSynth(offline, masterComp, {
+          oscType: 'sawtooth',
+          filterType: 'lowpass',
+          Q: 1.0,
+          duration
+        });
+        const raveAcid = createMonoSynth(offline, raveDist, {
+          oscType: 'sawtooth',
+          filterType: 'lowpass',
+          Q: 13.5,
+          duration
+        });
+
+        for (let b = 0; b < totalBeats; b++) {
+          const t = b * beatDur;
+          const bar = Math.floor(b / 4);
+          const beatInBar = b % 4;
+          const isDrop = bar >= 6;
+
+          if (!(bar === 5 && beatInBar >= 2)) {
+            triggerKick(t, 'techno');
+            // Heavy industrial distorted sub tail
+            tailSynth.note(t + beatDur * 0.18, beatDur * 0.78, 43.65, 160, 160, 0.38, beatDur * 0.30);
+          }
+
+          // Relentless 16th industrial hats + hard clap
+          triggerHat(t + beatDur * 0.5, true, 0.30);
+          for (let s = 0; s < 4; s++) triggerHat(t + s * (beatDur / 4), false, s % 2 ? 0.16 : 0.09);
+          if (beatInBar === 1 || beatInBar === 3) triggerClap(t, 0.44);
+
+          // Screaming 303 Acid Lead
+          const cut = Math.max(400, (isDrop ? 3200 : 1400) + Math.sin(b * 0.4) * 900);
+          for (let s = 0; s < 4; s++) {
+            const st = t + s * (beatDur / 4);
+            const note = acidNotes[(beatInBar * 4 + s) % 16] + (bar >= 12 ? 12 : 0);
+            raveAcid.note(st, beatDur * 0.23, midiToFreq(note), cut, 220, 0.25, 0.002);
+          }
+
+          // Classic 90s Rave Hoover Stab on downbeats during drop
+          if (isDrop && beatInBar === 0 && bar % 2 === 0) {
+            triggerSupersaw(t, [53, 56, 60, 65], beatDur * 0.8, 4800, 900, 0.16, raveDist);
+            triggerSupersaw(t + beatDur * 1.5, [53, 56, 60, 65], beatDur * 0.5, 4200, 800, 0.14, raveDist);
+          }
+        }
+        triggerRiser(4 * 4 * beatDur, 8 * beatDur, 0.30);
+      }
+
+      // =======================================================================
+      // TRACK 7: MIDNIGHT RUSH — Uplifting Trance / Euphoria (138 BPM, Dm)
+      // =======================================================================
+      else if (trackId === 7) {
+        // Dm - Bb - C - Am uplifting trance progression
+        const chords = [
+          [50, 57, 62, 65],
+          [46, 53, 58, 62],
+          [48, 55, 60, 64],
+          [45, 52, 57, 60]
+        ];
+        const bassNotes = [38, 34, 36, 33];
+        const arpSeq = [0, 1, 2, 3, 2, 1, 3, 2];
+
+        const tranceBass = createMonoSynth(offline, scBus, { oscType: 'sawtooth', filterType: 'lowpass', Q: 1.0, duration });
+        const tranceArp = createMonoSynth(offline, scBus, { oscType: 'sawtooth', filterType: 'lowpass', Q: 1.0, duration });
+
+        for (let b = 0; b < totalBeats; b++) {
+          const t = b * beatDur;
+          const bar = Math.floor(b / 4);
+          const beatInBar = b % 4;
+          const progIdx = Math.floor(bar / 2) % 4;
+          const isDrop = bar >= 8;
+
+          triggerKick(t, 'house');
+          if (beatInBar === 1 || beatInBar === 3) triggerClap(t, 0.38);
+          triggerHat(t + beatDur * 0.5, true, 0.22);
+          for (let s = 0; s < 4; s++) triggerHat(t + s * (beatDur / 4), false, 0.08);
+
+          // Rolling 16th Trance Bassline (off-kick 3x16th)
+          const bFreq = midiToFreq(bassNotes[progIdx]);
+          for (let s = 1; s < 4; s++) {
+            const st = t + s * (beatDur / 4);
+            tranceBass.note(st, beatDur * 0.23, bFreq, isDrop ? 1800 : 1000, 180, 0.35, 0.002);
+          }
+
+          // Lush Gated Supersaw Pad every 2 bars
+          if (beatInBar === 0 && bar % 2 === 0) {
+            triggerSupersaw(t, chords[progIdx], beatDur * 7.6, isDrop ? 4400 : 1800, isDrop ? 2800 : 900, isDrop ? 0.12 : 0.07);
+          }
+
+          // Sparkling Euphoric 16th Trance Arp
+          const ch = chords[progIdx];
+          for (let s = 0; s < 4; s++) {
+            const st = t + s * (beatDur / 4);
+            const note = ch[arpSeq[(beatInBar * 4 + s) % 8]] + 12;
+            tranceArp.note(st, beatDur * 0.24, midiToFreq(note), isDrop ? 6500 : 2800, 800, isDrop ? 0.18 : 0.11, 0.002);
+          }
+        }
+        triggerRiser(7 * 4 * beatDur, 4 * beatDur, 0.28);
+      }
+
+      // =======================================================================
+      // TRACK 8: GALAXY DROP — Slap House / Brazilian Bass (124 BPM, Bm)
+      // =======================================================================
+      else if (trackId === 8) {
+        // Bm - G - Em - F#m slap bass pattern
+        const slapRoots = [47, 43, 40, 42];
+        const slapRhythm = [
+          1, 0, 0, 1,  0, 0, 1, 0,  0, 1, 0, 0,  1, 0, 1, 0
+        ];
+        const slapDist = offline.createWaveShaper();
+        slapDist.curve = makeDistortionCurve(24);
+        slapDist.connect(scBus);
+
+        const formantChop = createMonoSynth(offline, scBus, {
+          oscType: 'sawtooth',
+          filterType: 'bandpass',
+          Q: 4.2,
+          duration
+        });
+
+        for (let b = 0; b < totalBeats; b++) {
+          const t = b * beatDur;
+          const bar = Math.floor(b / 4);
+          const beatInBar = b % 4;
+          const progIdx = Math.floor(bar / 2) % 4;
+          const isDrop = bar >= 4;
+
+          triggerKick(t, 'house');
+          if (beatInBar === 1 || beatInBar === 3) triggerClap(t, 0.48);
+          triggerHat(t + beatDur * 0.5, true, 0.20);
+          triggerHat(t + beatDur * 0.25, false, 0.09);
+          triggerHat(t + beatDur * 0.75, false, 0.12);
+
+          // Signature punchy Slap House FM pluck bass
+          const root = slapRoots[progIdx];
+          for (let s = 0; s < 4; s++) {
+            const idx = beatInBar * 4 + s;
+            if (slapRhythm[idx]) {
+              const st = t + s * (beatDur / 4);
+              const note = root + (idx === 14 ? 12 : (idx === 9 ? 3 : 0));
+              const bf = midiToFreq(note);
+
+              const car = offline.createOscillator();
+              const mod = offline.createOscillator();
+              const modG = offline.createGain();
+              const filt = offline.createBiquadFilter();
+              const g = offline.createGain();
+
+              car.type = 'sawtooth';
+              mod.type = 'sine';
+              car.frequency.value = bf;
+              mod.frequency.value = bf * 2;
+              modG.gain.setValueAtTime(bf * 4.5, st);
+              modG.gain.exponentialRampToValueAtTime(10, Math.min(duration - 0.002, st + 0.09));
+
+              filt.type = 'lowpass';
+              filt.Q.value = 2.6;
+              filt.frequency.setValueAtTime(isDrop ? 2800 : 1200, st);
+              filt.frequency.exponentialRampToValueAtTime(150, Math.min(duration - 0.002, st + 0.16));
+
+              g.gain.setValueAtTime(0.001, st);
+              g.gain.linearRampToValueAtTime(0.48, Math.min(duration - 0.003, st + 0.005));
+              g.gain.exponentialRampToValueAtTime(0.001, Math.min(duration - 0.002, st + beatDur * 0.45));
+
+              mod.connect(modG).connect(car.frequency);
+              car.connect(filt).connect(g).connect(slapDist);
+              const stopT = Math.min(duration, st + beatDur * 0.48);
+              car.start(st); car.stop(stopT);
+              mod.start(st); mod.stop(stopT);
+            }
+          }
+
+          // Formant vocal-chop style synth hook in bars 8-15
+          if (bar >= 8 && (beatInBar === 0 || beatInBar === 2)) {
+            const ct = t + beatDur * 0.5;
+            formantChop.note(ct, beatDur * 0.45, midiToFreq(root + (beatInBar === 0 ? 19 : 15)), 1350, 1350, 0.30, 0.003);
+          }
+        }
+        triggerRiser(3 * 4 * beatDur, 4 * beatDur, 0.25);
+        triggerRiser(7 * 4 * beatDur, 4 * beatDur, 0.28);
+      }
+
+      // =======================================================================
+      // TRACK 9: LASER STORM — Psytrance / Full-On Rolling (142 BPM, F#m)
+      // =======================================================================
+      else if (trackId === 9) {
+        const psyBase = 42; // F#2
+        const psyBass = createMonoSynth(offline, masterComp, {
+          oscType: 'sawtooth',
+          filterType: 'lowpass',
+          Q: 2.8,
+          duration
+        });
+        const psyZap = createMonoSynth(offline, scBus, {
+          oscType: 'sawtooth',
+          filterType: 'none',
+          duration
+        });
+
+        for (let b = 0; b < totalBeats; b++) {
+          const t = b * beatDur;
+          const bar = Math.floor(b / 4);
+          const beatInBar = b % 4;
+          const isDrop = bar >= 4;
+
+          // Tight punchy Psytrance kick
+          triggerKick(t, 'techno');
+
+          // Signature K-B-B-B rolling 16th psytrance bassline
+          const shift = (bar % 8 === 7) ? 3 : ((bar % 4 === 3) ? -2 : 0);
+          const bFreq = midiToFreq(psyBase + shift);
+          for (let s = 1; s < 4; s++) {
+            const st = t + s * (beatDur / 4);
+            psyBass.note(st, beatDur * 0.22, bFreq, isDrop ? 2600 : 1500, 170, s === 2 ? 0.44 : 0.36, 0.002);
+          }
+
+          // Crisp psy hats & clap
+          triggerHat(t + beatDur * 0.5, true, 0.20);
+          triggerHat(t + beatDur * 0.25, false, 0.10);
+          triggerHat(t + beatDur * 0.75, false, 0.11);
+          if (bar >= 8 && (beatInBar === 1 || beatInBar === 3)) triggerClap(t, 0.36);
+
+          // FM Psytrance Laser Zaps & Sci-Fi Squelches
+          if (isDrop && (beatInBar === 0 || (bar >= 8 && beatInBar === 2))) {
+            const zt = t + beatDur * 0.25;
+            psyZap.note(zt, beatDur * 0.40, midiToFreq(psyBase + 24), 0, 0, 0.18, 0.002, null, 2800 + (bar % 4) * 550, beatDur * 0.38);
+          }
+        }
+        triggerRiser(7 * 4 * beatDur, 4 * beatDur, 0.26);
+      }
+
+      // =======================================================================
+      // TRACK 10: VELOCITY DNB — Liquid / Neuro Drum & Bass (174 BPM, Cm)
+      // =======================================================================
+      else if (trackId === 10) {
+        const reeseNotes = [36, 32, 39, 34]; // C1, Ab0, Eb1, Bb0 (shifted +12 for audible punch)
+        const liquidChords = [
+          [60, 63, 67, 70],
+          [56, 60, 63, 67],
+          [63, 67, 70, 74],
+          [58, 62, 65, 70]
+        ];
+        const liquidPluck = createMonoSynth(offline, masterComp, {
+          oscType: 'triangle',
+          filterType: 'none',
+          duration
+        });
+
+        for (let b = 0; b < totalBeats; b++) {
+          const t = b * beatDur;
+          const bar = Math.floor(b / 4);
+          const beatInBar = b % 4;
+          const progIdx = Math.floor(bar / 2) % 4;
+          const isDrop = bar >= 4;
+
+          // Authentic Two-Step DnB Breakbeat: Kick on 1 & 2.5, Snare on 2 & 4
+          if (beatInBar === 0) triggerKick(t, 'house');
+          if (beatInBar === 2) triggerKick(t + beatDur * 0.5, 'house');
+          if (beatInBar === 1 || beatInBar === 3) triggerSnare(t, 250, 0.55);
+
+          // Fast shuffling DnB hi-hats (8th + ghost 16th)
+          triggerHat(t, false, 0.14);
+          triggerHat(t + beatDur * 0.5, beatInBar % 2 === 1, 0.20);
+          triggerHat(t + beatDur * 0.75, false, 0.09);
+
+          // Detuned Reese Bass per 2 bars
+          if (beatInBar === 0 && bar % 2 === 0) {
+            const dur2 = Math.min(duration - t - 0.004, beatDur * 7.8);
+            const bf = midiToFreq(reeseNotes[progIdx] + 12);
+            const filt = offline.createBiquadFilter();
+            filt.type = 'lowpass';
+            filt.Q.value = 3.0;
+            filt.frequency.setValueAtTime(isDrop ? 1600 : 700, t);
+            filt.frequency.exponentialRampToValueAtTime(320, t + dur2 * 0.5);
+            filt.frequency.exponentialRampToValueAtTime(isDrop ? 1900 : 800, t + dur2);
+            const g = offline.createGain();
+            g.gain.setValueAtTime(0.01, t);
+            g.gain.linearRampToValueAtTime(0.32, t + 0.04);
+            g.gain.setValueAtTime(0.30, Math.max(t + 0.05, t + dur2 - 0.08));
+            g.gain.exponentialRampToValueAtTime(0.001, t + dur2);
+            filt.connect(g).connect(masterComp);
+
+            [-16, 16].forEach((det) => {
+              const osc = offline.createOscillator();
+              osc.type = 'sawtooth';
+              osc.frequency.value = bf;
+              osc.detune.value = det;
+              osc.connect(filt);
+              osc.start(t); osc.stop(Math.min(duration, t + dur2 + 0.02));
+            });
+
+            // Lush Liquid Pad
+            triggerSupersaw(t, liquidChords[progIdx], dur2, 2600, 1200, 0.09, masterComp);
+          }
+
+          // Fast Liquid Synth Pluck
+          if (isDrop) {
+            const ch = liquidChords[progIdx];
+            const note = ch[(b * 2) % ch.length] + 12;
+            liquidPluck.note(t + beatDur * 0.5, beatDur * 0.45, midiToFreq(note), 0, 0, 0.14, 0.002);
+          }
+        }
+        triggerRiser(3 * 4 * beatDur, 4 * beatDur, 0.25);
+      }
+
+      // =======================================================================
+      // TRACK 11: GOLDEN HORIZON — Tech House / Ibiza Groove (125 BPM, G#m)
+      // =======================================================================
+      else {
+        // G#m funky syncopated Tech House sub-bass groove
+        const grooveNotes = [44, 0, 0, 44, 0, 47, 44, 0, 42, 0, 44, 0, 47, 0, 49, 0];
+        const techBass = createMonoSynth(offline, scBus, {
+          oscType: 'sawtooth',
+          subType: 'sine',
+          subRatio: 1.0,
+          filterType: 'lowpass',
+          Q: 1.0,
+          duration
+        });
+
+        for (let b = 0; b < totalBeats; b++) {
+          const t = b * beatDur;
+          const bar = Math.floor(b / 4);
+          const beatInBar = b % 4;
+          const isDrop = bar >= 4;
+
+          triggerKick(t, 'house');
+          if (beatInBar === 1 || beatInBar === 3) triggerClap(t, 0.45);
+          // Classic Ibiza 909 swinging hats
+          triggerHat(t + beatDur * 0.5, true, 0.25);
+          triggerHat(t + beatDur * 0.29, false, 0.11);
+          triggerHat(t + beatDur * 0.79, false, 0.14);
+
+          // Funky rolling Tech House bass
+          for (let s = 0; s < 4; s++) {
+            const idx = beatInBar * 4 + s;
+            const note = grooveNotes[idx];
+            if (note) {
+              const st = t + s * (beatDur / 4);
+              techBass.note(st, beatDur * 0.24, midiToFreq(note), isDrop ? 1100 : 650, 160, 0.40, 0.002);
+            }
+          }
+
+          // House Chord Stabs with rhythmic syncopation
+          if (isDrop && (beatInBar === 0 || (bar % 2 === 1 && beatInBar === 2))) {
+            const st = t + beatDur * 0.75;
+            triggerSupersaw(st, [56, 59, 63, 66], beatDur * 0.34, 3400, 800, 0.12);
+          }
+        }
+        triggerRiser(7 * 4 * beatDur, 4 * beatDur, 0.22);
+      }
+
+      const rendered = await offline.startRendering();
+      const waveform = analyzeRGBWaveform(rendered, 800);
+
+      // Lazy reversedBuffer getter: saves 50% RAM & skips heavy copy until REV / reverse-scratch is actually used!
+      let cachedRev = null;
       const entry = {
         ...meta,
         buffer: rendered,
-        reversedBuffer: reversed,
         waveform,
-        isDemo: true
+        isDemo: true,
+        get reversedBuffer() {
+          if (!cachedRev) cachedRev = createReversedBuffer(audioCtx || offline, rendered);
+          return cachedRev;
+        }
       };
       trackCache.set(trackId, entry);
+      void idbCache.set(trackId, entry);
+      updatePrewarmIndicators();
       return entry;
     }
 
@@ -2823,16 +4120,17 @@
         const size = parseInt(host.dataset.size || '42', 10);
 
         host.className = 'knob-wrap';
+        host.style.setProperty('--knob-default-sz', `${size}px`);
         host.innerHTML = `
-          <div class="relative flex items-center justify-center" style="width:${size + 10}px;height:${size + 10}px">
+          <div class="knob-ring">
             <svg class="absolute inset-0 w-full h-full -rotate-90 pointer-events-none" viewBox="0 0 100 100">
               <circle cx="50" cy="50" r="44" fill="none" stroke="#1e2534" stroke-width="6"
                 stroke-dasharray="207 277" stroke-dashoffset="-35" stroke-linecap="round" transform="rotate(135 50 50)" />
               <circle class="knob-arc" cx="50" cy="50" r="44" fill="none" stroke="${color}" stroke-width="6.5"
                 stroke-dasharray="0 277" stroke-linecap="round" transform="rotate(135 50 50)" />
             </svg>
-            <div class="knob-cap rounded-full relative flex items-center justify-center pointer-events-none" style="width:${size}px;height:${size}px">
-              <div class="knob-pointer absolute top-1 left-1/2 -translate-x-1/2 w-1 rounded-full" style="height:${Math.round(size * 0.34)}px;background:${color};box-shadow:0 0 6px ${color}"></div>
+            <div class="knob-cap rounded-full relative flex items-center justify-center pointer-events-none">
+              <div class="knob-pointer absolute top-1 left-1/2 -translate-x-1/2 w-1 rounded-full" style="background:${color};box-shadow:0 0 6px ${color}"></div>
             </div>
           </div>
           <span class="text-[9px] font-tech tracking-wider text-slate-400 mt-0.5 leading-none">${label}</span>
@@ -2894,7 +4192,7 @@
 
         host.addEventListener('pointermove', (e) => {
           if (e.pointerId !== activePointer) return;
-          const dy = startY - e.clientY;
+          const dy = (startY - e.clientY) / Math.max(0.5, currentUiScale);
           if (Math.abs(dy) > 4) moved = true;
           let next = clamp(startVal + dy / 130, 0, 1);
           // Subtle magnetic snap at 12 o'clock center detent
@@ -2948,8 +4246,8 @@
 
       function setFromClientY(clientY) {
         const rect = el.getBoundingClientRect();
-        const pad = 12;
-        const norm = clamp((clientY - (rect.top + pad)) / (rect.height - pad * 2), 0, 1);
+        const pad = Math.min(12, rect.height * 0.08);
+        const norm = clamp((clientY - (rect.top + pad)) / Math.max(1, rect.height - pad * 2), 0, 1);
         const val = invert ? (1 - norm) : norm;
         applyVal(val);
       }
@@ -3005,8 +4303,8 @@
 
       function updateFromX(clientX) {
         const rect = el.getBoundingClientRect();
-        const pad = 16;
-        let v = clamp((clientX - (rect.left + pad)) / (rect.width - pad * 2), 0, 1);
+        const pad = Math.min(16, rect.width * 0.06);
+        let v = clamp((clientX - (rect.left + pad)) / Math.max(1, rect.width - pad * 2), 0, 1);
         if (Math.abs(v - 0.5) < 0.025) v = 0.5;
         setCrossfaderUI(v);
       }
@@ -3218,12 +4516,104 @@
     /* =========================================================================
        9. HIGH-DPI CANVAS RENDERERS (WAVEFORMS, OVERVIEW, JOG LCD, VU METERS)
        ========================================================================= */
+    let currentUiScale = 1.0;
+    let autoFitEnabled = true;
+    let fitRaf = 0;
+    let lastFitKey = '';
+
+    const overviewCache = {
+      A: { trackId: null, w: 0, h: 0, canvas: null },
+      B: { trackId: null, w: 0, h: 0, canvas: null }
+    };
+
+    function invalidateOverviewCache() {
+      overviewCache.A.trackId = null;
+      overviewCache.B.trackId = null;
+    }
+
+    function scheduleAutoFitLayout() {
+      if (fitRaf) return;
+      fitRaf = requestAnimationFrame(() => {
+        fitRaf = 0;
+        applyAutoFitLayout();
+      });
+    }
+
+    function applyAutoFitLayout(force = false) {
+      const stage = document.getElementById('djStage');
+      if (!stage) return;
+      const vv = window.visualViewport;
+      const vw = Math.round(vv ? vv.width : window.innerWidth);
+      const vh = Math.round(vv ? vv.height : window.innerHeight);
+      const fitKey = `${vw}x${vh}:${autoFitEnabled ? 1 : 0}`;
+      if (!force && fitKey === lastFitKey) return;
+      lastFitKey = fitKey;
+
+      const isLandscape = vw >= 720 && vw > vh;
+      const label = document.getElementById('autoFitLabel');
+      const btn = document.getElementById('btnAutoFit');
+
+      if (autoFitEnabled && isLandscape) {
+        if (!document.body.classList.contains('autofit-landscape') && (window.scrollX || window.scrollY)) {
+          window.scrollTo(0, 0);
+        }
+        document.documentElement.classList.add('autofit-lock');
+        document.body.classList.add('autofit-landscape');
+        document.body.classList.remove('layout-portrait');
+
+        // Minimum logical space where all 3 columns (Deck A | Mixer | Deck B) + Waveform fit with zero overlap
+        const MIN_W = 1312;
+        const MIN_H = 816;
+        let scale = Math.min(vw / MIN_W, vh / MIN_H);
+        scale = clamp(scale, 0.45, 1.32);
+        currentUiScale = scale;
+
+        // Fill 100% x 100% of the 16:9 Windows or 16:10 iPad viewport with ZERO black bars
+        const stageW = vw / scale;
+        const stageH = vh / scale;
+        stage.style.width = `${stageW.toFixed(2)}px`;
+        stage.style.height = `${stageH.toFixed(2)}px`;
+        stage.style.transform = `scale(${scale.toFixed(4)})`;
+
+        const ratio = vw / Math.max(1, vh);
+        const is169 = ratio >= 1.68;
+        document.body.classList.toggle('layout-16-9', is169);
+        document.body.classList.toggle('layout-16-10', !is169);
+        document.body.classList.toggle('stage-tall', stageH >= 885);
+
+        if (label) {
+          const tag = is169 ? '16:9' : (ratio >= 1.45 ? '16:10' : '4:3');
+          label.textContent = `FIT ${tag}`;
+        }
+        if (btn) btn.classList.add('active-cyan');
+      } else {
+        document.documentElement.classList.remove('autofit-lock');
+        document.body.classList.remove('autofit-landscape', 'layout-16-9', 'layout-16-10', 'stage-tall');
+        document.body.classList.toggle('layout-portrait', vw <= vh);
+        currentUiScale = 1.0;
+        stage.style.width = '';
+        stage.style.height = '';
+        stage.style.transform = '';
+        if (label) label.textContent = autoFitEnabled ? 'PORTRAIT' : 'SCROLL';
+        if (btn) btn.classList.toggle('active-cyan', autoFitEnabled);
+      }
+
+      invalidateOverviewCache();
+      drawOverviewWaveform('A');
+      drawOverviewWaveform('B');
+      drawJogLCD('A');
+      drawJogLCD('B');
+      drawDualScrollingWaveforms();
+    }
+
     function resizeCanvas(canvas) {
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      const rect = canvas.getBoundingClientRect();
-      if (rect.width === 0 || rect.height === 0) return;
-      const w = Math.round(rect.width * dpr);
-      const h = Math.round(rect.height * dpr);
+      const wCss = canvas.clientWidth || canvas.getBoundingClientRect().width;
+      const hCss = canvas.clientHeight || canvas.getBoundingClientRect().height;
+      if (wCss === 0 || hCss === 0) return;
+      const effDpr = dpr * Math.max(1, currentUiScale);
+      const w = Math.round(wCss * effDpr);
+      const h = Math.round(hCss * effDpr);
       if (canvas.width !== w || canvas.height !== h) {
         canvas.width = w;
         canvas.height = h;
@@ -3232,10 +4622,12 @@
 
     function drawDualScrollingWaveforms() {
       const canvas = document.getElementById('dualWaveformCanvas');
+      if (!canvas) return;
       resizeCanvas(canvas);
       const ctx = canvas.getContext('2d');
       const w = canvas.width;
       const h = canvas.height;
+      if (w <= 4 || h <= 4) return;
       const halfH = h / 2;
 
       ctx.fillStyle = '#04060a';
@@ -3349,28 +4741,47 @@
 
     function drawOverviewWaveform(deckId) {
       const canvas = document.getElementById(`overviewCanvas${deckId}`);
+      if (!canvas) return;
       resizeCanvas(canvas);
       const ctx = canvas.getContext('2d');
       const deck = decks[deckId];
       const w = canvas.width;
       const h = canvas.height;
+      if (w <= 0 || h <= 0) return;
 
-      ctx.fillStyle = '#070a10';
-      ctx.fillRect(0, 0, w, h);
-
-      if (!deck.track) return;
-      const wf = deck.track.waveform;
-      const midY = h / 2;
-
-      for (let x = 0; x < w; x += 2) {
-        const bin = Math.floor((x / w) * wf.numBins);
-        const amp = wf.peaks[bin] * (h * 0.44);
-        const r = Math.min(255, Math.floor(wf.lows[bin] * 320 + 30));
-        const g = Math.min(255, Math.floor(wf.mids[bin] * 300 + 25));
-        const b = Math.min(255, Math.floor(wf.highs[bin] * 360 + 40));
-        ctx.fillStyle = `rgb(${r},${g},${b})`;
-        ctx.fillRect(x, midY - amp, 1.8, amp * 2);
+      if (!deck.track) {
+        ctx.fillStyle = '#070a10';
+        ctx.fillRect(0, 0, w, h);
+        return;
       }
+
+      const cache = overviewCache[deckId];
+      const tid = deck.track.id;
+      if (cache.trackId !== tid || cache.w !== w || cache.h !== h || !cache.canvas) {
+        if (!cache.canvas) cache.canvas = document.createElement('canvas');
+        cache.canvas.width = w;
+        cache.canvas.height = h;
+        const cctx = cache.canvas.getContext('2d');
+        cctx.fillStyle = '#070a10';
+        cctx.fillRect(0, 0, w, h);
+
+        const wf = deck.track.waveform;
+        const midY = h / 2;
+        for (let x = 0; x < w; x += 2) {
+          const bin = Math.floor((x / w) * wf.numBins);
+          const amp = wf.peaks[bin] * (h * 0.44);
+          const r = Math.min(255, Math.floor(wf.lows[bin] * 320 + 30));
+          const g = Math.min(255, Math.floor(wf.mids[bin] * 300 + 25));
+          const b = Math.min(255, Math.floor(wf.highs[bin] * 360 + 40));
+          cctx.fillStyle = `rgb(${r},${g},${b})`;
+          cctx.fillRect(x, midY - amp, 1.8, amp * 2);
+        }
+        cache.trackId = tid;
+        cache.w = w;
+        cache.h = h;
+      }
+
+      ctx.drawImage(cache.canvas, 0, 0);
 
       // Hot Cue dots on overview
       deck.hotCues.forEach((pos, idx) => {
@@ -3391,11 +4802,13 @@
     // Center LCD inside each Pioneer Jog Wheel
     function drawJogLCD(deckId) {
       const canvas = document.getElementById(`jogCanvas${deckId}`);
+      if (!canvas) return;
       resizeCanvas(canvas);
       const ctx = canvas.getContext('2d');
       const deck = decks[deckId];
       const w = canvas.width;
       const h = canvas.height;
+      if (w <= 4 || h <= 4) return;
       const cx = w / 2;
       const cy = h / 2;
       const r = Math.min(cx, cy) - 2;
@@ -3515,6 +4928,32 @@
        10. MAIN 60FPS ANIMATION LOOP
        ========================================================================= */
     const masterVuBuf = new Uint8Array(256);
+    let lcdDom = null;
+    const lcdLastText = Object.create(null);
+
+    function setCachedText(el, key, val) {
+      if (lcdLastText[key] !== val) {
+        lcdLastText[key] = val;
+        el.textContent = val;
+      }
+    }
+
+    function ensureLcdDom() {
+      if (lcdDom) return lcdDom;
+      lcdDom = {
+        bpmA: document.getElementById('infoBpmA'),
+        timeA: document.getElementById('infoTimeA'),
+        remA: document.getElementById('infoRemA'),
+        bpmB: document.getElementById('infoBpmB'),
+        timeB: document.getElementById('infoTimeB'),
+        remB: document.getElementById('infoRemB'),
+        dotA: document.getElementById('phaseDotA'),
+        dotB: document.getElementById('phaseDotB'),
+        phaseStatus: document.getElementById('phaseStatus'),
+        limLed: document.getElementById('limiterLed')
+      };
+      return lcdDom;
+    }
 
     function animationLoop() {
       requestAnimationFrame(animationLoop);
@@ -3522,42 +4961,46 @@
       decks.A.updatePosition();
       decks.B.updatePosition();
 
-      // Update text LCD readouts
-      ['A', 'B'].forEach((id) => {
-        const d = decks[id];
-        document.getElementById(`infoBpm${id}`).textContent = d.currentBpm.toFixed(2);
-        document.getElementById(`infoTime${id}`).textContent = formatTime(d.position);
-        document.getElementById(`infoRem${id}`).textContent = '-' + formatTime(Math.max(0, d.duration - d.position));
-        drawJogLCD(id);
-        drawOverviewWaveform(id);
-      });
+      const dom = ensureLcdDom();
+
+      // Update text LCD readouts & canvases
+      const dA = decks.A;
+      setCachedText(dom.bpmA, 'bpmA', dA.currentBpm.toFixed(2));
+      setCachedText(dom.timeA, 'timeA', formatTime(dA.position));
+      setCachedText(dom.remA, 'remA', '-' + formatTime(Math.max(0, dA.duration - dA.position)));
+      drawJogLCD('A');
+      drawOverviewWaveform('A');
+
+      const dB = decks.B;
+      setCachedText(dom.bpmB, 'bpmB', dB.currentBpm.toFixed(2));
+      setCachedText(dom.timeB, 'timeB', formatTime(dB.position));
+      setCachedText(dom.remB, 'remB', '-' + formatTime(Math.max(0, dB.duration - dB.position)));
+      drawJogLCD('B');
+      drawOverviewWaveform('B');
 
       // Dual Scrolling RGB Waveforms
       drawDualScrollingWaveforms();
 
       // Beat Phase Alignment Meter
-      if (decks.A.track && decks.B.track) {
-        const phA = ((decks.A.position / (60 / decks.A.baseBpm)) % 1);
-        const phB = ((decks.B.position / (60 / decks.B.baseBpm)) % 1);
-        const dotA = document.getElementById('phaseDotA');
-        const dotB = document.getElementById('phaseDotB');
-        dotA.style.left = `${phA * 100}%`;
-        dotB.style.left = `${phB * 100}%`;
+      if (dA.track && dB.track) {
+        const phA = ((dA.position / (60 / dA.baseBpm)) % 1);
+        const phB = ((dB.position / (60 / dB.baseBpm)) % 1);
+        dom.dotA.style.left = `${(phA * 100).toFixed(2)}%`;
+        dom.dotB.style.left = `${(phB * 100).toFixed(2)}%`;
         const diff = Math.min(Math.abs(phA - phB), 1 - Math.abs(phA - phB));
-        const st = document.getElementById('phaseStatus');
-        if (diff < 0.08 && Math.abs(decks.A.currentBpm - decks.B.currentBpm) < 0.4) {
-          st.textContent = 'BEAT LOCKED';
-          st.className = 'text-[9px] font-mono-lcd text-emerald-400 mt-0.5';
-        } else {
-          st.textContent = `Δ ${Math.round(diff * 100)}%`;
-          st.className = 'text-[9px] font-mono-lcd text-amber-400 mt-0.5';
+        const locked = diff < 0.08 && Math.abs(dA.currentBpm - dB.currentBpm) < 0.4;
+        setCachedText(dom.phaseStatus, 'phaseStatus', locked ? 'BEAT LOCKED' : `Δ ${Math.round(diff * 100)}%`);
+        const phaseCls = locked ? 'text-[9px] font-mono-lcd text-emerald-400 mt-0.5 whitespace-nowrap' : 'text-[9px] font-mono-lcd text-amber-400 mt-0.5 whitespace-nowrap';
+        if (lcdLastText.phaseCls !== phaseCls) {
+          lcdLastText.phaseCls = phaseCls;
+          dom.phaseStatus.className = phaseCls;
         }
       }
 
       // Live VU Meters & Master Limiter LED
       if (audioCtx && masterAnalyser) {
-        updateVUMeter('A', decks.A.getRMSLevel());
-        updateVUMeter('B', decks.B.getRMSLevel());
+        updateVUMeter('A', dA.getRMSLevel());
+        updateVUMeter('B', dB.getRMSLevel());
 
         masterAnalyser.getByteTimeDomainData(masterVuBuf);
         let sum = 0;
@@ -3568,13 +5011,12 @@
         const mRms = Math.sqrt(sum / masterVuBuf.length) * 2.4;
         updateVUMeter('M', mRms);
 
-        const limLed = document.getElementById('limiterLed');
-        if (masterLimiter && masterLimiter.reduction < -3) {
-          limLed.textContent = 'ACTIVE';
-          limLed.className = 'text-amber-400';
-        } else {
-          limLed.textContent = 'OK';
-          limLed.className = 'text-emerald-400';
+        const limActive = !!(masterLimiter && masterLimiter.reduction < -3);
+        setCachedText(dom.limLed, 'limLed', limActive ? 'ACTIVE' : 'OK');
+        const limCls = limActive ? 'text-amber-400' : 'text-emerald-400';
+        if (lcdLastText.limCls !== limCls) {
+          lcdLastText.limCls = limCls;
+          dom.limLed.className = limCls;
         }
       }
     }
@@ -3636,25 +5078,67 @@
       }
     }
 
-    function populateTrackBrowser() {
+    let activeBrowserGenre = 'ALL';
+    let prewarmStartTime = 0;
+    let prewarmElapsedSec = null;
+
+    function updatePrewarmIndicators() {
+      const readyCount = trackCache.size;
+      const total = DEMO_TRACKS.length;
+      const hdr = document.getElementById('hdrCacheCount');
+      if (hdr) hdr.textContent = `${readyCount}/${total}`;
+      const statusText = document.getElementById('prewarmStatusText');
+      if (statusText) {
+        if (readyCount >= total) {
+          const timeNote = prewarmElapsedSec ? ` (${prewarmElapsedSec}s)` : '';
+          statusText.textContent = `⚡ Đã nạp sẵn toàn bộ ${total}/${total} bản EDM${timeNote} — Sẵn sàng trình diễn tức thì!`;
+        } else if (trackCache.has(0) && trackCache.has(3)) {
+          statusText.textContent = `⚡ Deck A & B đã sẵn sàng! Đang nạp song song (${readyCount}/${total} bản EDM)...`;
+        } else {
+          statusText.textContent = `Đang nạp sẵn EDM nền (${readyCount}/${total})...`;
+        }
+      }
+      // Light up startup cards & any open track browser ready pills
+      DEMO_TRACKS.forEach((tr) => {
+        const isReady = trackCache.has(tr.id);
+        const dot = document.getElementById(`startupDot_${tr.id}`);
+        if (dot && isReady) {
+          dot.className = 'w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px_#34d399] shrink-0';
+        }
+        const badge = document.getElementById(`trackReadyBadge_${tr.id}`);
+        if (badge && isReady) {
+          badge.textContent = '⚡ SẴN SÀNG';
+          badge.className = 'text-[9px] font-mono-lcd px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-300 border border-emerald-500/30';
+        }
+      });
+    }
+
+    function populateTrackBrowser(genreFilter = activeBrowserGenre) {
+      activeBrowserGenre = genreFilter;
       const list = document.getElementById('browserTrackList');
       list.innerHTML = '';
-      DEMO_TRACKS.forEach((tr) => {
+      const filtered = genreFilter === 'ALL'
+        ? DEMO_TRACKS
+        : DEMO_TRACKS.filter((t) => t.genre === genreFilter);
+
+      filtered.forEach((tr) => {
+        const isReady = trackCache.has(tr.id);
         const row = document.createElement('div');
-        row.className = 'flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-[#0b0e15] border border-slate-800 rounded-xl p-3';
+        row.className = 'flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-[#0b0e15] border border-slate-800 rounded-xl p-2.5';
         row.innerHTML = `
           <div>
-            <div class="flex items-center gap-2">
-              <span class="w-2.5 h-2.5 rounded-full" style="background:${tr.color};box-shadow:0 0 8px ${tr.color}"></span>
-              <span class="font-tech font-bold text-white text-sm">${tr.title}</span>
-              <span class="text-[11px] font-mono-lcd px-1.5 py-0.5 rounded bg-slate-800 text-cyan-300">${tr.bpm.toFixed(1)} BPM</span>
-              <span class="text-[11px] font-mono-lcd px-1.5 py-0.5 rounded bg-slate-800 text-amber-300">${tr.key}</span>
+            <div class="flex items-center flex-wrap gap-1.5">
+              <span class="w-2.5 h-2.5 rounded-full shrink-0" style="background:${tr.color};box-shadow:0 0 8px ${tr.color}"></span>
+              <span class="font-tech font-bold text-white text-xs sm:text-sm">${String(tr.id + 1).padStart(2, '0')}. ${tr.title}</span>
+              <span class="text-[10px] font-mono-lcd px-1.5 py-0.5 rounded bg-slate-800 text-cyan-300">${tr.bpm.toFixed(1)} BPM</span>
+              <span class="text-[10px] font-mono-lcd px-1.5 py-0.5 rounded bg-slate-800 text-amber-300">${tr.key}</span>
+              <span id="trackReadyBadge_${tr.id}" class="${isReady ? 'text-[9px] font-mono-lcd px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-300 border border-emerald-500/30' : 'text-[9px] font-mono-lcd px-1.5 py-0.5 rounded bg-slate-800 text-slate-400'}">${isReady ? '⚡ SẴN SÀNG' : 'NẠP NHANH'}</span>
             </div>
-            <div class="text-xs text-slate-400 mt-1">${tr.artist} — ${tr.desc}</div>
+            <div class="text-[11px] text-slate-400 mt-1">${tr.artist} — ${tr.desc}</div>
           </div>
-          <div class="flex items-center gap-2 shrink-0">
-            <button class="hw-btn px-3 py-2 text-xs text-cyan-300 border-cyan-500/50" data-load-a="${tr.id}">LOAD A</button>
-            <button class="hw-btn px-3 py-2 text-xs text-orange-300 border-orange-500/50" data-load-b="${tr.id}">LOAD B</button>
+          <div class="flex items-center gap-1.5 shrink-0">
+            <button class="hw-btn px-3 py-1.5 text-xs text-cyan-300 border-cyan-500/50" data-load-a="${tr.id}">LOAD A</button>
+            <button class="hw-btn px-3 py-1.5 text-xs text-orange-300 border-orange-500/50" data-load-b="${tr.id}">LOAD B</button>
           </div>
         `;
         row.querySelector('[data-load-a]').addEventListener('click', async () => {
@@ -3954,6 +5438,38 @@
         helpModal.classList.add('hidden'); helpModal.classList.remove('flex');
       });
 
+      // Track Browser genre filter pills
+      document.querySelectorAll('#genreFilterBar .genre-pill').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('#genreFilterBar .genre-pill').forEach((b) => b.classList.remove('active-cyan'));
+          btn.classList.add('active-cyan');
+          populateTrackBrowser(btn.dataset.genre);
+        });
+      });
+
+      // Auto-Fit 16:9 / 16:10 Toggle & Unified Device-Switch Observers
+      document.getElementById('btnAutoFit').addEventListener('click', () => {
+        autoFitEnabled = !autoFitEnabled;
+        applyAutoFitLayout(true);
+        showToast(autoFitEnabled ? 'Đã bật AUTO FIT vừa khít 1 màn hình ngang' : 'Đã tắt AUTO FIT (chế độ cuộn tự do)', 'info');
+      });
+
+      window.addEventListener('resize', scheduleAutoFitLayout);
+      window.addEventListener('orientationchange', () => {
+        scheduleAutoFitLayout();
+        setTimeout(scheduleAutoFitLayout, 150);
+        setTimeout(scheduleAutoFitLayout, 350);
+      });
+      window.visualViewport?.addEventListener('resize', scheduleAutoFitLayout);
+      document.addEventListener('fullscreenchange', () => {
+        scheduleAutoFitLayout();
+        setTimeout(scheduleAutoFitLayout, 120);
+      });
+      if (typeof ResizeObserver !== 'undefined') {
+        const ro = new ResizeObserver(scheduleAutoFitLayout);
+        ro.observe(document.documentElement);
+      }
+
       document.getElementById('btnFullscreen').addEventListener('click', () => {
         if (!document.fullscreenElement) {
           document.documentElement.requestFullscreen?.().catch(() => {});
@@ -3996,13 +5512,15 @@
       const progPct = document.getElementById('initProgressPct');
 
       btn.disabled = true;
-      btn.textContent = 'ĐANG KHỞI TẠO HỆ THỐNG ÂM THANH...';
-      progWrap.classList.remove('hidden');
+      btn.textContent = (trackCache.has(0) && trackCache.has(3)) ? 'ĐANG MỞ BÀN DJ...' : 'ĐANG KHỞI TẠO HỆ THỐNG ÂM THANH...';
 
       try {
         const AudioCtx = window.AudioContext || window.webkitAudioContext;
         audioCtx = new AudioCtx();
         if (audioCtx.state === 'suspended') await audioCtx.resume();
+
+        const srLabel = document.getElementById('audioSrLabel');
+        if (srLabel) srLabel.textContent = `${(audioCtx.sampleRate / 1000).toFixed(1)}kHz`;
 
         // Master Chain: Master Gain -> Limiter -> Analyser -> Speakers
         masterGain = audioCtx.createGain();
@@ -4034,25 +5552,30 @@
         decks.A.initAudio(audioCtx, masterGain, beatFxEngine.input);
         decks.B.initAudio(audioCtx, masterGain, beatFxEngine.input);
 
-        // Render all 4 studio EDM demo tracks with visual progress feedback
-        for (let i = 0; i < DEMO_TRACKS.length; i++) {
-          progText.textContent = `Tổng hợp EDM [${i + 1}/4]: ${DEMO_TRACKS[i].title}...`;
-          progBar.style.width = `${Math.round(((i + 0.3) / 4) * 100)}%`;
-          progPct.textContent = `${Math.round(((i + 0.3) / 4) * 100)}%`;
-          await renderDemoTrack(i);
-          progBar.style.width = `${Math.round(((i + 1) / 4) * 100)}%`;
-          progPct.textContent = `${Math.round(((i + 1) / 4) * 100)}%`;
+        // Instant launch: Deck A (0) & Deck B (3) are already pre-warmed on page open (or finish in parallel!)
+        if (!trackCache.has(0) || !trackCache.has(3)) {
+          progWrap.classList.remove('hidden');
+          progText.textContent = 'Đang hoàn tất Deck A & Deck B...';
+          progBar.style.width = '55%';
+          progPct.textContent = '55%';
+          await Promise.all([renderDemoTrack(0), renderDemoTrack(3)]);
+          progBar.style.width = '100%';
+          progPct.textContent = '100%';
         }
 
-        // Auto-load NEON PULSE -> Deck A and SUB ZERO -> Deck B
+        // Auto-load NEON PULSE -> Deck A and SUB ZERO -> Deck B immediately
         decks.A.loadTrack(trackCache.get(0));
         decks.B.loadTrack(trackCache.get(3));
         setMasterDeck('A');
 
-        // Hide splash & launch 60fps loop
+        // Hide splash, ensure auto-fit layout, and launch 60fps loop
         document.getElementById('startupOverlay').style.display = 'none';
+        applyAutoFitLayout(true);
         requestAnimationFrame(animationLoop);
-        showToast('Sẵn sàng trình diễn! Nhấn PLAY ▶ trên Deck A để bắt đầu!', 'ok');
+        showToast('⚡ Sẵn sàng trình diễn! 12 bản EDM đã sẵn sàng — nhấn PLAY ▶ trên Deck A!', 'ok');
+
+        // Continue pre-caching any remaining EDM tracks silently in background
+        startBackgroundPrewarm();
       } catch (err) {
         console.error('Audio Init Error:', err);
         btn.disabled = false;
@@ -4061,12 +5584,50 @@
       }
     }
 
-    // Boot UI listeners immediately
+    // High-speed Parallel Pre-Warmer: Priority loads Deck A & B, then streams remaining 10 via worker pool
+    let bgPrewarmStarted = false;
+    async function startBackgroundPrewarm() {
+      if (bgPrewarmStarted) return;
+      bgPrewarmStarted = true;
+      prewarmStartTime = performance.now();
+      try {
+        // Priority 1: Deck A (0) & Deck B (3) in parallel for instant startup
+        await Promise.all([renderDemoTrack(0), renderDemoTrack(3)]);
+
+        // Priority 2: Parallel concurrency pool over remaining 10 tracks
+        const queue = [4, 1, 2, 5, 6, 7, 8, 9, 10, 11];
+        let cursor = 0;
+        const concurrency = Math.min(4, Math.max(2, (navigator.hardwareConcurrency || 4) - 1));
+        const workers = Array.from({ length: concurrency }, async () => {
+          while (cursor < queue.length) {
+            const id = queue[cursor++];
+            if (!trackCache.has(id)) {
+              await renderDemoTrack(id);
+              await new Promise((r) => setTimeout(r, 10));
+            }
+          }
+        });
+        await Promise.all(workers);
+
+        if (trackCache.size >= DEMO_TRACKS.length) {
+          prewarmElapsedSec = ((performance.now() - prewarmStartTime) / 1000).toFixed(2);
+          updatePrewarmIndicators();
+        }
+      } catch (e) {
+        // Allow retry after user gesture if browser blocks pre-gesture OfflineAudioContext
+        bgPrewarmStarted = false;
+      }
+    }
+
+    // Boot UI listeners, auto-fit stage, and start instant background EDM pre-warming
     window.addEventListener('DOMContentLoaded', () => {
       wireAllControls();
       renderPads('A');
       renderPads('B');
+      applyAutoFitLayout(true);
       document.getElementById('btnStartDJ').addEventListener('click', initializeDJSystem);
+      // Kick off pre-warming right away so opening takes 0 wait!
+      setTimeout(startBackgroundPrewarm, 30);
     });
   })();
   </script>
