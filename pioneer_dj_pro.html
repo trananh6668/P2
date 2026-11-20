@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <title>PIONEER PRO DJ CONSOLE</title>
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -37,6 +37,7 @@
       user-select: none;
       -webkit-user-select: none;
       -webkit-touch-callout: none;
+      touch-action: manipulation;
     }
 
     html, body {
@@ -47,6 +48,11 @@
       font-family: 'Inter', system-ui, -apple-system, sans-serif;
       overflow-x: hidden;
       overscroll-behavior: none;
+      touch-action: manipulation;
+      -webkit-text-size-adjust: 100%;
+    }
+
+    select, input, textarea, label {
       touch-action: manipulation;
     }
 
@@ -394,6 +400,7 @@
       left: 0;
       min-height: 0;
       overflow: hidden;
+      touch-action: none;
     }
 
     /* Header in Landscape Auto-Fit: decoupled from raw viewport breakpoints */
@@ -925,6 +932,7 @@
           <span class="text-cyan-300">● HIGH</span>
         </div>
         <div class="absolute top-1 right-2 flex items-center gap-1 z-10">
+          <button id="btnWaveMode" class="px-1.5 py-0.5 text-[9px] font-mono-lcd font-bold bg-slate-900/90 border border-cyan-500/50 rounded text-cyan-300 hover:text-white" title="Đổi kiểu hiển thị sóng RGB / 3-BAND">RGB</button>
           <button id="btnZoomOut" class="px-1.5 py-0.5 text-[10px] font-bold bg-slate-900/90 border border-slate-700 rounded text-slate-300 hover:text-white">-</button>
           <button id="btnZoomIn" class="px-1.5 py-0.5 text-[10px] font-bold bg-slate-900/90 border border-slate-700 rounded text-slate-300 hover:text-white">+</button>
         </div>
@@ -1611,7 +1619,7 @@
        2. HIGH-SPEED OFFLINE EDM SYNTHESIZER + PRE-BAKED DRUM KIT + IDB CACHE
        ========================================================================= */
     const DEMO_SR = 32000;
-    const DEMO_CACHE_VER = 2;
+    const DEMO_CACHE_VER = 3;
     const trackCache = new Map();
     const trackPending = new Map();
     const distortionCurveCache = new Map();
@@ -1672,8 +1680,8 @@
       return rev;
     }
 
-    // Fast anti-aliased 3-band RGB waveform extraction (Low=Red, Mid=Green, High=Cyan)
-    function analyzeRGBWaveform(buffer, numBins = 1600) {
+    // Studio-grade anti-aliased asymmetric Peak + RMS + 3-band spectral waveform extraction
+    function analyzeRGBWaveform(buffer, numBins = 3200) {
       const left = buffer.getChannelData(0);
       const isStereo = buffer.numberOfChannels > 1;
       const right = isStereo ? buffer.getChannelData(1) : null;
@@ -1681,26 +1689,37 @@
       const step = Math.max(1, Math.floor(total / numBins));
       const sr = buffer.sampleRate;
 
-      // Single-pole IIR filter coefficients for 250Hz lowpass & 2400Hz mid/high split
-      const aLow = 1 - Math.exp((-2 * Math.PI * 250) / sr);
-      const aMid = 1 - Math.exp((-2 * Math.PI * 2400) / sr);
+      // Single-pole IIR crossovers (~240 Hz low/mid, ~2600 Hz mid/high)
+      const aLow = 1 - Math.exp((-2 * Math.PI * 240) / sr);
+      const aMid = 1 - Math.exp((-2 * Math.PI * 2600) / sr);
 
+      const posPeaks = new Float32Array(numBins);
+      const negPeaks = new Float32Array(numBins);
+      const peaks = new Float32Array(numBins);
+      const rms = new Float32Array(numBins);
       const lows = new Float32Array(numBins);
       const mids = new Float32Array(numBins);
       const highs = new Float32Array(numBins);
-      const peaks = new Float32Array(numBins);
 
       let maxPeak = 0.001;
-      const winLen = Math.min(step, 160);
-      const peakInc = Math.max(1, Math.floor(step / 32));
+      const winLen = Math.min(step, 96);
+      const peakInc = Math.max(1, Math.floor(step / 64));
 
       for (let b = 0; b < numBins; b++) {
-        const start = Math.floor((b * total) / numBins);
-        const end = Math.min(total, start + step);
+        const start = Math.min(total - 1, Math.floor((b * total) / numBins));
+        const end = Math.min(total, Math.max(start + 1, Math.floor(((b + 1) * total) / numBins)));
         const bandEnd = Math.min(end, start + winLen);
 
+        // Pre-warm IIR state before bin start to suppress onset step-response spikes
         let lp1 = 0, lp2 = 0;
-        let eL = 0, eM = 0, eH = 0, count = 0;
+        const warmStart = Math.max(0, start - 16);
+        for (let i = warmStart; i < start; i++) {
+          const s = isStereo ? (left[i] + right[i]) * 0.5 : left[i];
+          lp1 += aLow * (s - lp1);
+          lp2 += aMid * (s - lp2);
+        }
+
+        let eL = 0, eM = 0, eH = 0, bandCount = 0;
         for (let i = start; i < bandEnd; i++) {
           const s = isStereo ? (left[i] + right[i]) * 0.5 : left[i];
           lp1 += aLow * (s - lp1);
@@ -1711,32 +1730,46 @@
           eL += low * low;
           eM += mid * mid;
           eH += high * high;
-          count++;
+          bandCount++;
         }
 
-        let pk = 0;
+        let posPk = 0, negPk = 0, sumSq = 0, rmsCount = 0;
         for (let i = start; i < end; i += peakInc) {
-          const a = isStereo ? Math.abs((left[i] + right[i]) * 0.5) : Math.abs(left[i]);
-          if (a > pk) pk = a;
+          const s = isStereo ? (left[i] + right[i]) * 0.5 : left[i];
+          if (s > posPk) posPk = s;
+          if (-s > negPk) negPk = -s;
+          sumSq += s * s;
+          rmsCount++;
         }
 
-        const inv = 1 / Math.max(1, count);
-        lows[b] = Math.sqrt(eL * inv);
-        mids[b] = Math.sqrt(eM * inv);
-        highs[b] = Math.sqrt(eH * inv);
+        const invBand = 1 / Math.max(1, bandCount);
+        lows[b] = Math.sqrt(eL * invBand);
+        mids[b] = Math.sqrt(eM * invBand);
+        highs[b] = Math.sqrt(eH * invBand);
+
+        const pk = posPk > negPk ? posPk : negPk;
+        posPeaks[b] = posPk;
+        negPeaks[b] = negPk;
         peaks[b] = pk;
+        rms[b] = Math.sqrt(sumSq / Math.max(1, rmsCount));
         if (pk > maxPeak) maxPeak = pk;
       }
 
-      // Normalize to 0..1
+      // Perceptual normalization (^0.88) preserving true rms <= peaks
+      const invMax = 1 / maxPeak;
       for (let b = 0; b < numBins; b++) {
-        peaks[b] = clamp(peaks[b] / maxPeak, 0, 1);
+        const np = clamp(Math.pow(clamp(peaks[b] * invMax, 0, 1), 0.88), 0, 1);
+        posPeaks[b] = clamp(Math.pow(clamp(posPeaks[b] * invMax, 0, 1), 0.88), 0, 1);
+        negPeaks[b] = clamp(Math.pow(clamp(negPeaks[b] * invMax, 0, 1), 0.88), 0, 1);
+        peaks[b] = np;
+        rms[b] = clamp(Math.pow(clamp(rms[b] * invMax, 0, 1), 0.88), 0, np);
+
         const sum = lows[b] + mids[b] + highs[b] + 1e-6;
         lows[b] /= sum;
         mids[b] /= sum;
         highs[b] /= sum;
       }
-      return { numBins, peaks, lows, mids, highs };
+      return { numBins, peaks, posPeaks, negPeaks, rms, lows, mids, highs };
     }
 
     // Lightweight BPM estimator for user-uploaded MP3/WAV tracks
@@ -2041,7 +2074,7 @@
               resolve(null);
             }
           });
-          if (!rec || rec.v !== DEMO_CACHE_VER || !rec.pcm16 || !rec.waveform || !rec.sr || !rec.len) return null;
+          if (!rec || rec.v !== DEMO_CACHE_VER || !rec.pcm16 || !rec.waveform || !rec.waveform.posPeaks || !rec.waveform.negPeaks || !rec.waveform.rms || !rec.sr || !rec.len) return null;
           const buf = allocAudioBuffer(1, rec.len, rec.sr);
           const out = buf.getChannelData(0);
           const pcm = rec.pcm16;
@@ -3027,7 +3060,7 @@
       }
 
       const rendered = await offline.startRendering();
-      const waveform = analyzeRGBWaveform(rendered, 800);
+      const waveform = analyzeRGBWaveform(rendered, 3200);
 
       // Lazy reversedBuffer getter: saves 50% RAM & skips heavy copy until REV / reverse-scratch is actually used!
       let cachedRev = null;
@@ -3066,7 +3099,8 @@
       colorFxMode: 'filter', // 'filter' | 'crush' | 'jet'
       autoMixActive: false,
       masterDeck: 'A',
-      waveformZoom: 1.0, // 0.5 .. 3.0
+      waveformZoom: 1.0, // 0.5 .. 4.0
+      waveformMode: 'rgb', // 'rgb' | '3band'
       beatFx: {
         on: false,
         type: 'echo',
@@ -4620,6 +4654,20 @@
       }
     }
 
+    function computeWaveColors(low, mid, high) {
+      const r0 = low * 1.18 + 0.04;
+      const g0 = mid * 1.05 + high * 0.72 + 0.04;
+      const b0 = high * 1.18 + 0.06;
+      const scale = 235 / Math.max(r0, g0, b0, 0.25);
+      const r = clamp(Math.round(r0 * scale), 0, 255);
+      const g = clamp(Math.round(g0 * scale), 0, 255);
+      const b = clamp(Math.round(b0 * scale), 0, 255);
+      const cr = Math.min(255, Math.round(r * 0.56 + 112));
+      const cg = Math.min(255, Math.round(g * 0.56 + 112));
+      const cb = Math.min(255, Math.round(b * 0.56 + 112));
+      return { r, g, b, cr, cg, cb };
+    }
+
     function drawDualScrollingWaveforms() {
       const canvas = document.getElementById('dualWaveformCanvas');
       if (!canvas) return;
@@ -4633,19 +4681,22 @@
       ctx.fillStyle = '#04060a';
       ctx.fillRect(0, 0, w, h);
 
+      drawSingleDeckWaveform(ctx, decks.A, 0, halfH, w, '#00d2ff');
+      drawSingleDeckWaveform(ctx, decks.B, halfH, halfH, w, '#ff5500');
+
       // Center horizontal divider
-      ctx.strokeStyle = '#1f2937';
+      ctx.strokeStyle = 'rgba(51, 65, 85, 0.75)';
       ctx.lineWidth = 1;
       ctx.beginPath();
       ctx.moveTo(0, halfH);
       ctx.lineTo(w, halfH);
       ctx.stroke();
 
-      drawSingleDeckWaveform(ctx, decks.A, 0, halfH, w, '#00d2ff');
-      drawSingleDeckWaveform(ctx, decks.B, halfH, halfH, w, '#ff5500');
-
-      // Center Red Playhead Line
+      // Center Playhead with subtle red halo + top & bottom pointers
       const centerX = Math.floor(w / 2);
+      ctx.fillStyle = 'rgba(255, 42, 85, 0.22)';
+      ctx.fillRect(centerX - 3, 0, 6, h);
+
       ctx.strokeStyle = '#ffffff';
       ctx.lineWidth = 2;
       ctx.beginPath();
@@ -4657,19 +4708,36 @@
       ctx.beginPath();
       ctx.moveTo(centerX - 6, 0);
       ctx.lineTo(centerX + 6, 0);
-      ctx.lineTo(centerX, 8);
+      ctx.lineTo(centerX, 7);
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.moveTo(centerX - 6, h);
+      ctx.lineTo(centerX + 6, h);
+      ctx.lineTo(centerX, h - 7);
       ctx.fill();
     }
 
     function drawSingleDeckWaveform(ctx, deck, yTop, height, w, accent) {
-      if (!deck.track) return;
+      if (!deck.track || !deck.track.waveform || !deck.duration) return;
       const wf = deck.track.waveform;
       const dur = deck.duration;
       const secVisible = 8.0 / mixerState.waveformZoom; // seconds shown across width
       const pxPerSec = w / secVisible;
       const centerX = w / 2;
       const midY = yTop + height / 2;
-      const maxAmp = height * 0.44;
+      const maxAmp = height * 0.45;
+
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(0, yTop, w, height);
+      ctx.clip();
+
+      // Subtle deck lane tint & zero-axis hairline
+      ctx.fillStyle = deck.id === 'A' ? 'rgba(0, 26, 46, 0.22)' : 'rgba(42, 18, 4, 0.22)';
+      ctx.fillRect(0, yTop, w, height);
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
+      ctx.fillRect(0, midY - 0.5, w, 1);
 
       // Active Loop Region highlight
       if (deck.loopActive) {
@@ -4682,12 +4750,13 @@
         ctx.strokeRect(lx1, yTop + 1, lx2 - lx1, height - 2);
       }
 
-      // Beat Grid Lines (White on beats, Red on downbeats every 4 beats)
+      // Beat Grid Lines (White on beats, Red on downbeats every 4 beats with bar numbers, half-beats when zoomed in)
       const beatDur = 60 / deck.baseBpm;
       const startSec = deck.position - secVisible / 2;
       const endSec = deck.position + secVisible / 2;
       const firstBeat = Math.floor(startSec / beatDur);
       const lastBeat = Math.ceil(endSec / beatDur);
+      const showHalfBeat = mixerState.waveformZoom >= 1.5;
 
       for (let b = firstBeat; b <= lastBeat; b++) {
         if (b < 0) continue;
@@ -4695,29 +4764,116 @@
         if (bt > dur) break;
         const x = centerX + (bt - deck.position) * pxPerSec;
         const isDownbeat = (b % 4 === 0);
-        ctx.strokeStyle = isDownbeat ? 'rgba(255, 65, 95, 0.55)' : 'rgba(148, 163, 184, 0.22)';
+        ctx.strokeStyle = isDownbeat ? 'rgba(255, 65, 95, 0.65)' : 'rgba(148, 163, 184, 0.24)';
         ctx.lineWidth = isDownbeat ? 1.5 : 1;
         ctx.beginPath();
         ctx.moveTo(x, yTop);
         ctx.lineTo(x, yTop + height);
         ctx.stroke();
+
+        if (isDownbeat) {
+          const barNum = Math.floor(b / 4) + 1;
+          ctx.fillStyle = 'rgba(255, 130, 150, 0.88)';
+          ctx.font = 'bold 9px JetBrains Mono, monospace';
+          ctx.fillText(String(barNum), x + 3, yTop + 10);
+        }
+
+        if (showHalfBeat) {
+          const halfBt = bt + beatDur * 0.5;
+          if (halfBt <= dur) {
+            const hx = centerX + (halfBt - deck.position) * pxPerSec;
+            ctx.strokeStyle = 'rgba(148, 163, 184, 0.18)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(hx, yTop);
+            ctx.lineTo(hx, yTop + 7);
+            ctx.moveTo(hx, yTop + height - 7);
+            ctx.lineTo(hx, yTop + height);
+            ctx.stroke();
+          }
+        }
       }
 
-      // RGB 3-Band Waveform Bars
-      const barStep = 2;
-      for (let x = 0; x < w; x += barStep) {
+      // Studio-grade Waveform Columns (interpolated when zoomed in, peak-aggregated when zoomed out)
+      const posArr = wf.posPeaks || wf.peaks;
+      const negArr = wf.negPeaks || wf.peaks;
+      const rmsArr = wf.rms || wf.peaks;
+      const numBins = wf.numBins;
+      const colStep = w > 1200 ? 2 : 1;
+      const binSpan = ((colStep / pxPerSec) / dur) * numBins;
+      const mode = mixerState.waveformMode;
+
+      for (let x = 0; x < w; x += colStep) {
         const t = deck.position + (x - centerX) / pxPerSec;
         if (t < 0 || t >= dur) continue;
-        const bin = Math.floor((t / dur) * wf.numBins);
-        if (bin < 0 || bin >= wf.numBins) continue;
+        const exactBin = (t / dur) * numBins;
 
-        const amp = wf.peaks[bin] * maxAmp;
-        const r = Math.min(255, Math.floor(wf.lows[bin] * 340 + 30));
-        const g = Math.min(255, Math.floor(wf.mids[bin] * 320 + 25));
-        const b = Math.min(255, Math.floor(wf.highs[bin] * 390 + 40));
+        let posPk = 0, negPk = 0, rmsVal = 0, low = 0, mid = 0, high = 0;
+        if (binSpan >= 1.0) {
+          const b0 = clamp(Math.floor(exactBin - binSpan * 0.5), 0, numBins - 1);
+          const b1 = clamp(Math.ceil(exactBin + binSpan * 0.5), b0, numBins - 1);
+          let wSum = 0;
+          for (let bi = b0; bi <= b1; bi++) {
+            const pp = posArr[bi];
+            const np = negArr[bi];
+            if (pp > posPk) posPk = pp;
+            if (np > negPk) negPk = np;
+            rmsVal += rmsArr[bi];
+            const wt = Math.max(pp, np, 0.01);
+            low += wf.lows[bi] * wt;
+            mid += wf.mids[bi] * wt;
+            high += wf.highs[bi] * wt;
+            wSum += wt;
+          }
+          rmsVal /= (b1 - b0 + 1);
+          low /= wSum;
+          mid /= wSum;
+          high /= wSum;
+        } else {
+          const idx0 = clamp(Math.floor(exactBin), 0, numBins - 1);
+          const idx1 = Math.min(numBins - 1, idx0 + 1);
+          const frac = exactBin - idx0;
+          posPk = posArr[idx0] + (posArr[idx1] - posArr[idx0]) * frac;
+          negPk = negArr[idx0] + (negArr[idx1] - negArr[idx0]) * frac;
+          rmsVal = rmsArr[idx0] + (rmsArr[idx1] - rmsArr[idx0]) * frac;
+          low = wf.lows[idx0] + (wf.lows[idx1] - wf.lows[idx0]) * frac;
+          mid = wf.mids[idx0] + (wf.mids[idx1] - wf.mids[idx0]) * frac;
+          high = wf.highs[idx0] + (wf.highs[idx1] - wf.highs[idx0]) * frac;
+        }
 
-        ctx.fillStyle = `rgb(${r},${g},${b})`;
-        ctx.fillRect(x, midY - amp, barStep, amp * 2);
+        const posH = posPk * maxAmp;
+        const negH = negPk * maxAmp;
+        if (posH < 0.5 && negH < 0.5) continue;
+
+        if (mode === '3band') {
+          ctx.fillStyle = 'rgba(219, 234, 254, 0.90)';
+          ctx.fillRect(x, midY - posH, colStep, posH + negH);
+
+          const midScale = clamp(low * 0.85 + mid * 1.05, 0.14, 0.95);
+          ctx.fillStyle = 'rgba(245, 158, 11, 0.92)';
+          ctx.fillRect(x, midY - posH * midScale, colStep, (posH + negH) * midScale);
+
+          const lowScale = clamp(low * 1.15, 0.08, 0.82);
+          ctx.fillStyle = 'rgba(37, 99, 235, 0.96)';
+          ctx.fillRect(x, midY - posH * lowScale, colStep, (posH + negH) * lowScale);
+        } else {
+          const c = computeWaveColors(low, mid, high);
+          ctx.fillStyle = `rgb(${c.r},${c.g},${c.b})`;
+          ctx.fillRect(x, midY - posH, colStep, posH + negH);
+
+          const rmsPosH = Math.min(posH, rmsVal * maxAmp * 0.88);
+          const rmsNegH = Math.min(negH, rmsVal * maxAmp * 0.88);
+          if (rmsPosH + rmsNegH >= 1) {
+            ctx.fillStyle = `rgb(${c.cr},${c.cg},${c.cb})`;
+            ctx.fillRect(x, midY - rmsPosH, colStep, rmsPosH + rmsNegH);
+          }
+
+          if (posH > 4) {
+            ctx.fillStyle = 'rgba(255,255,255,0.42)';
+            ctx.fillRect(x, midY - posH, colStep, 1);
+            ctx.fillRect(x, midY + negH - 1, colStep, 1);
+          }
+        }
       }
 
       // Hot Cue Markers
@@ -4737,6 +4893,8 @@
         ctx.font = 'bold 9px JetBrains Mono';
         ctx.fillText(String(idx + 1), x + 3, yTop + 9);
       });
+
+      ctx.restore();
     }
 
     function drawOverviewWaveform(deckId) {
@@ -4757,7 +4915,8 @@
 
       const cache = overviewCache[deckId];
       const tid = deck.track.id;
-      if (cache.trackId !== tid || cache.w !== w || cache.h !== h || !cache.canvas) {
+      const mode = mixerState.waveformMode;
+      if (cache.trackId !== tid || cache.w !== w || cache.h !== h || cache.mode !== mode || !cache.canvas) {
         if (!cache.canvas) cache.canvas = document.createElement('canvas');
         cache.canvas.width = w;
         cache.canvas.height = h;
@@ -4765,23 +4924,92 @@
         cctx.fillStyle = '#070a10';
         cctx.fillRect(0, 0, w, h);
 
-        const wf = deck.track.waveform;
         const midY = h / 2;
-        for (let x = 0; x < w; x += 2) {
-          const bin = Math.floor((x / w) * wf.numBins);
-          const amp = wf.peaks[bin] * (h * 0.44);
-          const r = Math.min(255, Math.floor(wf.lows[bin] * 320 + 30));
-          const g = Math.min(255, Math.floor(wf.mids[bin] * 300 + 25));
-          const b = Math.min(255, Math.floor(wf.highs[bin] * 360 + 40));
-          cctx.fillStyle = `rgb(${r},${g},${b})`;
-          cctx.fillRect(x, midY - amp, 1.8, amp * 2);
+        cctx.fillStyle = 'rgba(255, 255, 255, 0.07)';
+        cctx.fillRect(0, midY - 0.5, w, 1);
+
+        const wf = deck.track.waveform;
+        const posArr = wf.posPeaks || wf.peaks;
+        const negArr = wf.negPeaks || wf.peaks;
+        const rmsArr = wf.rms || wf.peaks;
+        const colStep = w > 700 ? 2 : 1;
+        const maxOverviewAmp = h * 0.44;
+
+        for (let x = 0; x < w; x += colStep) {
+          const b0 = clamp(Math.floor((x / w) * wf.numBins), 0, wf.numBins - 1);
+          const b1 = clamp(Math.floor(((x + colStep) / w) * wf.numBins), b0, wf.numBins - 1);
+          let posPk = 0, negPk = 0, rmsSum = 0, low = 0, mid = 0, high = 0, wSum = 0;
+          for (let bi = b0; bi <= b1; bi++) {
+            const pp = posArr[bi];
+            const np = negArr[bi];
+            if (pp > posPk) posPk = pp;
+            if (np > negPk) negPk = np;
+            rmsSum += rmsArr[bi];
+            const wt = Math.max(pp, np, 0.01);
+            low += wf.lows[bi] * wt;
+            mid += wf.mids[bi] * wt;
+            high += wf.highs[bi] * wt;
+            wSum += wt;
+          }
+          const posH = posPk * maxOverviewAmp;
+          const negH = negPk * maxOverviewAmp;
+          const rmsAvg = rmsSum / (b1 - b0 + 1);
+          low /= wSum;
+          mid /= wSum;
+          high /= wSum;
+
+          if (mode === '3band') {
+            cctx.fillStyle = 'rgba(219, 234, 254, 0.88)';
+            cctx.fillRect(x, midY - posH, colStep, posH + negH);
+            const ms = clamp(low * 0.85 + mid * 1.05, 0.14, 0.95);
+            cctx.fillStyle = 'rgba(245, 158, 11, 0.90)';
+            cctx.fillRect(x, midY - posH * ms, colStep, (posH + negH) * ms);
+            const ls = clamp(low * 1.15, 0.08, 0.82);
+            cctx.fillStyle = 'rgba(37, 99, 235, 0.95)';
+            cctx.fillRect(x, midY - posH * ls, colStep, (posH + negH) * ls);
+          } else {
+            const c = computeWaveColors(low, mid, high);
+            cctx.fillStyle = `rgb(${c.r},${c.g},${c.b})`;
+            cctx.fillRect(x, midY - posH, colStep, posH + negH);
+            const rPos = Math.min(posH, rmsAvg * maxOverviewAmp * 0.85);
+            const rNeg = Math.min(negH, rmsAvg * maxOverviewAmp * 0.85);
+            if (rPos + rNeg >= 1) {
+              cctx.fillStyle = `rgb(${c.cr},${c.cg},${c.cb})`;
+              cctx.fillRect(x, midY - rPos, colStep, rPos + rNeg);
+            }
+          }
         }
+
+        // Subtle 4-bar phrase markers along top edge
+        if (deck.baseBpm > 0 && deck.duration > 0) {
+          const phraseDur = (60 / deck.baseBpm) * 16;
+          cctx.fillStyle = 'rgba(148, 163, 184, 0.35)';
+          for (let pt = phraseDur; pt < deck.duration; pt += phraseDur) {
+            const pxMark = Math.round((pt / deck.duration) * w);
+            cctx.fillRect(pxMark, 0, 1, 4);
+          }
+        }
+
         cache.trackId = tid;
         cache.w = w;
         cache.h = h;
+        cache.mode = mode;
       }
 
       ctx.drawImage(cache.canvas, 0, 0);
+
+      // Active Loop highlight on overview
+      if (deck.loopActive && deck.duration > 0) {
+        const lx1 = clamp((deck.loopStart / deck.duration) * w, 0, w);
+        const lx2 = clamp((deck.loopEnd / deck.duration) * w, 0, w);
+        if (lx2 > lx1) {
+          ctx.fillStyle = 'rgba(251, 191, 36, 0.24)';
+          ctx.fillRect(lx1, 0, lx2 - lx1, h);
+          ctx.fillStyle = '#fbbf24';
+          ctx.fillRect(lx1, 0, lx2 - lx1, 1.5);
+          ctx.fillRect(lx1, h - 1.5, lx2 - lx1, 1.5);
+        }
+      }
 
       // Hot Cue dots on overview
       deck.hotCues.forEach((pos, idx) => {
@@ -5056,7 +5284,7 @@
         const arrayBuf = await file.arrayBuffer();
         const decoded = await audioCtx.decodeAudioData(arrayBuf);
         const reversed = createReversedBuffer(audioCtx, decoded);
-        const waveform = analyzeRGBWaveform(decoded, 1600);
+        const waveform = analyzeRGBWaveform(decoded, clamp(Math.round(decoded.duration * 100), 3200, 12000));
         const bpm = estimateBPM(decoded);
 
         const customTrack = {
@@ -5413,12 +5641,31 @@
         requestAnimationFrame(step);
       });
 
-      // Waveform Zoom Controls
+      // Waveform Mode & Zoom Controls
+      const btnWaveMode = document.getElementById('btnWaveMode');
+      if (btnWaveMode) {
+        btnWaveMode.addEventListener('click', () => {
+          mixerState.waveformMode = mixerState.waveformMode === 'rgb' ? '3band' : 'rgb';
+          const is3Band = mixerState.waveformMode === '3band';
+          btnWaveMode.textContent = is3Band ? '3-BAND' : 'RGB';
+          btnWaveMode.classList.toggle('border-amber-400/60', is3Band);
+          btnWaveMode.classList.toggle('text-amber-300', is3Band);
+          btnWaveMode.classList.toggle('border-cyan-500/50', !is3Band);
+          btnWaveMode.classList.toggle('text-cyan-300', !is3Band);
+          invalidateOverviewCache();
+          drawOverviewWaveform('A');
+          drawOverviewWaveform('B');
+          drawDualScrollingWaveforms();
+          showToast(is3Band ? 'Sóng nhạc: CDJ-3000 3-BAND (Blue/Amber/White)' : 'Sóng nhạc: Studio RGB Chi tiết', 'info');
+        });
+      }
       document.getElementById('btnZoomIn').addEventListener('click', () => {
-        mixerState.waveformZoom = clamp(mixerState.waveformZoom * 1.25, 0.5, 3.0);
+        mixerState.waveformZoom = clamp(mixerState.waveformZoom * 1.25, 0.5, 4.0);
+        drawDualScrollingWaveforms();
       });
       document.getElementById('btnZoomOut').addEventListener('click', () => {
-        mixerState.waveformZoom = clamp(mixerState.waveformZoom / 1.25, 0.5, 3.0);
+        mixerState.waveformZoom = clamp(mixerState.waveformZoom / 1.25, 0.5, 4.0);
+        drawDualScrollingWaveforms();
       });
 
       // Modals & Fullscreen
@@ -5499,6 +5746,100 @@
         if (k === 'w') decks.A.cueUp();
         else if (k === 'p') decks.B.cueUp();
       });
+
+      installTouchZoomGuard();
+    }
+
+    // Prevent iOS/iPadOS double-tap & pinch viewport zoom while preserving multi-touch DJ controls & form pickers
+    function installTouchZoomGuard() {
+      if (window.__touchZoomGuardInstalled) return;
+      window.__touchZoomGuardInstalled = true;
+
+      ['gesturestart', 'gesturechange', 'gestureend'].forEach((evt) => {
+        document.addEventListener(evt, (e) => {
+          e.preventDefault();
+        }, { passive: false });
+      });
+
+      document.addEventListener('dblclick', (e) => {
+        const tag = e.target?.tagName;
+        if (tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA') return;
+        e.preventDefault();
+      }, { passive: false });
+
+      let lastTapTime = 0;
+      let lastTapX = 0;
+      let lastTapY = 0;
+      let startX = 0;
+      let startY = 0;
+      let touchDragged = false;
+
+      document.addEventListener('touchstart', (e) => {
+        if (e.touches.length > 1) {
+          touchDragged = true;
+          lastTapTime = 0;
+          return;
+        }
+        const t = e.touches[0];
+        if (t) {
+          startX = t.clientX;
+          startY = t.clientY;
+          touchDragged = false;
+        }
+      }, { passive: true });
+
+      document.addEventListener('touchmove', (e) => {
+        if (touchDragged || e.touches.length !== 1) return;
+        const t = e.touches[0];
+        if (t && (Math.abs(t.clientX - startX) > 20 || Math.abs(t.clientY - startY) > 20)) {
+          touchDragged = true;
+        }
+      }, { passive: true });
+
+      document.addEventListener('touchend', (e) => {
+        if (e.touches.length > 0 || e.changedTouches.length !== 1) return;
+
+        if (touchDragged) {
+          lastTapTime = 0;
+          return;
+        }
+
+        const target = e.target;
+        if (!target || typeof target.closest !== 'function') return;
+
+        // Allow native select pickers, file inputs, and file upload labels without double triggering
+        if (target.closest('select, input, textarea, label')) {
+          lastTapTime = 0;
+          return;
+        }
+
+        const touch = e.changedTouches[0];
+        const now = performance.now();
+        const dt = now - lastTapTime;
+        const dx = Math.abs(touch.clientX - lastTapX);
+        const dy = Math.abs(touch.clientY - lastTapY);
+
+        if (dt > 0 && dt < 360 && dx < 64 && dy < 64) {
+          if (e.cancelable) e.preventDefault();
+          lastTapTime = 0;
+
+          // Restore click on click-bound controls (pointerdown-bound Play/Cue/Pads already ran on touchstart)
+          const interactive = target.closest('button, [role="button"], a');
+          if (
+            interactive &&
+            !interactive.disabled &&
+            !interactive.classList.contains('perf-pad') &&
+            !/^btn(Play|Cue)[AB]$/.test(interactive.id)
+          ) {
+            interactive.click();
+          }
+          return;
+        }
+
+        lastTapTime = now;
+        lastTapX = touch.clientX;
+        lastTapY = touch.clientY;
+      }, { passive: false });
     }
 
     /* =========================================================================
