@@ -652,7 +652,7 @@
                 <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
                     <div style="display:flex; align-items:center; gap:4px; background:#072452; border:1.5px solid #59c8ff; border-radius:7px; padding:2px 7px;">
                         <span style="font-size:11px; color:#9be8ff; font-weight:800;">Tên:</span>
-                        <input id="inputNickname" type="text" maxlength="12" value="ffdf" style="width:76px; background:#031430; color:#ffe252; border:1px solid #3c8ed6; border-radius:4px; padding:1px 5px; font-weight:800; font-size:12px; outline:none;">
+                        <input id="inputNickname" type="text" maxlength="12" value="admin" style="width:76px; background:#031430; color:#ffe252; border:1px solid #3c8ed6; border-radius:4px; padding:1px 5px; font-weight:800; font-size:12px; outline:none;">
                     </div>
                     <div class="nx-led-box" title="Lucci hiện có">
                         <span style="font-size:10px; font-weight:900; color:#8ef5a8; margin-right:6px;">LUCCI</span>
@@ -767,7 +767,7 @@
                         <div style="display:flex; align-items:center; justify-content:space-between; background:linear-gradient(90deg,#083578,#0f58b8); border:1.5px solid #6bd6ff; border-radius:7px; padding:4px 8px;">
                             <div style="display:flex; align-items:center; gap:6px;">
                                 <span style="display:inline-block; width:14px; height:14px; border-radius:3px; background:#58ff7e; border:1px solid #fff;"></span>
-                                <span id="shopPlayerName" class="font-cartoon" style="font-size:14px; color:#ffe252;">ffdf</span>
+                                <span id="shopPlayerName" class="font-cartoon" style="font-size:14px; color:#ffe252;">admin</span>
                             </div>
                             <span style="font-size:11px; font-weight:800; color:#a2ecff;">PHÒNG THỬ ĐỒ</span>
                         </div>
@@ -1351,7 +1351,7 @@
 
         defaultState() {
             return {
-                nickname: 'ffdf',
+                nickname: 'admin',
                 lucci: 120000,
                 nxPrepaid: 40000,
                 nxCredit: 0,
@@ -1414,7 +1414,7 @@
             setTxt('shopLucciVal', fmt(d.lucci));
             setTxt('shopNxPrepaid', fmt(d.nxPrepaid));
             setTxt('shopNxCredit', fmt(d.nxCredit));
-            setTxt('shopPlayerName', d.nickname || 'ffdf');
+            setTxt('shopPlayerName', d.nickname || 'admin');
             const nickIn = document.getElementById('inputNickname');
             if (nickIn && nickIn.value !== d.nickname) nickIn.value = d.nickname;
 
@@ -2763,7 +2763,7 @@
 
             const nickIn = document.getElementById('inputNickname');
             nickIn.oninput = (e) => {
-                Profile.data.nickname = e.target.value.trim() || 'ffdf';
+                Profile.data.nickname = e.target.value.trim() || 'admin';
                 Profile.save();
                 this.renderSlots();
             };
@@ -2846,7 +2846,7 @@
                 const tm = TEAMS[s.team] || TEAMS[0];
                 const charId = s.kind === 'p1' ? this.p1Char : (s.kind === 'p2' ? this.p2Char : s.charId);
                 const ch = CHARACTERS.find(c => c.id === charId) || CHARACTERS[0];
-                const label = s.kind === 'p1' ? (Profile.data.nickname || 'ffdf') : (s.kind === 'p2' ? 'Người Chơi 2' : (s.kind === 'bot' ? `Bot${i}` : 'Trống'));
+                const label = s.kind === 'p1' ? (Profile.data.nickname || 'admin') : (s.kind === 'p2' ? 'Người Chơi 2' : (s.kind === 'bot' ? `Bot${i}` : 'Trống'));
                 const isHuman = s.kind === 'p1' || s.kind === 'p2';
                 const cardCls = s.kind === 'off' ? 'slot-card empty' : (isHuman ? 'slot-card human' : 'slot-card');
 
@@ -3587,7 +3587,7 @@
                 const isP2 = slot.kind === 'p2';
                 const charId = isP1 ? Lobby.p1Char : (isP2 ? Lobby.p2Char : slot.charId);
                 const ch = CHARACTERS.find(c => c.id === charId) || CHARACTERS[0];
-                const name = isP1 ? (Profile.data.nickname || 'ffdf') : (isP2 ? 'P2' : `Bot${slot.idx}`);
+                const name = isP1 ? (Profile.data.nickname || 'admin') : (isP2 ? 'P2' : `Bot${slot.idx}`);
                 const teamId = slot.team === 0 ? (10 + slot.idx) : slot.team;
 
                 const pObj = {
