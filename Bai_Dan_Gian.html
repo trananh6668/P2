@@ -34,37 +34,36 @@
             --font-ui: 'Be Vietnam Pro', 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
             --font-mono: 'JetBrains Mono', ui-monospace, Consolas, monospace;
 
-            --card-w: 62px;
-            --card-h: 90px;
-            --totom-w: 52px;
-            --totom-h: 112px;
-            --hand-overlap: 6px;
+            --card-w: 68px;
+            --card-h: 98px;
+            --totom-w: 58px;
+            --totom-h: 118px;
         }
 
-        @media (max-height: 760px), (max-width: 1150px) {
+        @media (max-width: 1200px) {
             :root {
-                --card-w: 55px;
-                --card-h: 80px;
-                --totom-w: 46px;
-                --totom-h: 98px;
+                --card-w: 62px;
+                --card-h: 90px;
+                --totom-w: 54px;
+                --totom-h: 108px;
             }
         }
 
         @media (max-width: 640px) {
             :root {
-                --card-w: 48px;
-                --card-h: 71px;
-                --totom-w: 42px;
-                --totom-h: 88px;
+                --card-w: 52px;
+                --card-h: 76px;
+                --totom-w: 48px;
+                --totom-h: 96px;
             }
         }
 
         @media (max-width: 390px) {
             :root {
-                --card-w: 43px;
-                --card-h: 64px;
-                --totom-w: 38px;
-                --totom-h: 82px;
+                --card-w: 45px;
+                --card-h: 66px;
+                --totom-w: 43px;
+                --totom-h: 88px;
             }
         }
 
@@ -93,14 +92,6 @@
             -webkit-font-smoothing: antialiased;
         }
 
-        @media (min-width: 960px) and (min-height: 680px) {
-            html, body {
-                height: 100dvh;
-                max-height: 100dvh;
-                overflow: hidden;
-            }
-        }
-
         .tabular-nums {
             font-family: var(--font-mono);
             font-variant-numeric: tabular-nums;
@@ -110,19 +101,11 @@
             display: flex;
             flex-direction: column;
             width: 100%;
-            max-width: 1520px;
+            max-width: 1680px;
             min-height: 100dvh;
             margin: 0 auto;
-            padding: 8px 12px 10px;
-            gap: 8px;
-        }
-
-        @media (min-width: 960px) and (min-height: 680px) {
-            .app-wrapper {
-                height: 100dvh;
-                max-height: 100dvh;
-                overflow: hidden;
-            }
+            padding: 8px 14px 12px;
+            gap: 10px;
         }
 
         /* ================= HEADER CHROME ================= */
@@ -382,7 +365,7 @@
 
         /* ================= ROYAL FELT STAGE ================= */
         .game-stage {
-            flex: 1 1 auto;
+            flex: 1 0 auto;
             min-height: 0;
             position: relative;
             display: flex;
@@ -398,8 +381,9 @@
                 0 0 0 1px rgba(251, 191, 36, 0.28),
                 var(--shadow-strong);
             border-radius: 26px;
-            padding: 10px 14px;
-            overflow: hidden;
+            padding: 14px 18px;
+            overflow-x: clip;
+            overflow-y: visible;
         }
 
         @media (max-width: 959px), (max-height: 679px) {
@@ -408,8 +392,9 @@
                 min-height: 540px;
                 border-radius: 18px;
                 border-width: 4px;
-                padding: 8px;
-                overflow: visible;
+                padding: 10px;
+                overflow-x: clip;
+                overflow-y: visible;
             }
         }
 
@@ -446,10 +431,10 @@
             position: relative;
             z-index: 5;
             display: grid;
-            flex: 1 1 0%;
+            flex: 1 0 auto;
             min-height: 0;
             width: 100%;
-            gap: 8px 12px;
+            gap: 12px 16px;
             align-items: center;
         }
 
@@ -462,19 +447,33 @@
         /* Desktop >= 960px */
         @media (min-width: 960px) {
             #cardGameContainer.players-4 {
-                grid-template-columns: minmax(215px, 285px) minmax(0, 1fr) minmax(215px, 285px);
-                grid-template-rows: auto minmax(175px, 1fr) auto;
+                grid-template-columns: minmax(215px, 260px) minmax(0, 1fr) minmax(215px, 260px);
+                grid-template-rows: auto minmax(185px, 1fr) auto;
                 grid-template-areas:
-                    ". top ."
+                    "top top top"
                     "left center right"
                     "bottom bottom bottom";
             }
             #cardGameContainer.players-3 {
-                grid-template-columns: minmax(225px, 300px) minmax(0, 1fr) minmax(225px, 300px);
+                grid-template-columns: minmax(215px, 260px) minmax(0, 1fr) minmax(215px, 260px);
                 grid-template-rows: minmax(200px, 1fr) auto;
                 grid-template-areas:
                     "left center right"
                     "bottom bottom bottom";
+            }
+            #cardGameContainer.players-4.mode-phom,
+            #cardGameContainer.players-4.mode-chan,
+            #cardGameContainer.players-4.mode-totom,
+            #cardGameContainer.players-3.mode-phom,
+            #cardGameContainer.players-3.mode-chan,
+            #cardGameContainer.players-3.mode-totom {
+                grid-template-columns: minmax(250px, 320px) minmax(0, 1fr) minmax(250px, 320px);
+            }
+            #cardGameContainer.players-4.mode-tan,
+            #cardGameContainer.players-4.mode-tienlen,
+            #cardGameContainer.players-3.mode-tan,
+            #cardGameContainer.players-3.mode-tienlen {
+                grid-template-columns: minmax(200px, 245px) minmax(0, 1fr) minmax(200px, 245px);
             }
             #cardGameContainer.players-2 {
                 grid-template-columns: minmax(0, 1fr);
@@ -488,8 +487,13 @@
                 width: 100%;
             }
             #seatBox-2 {
-                min-width: 260px;
-                max-width: min(640px, 90%);
+                min-width: 280px;
+                max-width: min(920px, 96%);
+            }
+            #seatBox-1 .phom-zones-wrap,
+            #seatBox-3 .phom-zones-wrap {
+                flex-direction: column;
+                gap: 6px;
             }
         }
 
@@ -593,14 +597,14 @@
         #seatBox-0 {
             width: fit-content;
             min-width: 260px;
-            max-width: 100%;
+            max-width: min(1080px, 100%);
             margin: 0 auto;
             flex-direction: row;
             flex-wrap: wrap;
             align-items: center;
             justify-content: center;
             gap: 8px 16px;
-            padding: 6px 14px;
+            padding: 7px 16px;
         }
 
         .seat-header {
@@ -737,8 +741,8 @@
         /* ================= PHỎM / CHẮN / TỔ TÔM SEAT ZONES ================= */
         .phom-zones-wrap {
             display: flex;
-            flex-wrap: nowrap;
-            gap: 8px;
+            flex-wrap: wrap;
+            gap: 8px 16px;
             align-items: flex-start;
             width: 100%;
             min-width: 0;
@@ -758,31 +762,42 @@
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            margin-bottom: 2px;
+            margin-bottom: 3px;
         }
 
         .compact-card-stack {
             display: flex;
+            flex-wrap: wrap;
             align-items: center;
-            min-height: 48px;
-            overflow-x: auto;
-            scrollbar-width: none;
+            gap: 5px;
+            min-height: 54px;
+            overflow: visible;
         }
-        .compact-card-stack::-webkit-scrollbar { display: none; }
 
-        .compact-card-stack .playing-card.small-card:not(:first-child) {
-            margin-left: -14px;
+        .laid-meld-group {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            background: rgba(0, 0, 0, 0.28);
+            border: 1px solid rgba(251, 191, 36, 0.24);
+            border-radius: 7px;
+            padding: 3px 5px;
+            flex-shrink: 0;
         }
-        .compact-card-stack .totom-card.small-totom:not(:first-child) {
-            margin-left: -10px;
+
+        .laid-meld-cards {
+            display: flex;
+            align-items: center;
+            gap: 3px;
         }
 
         @media (max-width: 640px) {
             .phom-zones-wrap {
-                gap: 4px;
+                gap: 5px;
                 flex-wrap: wrap;
             }
-            .compact-card-stack { min-height: 36px; }
+            .compact-card-stack { min-height: 44px; gap: 4px; }
         }
 
         /* ================= CENTER ARENA ================= */
@@ -868,15 +883,26 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: 7px;
-            width: 100%;
-            max-width: 480px;
-            min-height: 138px;
-            padding: 10px 14px;
+            gap: 8px;
+            flex: 1 1 320px;
+            width: auto;
+            max-width: 660px;
+            min-height: 146px;
+            padding: 14px 16px;
             border-radius: 18px;
             background: rgba(0, 0, 0, 0.25);
             border: 1px dashed rgba(253, 230, 138, 0.22);
             box-shadow: inset 0 2px 14px rgba(0, 0, 0, 0.32);
+        }
+
+        #cardGameContainer.mode-tan .trick-cards-zone {
+            flex: 1 1 440px;
+            max-width: 780px;
+        }
+
+        #cardGameContainer.mode-chan .trick-cards-zone,
+        #cardGameContainer.mode-totom .trick-cards-zone {
+            min-height: 162px;
         }
 
         .center-card-wrap {
@@ -884,9 +910,8 @@
             flex-wrap: wrap;
             justify-content: center;
             align-items: center;
-        }
-        .center-card-wrap .playing-card:not(:first-child) {
-            margin-left: -22px;
+            gap: 8px;
+            padding: 4px;
         }
 
         @media (max-width: 640px) {
@@ -895,12 +920,14 @@
                 padding: 5px 12px;
             }
             .trick-cards-zone {
-                min-height: 114px;
-                padding: 8px 10px;
+                flex: 1 1 100%;
+                width: 100%;
+                min-height: 118px;
+                padding: 10px;
                 border-radius: 14px;
             }
-            .center-card-wrap .playing-card:not(:first-child) {
-                margin-left: -18px;
+            .center-card-wrap {
+                gap: 6px;
             }
         }
 
@@ -954,27 +981,116 @@
             background: rgba(0, 0, 0, 0.45);
             border: 1.5px solid var(--gold-main);
             border-radius: 12px;
-            padding: 5px 9px;
+            padding: 15px 10px 7px;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+        }
+
+        .tan-pairs-grid {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
         }
 
         .tan-pair-slot {
             display: flex;
             flex-direction: column;
-            align-items: center;
-            background: rgba(0, 0, 0, 0.34);
-            border: 1px solid rgba(251, 191, 36, 0.35);
-            border-radius: 10px;
-            padding: 5px;
+            align-items: stretch;
+            gap: 5px;
+            background: rgba(0, 0, 0, 0.36);
+            border: 1px solid rgba(251, 191, 36, 0.38);
+            border-radius: 12px;
+            padding: 7px 8px;
             position: relative;
-            min-width: 68px;
+            min-width: 144px;
         }
 
-        .tan-defend-overlap {
-            margin-top: -42px;
-            margin-left: 14px;
-            transform: rotate(6deg);
-            z-index: 2;
+        .tan-pair-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 6px;
+            font-size: 9.5px;
+            font-weight: 800;
+            color: #fde68a;
+        }
+
+        .tan-pair-status {
+            font-size: 9px;
+            font-weight: 800;
+            padding: 1px 6px;
+            border-radius: 999px;
+        }
+
+        .tan-pair-status.defended {
+            background: rgba(16, 185, 129, 0.22);
+            color: #6ee7b7;
+            border: 1px solid rgba(16, 185, 129, 0.45);
+        }
+
+        .tan-pair-status.pending {
+            background: rgba(239, 68, 68, 0.22);
+            color: #fca5a5;
+            border: 1px solid rgba(239, 68, 68, 0.45);
+        }
+
+        .tan-pair-cards {
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            gap: 5px;
+        }
+
+        .tan-card-col {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 3px;
+        }
+
+        .tan-col-label {
+            font-size: 8.5px;
+            font-weight: 800;
+            letter-spacing: 0.4px;
+            color: var(--text-jade);
+        }
+
+        .tan-pair-arrow {
+            font-size: 13px;
+            padding-bottom: 28px;
+            opacity: 0.9;
+        }
+
+        .tan-empty-defend {
+            width: 56px;
+            height: 80px;
+            border-radius: 8px;
+            border: 1.5px dashed rgba(252, 165, 165, 0.55);
+            background: rgba(127, 29, 29, 0.18);
+            color: #fca5a5;
+            font-weight: 900;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .playing-card.tan-table-card {
+            width: 56px;
+            height: 80px;
+            padding: 3px 4px;
+            cursor: default;
+        }
+        .playing-card.tan-table-card .card-rank { font-size: 12px; }
+        .playing-card.tan-table-card .card-suit-mini { font-size: 10px; }
+        .playing-card.tan-table-card .card-center-suit { font-size: 21px; }
+
+        @media (max-width: 640px) {
+            .tan-pair-slot { min-width: 122px; padding: 6px; }
+            .playing-card.tan-table-card,
+            .tan-empty-defend { width: 46px; height: 66px; }
+            .tan-pair-arrow { padding-bottom: 22px; font-size: 11px; }
         }
 
         /* ================= PLAYING CARDS (52 LÁ) ================= */
@@ -1004,14 +1120,19 @@
             border-color: #fbbf24;
         }
 
-        .playing-card:hover {
-            transform: translateY(-7px);
+        .trick-cards-zone .playing-card,
+        .trick-cards-zone .totom-card {
+            cursor: default;
+        }
+
+        .hand-cards-row .playing-card:hover {
+            transform: translateY(-6px);
             z-index: 20;
             box-shadow: 0 10px 20px rgba(0, 0, 0, 0.55);
         }
 
         .playing-card.selected {
-            transform: translateY(-16px) !important;
+            transform: translateY(-14px) !important;
             border: 2.5px solid #f59e0b;
             box-shadow: 0 12px 24px rgba(245, 158, 11, 0.58);
             background: #fffbeb;
@@ -1024,13 +1145,12 @@
         }
 
         .playing-card.small-card {
-            width: 38px;
-            height: 55px;
-            padding: 2px 3px;
+            width: 42px;
+            height: 60px;
+            padding: 3px 4px;
             border-radius: 6px;
             cursor: default;
         }
-        .playing-card.small-card:hover { transform: none; z-index: auto; }
 
         .card-corner-top {
             display: flex;
@@ -1045,10 +1165,10 @@
             letter-spacing: -0.5px;
         }
 
-        .playing-card.small-card .card-rank { font-size: 10px; }
+        .playing-card.small-card .card-rank { font-size: 11px; }
 
         .card-suit-mini { font-size: 11px; }
-        .playing-card.small-card .card-suit-mini { font-size: 8.5px; }
+        .playing-card.small-card .card-suit-mini { font-size: 9.5px; }
 
         .card-center-suit {
             position: absolute;
@@ -1059,7 +1179,8 @@
             opacity: 0.9;
             pointer-events: none;
         }
-        .playing-card.small-card .card-center-suit { font-size: 16px; }
+        .playing-card.small-card .card-center-suit { font-size: 16px; top: 58%; }
+        .playing-card.small-card .card-corner-bottom { display: none; }
 
         .card-corner-bottom {
             display: flex;
@@ -1067,6 +1188,11 @@
             align-items: flex-end;
             line-height: 0.95;
             transform: rotate(180deg);
+        }
+
+        @media (max-width: 640px) {
+            .playing-card .card-corner-bottom { display: none; }
+            .playing-card .card-center-suit { top: 58%; font-size: 20px; }
         }
 
         /* ================= TRADITIONAL CHẮN & TỔ TÔM CARDS ================= */
@@ -1109,13 +1235,14 @@
             box-shadow: 0 0 0 1px #fde047, 0 5px 12px rgba(0, 0, 0, 0.5);
         }
 
-        .totom-card:hover {
-            transform: translateY(-7px);
+        .hand-cards-row .totom-card:hover {
+            transform: translateY(-6px);
             z-index: 20;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.55);
         }
 
         .totom-card.selected {
-            transform: translateY(-16px) !important;
+            transform: translateY(-14px) !important;
             border: 2.5px solid #f59e0b;
             box-shadow: 0 12px 22px rgba(245, 158, 11, 0.65);
             background: #fef9c3;
@@ -1123,12 +1250,11 @@
         }
 
         .totom-card.small-totom {
-            width: 30px;
-            height: 62px;
-            padding: 2px;
+            width: 40px;
+            height: 78px;
+            padding: 3px 2px;
             cursor: default;
         }
-        .totom-card.small-totom:hover { transform: none; z-index: auto; }
 
         .totom-top-han {
             display: flex;
@@ -1140,11 +1266,13 @@
             line-height: 1;
             z-index: 1;
         }
-        .totom-card.small-totom .totom-top-han { font-size: 8px; }
+        .totom-card.small-totom .totom-top-han { font-size: 9px; }
 
         .totom-art-box {
-            width: 72%;
-            height: 38%;
+            width: 78%;
+            flex: 1;
+            min-height: 0;
+            margin: 3px 0;
             border-radius: 4px;
             background: rgba(255, 255, 255, 0.68);
             border: 1px dashed rgba(120, 53, 15, 0.3);
@@ -1159,7 +1287,7 @@
             background: rgba(254, 202, 202, 0.48);
             border-color: rgba(185, 28, 28, 0.35);
         }
-        .totom-card.small-totom .totom-art-box { font-size: 11px; }
+        .totom-card.small-totom .totom-art-box { font-size: 13px; margin: 2px 0; }
 
         .totom-vn-name {
             font-size: 8.5px;
@@ -1179,23 +1307,28 @@
             color: #fff;
         }
         .totom-card.small-totom .totom-vn-name {
-            font-size: 6px;
-            padding: 1px 0;
+            font-size: 7px;
+            padding: 1px;
+            line-height: 1.05;
         }
 
         /* ================= CARD TAG BADGES ================= */
         .card-tag-badge {
             position: absolute;
-            top: -8px;
+            top: -10px;
             left: 50%;
             transform: translateX(-50%);
-            font-size: 8.5px;
+            font-size: 7.5px;
             font-weight: 900;
-            padding: 1px 5px;
+            padding: 1.5px 4.5px;
             border-radius: 5px;
             color: #fff;
             text-transform: uppercase;
             white-space: nowrap;
+            max-width: calc(100% + 6px);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            letter-spacing: -0.2px;
             box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
             z-index: 5;
             pointer-events: none;
@@ -1235,18 +1368,23 @@
 
         .hand-cards-row {
             display: flex;
-            flex-wrap: nowrap;
+            flex-wrap: wrap;
             justify-content: center;
-            align-items: center;
+            align-items: flex-end;
             width: 100%;
-            min-height: calc(var(--card-h) + 22px);
-            padding: 14px 10px 4px;
+            margin: 0 auto;
+            column-gap: 7px;
+            row-gap: 28px;
+            min-height: calc(var(--card-h) + 36px);
+            padding: 28px 12px 8px;
             overflow: visible;
         }
 
-        .hand-cards-row .playing-card:not(:first-child),
-        .hand-cards-row .totom-card:not(:first-child) {
-            margin-left: var(--hand-overlap, 6px);
+        #cardGameContainer.mode-chan .hand-cards-row,
+        #cardGameContainer.mode-totom .hand-cards-row {
+            min-height: calc(var(--totom-h) + 36px);
+            column-gap: 6px;
+            row-gap: 28px;
         }
 
         .action-bar {
@@ -1262,6 +1400,44 @@
             border-radius: 14px;
             box-shadow: 0 8px 24px rgba(0, 0, 0, 0.55);
             max-width: 100%;
+        }
+
+        .action-bar.action-bar-centered {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+            align-items: center;
+            gap: 8px 12px;
+            width: fit-content;
+            max-width: 100%;
+        }
+
+        .action-bar-group {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 7px;
+        }
+
+        .action-bar-left { justify-content: flex-end; }
+        .action-bar-center { justify-content: center; }
+        .action-bar-right { justify-content: flex-start; }
+
+        .action-bar-center .btn-primary {
+            min-width: 136px;
+            padding-left: 18px;
+            padding-right: 18px;
+        }
+
+        @media (max-width: 820px) {
+            .action-bar.action-bar-centered {
+                display: flex;
+                flex-wrap: wrap;
+                justify-content: center;
+                width: 100%;
+            }
+            .action-bar-group {
+                display: contents;
+            }
         }
 
         .game-btn {
@@ -1329,6 +1505,11 @@
         }
 
         @media (max-width: 640px) {
+            .hand-cards-row {
+                column-gap: 5px;
+                row-gap: 24px;
+                padding: 24px 6px 6px;
+            }
             .action-bar {
                 padding: 6px 8px;
                 gap: 5px;
@@ -1377,13 +1558,12 @@
         .baucua-container {
             display: none;
             flex-direction: column;
-            gap: 10px;
+            gap: 14px;
             width: 100%;
-            max-width: 1220px;
-            margin: 0 auto;
-            flex: 1 1 0%;
-            min-height: 0;
-            justify-content: center;
+            max-width: 1180px;
+            margin: auto;
+            flex: 0 0 auto;
+            padding: 4px 0;
             z-index: 10;
         }
 
@@ -1392,11 +1572,12 @@
             flex-wrap: wrap;
             justify-content: space-between;
             align-items: center;
-            gap: 10px;
-            background: var(--panel-bg);
-            padding: 8px 14px;
-            border-radius: 14px;
-            border: 1px solid var(--panel-border);
+            gap: 10px 14px;
+            background: rgba(2, 20, 14, 0.88);
+            padding: 11px 16px;
+            border-radius: 16px;
+            border: 1px solid var(--panel-border-strong);
+            box-shadow: 0 8px 22px rgba(0, 0, 0, 0.4);
             flex-shrink: 0;
         }
 
@@ -1419,50 +1600,47 @@
 
         .baucua-main-grid {
             display: grid;
-            grid-template-columns: 1.45fr 1fr;
-            gap: 12px;
-            flex: 1 1 0%;
-            min-height: 0;
-            align-items: stretch;
+            grid-template-columns: minmax(0, 1.48fr) minmax(335px, 405px);
+            gap: 16px;
+            flex: 0 0 auto;
+            align-items: start;
         }
 
-        @media (max-width: 920px) {
+        @media (max-width: 960px) {
             .baucua-main-grid {
                 grid-template-columns: 1fr;
-                flex: 0 0 auto;
             }
         }
 
         .mascot-grid {
             display: grid;
             grid-template-columns: repeat(3, minmax(0, 1fr));
-            grid-template-rows: repeat(2, minmax(0, 1fr));
-            gap: 10px;
-            min-height: 0;
-        }
-
-        @media (max-width: 540px) {
-            .mascot-grid {
-                grid-template-columns: repeat(2, minmax(0, 1fr));
-                grid-template-rows: auto;
-            }
+            grid-auto-rows: auto;
+            gap: 12px;
+            padding: 14px;
+            border-radius: 18px;
+            background: linear-gradient(180deg, rgba(120, 32, 12, 0.42) 0%, rgba(45, 14, 6, 0.58) 100%);
+            border: 2px solid rgba(251, 191, 36, 0.48);
+            box-shadow: inset 0 2px 18px rgba(0, 0, 0, 0.48), 0 12px 30px rgba(0, 0, 0, 0.45);
         }
 
         .mascot-tile {
             background: linear-gradient(160deg, #fffbeb 0%, #fef3c7 55%, #fde68a 100%);
-            border: 2.5px solid #d97706;
-            border-radius: 15px;
-            padding: 10px 8px;
+            border: 2.5px solid #b45309;
+            border-radius: 14px;
+            padding: 10px 10px 11px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: space-between;
+            justify-content: flex-start;
+            gap: 6px;
             cursor: pointer;
             position: relative;
             transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease;
             box-shadow: 0 8px 20px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.8);
             color: #1c1917;
-            min-height: 112px;
+            min-height: 194px;
+            height: auto;
         }
 
         .mascot-tile:hover {
@@ -1475,23 +1653,74 @@
             transform: scale(0.98);
         }
 
+        .mascot-tile.has-user-bet {
+            border-color: #dc2626;
+            box-shadow: 0 0 0 2px rgba(253, 224, 71, 0.72), 0 10px 24px rgba(220, 38, 38, 0.32);
+        }
+
         .mascot-tile.winner-tile {
             border-color: #16a34a;
             background: linear-gradient(160deg, #dcfce7 0%, #bbf7d0 100%);
             box-shadow: 0 0 24px rgba(34, 197, 94, 0.75);
         }
 
+        .mascot-tile-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 4px;
+            width: 100%;
+            min-height: 20px;
+        }
+
+        .mascot-medallion {
+            width: 68px;
+            height: 68px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 35% 30%, #ffffff 0%, #fef3c7 68%, #f59e0b 100%);
+            border: 2px solid rgba(180, 83, 9, 0.35);
+            box-shadow: inset 0 2px 6px rgba(255, 255, 255, 0.9), 0 4px 10px rgba(120, 53, 15, 0.22);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
         .mascot-emoji {
-            font-size: clamp(30px, 4.5vh, 44px);
-            line-height: 1.05;
+            font-size: 40px;
+            line-height: 1;
             filter: drop-shadow(0 3px 5px rgba(0, 0, 0, 0.2));
         }
 
         .mascot-title {
-            font-size: clamp(13px, 1.9vh, 16px);
+            font-size: 16px;
             font-weight: 900;
             text-transform: uppercase;
-            color: #78350f;
+            letter-spacing: 0.6px;
+            color: #7c2d12;
+        }
+
+        @media (max-width: 540px) {
+            .mascot-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 9px;
+                padding: 10px;
+            }
+            .mascot-tile {
+                min-height: 164px;
+                padding: 8px 7px 9px;
+                gap: 5px;
+            }
+            .mascot-medallion {
+                width: 56px;
+                height: 56px;
+            }
+            .mascot-emoji {
+                font-size: 34px;
+            }
+            .mascot-title {
+                font-size: 14px;
+            }
         }
 
         .tile-bets-wrap {
@@ -1525,20 +1754,20 @@
 
         .shaker-panel {
             background: var(--panel-bg-strong);
-            border: 1.5px solid var(--panel-border-strong);
+            border: 2px solid var(--panel-border-strong);
             border-radius: 18px;
-            padding: 12px;
+            padding: 15px 16px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: space-evenly;
-            gap: 10px;
+            justify-content: flex-start;
+            gap: 12px;
             box-shadow: var(--shadow-strong);
         }
 
         .plate-stage {
-            width: clamp(148px, 22vh, 195px);
-            height: clamp(148px, 22vh, 195px);
+            width: 168px;
+            height: 168px;
             border-radius: 50%;
             background: radial-gradient(circle, #fffbeb 0%, #fde68a 65%, #d97706 100%);
             border: 6px solid #92400e;
@@ -1560,8 +1789,8 @@
         }
 
         .baucua-die {
-            width: clamp(44px, 6.4vh, 54px);
-            height: clamp(44px, 6.4vh, 54px);
+            width: 48px;
+            height: 48px;
             background: linear-gradient(160deg, #ffffff 0%, #e2e8f0 100%);
             border: 1.5px solid #cbd5e1;
             border-radius: 12px;
@@ -1570,7 +1799,7 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            font-size: clamp(20px, 3vh, 26px);
+            font-size: 23px;
         }
         .baucua-die span {
             font-size: 9px;
@@ -1621,8 +1850,8 @@
         }
 
         .chip-btn {
-            width: clamp(40px, 5.6vh, 48px);
-            height: clamp(40px, 5.6vh, 48px);
+            width: 44px;
+            height: 44px;
             border-radius: 50%;
             border: 3px dashed rgba(255, 255, 255, 0.85);
             font-family: var(--font-mono);
@@ -1640,6 +1869,49 @@
         .chip-btn.active {
             transform: scale(1.16);
             outline: 3px solid var(--gold-main);
+        }
+
+        .baucua-actions-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 7px;
+            width: 100%;
+        }
+
+        .baucua-shake-btn {
+            width: 100%;
+            min-height: 42px;
+            font-size: 13.5px;
+        }
+
+        .baucua-sub-actions {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 6px;
+            width: 100%;
+        }
+
+        .baucua-sub-actions .game-btn {
+            width: 100%;
+            padding: 7px 8px;
+            font-size: 11.5px;
+        }
+
+        @media (max-width: 640px) {
+            .plate-stage {
+                width: 150px;
+                height: 150px;
+            }
+            .baucua-die {
+                width: 42px;
+                height: 42px;
+                font-size: 19px;
+            }
+            .chip-btn {
+                width: 40px;
+                height: 40px;
+                font-size: 10.5px;
+            }
         }
 
         /* ================= MODALS & TOASTS ================= */
@@ -1805,7 +2077,7 @@
     </header>
 
     <main class="game-stage">
-        <div class="table-watermark">
+        <div class="table-watermark" id="tableWatermark" style="display:none;">
             <h2 id="watermarkTitle">TIẾN LÊN MIỀN BẮC</h2>
             <p id="watermarkSub">SỚI BÀI HOÀNG GIA • LUẬT CHUẨN</p>
         </div>
@@ -1892,11 +2164,13 @@
                         <div style="font-size:10.5px; color:var(--text-jade); font-weight:800; letter-spacing:0.5px;">CHỌN PHỈNH CƯỢC (XU):</div>
                         <div class="chip-selector" id="bauCuaChipSelector"></div>
 
-                        <div style="display:flex; flex-wrap:wrap; gap:6px; justify-content:center; margin-top:2px;">
-                            <button class="game-btn btn-primary" id="btnShakeBowl" onclick="shakeAndOpenBauCua()">🎲 Xóc Đĩa &amp; Mở Bát</button>
-                            <button class="game-btn btn-secondary" id="btnUndoBauCua" onclick="undoBauCuaBet()">↩️ Hoàn Tác</button>
-                            <button class="game-btn btn-secondary" id="btnRebetBauCua" onclick="rebetBauCua()">🔄 Cược Lại</button>
-                            <button class="game-btn btn-danger" id="btnClearBauCua" onclick="clearBauCuaBets()">🗑️ Xóa Cược</button>
+                        <div class="baucua-actions-stack">
+                            <button class="game-btn btn-primary baucua-shake-btn" id="btnShakeBowl" onclick="shakeAndOpenBauCua()">🎲 Xóc Đĩa &amp; Mở Bát</button>
+                            <div class="baucua-sub-actions">
+                                <button class="game-btn btn-secondary" id="btnUndoBauCua" onclick="undoBauCuaBet()">↩️ Hoàn Tác</button>
+                                <button class="game-btn btn-secondary" id="btnRebetBauCua" onclick="rebetBauCua()">🔄 Cược Lại</button>
+                                <button class="game-btn btn-danger" id="btnClearBauCua" onclick="clearBauCuaBets()">🗑️ Xóa Cược</button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -2532,6 +2806,11 @@ function refundPendingBauCuaBets() {
 }
 
 function updateTableWatermark() {
+    const watermarkEl = document.getElementById('tableWatermark');
+    const isCardGame = ['tienlen', 'phom', 'tan', 'chan', 'totom'].includes(AppState.mode);
+    if (watermarkEl) {
+        watermarkEl.style.display = isCardGame ? 'none' : 'block';
+    }
     const meta = MODE_META[AppState.mode] || MODE_META.tienlen;
     const titleEl = document.getElementById('watermarkTitle');
     const subEl = document.getElementById('watermarkSub');
@@ -2599,24 +2878,25 @@ function updateHandOverlapLayout() {
     const cards = handRow.querySelectorAll('.playing-card, .totom-card');
     const cardCount = cards.length;
     if (cardCount <= 1) {
-        handRow.style.setProperty('--hand-overlap', '0px');
+        handRow.style.maxWidth = '';
         return;
     }
 
+    const parent = handRow.parentElement;
+    const availW = (parent && parent.clientWidth > 60 ? parent.clientWidth : window.innerWidth - 32) - 24;
     const cardRect = cards[0].getBoundingClientRect();
-    const fallbackW = (AppState.mode === 'chan' || AppState.mode === 'totom') ? 46 : 55;
+    const fallbackW = (AppState.mode === 'chan' || AppState.mode === 'totom') ? 58 : 68;
     const cardWidth = cardRect.width > 10 ? cardRect.width : fallbackW;
-    const rowWidth = handRow.clientWidth > 40 ? handRow.clientWidth - 20 : Math.min(window.innerWidth - 32, 1080);
+    const gap = parseFloat(getComputedStyle(handRow).columnGap) || 6;
 
-    const naturalGap = 6;
-    const fullWidth = cardCount * cardWidth + (cardCount - 1) * naturalGap;
-    if (fullWidth <= rowWidth) {
-        handRow.style.setProperty('--hand-overlap', `${naturalGap}px`);
+    const maxPerRow = Math.max(1, Math.floor((availW + gap) / (cardWidth + gap)));
+    if (cardCount <= maxPerRow) {
+        handRow.style.maxWidth = '';
     } else {
-        const neededStep = (rowWidth - cardWidth) / (cardCount - 1);
-        const overlap = Math.floor(neededStep - cardWidth);
-        const minOverlap = -Math.floor(cardWidth * 0.72);
-        handRow.style.setProperty('--hand-overlap', `${Math.max(minOverlap, Math.min(naturalGap, overlap))}px`);
+        const numRows = Math.ceil(cardCount / maxPerRow);
+        const balancedPerRow = Math.ceil(cardCount / numRows);
+        const targetMaxW = balancedPerRow * cardWidth + (balancedPerRow - 1) * gap + 28;
+        handRow.style.maxWidth = `${Math.min(availW + 24, Math.ceil(targetMaxW))}px`;
     }
 }
 
@@ -3818,7 +4098,7 @@ function handleCenterNocClick() {
    ============================================================================ */
 function renderCardTableUI() {
     const container = document.getElementById('cardGameContainer');
-    container.className = `players-${AppState.playerCount}`;
+    container.className = `players-${AppState.playerCount} mode-${AppState.mode}`;
 
     const visualMap = getVisualSeatMap(AppState.playerCount);
 
@@ -3874,9 +4154,9 @@ function renderCardTableUI() {
                 : `<span style="font-size:8px; color:#64748b; margin-bottom:2px;">Trống</span>`;
             const recentTrashHTML = latestTrash ? renderCardHTML(latestTrash, { small: true, animClass: '' }) : '';
             const meldsHTML = p.laidMelds.map(m => `
-                <div style="display:inline-flex; flex-direction:column; align-items:center; margin-right:4px; flex-shrink:0;">
-                    <span style="font-size:7px; color:#fde047; font-weight:800; white-space:nowrap;">${m.meldType}</span>
-                    <div class="compact-card-stack" style="min-height:auto;">${m.cards.map(c => renderCardHTML(c, { small: true, animClass: '' })).join('')}</div>
+                <div class="laid-meld-group">
+                    <span style="font-size:7.5px; color:#fde047; font-weight:800; white-space:nowrap;">${m.meldType}</span>
+                    <div class="laid-meld-cards">${m.cards.map(c => renderCardHTML(c, { small: true, animClass: '' })).join('')}</div>
                 </div>
             `).join('');
 
@@ -3977,16 +4257,34 @@ function renderCardTableUI() {
         }
 
         if (AppState.tanTablePairs.length > 0) {
-            const pairsHTML = AppState.tanTablePairs.map((pair, pIdx) => `
-                <div class="tan-pair-slot">
-                    <span style="font-size:9.5px; color:#fde68a; margin-bottom:2px; font-weight:800;">Cặp #${pIdx + 1}</span>
-                    ${renderCardHTML(pair.attackCard, { extraClass: pair.attackCard.suitIdx === AppState.tanTrumpSuit ? 'is-trump-card' : '' })}
-                    ${pair.defendCard
-                        ? `<div class="tan-defend-overlap">${renderCardHTML(pair.defendCard, { badgeText: 'ĐỠ', badgeClass: 'tag-phom', extraClass: pair.defendCard.suitIdx === AppState.tanTrumpSuit ? 'is-trump-card' : '' })}</div>`
-                        : `<span style="font-size:9.5px; color:#fca5a5; margin-top:4px; font-weight:800;">Chưa đỡ!</span>`}
-                </div>
-            `).join('');
-            centerZone.innerHTML = `<div style="display:flex; flex-wrap:wrap; gap:8px; justify-content:center;">${pairsHTML}</div>`;
+            const pairsHTML = AppState.tanTablePairs.map((pair, pIdx) => {
+                const atkExtra = `tan-table-card${pair.attackCard.suitIdx === AppState.tanTrumpSuit ? ' is-trump-card' : ''}`;
+                const defExtra = pair.defendCard
+                    ? `tan-table-card${pair.defendCard.suitIdx === AppState.tanTrumpSuit ? ' is-trump-card' : ''}`
+                    : '';
+                return `
+                    <div class="tan-pair-slot">
+                        <div class="tan-pair-header">
+                            <span>Cặp #${pIdx + 1}</span>
+                            <span class="tan-pair-status ${pair.defendCard ? 'defended' : 'pending'}">${pair.defendCard ? 'Đã đỡ' : 'Chờ đỡ'}</span>
+                        </div>
+                        <div class="tan-pair-cards">
+                            <div class="tan-card-col">
+                                <span class="tan-col-label">TẤN</span>
+                                ${renderCardHTML(pair.attackCard, { extraClass: atkExtra })}
+                            </div>
+                            <span class="tan-pair-arrow">${pair.defendCard ? '🛡️' : '⚔️'}</span>
+                            <div class="tan-card-col">
+                                <span class="tan-col-label">ĐỠ</span>
+                                ${pair.defendCard
+                                    ? renderCardHTML(pair.defendCard, { extraClass: defExtra })
+                                    : `<div class="tan-empty-defend">?</div>`}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            centerZone.innerHTML = `<div class="tan-pairs-grid">${pairsHTML}</div>`;
         } else {
             const atk = AppState.players[AppState.tanAttackerIdx];
             const def = AppState.players[AppState.tanDefenderIdx];
@@ -4082,25 +4380,32 @@ function renderHumanHandAndControls() {
         const canPlay = isMyTurn && moveCheck.ok;
         const canPass = isMyTurn && AppState.tlCurrentTrick && AppState.tlCurrentTrick.playerIdx !== 0;
 
+        actionBar.className = 'action-bar action-bar-centered';
         actionBar.innerHTML = `
-            <button class="game-btn btn-primary" ${canPlay ? '' : 'disabled'} onclick="humanPlayTienLen()" title="${moveCheck.reason}">
-                🔥 Đánh Bài ${combo ? `(${combo.label})` : ''}
-            </button>
-            <button class="game-btn btn-danger" ${canPass ? '' : 'disabled'} onclick="humanPassTienLen()">
-                ⏭️ Bỏ Lượt
-            </button>
-            <button class="game-btn btn-success" ${isMyTurn ? '' : 'disabled'} onclick="suggestTienLenMove()">
-                💡 Gợi Ý
-            </button>
-            <button class="game-btn btn-secondary" onclick="toggleSortHumanHand()">
-                🔀 Xếp (${AppState.sortMode === 'rank' ? 'Số' : 'Bộ'})
-            </button>
-            <button class="game-btn btn-secondary" onclick="clearSelectedCards()">
-                ✖ Bỏ Chọn
-            </button>
-            <button class="game-btn btn-secondary" onclick="startNewRound()">
-                🔄 Ván Mới
-            </button>
+            <div class="action-bar-group action-bar-left">
+                <button class="game-btn btn-secondary" onclick="clearSelectedCards()">
+                    ✖ Bỏ Chọn
+                </button>
+                <button class="game-btn btn-success" ${isMyTurn ? '' : 'disabled'} onclick="suggestTienLenMove()">
+                    💡 Gợi Ý
+                </button>
+                <button class="game-btn btn-danger" ${canPass ? '' : 'disabled'} onclick="humanPassTienLen()">
+                    ⏭️ Bỏ Lượt
+                </button>
+            </div>
+            <div class="action-bar-group action-bar-center">
+                <button class="game-btn btn-primary" ${canPlay ? '' : 'disabled'} onclick="humanPlayTienLen()" title="${moveCheck.reason}">
+                    🔥 Đánh Bài ${combo ? `(${combo.label})` : ''}
+                </button>
+            </div>
+            <div class="action-bar-group action-bar-right">
+                <button class="game-btn btn-secondary" onclick="toggleSortHumanHand()">
+                    🔀 Xếp (${AppState.sortMode === 'rank' ? 'Số' : 'Bộ'})
+                </button>
+                <button class="game-btn btn-secondary" onclick="startNewRound()">
+                    🔄 Ván Mới
+                </button>
+            </div>
         `;
     } else if (AppState.mode === 'phom') {
         const canEatNow = isMyTurn && AppState.phomPhase === 'DRAW_OR_EAT' && AppState.lastDiscard && canEatPhomCard(human.hand, AppState.lastDiscard.card);
@@ -4108,23 +4413,30 @@ function renderHumanHandAndControls() {
         const canDiscardNow = isMyTurn && AppState.phomPhase === 'DISCARD' && selectedCards.length === 1 && canLegallyDiscardPhom(human.hand, selectedCards[0]);
         const canDeclareU = isMyTurn && phomSolved && isPhomU(phomSolved);
 
+        actionBar.className = 'action-bar action-bar-centered';
         actionBar.innerHTML = `
-            <button class="game-btn ${canEatNow ? 'btn-glow-eat' : 'btn-secondary'}" ${canEatNow ? '' : 'disabled'} onclick="humanEatPhomCard()">
-                🍽️ Ăn Bài ${AppState.lastDiscard ? `(${getCardLabel52(AppState.lastDiscard.card)})` : ''}
-            </button>
-            <button class="game-btn btn-success" ${canDrawNow ? '' : 'disabled'} onclick="handlePhomDrawClick()">
-                🎴 Bốc Nọc
-            </button>
-            <button class="game-btn btn-primary" ${canDiscardNow ? '' : 'disabled'} onclick="humanDiscardPhomCard()">
-                🔥 Đánh Rác
-            </button>
-            ${canDeclareU ? `<button class="game-btn btn-glow-eat" onclick="triggerPhomShowdown(0, true, ${phomSolved.deadwoodPoints === 0 ? `'Ù Tròn'` : `'Ù Phỏm'`})">🏆 Báo Ù Ngay!</button>` : ''}
-            <button class="game-btn btn-secondary" onclick="toggleSortHumanHand()">
-                🔀 Xếp (${phomSolved ? `${phomSolved.melds.length} Phỏm • ${phomSolved.deadwoodPoints}đ` : ''})
-            </button>
-            <button class="game-btn btn-secondary" onclick="startNewRound()">
-                🔄 Ván Mới
-            </button>
+            <div class="action-bar-group action-bar-left">
+                <button class="game-btn ${canEatNow ? 'btn-glow-eat' : 'btn-secondary'}" ${canEatNow ? '' : 'disabled'} onclick="humanEatPhomCard()">
+                    🍽️ Ăn Bài ${AppState.lastDiscard ? `(${getCardLabel52(AppState.lastDiscard.card)})` : ''}
+                </button>
+                <button class="game-btn btn-success" ${canDrawNow ? '' : 'disabled'} onclick="handlePhomDrawClick()">
+                    🎴 Bốc Nọc
+                </button>
+            </div>
+            <div class="action-bar-group action-bar-center">
+                <button class="game-btn btn-primary" ${canDiscardNow ? '' : 'disabled'} onclick="humanDiscardPhomCard()">
+                    🔥 Đánh Rác
+                </button>
+            </div>
+            <div class="action-bar-group action-bar-right">
+                ${canDeclareU ? `<button class="game-btn btn-glow-eat" onclick="triggerPhomShowdown(0, true, ${phomSolved.deadwoodPoints === 0 ? `'Ù Tròn'` : `'Ù Phỏm'`})">🏆 Báo Ù Ngay!</button>` : ''}
+                <button class="game-btn btn-secondary" onclick="toggleSortHumanHand()">
+                    🔀 Xếp (${phomSolved ? `${phomSolved.melds.length} Phỏm • ${phomSolved.deadwoodPoints}đ` : ''})
+                </button>
+                <button class="game-btn btn-secondary" onclick="startNewRound()">
+                    🔄 Ván Mới
+                </button>
+            </div>
         `;
     } else if (AppState.mode === 'tan') {
         const selCard = selectedCards.length === 1 ? selectedCards[0] : null;
@@ -4134,27 +4446,35 @@ function renderHumanHandAndControls() {
         const canDapBo = isMyTurn && AppState.tanBoutPhase === 'ATTACK' && AppState.tanTablePairs.length > 0 && !undefendedPair;
         const canOmBai = isMyTurn && AppState.tanBoutPhase === 'DEFEND' && undefendedPair;
 
+        actionBar.className = 'action-bar action-bar-centered';
         actionBar.innerHTML = `
-            <button class="game-btn btn-primary" ${canAttackNow ? '' : 'disabled'} onclick="humanAttackTan()">
-                ⚔️ ${AppState.tanTablePairs.length === 0 ? 'Tấn Mở Đầu' : 'Bồi Bài'}
-            </button>
-            <button class="game-btn btn-success" ${canDefendNow ? '' : 'disabled'} onclick="humanDefendTan()">
-                🛡️ Đỡ Bài
-            </button>
-            <button class="game-btn btn-glow-eat" ${canDapBo ? '' : 'disabled'} onclick="humanPassBoutTan()">
-                ✅ Cho Qua (Dập Bộ)
-            </button>
-            <button class="game-btn btn-danger" ${canOmBai ? '' : 'disabled'} onclick="humanTakeAllTan()">
-                📥 Ôm Bài
-            </button>
-            <button class="game-btn btn-secondary" ${isMyTurn ? '' : 'disabled'} onclick="suggestTanMove()">
-                💡 Gợi Ý
-            </button>
-            <button class="game-btn btn-secondary" onclick="startNewRound()">
-                🔄 Ván Mới
-            </button>
+            <div class="action-bar-group action-bar-left">
+                <button class="game-btn btn-success" ${canDefendNow ? '' : 'disabled'} onclick="humanDefendTan()">
+                    🛡️ Đỡ Bài
+                </button>
+                <button class="game-btn btn-danger" ${canOmBai ? '' : 'disabled'} onclick="humanTakeAllTan()">
+                    📥 Ôm Bài
+                </button>
+                <button class="game-btn btn-secondary" ${isMyTurn ? '' : 'disabled'} onclick="suggestTanMove()">
+                    💡 Gợi Ý
+                </button>
+            </div>
+            <div class="action-bar-group action-bar-center">
+                <button class="game-btn btn-primary" ${canAttackNow ? '' : 'disabled'} onclick="humanAttackTan()">
+                    ⚔️ ${AppState.tanTablePairs.length === 0 ? 'Tấn Mở Đầu' : 'Bồi Bài'}
+                </button>
+            </div>
+            <div class="action-bar-group action-bar-right">
+                <button class="game-btn btn-glow-eat" ${canDapBo ? '' : 'disabled'} onclick="humanPassBoutTan()">
+                    ✅ Cho Qua (Dập Bộ)
+                </button>
+                <button class="game-btn btn-secondary" onclick="startNewRound()">
+                    🔄 Ván Mới
+                </button>
+            </div>
         `;
     } else if (AppState.mode === 'chan') {
+        actionBar.className = 'action-bar';
         const selCard = selectedCards.length === 1 ? selectedCards[0] : null;
         const target = AppState.chanActiveCard ? AppState.chanActiveCard.card : null;
         const matchOpts = getChanMatchOptions(human.hand, target);
@@ -4198,6 +4518,7 @@ function renderHumanHandAndControls() {
             </button>
         `;
     } else if (AppState.mode === 'totom') {
+        actionBar.className = 'action-bar';
         const selCard = selectedCards.length === 1 ? selectedCards[0] : null;
         const target = AppState.chanActiveCard ? AppState.chanActiveCard.card : null;
         const eatMeld = target ? findToTomEatMeld(human.hand, target) : null;
@@ -4856,7 +5177,7 @@ function triggerPhomShowdown(uWinnerIdx = null, isU = false, uReason = 'Ù Phỏ
                 : `${r.totalPoints} Điểm ${r.sentCards.length > 0 ? `(Gửi ${r.sentCards.length} lá)` : ''}`;
 
         const meldsHTML = r.melds.map(m =>
-            `<div style="display:inline-flex; gap:2px; background:rgba(16,185,129,0.2); padding:3px; border-radius:6px; border:1px solid #10b981;">
+            `<div style="display:inline-flex; gap:4px; background:rgba(16,185,129,0.2); padding:3px; border-radius:6px; border:1px solid #10b981;">
                 ${m.map(c => renderCardHTML(c, { small: true, animClass: '' })).join('')}
             </div>`
         ).join(' ');
@@ -5934,12 +6255,14 @@ function renderBauCuaUI(winningCounts = AppState.bcLastWinningCounts, tilePayout
             .join('');
 
         return `
-            <div class="mascot-tile ${isWin ? 'winner-tile' : ''}" onclick="placeBauCuaBet(${idx})">
-                <div style="display:flex; justify-content:space-between; width:100%; align-items:center; gap:4px;">
+            <div class="mascot-tile ${userAmt > 0 ? 'has-user-bet' : ''} ${isWin ? 'winner-tile' : ''}" onclick="placeBauCuaBet(${idx})">
+                <div class="mascot-tile-top">
                     <span style="font-size:10px; font-weight:800; color:#92400e;">${m.sub}</span>
                     ${winBadge}
                 </div>
-                <div class="mascot-emoji">${m.emoji}</div>
+                <div class="mascot-medallion">
+                    <div class="mascot-emoji">${m.emoji}</div>
+                </div>
                 <div class="mascot-title">${m.name}</div>
                 <div class="tile-bets-wrap">
                     ${userAmt > 0 ? `<span class="bet-chip-badge">Bạn: ${userAmt.toLocaleString('vi-VN')}</span>` : ''}

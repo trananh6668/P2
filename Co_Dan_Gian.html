@@ -580,36 +580,152 @@
         .special-action-bar {
             width: 100%;
             max-width: 720px;
-            padding: 6px 10px;
-            background: var(--bg-card);
+            padding: 6px 12px;
+            background: linear-gradient(135deg, rgba(26, 34, 50, 0.94), rgba(15, 22, 34, 0.96));
+            backdrop-filter: blur(8px);
             border: 1px solid var(--accent-border);
+            box-shadow: 0 4px 18px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.06);
             border-radius: var(--radius-md);
             display: none;
             flex-wrap: wrap;
-            gap: 7px;
+            gap: 8px;
             align-items: center;
             justify-content: center;
             flex-shrink: 0;
+        }
+
+        .turn-badge-mini {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 11.5px;
+            font-weight: 800;
+            background: rgba(0, 0, 0, 0.36);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            white-space: nowrap;
+        }
+
+        .turn-badge-mini .turn-dot {
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+            box-shadow: 0 0 8px currentColor;
+            flex-shrink: 0;
+        }
+
+        .btn-roll-ready {
+            animation: rollPulseGlow 1.5s ease-in-out infinite;
+        }
+
+        @keyframes rollPulseGlow {
+            0%, 100% {
+                box-shadow: 0 2px 10px var(--accent-soft), 0 0 0 0 rgba(245, 158, 11, 0.45);
+            }
+            50% {
+                box-shadow: 0 4px 16px rgba(245, 158, 11, 0.45), 0 0 0 5px rgba(245, 158, 11, 0);
+            }
         }
 
         .dice-pip-box {
             display: inline-flex;
             align-items: center;
             gap: 6px;
+            min-height: 30px;
         }
 
-        .die-face {
-            width: 28px;
-            height: 28px;
-            border-radius: 6px;
-            background: #f8fafc;
-            color: #0f172a;
+        .die-3d {
+            width: 30px;
+            height: 30px;
+            border-radius: 7px;
+            background: linear-gradient(145deg, #fffdf9 0%, #f1f5f9 68%, #e2e8f0 100%);
+            border: 1px solid rgba(148, 163, 184, 0.65);
+            padding: 4px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            font-weight: 900;
-            font-size: 14px;
-            box-shadow: inset 0 -2px 0 #cbd5e1, 0 2px 5px rgba(0,0,0,0.4);
+            box-shadow: inset 0 -2.5px 0 #cbd5e1, inset 0 1.5px 0 #ffffff, 0 3px 8px rgba(0, 0, 0, 0.45);
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .die-3d.idle {
+            opacity: 0.42;
+            filter: grayscale(0.25);
+        }
+
+        .die-3d.rolling {
+            animation: diceShakeMini 0.14s linear infinite alternate;
+            border-color: var(--accent-light);
+        }
+
+        .die-3d.landed {
+            animation: diceLandPop 0.34s cubic-bezier(0.22, 1.4, 0.36, 1) forwards;
+        }
+
+        .die-3d.special {
+            border-color: #f59e0b;
+            box-shadow: inset 0 -2.5px 0 #fde68a, inset 0 1.5px 0 #ffffff, 0 0 12px rgba(245, 158, 11, 0.68);
+        }
+
+        @keyframes diceShakeMini {
+            0% { transform: translate(-1.5px, -1px) rotate(-10deg) scale(0.95); }
+            50% { transform: translate(1.5px, 1px) rotate(8deg) scale(1.04); }
+            100% { transform: translate(-1px, 1.5px) rotate(-6deg) scale(0.98); }
+        }
+
+        @keyframes diceLandPop {
+            0% { transform: scale(1.26) translateY(-4px); }
+            60% { transform: scale(0.92) translateY(1px); }
+            100% { transform: scale(1) translateY(0); }
+        }
+
+        .die-pips-grid {
+            width: 100%;
+            height: 100%;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            place-items: center;
+        }
+
+        .die-pip {
+            width: 5.2px;
+            height: 5.2px;
+            border-radius: 50%;
+            background: #0f172a;
+            box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.65), 0 0.5px 0 rgba(255, 255, 255, 0.8);
+        }
+
+        .die-pip.red {
+            background: #dc2626;
+        }
+
+        .die-pip.big {
+            width: 7px;
+            height: 7px;
+        }
+
+        .die-total-chip {
+            display: inline-flex;
+            align-items: center;
+            padding: 2px 8px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 800;
+            background: var(--accent-soft);
+            color: var(--accent-light);
+            border: 1px solid var(--accent-border);
+            white-space: nowrap;
+        }
+
+        .die-total-chip.double {
+            background: rgba(245, 158, 11, 0.28);
+            color: #fef08a;
+            border-color: #fbbf24;
+            box-shadow: 0 0 10px rgba(245, 158, 11, 0.35);
         }
 
         .move-choice-pills {
@@ -1321,6 +1437,12 @@
             .brand-logo { width: 30px; height: 30px; font-size: 16px; }
             .brand-text h1 { font-size: 13.5px; }
             .btn { padding: 6px 9px; font-size: 11.5px; min-height: 36px; }
+            .special-action-bar { padding: 5px 8px; gap: 5px; }
+            .turn-badge-mini { padding: 3px 8px; font-size: 10.5px; }
+            .die-3d { width: 26px; height: 26px; border-radius: 6px; padding: 3.5px; }
+            .die-pip { width: 4.5px; height: 4.5px; }
+            .die-pip.big { width: 6px; height: 6px; }
+            .die-total-chip { font-size: 10px; padding: 2px 6px; }
             .player-plate { padding: 5px 8px; min-height: 40px; }
             .plate-name { font-size: 12px; }
             .status-pill { max-width: 105px; font-size: 10px; padding: 2px 7px; }
@@ -1422,6 +1544,7 @@
 
             <!-- Cờ Cá Ngựa Action Bar -->
             <div class="special-action-bar" id="canguaActionBar">
+                <span class="turn-badge-mini" id="canguaTurnChip"></span>
                 <button class="btn btn-gold" id="btnCaNguaRoll" onclick="CaNguaGame.rollDice()">🎲 Đổ Xúc Xắc</button>
                 <div class="dice-pip-box" id="canguaDicePips"></div>
                 <span id="canguaDiceInfo" style="font-size:12px;font-weight:700;color:var(--accent-light);">
@@ -1433,6 +1556,7 @@
             <!-- Cờ Tỷ Phú Action Bar -->
             <div class="special-action-bar" id="typhuActionBar">
                 <button class="btn btn-gold" id="btnTpRoll" onclick="TyPhuGame.rollDice()">🎲 Đổ Xúc Xắc</button>
+                <div class="dice-pip-box" id="typhuDicePips"></div>
                 <button class="btn btn-action-success" id="btnTpBuy" onclick="TyPhuGame.buyProperty()" disabled>🏠 Mua Đất</button>
                 <button class="btn btn-action-primary" id="btnTpUpgrade" onclick="TyPhuGame.upgradeProperty()" disabled>🏗 Xây Nhà</button>
                 <button class="btn btn-action-danger" id="btnTpBail" onclick="TyPhuGame.payBail()" style="display:none;">💳 Nộp Phạt Ra Tù ($100)</button>
@@ -1820,6 +1944,7 @@
         const SoundFX = {
             enabled: true,
             ctx: null,
+            noiseBuf: null,
 
             init() {
                 try {
@@ -1838,6 +1963,43 @@
                 const btn = document.getElementById('btnSound');
                 if (btn) btn.textContent = this.enabled ? '🔊' : '🔇';
                 App.showToast(this.enabled ? 'Đã bật âm thanh hiệu ứng' : 'Đã tắt âm thanh');
+            },
+
+            getNoiseBuffer() {
+                if (!this.ctx) return null;
+                if (!this.noiseBuf) {
+                    const len = Math.floor(this.ctx.sampleRate * 0.2);
+                    const buf = this.ctx.createBuffer(1, len, this.ctx.sampleRate);
+                    const data = buf.getChannelData(0);
+                    for (let i = 0; i < len; i++) data[i] = Math.random() * 2 - 1;
+                    this.noiseBuf = buf;
+                }
+                return this.noiseBuf;
+            },
+
+            playNoiseBurst(dur = 0.03, filterFreq = 1800, q = 3, vol = 0.14) {
+                if (!this.enabled) return;
+                try {
+                    this.init();
+                    if (!this.ctx) return;
+                    const buf = this.getNoiseBuffer();
+                    if (!buf) return;
+                    const now = this.ctx.currentTime;
+                    const src = this.ctx.createBufferSource();
+                    src.buffer = buf;
+                    const filter = this.ctx.createBiquadFilter();
+                    filter.type = 'bandpass';
+                    filter.frequency.setValueAtTime(filterFreq, now);
+                    filter.Q.setValueAtTime(q, now);
+                    const gain = this.ctx.createGain();
+                    gain.gain.setValueAtTime(vol, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + dur);
+                    src.connect(filter);
+                    filter.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    src.start(now);
+                    src.stop(now + dur + 0.01);
+                } catch (e) {}
             },
 
             playTone(freqStart, freqEnd, dur, type = 'triangle', vol = 0.22) {
@@ -1867,6 +2029,42 @@
                     setTimeout(() => this.playTone(250 + i * 75, 120, 0.045, 'square', 0.15), ms);
                 });
             },
+            playDiceShake() {
+                [0, 45, 95].forEach((ms, i) => {
+                    setTimeout(() => {
+                        this.playNoiseBurst(0.032, 2000 + i * 320, 2.6, 0.13);
+                        this.playTone(300 + i * 55, 170, 0.028, 'triangle', 0.08);
+                    }, ms);
+                });
+            },
+            playDiceBounce(strength = 1) {
+                const s = Math.max(0.25, Math.min(1, strength));
+                this.playTone(210 + s * 130, 92, 0.04, 'triangle', 0.13 * s);
+                this.playNoiseBurst(0.028, 1650 + s * 1150, 3.2, 0.15 * s);
+            },
+            playDiceLand() {
+                this.playTone(330, 145, 0.042, 'sine', 0.13);
+                this.playNoiseBurst(0.022, 2350, 3.8, 0.09);
+            },
+            playDiceSpecial() {
+                [659, 880, 1175].forEach((f, i) => {
+                    setTimeout(() => this.playTone(f, f * 1.03, 0.16, 'sine', 0.20), i * 75);
+                });
+            },
+            playStep() { this.playTone(290, 140, 0.038, 'triangle', 0.14); },
+            playBuild() {
+                this.playTone(523, 523, 0.09, 'triangle', 0.18);
+                setTimeout(() => this.playTone(784, 784, 0.14, 'triangle', 0.20), 75);
+            },
+            playCard() {
+                this.playNoiseBurst(0.08, 1250, 1.8, 0.12);
+                setTimeout(() => this.playTone(660, 880, 0.12, 'sine', 0.16), 55);
+            },
+            playJail() {
+                [460, 310, 220].forEach((f, i) => {
+                    setTimeout(() => this.playTone(f, f * 0.9, 0.12, 'sawtooth', 0.15), i * 90);
+                });
+            },
             playCoin() { this.playTone(987, 1318, 0.14, 'sine', 0.20); },
             playCheck() { this.playTone(540, 720, 0.16, 'sine', 0.25); },
             playWin() {
@@ -1878,29 +2076,460 @@
 
         /**
          * ============================================================================
-         * 2. ANIMATION & VISUAL EFFECTS ENGINE (AnimFX)
+         * 2. ANIMATION, PARTICLE & 3D PHYSICS DICE ENGINE (AnimFX & DiceFX)
          * ============================================================================
          */
+        const DiceFX = {
+            active: null,
+            rollSeq: 0,
+
+            FACES: [
+                { val: 1, n: [0, 0, 1],  u: [1, 0, 0],  v: [0, 1, 0] },
+                { val: 6, n: [0, 0, -1], u: [-1, 0, 0], v: [0, 1, 0] },
+                { val: 2, n: [0, -1, 0], u: [1, 0, 0],  v: [0, 0, 1] },
+                { val: 5, n: [0, 1, 0],  u: [1, 0, 0],  v: [0, 0, -1] },
+                { val: 3, n: [1, 0, 0],  u: [0, 0, -1], v: [0, 1, 0] },
+                { val: 4, n: [-1, 0, 0], u: [0, 0, 1],  v: [0, 1, 0] }
+            ],
+
+            TARGET_ROT: {
+                1: { rx: 0, ry: 0 },
+                2: { rx: -Math.PI / 2, ry: 0 },
+                3: { rx: 0, ry: -Math.PI / 2 },
+                4: { rx: 0, ry: Math.PI / 2 },
+                5: { rx: Math.PI / 2, ry: 0 },
+                6: { rx: Math.PI, ry: 0 }
+            },
+
+            PIP_UV: {
+                1: [[0, 0]],
+                2: [[-0.46, -0.46], [0.46, 0.46]],
+                3: [[-0.48, -0.48], [0, 0], [0.48, 0.48]],
+                4: [[-0.46, -0.46], [0.46, -0.46], [-0.46, 0.46], [0.46, 0.46]],
+                5: [[-0.48, -0.48], [0.48, -0.48], [0, 0], [-0.48, 0.48], [0.48, 0.48]],
+                6: [[-0.46, -0.50], [0.46, -0.50], [-0.46, 0], [0.46, 0], [-0.46, 0.50], [0.46, 0.50]]
+            },
+
+            PIP_GRID_MAP: {
+                1: [4],
+                2: [2, 6],
+                3: [2, 4, 6],
+                4: [0, 2, 6, 8],
+                5: [0, 2, 4, 6, 8],
+                6: [0, 2, 3, 5, 6, 8]
+            },
+
+            isRolling() {
+                return this.active !== null;
+            },
+
+            cancel() {
+                this.rollSeq++;
+                this.active = null;
+            },
+
+            rotateVec(vec, rx, ry, rz) {
+                const cx = Math.cos(rx), sx = Math.sin(rx);
+                const y1 = vec[1] * cx - vec[2] * sx;
+                const z1 = vec[1] * sx + vec[2] * cx;
+                const x1 = vec[0];
+
+                const cy = Math.cos(ry), sy = Math.sin(ry);
+                const x2 = x1 * cy + z1 * sy;
+                const z2 = -x1 * sy + z1 * cy;
+                const y2 = y1;
+
+                const cz = Math.cos(rz), sz = Math.sin(rz);
+                return [
+                    x2 * cz - y2 * sz,
+                    x2 * sz + y2 * cz,
+                    z2
+                ];
+            },
+
+            renderMiniDiceHTML(values, stateClass = '', extraLabel = '') {
+                if (!values || values.length === 0) return '';
+                const diceHtml = values.map(val => {
+                    const v = Math.max(1, Math.min(6, val | 0));
+                    const activeCells = this.PIP_GRID_MAP[v] || [4];
+                    const isRed = (v === 1 || v === 4);
+                    const isBig = (v === 1);
+                    let cells = '';
+                    for (let i = 0; i < 9; i++) {
+                        if (activeCells.includes(i)) {
+                            cells += `<span class="die-pip${isRed ? ' red' : ''}${isBig ? ' big' : ''}"></span>`;
+                        } else {
+                            cells += '<span></span>';
+                        }
+                    }
+                    return `<span class="die-3d ${stateClass}" title="Xúc xắc ${v}"><span class="die-pips-grid">${cells}</span></span>`;
+                }).join('');
+                return diceHtml + (extraLabel ? `<span class="die-total-chip ${stateClass.includes('special') ? 'double' : ''}">${extraLabel}</span>` : '');
+            },
+
+            render3DDie(ctx, sx, sy, heightZ, halfSize, rx, ry, rz, opts = {}) {
+                const liftScale = 1 + heightZ * 0.0045;
+                const drawX = sx;
+                const drawY = sy - heightZ * 0.85;
+                const fov = 6.2;
+                const scale = halfSize * liftScale;
+
+                // Soft dynamic ground shadow
+                ctx.save();
+                const shAlpha = Math.max(0.14, 0.44 - heightZ * 0.0048);
+                const shRx = halfSize * (1.16 + heightZ * 0.0085);
+                const shRy = halfSize * (0.64 + heightZ * 0.0055);
+                ctx.fillStyle = `rgba(0, 0, 0, ${shAlpha.toFixed(3)})`;
+                ctx.beginPath();
+                ctx.ellipse(sx + 4 + heightZ * 0.28, sy + halfSize * 0.72 + heightZ * 0.34, shRx, shRy, 0, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+
+                if (opts.highlight) {
+                    ctx.save();
+                    const glow = ctx.createRadialGradient(drawX, drawY, halfSize * 0.4, drawX, drawY, halfSize * 2.25);
+                    glow.addColorStop(0, opts.glowColor || 'rgba(251, 191, 36, 0.46)');
+                    glow.addColorStop(1, 'rgba(251, 191, 36, 0)');
+                    ctx.fillStyle = glow;
+                    ctx.beginPath();
+                    ctx.arc(drawX, drawY, halfSize * 2.25, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.restore();
+                }
+
+                const visibleFaces = [];
+                for (const f of this.FACES) {
+                    const rn = this.rotateVec(f.n, rx, ry, rz);
+                    if (rn[2] <= 0.04) continue;
+                    const ru = this.rotateVec(f.u, rx, ry, rz);
+                    const rv = this.rotateVec(f.v, rx, ry, rz);
+                    visibleFaces.push({ val: f.val, rn, ru, rv });
+                }
+                visibleFaces.sort((a, b) => a.rn[2] - b.rn[2]);
+
+                const projectPt = (pt) => {
+                    const w = fov / (fov - Math.min(2.8, pt[2]));
+                    return {
+                        x: drawX + pt[0] * scale * w,
+                        y: drawY + pt[1] * scale * w
+                    };
+                };
+
+                // Key directional light from top-left-front
+                const lx = -0.38, ly = -0.52, lz = 0.76;
+
+                for (const f of visibleFaces) {
+                    const { val, rn, ru, rv } = f;
+                    const c00 = projectPt([rn[0] - ru[0] - rv[0], rn[1] - ru[1] - rv[1], rn[2] - ru[2] - rv[2]]);
+                    const c10 = projectPt([rn[0] + ru[0] - rv[0], rn[1] + ru[1] - rv[1], rn[2] + ru[2] - rv[2]]);
+                    const c11 = projectPt([rn[0] + ru[0] + rv[0], rn[1] + ru[1] + rv[1], rn[2] + ru[2] + rv[2]]);
+                    const c01 = projectPt([rn[0] - ru[0] + rv[0], rn[1] - ru[1] + rv[1], rn[2] - ru[2] + rv[2]]);
+
+                    const light = Math.max(0, Math.min(1, (rn[0] * lx + rn[1] * ly + rn[2] * lz + 0.35) / 1.25));
+                    const rCol = Math.round(196 + light * 59);
+                    const gCol = Math.round(202 + light * 51);
+                    const bCol = Math.round(214 + light * 34);
+                    const faceColor = `rgb(${rCol},${gCol},${bCol})`;
+
+                    ctx.save();
+                    ctx.beginPath();
+                    ctx.moveTo(c00.x, c00.y);
+                    ctx.lineTo(c10.x, c10.y);
+                    ctx.lineTo(c11.x, c11.y);
+                    ctx.lineTo(c01.x, c01.y);
+                    ctx.closePath();
+                    ctx.fillStyle = faceColor;
+                    ctx.fill();
+                    ctx.strokeStyle = opts.highlight ? 'rgba(245, 158, 11, 0.85)' : 'rgba(100, 116, 139, 0.58)';
+                    ctx.lineWidth = Math.max(0.9, halfSize * 0.06);
+                    ctx.lineJoin = 'round';
+                    ctx.stroke();
+
+                    const Cx = (c00.x + c10.x + c11.x + c01.x) * 0.25;
+                    const Cy = (c00.y + c10.y + c11.y + c01.y) * 0.25;
+                    const Ux = ((c10.x + c11.x) - (c00.x + c01.x)) * 0.25;
+                    const Uy = ((c10.y + c11.y) - (c00.y + c01.y)) * 0.25;
+                    const Vx = ((c01.x + c11.x) - (c00.x + c10.x)) * 0.25;
+                    const Vy = ((c01.y + c11.y) - (c00.y + c10.y)) * 0.25;
+                    const det = Math.abs(Ux * Vy - Uy * Vx);
+
+                    if (det > 1e-3) {
+                        ctx.transform(Ux, Uy, Vx, Vy, Cx, Cy);
+
+                        // Inner beveled face plate
+                        const plateR = Math.round(212 + light * 43);
+                        const plateG = Math.round(216 + light * 38);
+                        const plateB = Math.round(224 + light * 26);
+                        ctx.fillStyle = `rgb(${plateR},${plateG},${plateB})`;
+                        ctx.beginPath();
+                        if (ctx.roundRect) {
+                            ctx.roundRect(-0.88, -0.88, 1.76, 1.76, 0.26);
+                        } else {
+                            ctx.rect(-0.88, -0.88, 1.76, 1.76);
+                        }
+                        ctx.fill();
+
+                        ctx.strokeStyle = `rgba(255, 255, 255, ${(0.25 + light * 0.45).toFixed(2)})`;
+                        ctx.lineWidth = 0.05;
+                        ctx.stroke();
+
+                        // Crisp pips
+                        const pips = this.PIP_UV[val];
+                        const isCrimson = (val === 1 || val === 4);
+                        const pipR = val === 1 ? 0.27 : 0.175;
+                        for (const [pu, pv] of pips) {
+                            ctx.fillStyle = isCrimson ? '#dc2626' : '#0f172a';
+                            ctx.beginPath();
+                            ctx.arc(pu, pv, pipR, 0, Math.PI * 2);
+                            ctx.fill();
+
+                            // Subtle top-left specular gleam inside pip socket
+                            ctx.fillStyle = isCrimson ? 'rgba(254, 202, 202, 0.35)' : 'rgba(255, 255, 255, 0.16)';
+                            ctx.beginPath();
+                            ctx.arc(pu - pipR * 0.26, pv - pipR * 0.26, pipR * 0.32, 0, Math.PI * 2);
+                            ctx.fill();
+                        }
+                    }
+                    ctx.restore();
+                }
+            },
+
+            renderStaticDie(ctx, x, y, halfSize, value, yaw = 0, highlight = false) {
+                const v = Math.max(1, Math.min(6, value | 0));
+                const t = this.TARGET_ROT[v] || this.TARGET_ROT[1];
+                // Subtle isometric display tilt so 3D depth & bevels remain clearly visible while resting
+                this.render3DDie(ctx, x, y, 0, halfSize, t.rx + 0.16, t.ry - 0.12, yaw, { highlight });
+            },
+
+            roll(opts) {
+                const values = opts.values && opts.values.length ? opts.values : [1];
+                const speed = App.moveSpeed;
+                const rollDur = speed === 'slow' ? 1220 : (speed === 'normal' ? 860 : 480);
+                const holdDur = speed === 'slow' ? 280 : (speed === 'normal' ? 220 : 120);
+                const now = performance.now();
+                const seq = ++this.rollSeq;
+
+                const dice = values.map((val, idx) => {
+                    const v = Math.max(1, Math.min(6, val | 0));
+                    const target = this.TARGET_ROT[v] || this.TARGET_ROT[1];
+                    const lt = (opts.landTargets && opts.landTargets[idx]) || {
+                        x: (opts.trayCenter ? opts.trayCenter.x : App.boardW / 2) + (values.length > 1 ? (idx === 0 ? -24 : 24) : 0),
+                        y: (opts.trayCenter ? opts.trayCenter.y : App.boardH / 2)
+                    };
+                    const dirSignX = (idx % 2 === 0 ? 1 : -1);
+                    const startRx = target.rx - Math.PI * 2 * (2 + Math.floor(Math.random() * 2));
+                    const startRy = target.ry + dirSignX * Math.PI * 2 * (2 + Math.floor(Math.random() * 2));
+                    const endRz = (idx % 2 === 0 ? -1 : 1) * (0.06 + Math.random() * 0.10);
+                    const startRz = endRz + dirSignX * Math.PI * (2.5 + Math.random());
+
+                    return {
+                        val: v,
+                        originX: (opts.originX != null ? opts.originX : lt.x) + idx * 14,
+                        originY: (opts.originY != null ? opts.originY : lt.y) + idx * 8,
+                        landX: lt.x,
+                        landY: lt.y,
+                        arcSide: (idx === 0 ? -1 : 1) * (12 + Math.random() * 12),
+                        startRx, startRy, startRz,
+                        endRx: target.rx,
+                        endRy: target.ry,
+                        endRz,
+                        rx: startRx, ry: startRy, rz: startRz,
+                        curX: opts.originX != null ? opts.originX : lt.x,
+                        curY: opts.originY != null ? opts.originY : lt.y,
+                        heightZ: 0,
+                        delayOffset: idx * 0.045,
+                        bounceStage: 0
+                    };
+                });
+
+                this.active = {
+                    seq,
+                    game: opts.game,
+                    startTime: now,
+                    rollDur,
+                    holdDur,
+                    dieSize: opts.dieSize || 24,
+                    trayCenter: opts.trayCenter || null,
+                    trayRadius: opts.trayRadius || 0,
+                    accentColor: opts.accentColor || '#f59e0b',
+                    isSpecial: !!opts.isSpecial,
+                    specialLabel: opts.specialLabel || '',
+                    specialFired: false,
+                    landSoundPlayed: false,
+                    onComplete: opts.onComplete,
+                    dice
+                };
+
+                SoundFX.playDiceShake();
+                AnimFX.startLoop();
+            },
+
+            step(now) {
+                if (!this.active) return false;
+                const st = this.active;
+                const elapsed = Math.max(0, now - st.startTime);
+                const totalDur = st.rollDur + st.holdDur;
+
+                if (elapsed >= totalDur) {
+                    const cb = st.onComplete;
+                    const seq = st.seq;
+                    this.active = null;
+                    if (cb && this.rollSeq === seq) cb();
+                    return false;
+                }
+
+                const globalT = Math.min(1, elapsed / st.rollDur);
+
+                for (const d of st.dice) {
+                    const t = Math.max(0, Math.min(1, (globalT - d.delayOffset) / (1 - d.delayOffset)));
+                    // Horizontal path with ease-out + gentle curve
+                    const horizEase = 1 - Math.pow(1 - t, 2.7);
+                    const curve = Math.sin(t * Math.PI) * d.arcSide * (1 - t);
+                    d.curX = d.originX + (d.landX - d.originX) * horizEase + curve;
+                    d.curY = d.originY + (d.landY - d.originY) * horizEase;
+
+                    // 3 decaying physical bounces
+                    if (t < 0.44) {
+                        d.heightZ = Math.sin((t / 0.44) * Math.PI) * 52;
+                    } else if (t < 0.72) {
+                        if (d.bounceStage < 1) {
+                            d.bounceStage = 1;
+                            SoundFX.playDiceBounce(1.0);
+                            AnimFX.addParticles(d.curX, d.curY + 8, 5, ['#cbd5e1', '#fef08a'], { speed: 42, size: 2.5, life: 280 });
+                        }
+                        d.heightZ = Math.sin(((t - 0.44) / 0.28) * Math.PI) * 24;
+                    } else if (t < 0.88) {
+                        if (d.bounceStage < 2) {
+                            d.bounceStage = 2;
+                            SoundFX.playDiceBounce(0.62);
+                            AnimFX.addParticles(d.curX, d.curY + 8, 4, ['#e2e8f0', '#fbbf24'], { speed: 28, size: 2.0, life: 220 });
+                        }
+                        d.heightZ = Math.sin(((t - 0.72) / 0.16) * Math.PI) * 9;
+                    } else {
+                        if (d.bounceStage < 3) {
+                            d.bounceStage = 3;
+                            SoundFX.playDiceBounce(0.32);
+                        }
+                        d.heightZ = 0;
+                    }
+
+                    // Rotation reaches exact target face at t = 0.88 with subtle damped settle wobble
+                    if (t < 0.88) {
+                        const rotT = t / 0.88;
+                        const rotEase = 1 - Math.pow(1 - rotT, 2.8);
+                        d.rx = d.startRx + (d.endRx - d.startRx) * rotEase;
+                        d.ry = d.startRy + (d.endRy - d.startRy) * rotEase;
+                        d.rz = d.startRz + (d.endRz - d.startRz) * rotEase;
+                    } else {
+                        const settleT = (t - 0.88) / 0.12;
+                        const wobble = Math.sin(settleT * Math.PI * 2) * (1 - settleT) * 0.08;
+                        // Slight resting isometric tilt so side depth stays gorgeous
+                        d.rx = d.endRx + 0.14 * settleT + wobble;
+                        d.ry = d.endRy - 0.10 * settleT - wobble * 0.7;
+                        d.rz = d.endRz;
+                    }
+                }
+
+                if (globalT >= 0.94 && !st.landSoundPlayed) {
+                    st.landSoundPlayed = true;
+                    SoundFX.playDiceLand();
+                }
+
+                if (globalT >= 0.96 && st.isSpecial && !st.specialFired) {
+                    st.specialFired = true;
+                    SoundFX.playDiceSpecial();
+                    const cx = st.dice.reduce((a, d) => a + d.landX, 0) / st.dice.length;
+                    const cy = st.dice.reduce((a, d) => a + d.landY, 0) / st.dice.length;
+                    AnimFX.addParticles(cx, cy, 18, ['#fbbf24', '#fef08a', '#f59e0b', '#ffffff'], { speed: 120, size: 3.5, life: 580 });
+                    if (st.specialLabel) {
+                        AnimFX.addCaptureEffect(cx, cy - 26, st.specialLabel, '#f59e0b', '#fbbf24');
+                    }
+                }
+
+                return true;
+            },
+
+            render(ctx) {
+                if (!this.active || this.active.game !== App.currentGame) return;
+                const st = this.active;
+                const now = performance.now();
+                const t = Math.max(0, Math.min(1, (now - st.startTime) / st.rollDur));
+
+                // Spotlight felt ring if trayRadius > 0 (e.g. Cá Ngựa center hub)
+                if (st.trayCenter && st.trayRadius > 0) {
+                    ctx.save();
+                    const fade = t < 0.12 ? (t / 0.12) : (t >= 1 ? Math.max(0.55, 1 - (now - st.startTime - st.rollDur) / Math.max(1, st.holdDur) * 0.45) : 1);
+                    ctx.globalAlpha = fade;
+                    const grad = ctx.createRadialGradient(
+                        st.trayCenter.x, st.trayCenter.y, st.trayRadius * 0.15,
+                        st.trayCenter.x, st.trayCenter.y, st.trayRadius
+                    );
+                    grad.addColorStop(0, 'rgba(15, 23, 42, 0.88)');
+                    grad.addColorStop(0.75, 'rgba(15, 23, 42, 0.72)');
+                    grad.addColorStop(1, 'rgba(15, 23, 42, 0)');
+                    ctx.fillStyle = grad;
+                    ctx.beginPath();
+                    ctx.arc(st.trayCenter.x, st.trayCenter.y, st.trayRadius, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    ctx.strokeStyle = st.accentColor;
+                    ctx.globalAlpha = fade * 0.45;
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.arc(st.trayCenter.x, st.trayCenter.y, st.trayRadius * 0.82, 0, Math.PI * 2);
+                    ctx.stroke();
+                    ctx.restore();
+                }
+
+                // Draw each 3D die sorted slightly by Y
+                const ordered = st.dice.slice().sort((a, b) => a.curY - b.curY);
+                const landed = t >= 0.90;
+                for (const d of ordered) {
+                    this.render3DDie(ctx, d.curX, d.curY, d.heightZ, st.dieSize, d.rx, d.ry, d.rz, {
+                        highlight: landed && st.isSpecial,
+                        glowColor: 'rgba(251, 191, 36, 0.55)'
+                    });
+                }
+            }
+        };
+
         const AnimFX = {
             moveAnim: null,
             captureEffects: [],
+            particles: [],
+            ambientActive: false,
             rafId: null,
 
             isBusy() {
-                return this.moveAnim !== null;
+                return this.moveAnim !== null || DiceFX.isRolling();
             },
 
             clear() {
                 this.moveAnim = null;
                 this.captureEffects = [];
+                this.particles = [];
+                DiceFX.cancel();
                 if (this.rafId) {
                     cancelAnimationFrame(this.rafId);
                     this.rafId = null;
+                }
+                this.syncAmbient();
+            },
+
+            syncAmbient() {
+                const shouldRun = !document.hidden && (App.currentGame === 'cangua' || App.currentGame === 'typhu');
+                this.ambientActive = shouldRun;
+                if (shouldRun) {
+                    this.startLoop();
                 }
             },
 
             easeInOutCubic(t) {
                 return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+            },
+
+            easeInOutQuad(t) {
+                return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
             },
 
             animateMove(opts) {
@@ -1911,6 +2540,7 @@
                 }
                 this.moveAnim = {
                     ...opts,
+                    kind: 'linear',
                     startTime: performance.now(),
                     duration,
                     curX: opts.fromX,
@@ -1923,10 +2553,69 @@
                 this.startLoop();
             },
 
-            addCaptureEffect(x, y, text, color = '#ef4444') {
-                const duration = App.moveSpeed === 'slow' ? 1350 : (App.moveSpeed === 'normal' ? 900 : 560);
+            animatePath(opts) {
+                const wps = opts.waypoints || [];
+                if (wps.length < 2) {
+                    if (opts.onDone) opts.onDone();
+                    return;
+                }
+                const segCount = wps.length - 1;
+                const baseStep = opts.stepDuration != null
+                    ? opts.stepDuration
+                    : (App.moveSpeed === 'slow' ? 175 : (App.moveSpeed === 'normal' ? 105 : 55));
+                const maxTotal = App.moveSpeed === 'slow' ? 1350 : (App.moveSpeed === 'normal' ? 860 : 460);
+                const stepDuration = Math.min(baseStep, Math.max(36, maxTotal / segCount));
+
+                this.moveAnim = {
+                    ...opts,
+                    kind: 'path',
+                    waypoints: wps,
+                    segCount,
+                    stepDuration,
+                    hopHeight: opts.hopHeight != null ? opts.hopHeight : 14,
+                    trailColor: opts.trailColor || '#fbbf24',
+                    fromX: wps[0].x,
+                    fromY: wps[0].y,
+                    toX: wps[segCount].x,
+                    toY: wps[segCount].y,
+                    curX: wps[0].x,
+                    curY: wps[0].y,
+                    hopOffset: 0,
+                    lastSegFired: 0,
+                    startTime: performance.now()
+                };
+                this.startLoop();
+            },
+
+            addParticles(x, y, count = 12, colors = ['#fbbf24', '#fef08a', '#ffffff'], opts = {}) {
+                const now = performance.now();
+                const speed = opts.speed || 105;
+                const life = opts.life || 520;
+                const size = opts.size || 3.2;
+                const gravity = opts.gravity != null ? opts.gravity : 180;
+                for (let i = 0; i < count; i++) {
+                    if (this.particles.length >= 180) this.particles.shift();
+                    const ang = (Math.PI * 2 * i) / count + (Math.random() - 0.5) * 0.55;
+                    const mag = speed * (0.45 + Math.random() * 0.75);
+                    this.particles.push({
+                        x, y,
+                        vx: Math.cos(ang) * mag,
+                        vy: Math.sin(ang) * mag - speed * 0.28,
+                        size: size * (0.7 + Math.random() * 0.65),
+                        color: colors[i % colors.length],
+                        gravity,
+                        startTime: now,
+                        lastTime: now,
+                        life
+                    });
+                }
+                this.startLoop();
+            },
+
+            addCaptureEffect(x, y, text, color = '#ef4444', borderColor = '#f59e0b') {
+                const duration = App.moveSpeed === 'slow' ? 1350 : (App.moveSpeed === 'normal' ? 920 : 580);
                 this.captureEffects.push({
-                    x, y, text, color,
+                    x, y, text, color, borderColor,
                     startTime: performance.now(),
                     duration
                 });
@@ -1938,37 +2627,95 @@
                 const step = (now) => {
                     let active = false;
                     try {
+                        if (DiceFX.step(now)) active = true;
+
                         if (this.moveAnim) {
-                            const elapsed = now - this.moveAnim.startTime;
-                            const rawT = Math.min(1, elapsed / this.moveAnim.duration);
-                            const eased = this.easeInOutCubic(rawT);
-                            this.moveAnim.curX = this.moveAnim.fromX + (this.moveAnim.toX - this.moveAnim.fromX) * eased;
-                            this.moveAnim.curY = this.moveAnim.fromY + (this.moveAnim.toY - this.moveAnim.fromY) * eased;
-                            if (this.moveAnim.secondary) {
-                                const s = this.moveAnim.secondary;
-                                this.moveAnim.secCurX = s.fromX + (s.toX - s.fromX) * eased;
-                                this.moveAnim.secCurY = s.fromY + (s.toY - s.fromY) * eased;
-                            }
-                            if (rawT >= 1) {
-                                const doneCb = this.moveAnim.onDone;
-                                this.moveAnim = null;
-                                if (doneCb) doneCb();
+                            if (this.moveAnim.kind === 'path') {
+                                const m = this.moveAnim;
+                                const elapsed = Math.max(0, now - m.startTime);
+                                const totalDur = m.segCount * m.stepDuration;
+                                const segIdx = Math.max(0, Math.min(m.segCount - 1, Math.floor(elapsed / m.stepDuration)));
+
+                                // Fire segment arrival events & trail dust
+                                while (m.lastSegFired < Math.min(m.segCount, Math.floor(elapsed / m.stepDuration))) {
+                                    m.lastSegFired++;
+                                    const wp = m.waypoints[m.lastSegFired];
+                                    SoundFX.playStep();
+                                    this.addParticles(wp.x, wp.y, 3, [m.trailColor, '#ffffff'], { speed: 34, size: 2.2, life: 260, gravity: 60 });
+                                    if (wp.onReach) wp.onReach();
+                                }
+
+                                if (elapsed >= totalDur) {
+                                    while (m.lastSegFired < m.segCount) {
+                                        m.lastSegFired++;
+                                        const wp = m.waypoints[m.lastSegFired];
+                                        if (wp.onReach) wp.onReach();
+                                    }
+                                    const doneCb = m.onDone;
+                                    this.moveAnim = null;
+                                    if (doneCb) doneCb();
+                                } else {
+                                    const segT = Math.max(0, Math.min(1, (elapsed - segIdx * m.stepDuration) / m.stepDuration));
+                                    const eased = this.easeInOutQuad(segT);
+                                    const p0 = m.waypoints[segIdx];
+                                    const p1 = m.waypoints[segIdx + 1];
+                                    m.curX = p0.x + (p1.x - p0.x) * eased;
+                                    m.curY = p0.y + (p1.y - p0.y) * eased;
+                                    m.hopOffset = Math.sin(segT * Math.PI) * m.hopHeight;
+                                    active = true;
+                                }
                             } else {
-                                active = true;
+                                const elapsed = Math.max(0, now - this.moveAnim.startTime);
+                                const rawT = Math.max(0, Math.min(1, elapsed / this.moveAnim.duration));
+                                const eased = this.easeInOutCubic(rawT);
+                                this.moveAnim.curX = this.moveAnim.fromX + (this.moveAnim.toX - this.moveAnim.fromX) * eased;
+                                this.moveAnim.curY = this.moveAnim.fromY + (this.moveAnim.toY - this.moveAnim.fromY) * eased;
+                                if (this.moveAnim.secondary) {
+                                    const s = this.moveAnim.secondary;
+                                    this.moveAnim.secCurX = s.fromX + (s.toX - s.fromX) * eased;
+                                    this.moveAnim.secCurY = s.fromY + (s.toY - s.fromY) * eased;
+                                }
+                                if (rawT >= 1) {
+                                    const doneCb = this.moveAnim.onDone;
+                                    this.moveAnim = null;
+                                    if (doneCb) doneCb();
+                                } else {
+                                    active = true;
+                                }
                             }
+                        }
+
+                        // Step particles
+                        if (this.particles.length > 0) {
+                            const kept = [];
+                            for (const pt of this.particles) {
+                                if (now - pt.startTime >= pt.life) continue;
+                                const dt = Math.max(0, Math.min(0.05, (now - pt.lastTime) / 1000));
+                                pt.lastTime = Math.max(pt.lastTime, now);
+                                pt.x += pt.vx * dt;
+                                pt.y += pt.vy * dt;
+                                pt.vy += pt.gravity * dt;
+                                pt.vx *= 0.96;
+                                kept.push(pt);
+                            }
+                            this.particles = kept;
+                            if (this.particles.length > 0) active = true;
                         }
 
                         this.captureEffects = this.captureEffects.filter(ef => (now - ef.startTime) < ef.duration);
                         if (this.captureEffects.length > 0) active = true;
+
+                        if (DiceFX.isRolling()) active = true;
 
                         const engine = App.getActiveEngine();
                         if (engine) engine.render();
                     } catch (err) {
                         console.error('AnimFX error:', err);
                         this.moveAnim = null;
+                        DiceFX.cancel();
                     }
 
-                    if (active) {
+                    if ((active || this.ambientActive) && !document.hidden) {
                         this.rafId = requestAnimationFrame(step);
                     } else {
                         this.rafId = null;
@@ -2017,14 +2764,28 @@
 
                     if (this.moveAnim.drawFn) {
                         ctx.save();
-                        this.moveAnim.drawFn(ctx, this.moveAnim.curX, this.moveAnim.curY);
+                        this.moveAnim.drawFn(ctx, this.moveAnim.curX, this.moveAnim.curY, this.moveAnim.hopOffset || 0);
                         ctx.restore();
                     }
                 }
 
+                // Render particles
+                for (const pt of this.particles) {
+                    const t = Math.min(1, (now - pt.startTime) / pt.life);
+                    ctx.save();
+                    ctx.globalAlpha = Math.max(0, 1 - t * t);
+                    ctx.fillStyle = pt.color;
+                    ctx.beginPath();
+                    ctx.arc(pt.x, pt.y, pt.size * (1 - t * 0.35), 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.restore();
+                }
+
+                // Render capture/floating effects
                 for (const ef of this.captureEffects) {
                     const t = Math.min(1, (now - ef.startTime) / ef.duration);
                     const alpha = 1 - Math.pow(t, 1.5);
+                    const popScale = t < 0.16 ? (0.75 + (t / 0.16) * 0.35) : (t < 0.30 ? (1.10 - ((t - 0.16) / 0.14) * 0.10) : 1);
 
                     ctx.save();
                     ctx.strokeStyle = ef.color || '#ef4444';
@@ -2038,16 +2799,19 @@
                     const clampX = Math.max(105, Math.min(App.boardW - 105, ef.x));
                     const clampY = Math.max(26, floatY);
 
+                    ctx.translate(clampX, clampY);
+                    ctx.scale(popScale, popScale);
+
                     ctx.font = 'bold 12.5px sans-serif';
                     const textW = ctx.measureText(ef.text).width + 22;
                     ctx.fillStyle = 'rgba(15, 23, 42, 0.94)';
-                    ctx.strokeStyle = '#f59e0b';
+                    ctx.strokeStyle = ef.borderColor || '#f59e0b';
                     ctx.lineWidth = 1.8;
                     ctx.beginPath();
                     if (ctx.roundRect) {
-                        ctx.roundRect(clampX - textW / 2, clampY - 13, textW, 26, 13);
+                        ctx.roundRect(-textW / 2, -13, textW, 26, 13);
                     } else {
-                        ctx.rect(clampX - textW / 2, clampY - 13, textW, 26);
+                        ctx.rect(-textW / 2, -13, textW, 26);
                     }
                     ctx.fill();
                     ctx.stroke();
@@ -2055,9 +2819,11 @@
                     ctx.fillStyle = '#fef08a';
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'middle';
-                    ctx.fillText(ef.text, clampX, clampY);
+                    ctx.fillText(ef.text, 0, 0);
                     ctx.restore();
                 }
+
+                DiceFX.render(ctx);
             }
         };
 
@@ -4168,6 +4934,7 @@
                 const arena = document.getElementById('boardArena');
                 if (arena) ro.observe(arena);
                 window.addEventListener('resize', () => this.scheduleFitBoard());
+                document.addEventListener('visibilitychange', () => AnimFX.syncAmbient());
 
                 XiangqiGame.init();
                 ChessGame.init();
@@ -4344,6 +5111,20 @@
                         }
                         return;
                     }
+                    if (e.code === 'Space' || e.key === ' ') {
+                        if (!document.querySelector('.modal-backdrop.open')) {
+                            if (this.currentGame === 'cangua' && CaNguaGame.phase === 'ROLL' && !CaNguaGame.isCurrentTurnAI() && !CaNguaGame.gameOver && !AnimFX.isBusy()) {
+                                e.preventDefault();
+                                CaNguaGame.rollDice();
+                                return;
+                            }
+                            if (this.currentGame === 'typhu' && TyPhuGame.phase === 'ROLL' && !TyPhuGame.isCurrentTurnAI() && !TyPhuGame.gameOver && !AnimFX.isBusy()) {
+                                e.preventDefault();
+                                TyPhuGame.rollDice();
+                                return;
+                            }
+                        }
+                    }
                     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
                         e.preventDefault();
                         this.undoMove();
@@ -4487,9 +5268,11 @@
                 this.boardFlipped = (supportsFlip && this.mode === 'ai' && this.humanSide === -1);
                 this.boardW = gameKey === 'xiangqi' ? 630 : 640;
                 this.boardH = gameKey === 'xiangqi' ? 700 : 640;
+                if (this.canvas) this.canvas.style.cursor = 'pointer';
 
                 this.resetEvalDisplay();
                 this.fitBoardToViewport();
+                AnimFX.syncAmbient();
 
                 try {
                     const engine = this.getActiveEngine();
@@ -7683,16 +8466,16 @@
                 3: [[13,7],[12,7],[11,7],[10,7],[9,7],[8,7]]
             },
             stableSpots: {
-                0: [[1.8,1.8],[1.8,3.8],[3.8,1.8],[3.8,3.8]],
-                1: [[1.8,10.2],[1.8,12.2],[3.8,10.2],[3.8,12.2]],
-                2: [[10.2,10.2],[10.2,12.2],[12.2,10.2],[12.2,12.2]],
-                3: [[10.2,1.8],[10.2,3.8],[12.2,1.8],[12.2,3.8]]
+                0: [[1.5,1.5],[1.5,3.5],[3.5,1.5],[3.5,3.5]],
+                1: [[1.5,10.5],[1.5,12.5],[3.5,10.5],[3.5,12.5]],
+                2: [[10.5,10.5],[10.5,12.5],[12.5,10.5],[12.5,12.5]],
+                3: [[10.5,1.5],[10.5,3.5],[12.5,1.5],[12.5,3.5]]
             },
             playerDefs: [
-                { id: 0, name: 'Đỏ',         color: '#ef4444', light: '#fecaca', startIdx: 0,  doorIdx: 50 },
-                { id: 1, name: 'Xanh Dương', color: '#3b82f6', light: '#bfdbfe', startIdx: 13, doorIdx: 11 },
-                { id: 2, name: 'Vàng',       color: '#eab308', light: '#fef08a', startIdx: 26, doorIdx: 24 },
-                { id: 3, name: 'Xanh Lá',    color: '#10b981', light: '#a7f3d0', startIdx: 39, doorIdx: 37 }
+                { id: 0, name: 'Đỏ',         color: '#ef4444', dark: '#991b1b', light: '#fecaca', startIdx: 0,  doorIdx: 50 },
+                { id: 1, name: 'Xanh Dương', color: '#3b82f6', dark: '#1e40af', light: '#bfdbfe', startIdx: 13, doorIdx: 11 },
+                { id: 2, name: 'Vàng',       color: '#eab308', dark: '#a16207', light: '#fef08a', startIdx: 26, doorIdx: 24 },
+                { id: 3, name: 'Xanh Lá',    color: '#10b981', dark: '#065f46', light: '#a7f3d0', startIdx: 39, doorIdx: 37 }
             ],
 
             numPlayers: 4,
@@ -7701,9 +8484,12 @@
             turnSeatIdx: 0,
             horses: {},
             diceValues: [],
+            rollingPreview: [],
             phase: 'ROLL',
             validMoves: [],
             selectedHorseId: null,
+            hoverHorseId: null,
+            hoverCenter: false,
             hintMove: null,
             history: [],
             gameOver: false,
@@ -7751,9 +8537,12 @@
                     ];
                 }
                 this.diceValues = [];
+                this.rollingPreview = [];
                 this.phase = 'ROLL';
                 this.validMoves = [];
                 this.selectedHorseId = null;
+                this.hoverHorseId = null;
+                this.hoverCenter = false;
                 this.hintMove = null;
                 this.history = [];
                 this.gameOver = false;
@@ -7873,33 +8662,77 @@
 
             rollDice() {
                 if (this.gameOver || this.phase !== 'ROLL' || AnimFX.isBusy()) return;
-                SoundFX.playDice();
                 const d1 = Math.floor(Math.random() * 6) + 1;
-                this.diceValues = this.diceMode === 1 ? [d1] : [d1, Math.floor(Math.random() * 6) + 1];
-                this.validMoves = this.computeValidMoves();
-                this.selectedHorseId = null;
-
+                const rolled = this.diceMode === 1 ? [d1] : [d1, Math.floor(Math.random() * 6) + 1];
                 const seat = this.getCurrentSeat();
-                const pName = this.playerDefs[seat].name;
-                const diceStr = this.diceValues.join(' + ');
+                const pDef = this.playerDefs[seat];
+                const W = App.boardW, cell = W / 15;
 
-                if (this.validMoves.length === 0) {
-                    this.history.push({
-                        side: `Nhà ${pName}`,
-                        notation: `Đổ [${diceStr}] - Hết nước đi`
-                    });
-                    this.phase = 'DONE';
-                    this.updateUI();
-                    this.render();
-                    App.scheduleTask(() => this.nextTurn(false), 620);
-                } else {
-                    this.phase = 'MOVE';
-                    this.updateUI();
-                    this.render();
-                    if (this.isCurrentTurnAI()) {
-                        App.scheduleTask(() => this.makeAIMove(App.difficulty), App.getAIDelay());
+                // Origin corner near the active house stable
+                const stableAnchor = [
+                    { x: 3.0 * cell, y: 3.0 * cell },
+                    { x: 12.0 * cell, y: 3.0 * cell },
+                    { x: 12.0 * cell, y: 12.0 * cell },
+                    { x: 3.0 * cell, y: 12.0 * cell }
+                ][seat];
+
+                const landTargets = rolled.length === 1
+                    ? [{ x: W / 2, y: W / 2 + 2 }]
+                    : [{ x: W / 2 - 34, y: W / 2 + 2 }, { x: W / 2 + 34, y: W / 2 + 2 }];
+
+                const r1 = rolled[0];
+                const r2 = rolled.length > 1 ? rolled[1] : 0;
+                const isDouble = (this.diceMode === 2 && r1 === r2);
+                const hasSix = (r1 === 6 || r2 === 6);
+                const hasOne = (r1 === 1 || r2 === 1);
+                const isSpecial = isDouble || hasSix || hasOne;
+                const specialLabel = isDouble ? '✨ ĐỔ ĐÔI!' : (hasSix ? '🔥 RA 6!' : (hasOne ? '⭐ RA 1!' : ''));
+
+                this.phase = 'ROLLING';
+                this.rollingPreview = rolled;
+                this.selectedHorseId = null;
+                this.hoverHorseId = null;
+                this.hintMove = null;
+                this.updateUI();
+
+                DiceFX.roll({
+                    game: 'cangua',
+                    values: rolled,
+                    originX: stableAnchor.x,
+                    originY: stableAnchor.y,
+                    landTargets,
+                    dieSize: 27,
+                    trayCenter: { x: W / 2, y: W / 2 },
+                    trayRadius: cell * 2.15,
+                    accentColor: pDef.color,
+                    isSpecial,
+                    specialLabel,
+                    onComplete: () => {
+                        if (this.gameOver) return;
+                        this.diceValues = rolled;
+                        this.rollingPreview = [];
+                        this.validMoves = this.computeValidMoves();
+                        const diceStr = this.diceValues.join(' + ');
+
+                        if (this.validMoves.length === 0) {
+                            this.history.push({
+                                side: `Nhà ${pDef.name}`,
+                                notation: `Đổ [${diceStr}] - Hết nước đi`
+                            });
+                            this.phase = 'DONE';
+                            this.updateUI();
+                            this.render();
+                            App.scheduleTask(() => this.nextTurn(false), 620);
+                        } else {
+                            this.phase = 'MOVE';
+                            this.updateUI();
+                            this.render();
+                            if (this.isCurrentTurnAI()) {
+                                App.scheduleTask(() => this.makeAIMove(App.difficulty), App.getAIDelay());
+                            }
+                        }
                     }
-                }
+                });
             },
 
             executeMove(move) {
@@ -7908,17 +8741,25 @@
                 const pDef = this.playerDefs[seat];
                 const cell = App.boardW / 15;
 
-                const [fromR, fromC] = this.getHorseCoord(seat, move.horseId);
-                const fromX = (fromC + 0.5) * cell, fromY = (fromR + 0.5) * cell;
-
-                this.horses[seat][move.horseId].step = move.toStep;
-                const [toR, toC] = this.getHorseCoord(seat, move.horseId);
-                const toX = (toC + 0.5) * cell, toY = (toR + 0.5) * cell;
-
-                const kickedInfo = move.kick ? { ...move.kick } : null;
-                if (kickedInfo) {
-                    this.horses[kickedInfo.seat][kickedInfo.horseId].step = -1;
+                // Build step-by-step waypoints BEFORE updating horse step
+                const waypoints = [];
+                if (move.type === 'DEPLOY') {
+                    const [sr, sc] = this.getCoordForStep(seat, -1, move.horseId);
+                    const [er, ec] = this.getCoordForStep(seat, 0, move.horseId);
+                    waypoints.push({ x: (sc + 0.5) * cell, y: (sr + 0.5) * cell });
+                    waypoints.push({ x: (ec + 0.5) * cell, y: (er + 0.5) * cell });
+                } else {
+                    for (let s = move.fromStep; s <= move.toStep; s++) {
+                        const [wr, wc] = this.getCoordForStep(seat, s, move.horseId);
+                        waypoints.push({ x: (wc + 0.5) * cell, y: (wr + 0.5) * cell });
+                    }
                 }
+
+                const toPt = waypoints[waypoints.length - 1];
+                const kickedInfo = move.kick ? { ...move.kick } : null;
+
+                // Update moving horse step immediately and hide it while hopping; keep victim visible until impact!
+                this.horses[seat][move.horseId].step = move.toStep;
 
                 const diceStr = this.diceValues.join('+');
                 let desc = move.type === 'DEPLOY'
@@ -7933,26 +8774,43 @@
 
                 this.validMoves = [];
                 this.selectedHorseId = null;
+                this.hoverHorseId = null;
                 this.hintMove = null;
-                this.phase = 'DONE';
+                this.phase = 'MOVING';
                 this.updateActionBar();
-                SoundFX.playMove();
+                if (move.type === 'DEPLOY') SoundFX.playMove();
 
-                AnimFX.animateMove({
+                AnimFX.animatePath({
                     game: 'cangua',
-                    fromX, fromY, toX, toY,
-                    hideSeat: seat, hideHorseId: move.horseId,
-                    drawFn: (ctx, x, y) => this.drawHorseToken(ctx, x, y, pDef.color, move.horseId + 1, true),
-                    victimDrawFn: kickedInfo ? (ctx, x, y) => this.drawHorseToken(ctx, x, y, this.playerDefs[kickedInfo.seat].color, kickedInfo.horseId + 1, false) : null,
+                    waypoints,
+                    stepDuration: move.type === 'DEPLOY'
+                        ? (App.moveSpeed === 'slow' ? 420 : (App.moveSpeed === 'normal' ? 240 : 120))
+                        : undefined,
+                    hopHeight: move.type === 'DEPLOY' ? 26 : 14,
+                    trailColor: pDef.light,
+                    hideSeat: seat,
+                    hideHorseId: move.horseId,
+                    kickTargetX: kickedInfo ? toPt.x : null,
+                    kickTargetY: kickedInfo ? toPt.y : null,
+                    drawFn: (ctx, x, y, hopOffset = 0) => this.drawHorseToken(ctx, x, y, pDef.color, move.horseId + 1, true, hopOffset, true),
                     onDone: () => {
                         if (kickedInfo) {
+                            const vDef = this.playerDefs[kickedInfo.seat];
+                            this.horses[kickedInfo.seat][kickedInfo.horseId].step = -1;
                             SoundFX.playCapture();
-                            AnimFX.addCaptureEffect(toX, toY, `💥 Đá Ngựa ${this.playerDefs[kickedInfo.seat].name}!`);
+                            AnimFX.addParticles(toPt.x, toPt.y, 20, [vDef.color, '#ef4444', '#fef08a', '#ffffff'], { speed: 145, size: 3.6, life: 580 });
+                            AnimFX.addCaptureEffect(toPt.x, toPt.y, `💥 Đá Ngựa ${vDef.name}!`, vDef.color, '#ef4444');
+                        } else if (move.toStep >= 53) {
+                            SoundFX.playCoin();
+                            AnimFX.addParticles(toPt.x, toPt.y, 14, ['#fbbf24', '#fef08a', pDef.color], { speed: 110, size: 3.2, life: 520 });
+                            AnimFX.addCaptureEffect(toPt.x, toPt.y, `⭐ Bậc ${move.toStep - 50}!`, '#fbbf24', '#f59e0b');
                         }
 
                         if (this.checkVictory(seat)) {
                             this.gameOver = true;
+                            this.phase = 'DONE';
                             SoundFX.playWin();
+                            AnimFX.addParticles(App.boardW / 2, App.boardH / 2, 42, ['#ef4444', '#3b82f6', '#eab308', '#10b981', '#ffffff'], { speed: 190, size: 4.2, life: 950 });
                             App.setStatus(`🏆 Nhà ${pDef.name} chiến thắng!`, true);
                             App.showResultModal(`🏆 Nhà ${pDef.name} thắng Cờ Cá Ngựa!`, 'Đã đưa đủ 4 ngựa xếp vào các bậc 3–4–5–6 về đích.');
                             this.updateUI();
@@ -7984,6 +8842,7 @@
                 this.phase = 'ROLL';
                 this.validMoves = [];
                 this.selectedHorseId = null;
+                this.hoverHorseId = null;
                 this.updateUI();
                 this.render();
                 App.checkAITurn();
@@ -8018,10 +8877,10 @@
 
             showHint() {
                 if (this.phase === 'ROLL') {
-                    App.showToast('💡 Hãy bấm "🎲 Đổ Xúc Xắc" trước!');
+                    App.showToast('💡 Hãy bấm "🎲 Đổ Xúc Xắc" hoặc nhấn Space!');
                     return;
                 }
-                if (this.validMoves.length > 0) {
+                if (this.phase === 'MOVE' && this.validMoves.length > 0) {
                     const best = this.validMoves.slice().sort((a, b) => ((b.kick ? 300 : 0) + b.toStep) - ((a.kick ? 300 : 0) + a.toStep))[0];
                     this.hintMove = best;
                     this.selectedHorseId = best.horseId;
@@ -8035,6 +8894,58 @@
                 if (this.phase !== 'MOVE' || this.selectedHorseId === null) return;
                 const opts = this.validMoves.filter(m => m.horseId === this.selectedHorseId);
                 if (opts[idx]) this.executeMove(opts[idx]);
+            },
+
+            onHover(x, y) {
+                if (this.gameOver || this.isCurrentTurnAI() || AnimFX.isBusy()) return;
+                const W = App.boardW, cell = W / 15;
+                let newHoverHorse = null;
+                let newHoverCenter = false;
+                let pointer = false;
+
+                if (this.phase === 'ROLL') {
+                    if (x >= 6 * cell && x <= 9 * cell && y >= 6 * cell && y <= 9 * cell) {
+                        newHoverCenter = true;
+                        pointer = true;
+                    }
+                } else if (this.phase === 'MOVE') {
+                    const seat = this.getCurrentSeat();
+                    if (this.selectedHorseId !== null) {
+                        const opts = this.validMoves.filter(m => m.horseId === this.selectedHorseId);
+                        for (const m of opts) {
+                            const [tr, tc] = this.getCoordForStep(seat, m.toStep, m.horseId);
+                            if (Math.hypot(x - (tc + 0.5) * cell, y - (tr + 0.5) * cell) <= cell * 0.65) {
+                                pointer = true;
+                                break;
+                            }
+                        }
+                    }
+                    for (const h of this.horses[seat]) {
+                        if (!this.validMoves.some(m => m.horseId === h.id)) continue;
+                        const [hr, hc] = this.getHorseCoord(seat, h.id);
+                        if (Math.hypot(x - (hc + 0.5) * cell, y - (hr + 0.5) * cell) <= cell * 0.68) {
+                            newHoverHorse = h.id;
+                            pointer = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (App.canvas) App.canvas.style.cursor = pointer ? 'pointer' : 'default';
+                if (this.hoverHorseId !== newHoverHorse || this.hoverCenter !== newHoverCenter) {
+                    this.hoverHorseId = newHoverHorse;
+                    this.hoverCenter = newHoverCenter;
+                    this.render();
+                }
+            },
+
+            onHoverLeave() {
+                if (App.canvas) App.canvas.style.cursor = 'default';
+                if (this.hoverHorseId !== null || this.hoverCenter) {
+                    this.hoverHorseId = null;
+                    this.hoverCenter = false;
+                    this.render();
+                }
             },
 
             onClick(x, y) {
@@ -8087,33 +8998,60 @@
                 const info = document.getElementById('canguaDiceInfo');
                 const pipsBox = document.getElementById('canguaDicePips');
                 const pillsBox = document.getElementById('canguaChoicePills');
+                const turnChip = document.getElementById('canguaTurnChip');
                 if (!btnRoll || !info) return;
-                const seat = this.getCurrentSeat();
-                const pName = this.playerDefs[seat].name;
 
-                btnRoll.disabled = (this.phase !== 'ROLL' || this.isCurrentTurnAI() || this.gameOver);
-                const dieGlyphs = ['', '⚀', '⚁', '⚂', '⚃', '⚄', '⚅'];
+                const seat = this.getCurrentSeat();
+                const pDef = this.playerDefs[seat];
+                const canHumanRoll = (this.phase === 'ROLL' && !this.isCurrentTurnAI() && !this.gameOver);
+
+                if (turnChip) {
+                    turnChip.innerHTML = `<span class="turn-dot" style="background:${pDef.color};color:${pDef.color};"></span>Nhà ${pDef.name}`;
+                    turnChip.style.borderColor = pDef.color;
+                }
+
+                btnRoll.disabled = !canHumanRoll;
+                btnRoll.classList.toggle('btn-roll-ready', canHumanRoll);
+
                 if (pipsBox) {
-                    pipsBox.innerHTML = this.diceValues.map(v => `<span class="die-face" title="${v}">${dieGlyphs[v] || v}</span>`).join('');
+                    if (this.phase === 'ROLLING') {
+                        const preview = this.rollingPreview.length ? this.rollingPreview : [1];
+                        pipsBox.innerHTML = DiceFX.renderMiniDiceHTML(preview, 'rolling');
+                    } else if (this.diceValues.length > 0) {
+                        const d1 = this.diceValues[0];
+                        const d2 = this.diceValues.length > 1 ? this.diceValues[1] : 0;
+                        const isSpecial = (d1 === 6 || d1 === 1 || d2 === 6 || d2 === 1 || (this.diceMode === 2 && d1 === d2));
+                        const totalTxt = this.diceValues.length > 1 ? `= ${d1 + d2}` : '';
+                        pipsBox.innerHTML = DiceFX.renderMiniDiceHTML(this.diceValues, `landed${isSpecial ? ' special' : ''}`, totalTxt);
+                    } else {
+                        pipsBox.innerHTML = '';
+                    }
                 }
 
                 if (this.phase === 'ROLL') {
-                    info.textContent = `Lượt Nhà ${pName}: Bấm Đổ Xúc Xắc`;
+                    info.textContent = this.isCurrentTurnAI()
+                        ? `🤖 Nhà ${pDef.name} chuẩn bị đổ...`
+                        : `Lượt Nhà ${pDef.name}: Bấm Đổ Xúc Xắc (Space)`;
+                    if (pillsBox) pillsBox.innerHTML = '';
+                } else if (this.phase === 'ROLLING') {
+                    info.textContent = `🎲 Nhà ${pDef.name} đang gieo xúc xắc...`;
                     if (pillsBox) pillsBox.innerHTML = '';
                 } else if (this.phase === 'MOVE') {
                     if (this.selectedHorseId !== null && pillsBox) {
                         const opts = this.validMoves.filter(m => m.horseId === this.selectedHorseId);
-                        info.textContent = `Ngựa #${this.selectedHorseId + 1} — Chọn bước đi:`;
+                        info.textContent = `Ngựa #${this.selectedHorseId + 1} — Chọn bước:`;
                         pillsBox.innerHTML = opts.map((m, i) => {
-                            const lbl = m.toStep >= 51 ? `Leo bậc ${m.toStep - 50} (+${m.stepsUsed})` : `Đi +${m.stepsUsed} ô`;
+                            const lbl = m.type === 'DEPLOY'
+                                ? 'Xuất chuồng ★'
+                                : (m.toStep >= 51 ? `Leo bậc ${m.toStep - 50} (+${m.stepsUsed})` : `Đi +${m.stepsUsed} ô`);
                             return `<button class="btn btn-gold" style="min-height:28px;padding:3px 9px;font-size:11px;" onclick="CaNguaGame.executeChoiceIndex(${i})">${lbl}${m.kick ? ' 💥' : ''}</button>`;
                         }).join('');
                     } else {
-                        info.textContent = `Click Ngựa phát sáng của Nhà ${pName}!`;
+                        info.textContent = `Click Ngựa phát sáng của Nhà ${pDef.name}!`;
                         if (pillsBox) pillsBox.innerHTML = '';
                     }
                 } else {
-                    info.textContent = `Đang chuyển lượt...`;
+                    info.textContent = this.gameOver ? `🏆 Nhà ${pDef.name} chiến thắng!` : `Đang di chuyển / chuyển lượt...`;
                     if (pillsBox) pillsBox.innerHTML = '';
                 }
             },
@@ -8123,23 +9061,39 @@
                 const seat = this.getCurrentSeat();
                 const pDef = this.playerDefs[seat];
 
+                if (this.gameOver) {
+                    App.setStatus(`🏆 Nhà ${pDef.name} thắng!`, true);
+                } else if (this.isCurrentTurnAI()) {
+                    App.setStatus(`🤖 AI Nhà ${pDef.name} đang đi...`, false);
+                } else if (this.phase === 'ROLL') {
+                    App.setStatus(`🎲 Lượt Nhà ${pDef.name}: Đổ xúc xắc`, false);
+                } else if (this.phase === 'ROLLING') {
+                    App.setStatus(`🎲 Đang gieo xúc xắc...`, false);
+                } else if (this.phase === 'MOVE') {
+                    App.setStatus(`🐴 Nhà ${pDef.name}: Chọn ngựa đi`, false);
+                } else {
+                    App.setStatus(`Đang xử lý lượt...`, false);
+                }
+
                 const prog = (s) => this.horses[s] ? this.horses[s].reduce((acc, h) => acc + (h.step === -1 ? 0 : h.step + 5), 0) : 0;
                 const activeCount = (s) => this.horses[s].filter(h => h.step >= 53).length;
                 const summary = this.activeSeats.map(s => `${this.playerDefs[s].name}:${activeCount(s)}/4`).join(' | ');
                 App.updateForceBar(prog(0) + 10, prog(this.activeSeats[1]) + 10, `Tiến độ về đích (Bậc 3-6): ${summary}`, `${this.numPlayers} Nhà`);
 
+                const p2Seat = pDef.id === 0 ? (this.activeSeats[1] || 2) : pDef.id;
+                const p2Def = this.playerDefs[p2Seat];
                 App.updatePlates({
                     turnMeta: `Lượt #${this.history.length}`,
                     p1: {
                         avatar: '🐴', avatarBg: this.playerDefs[0].color, avatarColor: '#fff',
-                        name: 'Bạn (Nhà Đỏ)',
+                        name: App.mode === 'ai' ? 'Bạn (Nhà Đỏ)' : 'Nhà Đỏ',
                         badge: seat === 0 ? 'Đang đi' : 'Chờ',
                         capturedHtml: `Về đích (3-6): ${activeCount(0)}/4 ngựa`,
                         isTurn: !this.gameOver && seat === 0
                     },
                     p2: {
-                        avatar: '🎲', avatarBg: pDef.id === 0 ? '#334155' : pDef.color, avatarColor: '#fff',
-                        name: pDef.id === 0 ? 'Các nhà đối thủ' : `Nhà ${pDef.name}`,
+                        avatar: '🎲', avatarBg: pDef.id === 0 ? '#334155' : p2Def.color, avatarColor: '#fff',
+                        name: pDef.id === 0 ? 'Các nhà đối thủ' : `Nhà ${p2Def.name}`,
                         badge: seat !== 0 ? 'Đang đi' : 'Chờ',
                         capturedHtml: `Xúc xắc: ${this.diceValues.length ? this.diceValues.join(' + ') : 'Chờ đổ'}`,
                         isTurn: !this.gameOver && seat !== 0
@@ -8174,34 +9128,105 @@
                 App.updateHistoryUI(this.history);
             },
 
-            drawHorseToken(ctx, x, y, color, numLabel, isHighlight) {
+            drawHorseToken(ctx, x, y, color, numLabel, isHighlight, hopOffset = 0, isSelected = false) {
+                const now = performance.now();
+                const bob = (isHighlight && hopOffset === 0) ? Math.sin(now * 0.007 + numLabel) * 1.6 : 0;
+                const totalLift = hopOffset + Math.max(0, bob);
+                const liftScale = 1 + Math.min(0.24, hopOffset * 0.009);
+                const ty = y - totalLift;
+
                 ctx.save();
+                // Ground shadow
+                const shAlpha = Math.max(0.16, 0.45 - totalLift * 0.008);
+                ctx.fillStyle = `rgba(0, 0, 0, ${shAlpha.toFixed(2)})`;
                 ctx.beginPath();
-                ctx.arc(x, y + 2.5, 15, 0, Math.PI * 2);
-                ctx.fillStyle = 'rgba(0,0,0,0.42)';
+                ctx.ellipse(x, y + 5.5, 14 + totalLift * 0.12, 8.5 + totalLift * 0.06, 0, 0, Math.PI * 2);
                 ctx.fill();
 
-                if (isHighlight) {
+                if (isHighlight || isSelected) {
+                    const pulse = 1 + Math.sin(now * 0.008) * 0.10;
+                    ctx.save();
+                    ctx.strokeStyle = isSelected ? '#34d399' : '#fef08a';
+                    ctx.lineWidth = isSelected ? 3.2 : 2.6;
                     ctx.beginPath();
-                    ctx.arc(x, y, 19.5, 0, Math.PI * 2);
-                    ctx.strokeStyle = '#fef08a';
-                    ctx.lineWidth = 3.5;
+                    ctx.arc(x, y, 18.5 * pulse, 0, Math.PI * 2);
                     ctx.stroke();
+
+                    ctx.fillStyle = isSelected ? 'rgba(52, 211, 153, 0.22)' : 'rgba(254, 240, 138, 0.18)';
+                    ctx.beginPath();
+                    ctx.arc(x, y, 17.5 * pulse, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.restore();
                 }
 
+                ctx.translate(x, ty);
+                ctx.scale(liftScale, liftScale);
+
+                // 3D Domed Medallion Base
+                const r = 14.5;
+                const rimGrad = ctx.createRadialGradient(-4, -5, 2, 0, 0, r);
+                rimGrad.addColorStop(0, '#ffffff');
+                rimGrad.addColorStop(0.28, color);
+                rimGrad.addColorStop(1, '#0f172a');
+                ctx.fillStyle = rimGrad;
                 ctx.beginPath();
-                ctx.arc(x, y, 14.5, 0, Math.PI * 2);
-                ctx.fillStyle = color;
+                ctx.arc(0, 0, r, 0, Math.PI * 2);
                 ctx.fill();
-                ctx.lineWidth = 2;
-                ctx.strokeStyle = '#ffffff';
+
+                ctx.fillStyle = color;
+                ctx.beginPath();
+                ctx.arc(0, 0, r - 2.1, 0, Math.PI * 2);
+                ctx.fill();
+
+                const gloss = ctx.createLinearGradient(0, -r, 0, r);
+                gloss.addColorStop(0, 'rgba(255, 255, 255, 0.36)');
+                gloss.addColorStop(0.5, 'rgba(255, 255, 255, 0.04)');
+                gloss.addColorStop(1, 'rgba(0, 0, 0, 0.26)');
+                ctx.fillStyle = gloss;
+                ctx.beginPath();
+                ctx.arc(0, 0, r - 2.1, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.85)';
+                ctx.lineWidth = 1.4;
+                ctx.beginPath();
+                ctx.arc(0, 0, r - 0.6, 0, Math.PI * 2);
                 ctx.stroke();
 
+                // Crisp Vector Knight Silhouette
                 ctx.fillStyle = '#ffffff';
-                ctx.font = 'bold 11.5px sans-serif';
+                ctx.strokeStyle = 'rgba(15, 23, 42, 0.65)';
+                ctx.lineWidth = 0.9;
+                ctx.beginPath();
+                ctx.moveTo(-5.5, 6.5);
+                ctx.lineTo(5.5, 6.5);
+                ctx.lineTo(4.2, 4.0);
+                ctx.quadraticCurveTo(5.2, -1.5, 1.8, -5.2);
+                ctx.lineTo(0.8, -7.8);
+                ctx.lineTo(-1.2, -5.8);
+                ctx.quadraticCurveTo(-4.8, -5.2, -6.5, -1.6);
+                ctx.lineTo(-5.2, 0.4);
+                ctx.lineTo(-2.0, -0.8);
+                ctx.quadraticCurveTo(-2.2, 2.2, -4.6, 4.2);
+                ctx.closePath();
+                ctx.fill();
+                ctx.stroke();
+
+                // Number badge (#1..#4)
+                ctx.fillStyle = '#0f172a';
+                ctx.beginPath();
+                ctx.arc(9.5, 9.2, 5.8, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 1.1;
+                ctx.stroke();
+
+                ctx.fillStyle = '#fef08a';
+                ctx.font = 'bold 8.5px sans-serif';
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
-                ctx.fillText(`🐴${numLabel}`, x, y);
+                ctx.fillText(String(numLabel), 9.5, 9.4);
+
                 ctx.restore();
             },
 
@@ -8209,104 +9234,304 @@
                 const ctx = App.ctx;
                 const W = App.boardW, H = App.boardH;
                 const cell = W / 15;
+                const now = performance.now();
 
-                ctx.fillStyle = '#141c2b';
+                const pal = {
+                    'dark-gold': { bg: '#0e1624', frame: '#d97706', tileA: '#f8fafc', tileB: '#e2e8f0', stroke: '#94a3b8', pad: '#111b2c', hub: '#0f172a' },
+                    'classic-wood': { bg: '#26160b', frame: '#e5a93c', tileA: '#fcf5e6', tileB: '#f1e2c5', stroke: '#a17a50', pad: '#331e10', hub: '#201208' },
+                    'tournament-emerald': { bg: '#0a1c18', frame: '#10b981', tileA: '#f0fdf4', tileB: '#dcfce7', stroke: '#628b7b', pad: '#0f2923', hub: '#091915' }
+                }[App.theme] || { bg: '#0e1624', frame: '#d97706', tileA: '#f8fafc', tileB: '#e2e8f0', stroke: '#94a3b8', pad: '#111b2c', hub: '#0f172a' };
+
+                ctx.fillStyle = pal.bg;
                 ctx.fillRect(0, 0, W, H);
 
+                // Subtle outer tournament frame
+                ctx.strokeStyle = pal.frame;
+                ctx.lineWidth = 3;
+                ctx.strokeRect(2, 2, W - 4, H - 4);
+
+                const curSeat = this.getCurrentSeat();
+
+                // 4 Corner Stables (6x6 each)
                 const drawStableBox = (r, c, def) => {
+                    const bx = c * cell + 4, by = r * cell + 4, bw = 6 * cell - 8;
+                    const isActive = !this.gameOver && def.id === curSeat;
+                    const isParticipant = this.activeSeats.includes(def.id);
+
+                    ctx.save();
+                    if (!isParticipant) ctx.globalAlpha = 0.45;
+
+                    const grad = ctx.createLinearGradient(bx, by, bx + bw, by + bw);
+                    grad.addColorStop(0, def.color);
+                    grad.addColorStop(1, def.dark);
+                    ctx.fillStyle = grad;
+                    ctx.beginPath();
+                    if (ctx.roundRect) ctx.roundRect(bx, by, bw, bw, 14);
+                    else ctx.rect(bx, by, bw, bw);
+                    ctx.fill();
+
+                    if (isActive) {
+                        const glowAlpha = 0.55 + Math.sin(now * 0.007) * 0.35;
+                        ctx.strokeStyle = `rgba(254, 240, 138, ${glowAlpha.toFixed(2)})`;
+                        ctx.lineWidth = 4;
+                        ctx.stroke();
+                    }
+
+                    // Inner paddock card
+                    const px = (c + 0.65) * cell, py = (r + 0.65) * cell, pw = 4.7 * cell;
+                    ctx.fillStyle = pal.pad;
+                    ctx.beginPath();
+                    if (ctx.roundRect) ctx.roundRect(px, py, pw, pw, 12);
+                    else ctx.rect(px, py, pw, pw);
+                    ctx.fill();
+                    ctx.strokeStyle = 'rgba(255, 255, 255, 0.22)';
+                    ctx.lineWidth = 1.5;
+                    ctx.stroke();
+
+                    // House nameplate ribbon at top of paddock
                     ctx.fillStyle = def.color;
-                    ctx.fillRect(c * cell + 3, r * cell + 3, 6 * cell - 6, 6 * cell - 6);
-                    ctx.fillStyle = def.light;
-                    ctx.fillRect((c + 0.7) * cell, (r + 0.7) * cell, 4.6 * cell, 4.6 * cell);
+                    ctx.beginPath();
+                    if (ctx.roundRect) ctx.roundRect(px + pw * 0.18, py - 9, pw * 0.64, 18, 9);
+                    else ctx.rect(px + pw * 0.18, py - 9, pw * 0.64, 18);
+                    ctx.fill();
+                    ctx.fillStyle = '#ffffff';
+                    ctx.font = 'bold 10.5px sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(`NHÀ ${def.name.toUpperCase()}`, px + pw * 0.5, py);
+
+                    // 4 Circular numbered paddock spots matching exact stableSpots
+                    const spots = this.stableSpots[def.id];
+                    spots.forEach(([sr, sc], idx) => {
+                        const sx = (sc + 0.5) * cell;
+                        const sy = (sr + 0.5) * cell;
+                        ctx.fillStyle = 'rgba(255, 255, 255, 0.07)';
+                        ctx.beginPath();
+                        ctx.arc(sx, sy, cell * 0.56, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.strokeStyle = def.color;
+                        ctx.lineWidth = 2;
+                        ctx.stroke();
+
+                        ctx.fillStyle = 'rgba(255, 255, 255, 0.28)';
+                        ctx.font = 'bold 11px sans-serif';
+                        ctx.fillText(String(idx + 1), sx, sy);
+                    });
+
+                    // Finish progress dots at bottom of paddock
+                    if (isParticipant) {
+                        const homeCnt = this.horses[def.id].filter(h => h.step >= 53).length;
+                        for (let k = 0; k < 4; k++) {
+                            const dotX = px + pw * 0.5 + (k - 1.5) * 14;
+                            const dotY = py + pw - 9;
+                            ctx.fillStyle = k < homeCnt ? '#fbbf24' : 'rgba(255,255,255,0.18)';
+                            ctx.beginPath();
+                            ctx.arc(dotX, dotY, 4, 0, Math.PI * 2);
+                            ctx.fill();
+                        }
+                    }
+
+                    ctx.restore();
                 };
                 drawStableBox(0, 0, this.playerDefs[0]);
                 drawStableBox(0, 9, this.playerDefs[1]);
                 drawStableBox(9, 9, this.playerDefs[2]);
                 drawStableBox(9, 0, this.playerDefs[3]);
 
-                // Track tiles
-                this.trackCoords.forEach(([r, c], idx) => {
-                    ctx.fillStyle = '#f8fafc';
-                    if (idx === 0) ctx.fillStyle = '#fca5a5';
-                    else if (idx === 13) ctx.fillStyle = '#93c5fd';
-                    else if (idx === 26) ctx.fillStyle = '#fde047';
-                    else if (idx === 39) ctx.fillStyle = '#6ee7b7';
-                    ctx.fillRect(c * cell + 1, r * cell + 1, cell - 2, cell - 2);
-                    ctx.strokeStyle = '#94a3b8';
-                    ctx.lineWidth = 1;
-                    ctx.strokeRect(c * cell + 1, r * cell + 1, cell - 2, cell - 2);
+                // Track tiles (52)
+                const doorArrows = { 50: '→', 11: '↓', 24: '←', 37: '↑' };
+                const doorColors = { 50: '#ef4444', 11: '#3b82f6', 24: '#eab308', 37: '#10b981' };
 
+                this.trackCoords.forEach(([r, c], idx) => {
+                    const tx = c * cell + 1.5, ty = r * cell + 1.5, tw = cell - 3;
+                    let fillCol = (idx % 2 === 0) ? pal.tileA : pal.tileB;
+                    if (idx === 0) fillCol = '#fca5a5';
+                    else if (idx === 13) fillCol = '#93c5fd';
+                    else if (idx === 26) fillCol = '#fde047';
+                    else if (idx === 39) fillCol = '#6ee7b7';
+
+                    ctx.fillStyle = fillCol;
+                    ctx.beginPath();
+                    if (ctx.roundRect) ctx.roundRect(tx, ty, tw, tw, 5);
+                    else ctx.rect(tx, ty, tw, tw);
+                    ctx.fill();
+
+                    ctx.strokeStyle = pal.stroke;
+                    ctx.lineWidth = 1;
+                    ctx.stroke();
+
+                    const cxTile = (c + 0.5) * cell, cyTile = (r + 0.5) * cell;
                     if (idx === 0 || idx === 13 || idx === 26 || idx === 39) {
-                        ctx.fillStyle = '#1e293b';
-                        ctx.font = 'bold 14px sans-serif';
+                        ctx.fillStyle = '#0f172a';
+                        ctx.font = 'bold 16px sans-serif';
                         ctx.textAlign = 'center';
                         ctx.textBaseline = 'middle';
-                        ctx.fillText('★', (c + 0.5) * cell, (r + 0.5) * cell);
-                    } else if (idx === 50 || idx === 11 || idx === 24 || idx === 37) {
-                        ctx.fillStyle = '#475569';
-                        ctx.font = '12px sans-serif';
+                        ctx.fillText('★', cxTile, cyTile);
+                    } else if (doorArrows[idx]) {
+                        ctx.fillStyle = doorColors[idx];
+                        ctx.font = 'bold 16px sans-serif';
                         ctx.textAlign = 'center';
                         ctx.textBaseline = 'middle';
-                        ctx.fillText('🚪', (c + 0.5) * cell, (r + 0.5) * cell);
+                        ctx.fillText(doorArrows[idx], cxTile, cyTile);
+                    } else {
+                        // Subtle directional dot
+                        ctx.fillStyle = 'rgba(100, 116, 139, 0.25)';
+                        ctx.beginPath();
+                        ctx.arc(cxTile, cyTile, 2.2, 0, Math.PI * 2);
+                        ctx.fill();
                     }
                 });
 
-                // Home stairs 1-6
+                // Home stairs 1-6 (fully unobstructed!)
                 for (let s = 0; s < 4; s++) {
                     const def = this.playerDefs[s];
                     this.homeColumns[s].forEach(([r, c], idx) => {
-                        ctx.fillStyle = def.color;
-                        ctx.fillRect(c * cell + 1.5, r * cell + 1.5, cell - 3, cell - 3);
-                        ctx.fillStyle = idx >= 2 ? '#fef08a' : '#fff';
-                        ctx.font = 'bold 13px sans-serif';
+                        const sx = c * cell + 1.5, sy = r * cell + 1.5, sw = cell - 3;
+                        const isGoalZone = idx >= 2;
+                        const isTopStair = idx === 5;
+                        ctx.save();
+                        const grad = ctx.createLinearGradient(sx, sy, sx + sw, sy + sw);
+                        grad.addColorStop(0, def.color);
+                        grad.addColorStop(1, def.dark);
+                        ctx.fillStyle = grad;
+                        ctx.beginPath();
+                        if (ctx.roundRect) ctx.roundRect(sx, sy, sw, sw, 6);
+                        else ctx.rect(sx, sy, sw, sw);
+                        ctx.fill();
+
+                        ctx.strokeStyle = isTopStair ? '#fef08a' : (isGoalZone ? 'rgba(254, 240, 138, 0.72)' : 'rgba(255,255,255,0.4)');
+                        ctx.lineWidth = isTopStair ? 2.2 : 1.2;
+                        ctx.stroke();
+
+                        ctx.fillStyle = isGoalZone ? '#fef08a' : '#ffffff';
+                        ctx.font = isTopStair ? 'bold 13.5px sans-serif' : 'bold 12.5px sans-serif';
                         ctx.textAlign = 'center';
                         ctx.textBaseline = 'middle';
-                        ctx.fillText(String(idx + 1), (c + 0.5) * cell, (r + 0.5) * cell);
+                        ctx.fillText(isTopStair ? '👑6' : String(idx + 1), (c + 0.5) * cell, (r + 0.5) * cell);
+                        ctx.restore();
                     });
                 }
 
-                // Center Dice Hub
-                ctx.fillStyle = '#0f172a';
-                ctx.strokeStyle = '#f59e0b';
-                ctx.lineWidth = 3;
-                ctx.fillRect(6 * cell, 6 * cell, 3 * cell, 3 * cell);
-                ctx.strokeRect(6 * cell, 6 * cell, 3 * cell, 3 * cell);
+                // Decorative 4 inner corner tiles [6,6],[6,8],[8,6],[8,8]
+                const cornerColors = [
+                    { r: 6, c: 6, c1: '#ef4444', c2: '#3b82f6' },
+                    { r: 6, c: 8, c1: '#3b82f6', c2: '#eab308' },
+                    { r: 8, c: 8, c1: '#eab308', c2: '#10b981' },
+                    { r: 8, c: 6, c1: '#10b981', c2: '#ef4444' }
+                ];
+                for (const cc of cornerColors) {
+                    const x0 = cc.c * cell + 1.5, y0 = cc.r * cell + 1.5, sz = cell - 3;
+                    ctx.save();
+                    ctx.fillStyle = pal.hub;
+                    ctx.beginPath();
+                    if (ctx.roundRect) ctx.roundRect(x0, y0, sz, sz, 6);
+                    else ctx.rect(x0, y0, sz, sz);
+                    ctx.fill();
+                    ctx.strokeStyle = 'rgba(245, 158, 11, 0.35)';
+                    ctx.lineWidth = 1;
+                    ctx.stroke();
+                    ctx.restore();
+                }
 
-                ctx.fillStyle = '#fbbf24';
-                ctx.font = 'bold 11.5px sans-serif';
+                // Sleek Center Crest inside [7,7] only — Stair 6 cells remain 100% visible!
+                const hubCx = 7.5 * cell, hubCy = 7.5 * cell;
+                const hubR = cell * 0.48;
+                ctx.save();
+                ctx.fillStyle = pal.hub;
+                ctx.beginPath();
+                ctx.arc(hubCx, hubCy, hubR, 0, Math.PI * 2);
+                ctx.fill();
+
+                const canCenterRoll = (this.phase === 'ROLL' && !this.isCurrentTurnAI() && !this.gameOver);
+                const hubPulse = canCenterRoll ? (1 + Math.sin(now * 0.008) * 0.06) : 1;
+                ctx.strokeStyle = this.hoverCenter ? '#fef08a' : (canCenterRoll ? '#f59e0b' : '#475569');
+                ctx.lineWidth = (canCenterRoll || this.hoverCenter) ? 2.6 : 1.6;
+                ctx.beginPath();
+                ctx.arc(hubCx, hubCy, hubR * hubPulse, 0, Math.PI * 2);
+                ctx.stroke();
+
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
-                ctx.fillText('XÚC XẮC', 7.5 * cell, 6.5 * cell);
+                if (this.phase === 'ROLL' || this.phase === 'ROLLING') {
+                    ctx.fillStyle = canCenterRoll ? '#fef08a' : '#94a3b8';
+                    ctx.font = 'bold 12px sans-serif';
+                    ctx.fillText(this.phase === 'ROLLING' ? '🎲' : '🎲 ĐỔ', hubCx, hubCy);
+                } else if (this.diceValues.length > 0) {
+                    ctx.fillStyle = '#fbbf24';
+                    ctx.font = 'bold 13px sans-serif';
+                    ctx.fillText(this.diceValues.join('+'), hubCx, hubCy);
+                } else {
+                    ctx.fillStyle = '#94a3b8';
+                    ctx.font = 'bold 12px sans-serif';
+                    ctx.fillText('★', hubCx, hubCy);
+                }
+                ctx.restore();
 
-                ctx.fillStyle = '#ffffff';
-                ctx.font = 'bold 26px sans-serif';
-                const diceDisplay = this.diceValues.length > 0 ? this.diceValues.join(' - ') : '🎲';
-                ctx.fillText(diceDisplay, 7.5 * cell, 7.55 * cell);
+                // Dotted path preview & destination rings for selected/hovered horse or hint
+                const previewHorseId = this.selectedHorseId !== null ? this.selectedHorseId : this.hoverHorseId;
+                if (this.phase === 'MOVE' && previewHorseId !== null) {
+                    const opts = this.validMoves.filter(m => m.horseId === previewHorseId);
+                    const [hr, hc] = this.getHorseCoord(curSeat, previewHorseId);
+                    const startX = (hc + 0.5) * cell, startY = (hr + 0.5) * cell;
 
-                ctx.fillStyle = '#94a3b8';
-                ctx.font = 'bold 10px sans-serif';
-                ctx.fillText(this.phase === 'ROLL' ? 'Click để đổ' : 'Chọn ngựa đi', 7.5 * cell, 8.5 * cell);
-
-                // Highlight destination targets for selected horse (multi-dice choice)
-                const curSeat = this.getCurrentSeat();
-                if (this.phase === 'MOVE' && this.selectedHorseId !== null) {
-                    const opts = this.validMoves.filter(m => m.horseId === this.selectedHorseId);
                     for (const m of opts) {
                         const [tr, tc] = this.getCoordForStep(curSeat, m.toStep, m.horseId);
                         const tx = (tc + 0.5) * cell, ty = (tr + 0.5) * cell;
                         ctx.save();
-                        ctx.fillStyle = 'rgba(16, 185, 129, 0.35)';
-                        ctx.strokeStyle = '#10b981';
-                        ctx.lineWidth = 3;
+                        // Draw dotted step trail for moves along the track/stairs
+                        if (m.type !== 'DEPLOY') {
+                            ctx.strokeStyle = m.kick ? 'rgba(239, 68, 68, 0.72)' : 'rgba(16, 185, 129, 0.72)';
+                            ctx.lineWidth = 2.6;
+                            ctx.setLineDash([4, 4]);
+                            ctx.beginPath();
+                            ctx.moveTo(startX, startY);
+                            for (let s = m.fromStep + 1; s <= m.toStep; s++) {
+                                const [sr, sc] = this.getCoordForStep(curSeat, s, m.horseId);
+                                ctx.lineTo((sc + 0.5) * cell, (sr + 0.5) * cell);
+                            }
+                            ctx.stroke();
+                            ctx.setLineDash([]);
+                        }
+
+                        const pulse = 1 + Math.sin(now * 0.01) * 0.08;
+                        ctx.fillStyle = m.kick ? 'rgba(239, 68, 68, 0.32)' : 'rgba(16, 185, 129, 0.30)';
+                        ctx.strokeStyle = m.kick ? '#ef4444' : '#10b981';
+                        ctx.lineWidth = 2.8;
                         ctx.beginPath();
-                        ctx.arc(tx, ty, cell * 0.46, 0, Math.PI * 2);
+                        ctx.arc(tx, ty, cell * 0.44 * pulse, 0, Math.PI * 2);
                         ctx.fill();
                         ctx.stroke();
-                        ctx.fillStyle = '#fff';
+
+                        // Step badge pill
+                        const badgeText = m.type === 'DEPLOY' ? '★' : `+${m.stepsUsed}${m.kick ? '💥' : ''}`;
                         ctx.font = 'bold 10px sans-serif';
-                        ctx.fillText(`+${m.stepsUsed}`, tx, ty - cell * 0.55);
+                        const bw = ctx.measureText(badgeText).width + 10;
+                        ctx.fillStyle = 'rgba(15, 23, 42, 0.92)';
+                        ctx.beginPath();
+                        if (ctx.roundRect) ctx.roundRect(tx - bw / 2, ty - cell * 0.72 - 8, bw, 16, 8);
+                        else ctx.rect(tx - bw / 2, ty - cell * 0.72 - 8, bw, 16);
+                        ctx.fill();
+                        ctx.strokeStyle = m.kick ? '#ef4444' : '#34d399';
+                        ctx.lineWidth = 1.2;
+                        ctx.stroke();
+                        ctx.fillStyle = '#ffffff';
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        ctx.fillText(badgeText, tx, ty - cell * 0.72);
                         ctx.restore();
                     }
+                }
+
+                // Target pulse ring under victim if a kick move is currently hopping
+                if (AnimFX.moveAnim && AnimFX.moveAnim.game === 'cangua' && AnimFX.moveAnim.kickTargetX != null) {
+                    const pulse = 1 + Math.sin(now * 0.022) * 0.14;
+                    ctx.save();
+                    ctx.strokeStyle = '#ef4444';
+                    ctx.lineWidth = 3;
+                    ctx.beginPath();
+                    ctx.arc(AnimFX.moveAnim.kickTargetX, AnimFX.moveAnim.kickTargetY, 21 * pulse, 0, Math.PI * 2);
+                    ctx.stroke();
+                    ctx.restore();
                 }
 
                 // Horses
@@ -8316,9 +9541,9 @@
                         if (AnimFX.moveAnim && AnimFX.moveAnim.game === 'cangua' &&
                             AnimFX.moveAnim.hideSeat === seat && AnimFX.moveAnim.hideHorseId === h.id) continue;
                         const [hr, hc] = this.getHorseCoord(seat, h.id);
-                        const isMovable = (seat === curSeat) && this.validMoves.some(m => m.horseId === h.id);
-                        const isChosen = (seat === curSeat) && this.selectedHorseId === h.id;
-                        this.drawHorseToken(ctx, (hc + 0.5) * cell, (hr + 0.5) * cell, def.color, h.id + 1, isMovable || isChosen);
+                        const isMovable = (this.phase === 'MOVE') && (seat === curSeat) && this.validMoves.some(m => m.horseId === h.id);
+                        const isChosen = (this.phase === 'MOVE') && (seat === curSeat) && (this.selectedHorseId === h.id || this.hoverHorseId === h.id);
+                        this.drawHorseToken(ctx, (hc + 0.5) * cell, (hr + 0.5) * cell, def.color, h.id + 1, isMovable, 0, isChosen);
                     }
                 }
 
@@ -8365,6 +9590,10 @@
             dice: [1, 1],
             jackpot: 200,
             selectedTileId: 23,
+            hoverTileId: null,
+            hoverDiceTray: false,
+            cardPopup: null,
+            lastRollDouble: false,
             phase: 'ROLL',
             eventMessage: 'Bấm 🎲 Đổ Xúc Xắc để khởi hành!',
             history: [],
@@ -8389,10 +9618,10 @@
             reset() {
                 this.tiles.forEach(t => { if (t.type === 'PROP') { t.owner = null; t.level = 0; } });
                 const defs = [
-                    { id: 0, name: 'Tỷ Phú Đỏ',   color: '#ef4444' },
-                    { id: 1, name: 'Tỷ Phú Xanh', color: '#3b82f6' },
-                    { id: 2, name: 'Tỷ Phú Vàng', color: '#eab308' },
-                    { id: 3, name: 'Tỷ Phú Tím',  color: '#a855f7' }
+                    { id: 0, name: 'Tỷ Phú Đỏ',   short: 'Đỏ',   color: '#ef4444' },
+                    { id: 1, name: 'Tỷ Phú Xanh', short: 'Xanh', color: '#3b82f6' },
+                    { id: 2, name: 'Tỷ Phú Vàng', short: 'Vàng', color: '#eab308' },
+                    { id: 3, name: 'Tỷ Phú Tím',  short: 'Tím',  color: '#a855f7' }
                 ];
                 this.players = defs.slice(0, this.numPlayers).map(d => ({
                     ...d, pos: 0, cash: 2000, inJail: 0, bankrupt: false
@@ -8401,6 +9630,10 @@
                 this.dice = [1, 1];
                 this.jackpot = 200;
                 this.selectedTileId = 23;
+                this.hoverTileId = null;
+                this.hoverDiceTray = false;
+                this.cardPopup = null;
+                this.lastRollDouble = false;
                 this.phase = 'ROLL';
                 this.eventMessage = 'Mỗi Tỷ Phú khởi nghiệp với $2,000. Bấm Đổ Xúc Xắc!';
                 this.history = [];
@@ -8420,6 +9653,18 @@
                 else if (id >= 13 && id <= 18) { r = 0; c = id - 12; }
                 else { c = 6; r = id - 18; }
                 return { x: c * cell, y: r * cell, w: cell, h: cell, cx: (c + 0.5) * cell, cy: (r + 0.5) * cell };
+            },
+
+            getDiceTrayRect() {
+                const W = App.boardW;
+                const cell = W / 7;
+                const cx = cell, cy = cell, cw = cell * 5;
+                const dx = cx + 8, dy = cy + 8, dw = cw - 16;
+                const trayX = dx + 248;
+                const trayY = dy + 104;
+                const trayW = dw - 260;
+                const trayH = 140;
+                return { x: trayX, y: trayY, w: trayW, h: trayH, cx: trayX + trayW / 2, cy: trayY + trayH / 2 };
             },
 
             hasFullColorGroup(ownerId, group) {
@@ -8443,78 +9688,112 @@
             rollDice() {
                 if (this.gameOver || this.phase !== 'ROLL' || AnimFX.isBusy()) return;
                 const p = this.getCurrentPlayer();
-                SoundFX.playDice();
                 const d1 = Math.floor(Math.random() * 6) + 1;
                 const d2 = Math.floor(Math.random() * 6) + 1;
-                this.dice = [d1, d2];
+                const isDouble = (d1 === d2);
+                const tray = this.getDiceTrayRect();
 
-                if (p.inJail > 0) {
-                    if (d1 === d2) {
-                        p.inJail = 0;
-                        this.eventMessage = `${p.name} đổ đôi [${d1}-${d2}] được ra tù ngay!`;
-                    } else {
-                        p.inJail--;
-                        this.eventMessage = `${p.name} không đổ đôi, còn ${p.inJail} lượt ở tù.`;
-                        this.history.push({ side: p.name, notation: `Đổ [${d1}+${d2}] - Ở Nhà Tù` });
-                        this.phase = 'ACTION';
+                this.phase = 'ROLLING';
+                this.dice = [d1, d2];
+                this.lastRollDouble = isDouble;
+                this.cardPopup = null;
+                this.updateButtons();
+                this.updateUI();
+
+                DiceFX.roll({
+                    game: 'typhu',
+                    values: [d1, d2],
+                    originX: tray.cx - 38,
+                    originY: tray.y + tray.h + 42,
+                    landTargets: [
+                        { x: tray.cx - 34, y: tray.cy - 2 },
+                        { x: tray.cx + 34, y: tray.cy - 2 }
+                    ],
+                    dieSize: 22,
+                    trayCenter: { x: tray.cx, y: tray.cy },
+                    trayRadius: 0,
+                    accentColor: p.color,
+                    isSpecial: isDouble,
+                    specialLabel: isDouble ? '✨ ĐỔ ĐÔI!' : '',
+                    onComplete: () => {
+                        if (this.gameOver) return;
+                        this.dice = [d1, d2];
+                        this.lastRollDouble = isDouble;
+
+                        if (p.inJail > 0) {
+                            if (isDouble) {
+                                p.inJail = 0;
+                                this.eventMessage = `🔓 ${p.name} đổ đôi [${d1}-${d2}] được ra tù ngay!`;
+                                AnimFX.addParticles(this.getTileRect(p.pos).cx, this.getTileRect(p.pos).cy, 14, ['#10b981', '#fef08a'], { speed: 100 });
+                            } else {
+                                p.inJail--;
+                                this.eventMessage = p.inJail === 0
+                                    ? `${p.name} không đổ đôi — đã mãn hạn tù, lượt sau đi tự do!`
+                                    : `${p.name} không đổ đôi, còn ${p.inJail} lượt ở tù.`;
+                                this.history.push({ side: p.name, notation: `Đổ [${d1}+${d2}] - Ở Nhà Tù` });
+                                this.phase = 'ACTION';
+                                this.updateButtons();
+                                this.updateUI();
+                                this.render();
+                                if (this.isCurrentTurnAI()) App.scheduleTask(() => this.endTurn(), 520);
+                                return;
+                            }
+                        }
+
+                        const steps = d1 + d2;
+                        const oldPos = p.pos;
+                        const newPos = (oldPos + steps) % 24;
+
+                        // Build clockwise tile-by-tile hop waypoints
+                        const waypoints = [];
+                        for (let s = 0; s <= steps; s++) {
+                            const tid = (oldPos + s) % 24;
+                            const tr = this.getTileRect(tid);
+                            const wp = { x: tr.cx, y: tr.cy };
+                            if (s > 0 && tid === 0) {
+                                wp.onReach = () => {
+                                    p.cash += 200;
+                                    SoundFX.playCoin();
+                                    AnimFX.addParticles(tr.cx, tr.cy, 16, ['#fbbf24', '#10b981', '#fef08a'], { speed: 120, size: 3.4 });
+                                    AnimFX.addCaptureEffect(tr.cx, tr.cy, '💰 +$200 LƯƠNG!', '#10b981', '#fbbf24');
+                                    App.showToast(`💰 ${p.name} qua Khởi Hành nhận lương +$200!`);
+                                };
+                            }
+                            waypoints.push(wp);
+                        }
+
+                        p.pos = newPos;
+                        this.selectedTileId = newPos;
+                        this.phase = 'MOVING';
                         this.updateButtons();
                         this.updateUI();
-                        this.render();
-                        if (this.isCurrentTurnAI()) App.scheduleTask(() => this.endTurn(), 520);
-                        return;
-                    }
-                }
 
-                const steps = d1 + d2;
-                const oldPos = p.pos;
-                const newPos = (oldPos + steps) % 24;
-                if (oldPos + steps >= 24) {
-                    p.cash += 200;
-                    SoundFX.playCoin();
-                    App.showToast(`💰 ${p.name} qua Khởi Hành nhận lương +$200!`);
-                }
-
-                const fromRect = this.getTileRect(oldPos);
-                const toRect = this.getTileRect(newPos);
-                p.pos = newPos;
-                this.selectedTileId = newPos;
-                this.phase = 'MOVING';
-                this.updateButtons();
-
-                AnimFX.animateMove({
-                    game: 'typhu',
-                    fromX: fromRect.cx, fromY: fromRect.cy,
-                    toX: toRect.cx, toY: toRect.cy,
-                    hidePlayerId: p.id,
-                    drawFn: (ctx, x, y) => {
-                        ctx.beginPath();
-                        ctx.arc(x, y, 13, 0, Math.PI * 2);
-                        ctx.fillStyle = p.color;
-                        ctx.fill();
-                        ctx.lineWidth = 2.5;
-                        ctx.strokeStyle = '#fff';
-                        ctx.stroke();
-                        ctx.fillStyle = '#fff';
-                        ctx.font = 'bold 9.5px sans-serif';
-                        ctx.textAlign = 'center';
-                        ctx.textBaseline = 'middle';
-                        ctx.fillText(`P${p.id + 1}`, x, y);
-                    },
-                    onDone: () => {
-                        this.handleLandedTile(p, this.tiles[newPos], steps);
+                        AnimFX.animatePath({
+                            game: 'typhu',
+                            waypoints,
+                            hopHeight: 14,
+                            trailColor: p.color,
+                            hidePlayerId: p.id,
+                            drawFn: (ctx, x, y, hopOffset = 0) => this.drawPlayerToken(ctx, x, y, p, true, hopOffset),
+                            onDone: () => {
+                                this.handleLandedTile(p, this.tiles[newPos], steps);
+                            }
+                        });
                     }
                 });
             },
 
             handleLandedTile(p, tile, steps) {
                 let capNote = null;
+                let sendingToJail = false;
+
                 if (tile.type === 'START') {
-                    this.eventMessage = `${p.name} dừng tại Ô Khởi Hành.`;
+                    this.eventMessage = `🏁 ${p.name} dừng tại Ô Khởi Hành.`;
                 } else if (tile.type === 'PROP') {
                     if (tile.owner === null) {
-                        this.eventMessage = `${p.name} đến ${tile.name} (Giá: $${tile.price}).`;
+                        this.eventMessage = `🏞 ${p.name} đến ${tile.name} (Giá mua: $${tile.price}).`;
                     } else if (tile.owner === p.id) {
-                        this.eventMessage = `${p.name} ghé đất nhà ${tile.name} (Có thể xây nhà).`;
+                        this.eventMessage = `🏡 ${p.name} ghé đất nhà ${tile.name} (Có thể xây nâng cấp).`;
                     } else {
                         const ownerObj = this.players[tile.owner];
                         const rent = this.getRentAmount(tile);
@@ -8523,24 +9802,38 @@
                         capNote = `Thuê -$${rent}`;
                         const rect = this.getTileRect(tile.id);
                         SoundFX.playCapture();
-                        AnimFX.addCaptureEffect(rect.cx, rect.cy, `💸 Thuê $${rent}!`);
+                        AnimFX.addParticles(rect.cx, rect.cy, 14, ['#ef4444', '#fbbf24'], { speed: 110 });
+                        AnimFX.addCaptureEffect(rect.cx, rect.cy, `💸 Thuê -$${rent}!`, '#ef4444', '#f87171');
                     }
                 } else if (tile.type === 'TAX') {
                     const paid = this.payMoney(p, tile.price, null, true);
                     this.jackpot += paid;
-                    this.eventMessage = `${p.name} nộp Thuế $${paid} vào Quỹ Phúc Lợi.`;
+                    const rect = this.getTileRect(tile.id);
+                    SoundFX.playCapture();
+                    AnimFX.addParticles(rect.cx, rect.cy, 12, ['#ef4444', '#fca5a5'], { speed: 100 });
+                    AnimFX.addCaptureEffect(rect.cx, rect.cy, `🏛 Thuế -$${paid}`, '#ef4444', '#f87171');
+                    this.eventMessage = `🏛 ${p.name} nộp Thuế $${paid} vào Quỹ Phúc Lợi.`;
                     capNote = `Thuế -$${paid}`;
                 } else if (tile.type === 'PARKING') {
                     const bonus = this.jackpot;
                     p.cash += bonus;
                     this.jackpot = 100;
+                    const rect = this.getTileRect(tile.id);
                     SoundFX.playCoin();
+                    AnimFX.addParticles(rect.cx, rect.cy, 22, ['#fbbf24', '#10b981', '#fef08a', '#ffffff'], { speed: 145 });
+                    AnimFX.addCaptureEffect(rect.cx, rect.cy, `🎉 Quỹ +$${bonus}!`, '#10b981', '#fbbf24');
                     this.eventMessage = `🎉 ${p.name} nhận Quỹ Phúc Lợi Bãi Đỗ Xe +$${bonus}!`;
                     capNote = `Thưởng +$${bonus}`;
                 } else if (tile.type === 'GOTOJAIL') {
+                    sendingToJail = true;
+                    SoundFX.playJail();
+                    const r18 = this.getTileRect(18);
+                    const r6 = this.getTileRect(6);
+                    AnimFX.addParticles(r18.cx, r18.cy, 16, ['#ef4444', '#3b82f6', '#ffffff'], { speed: 120 });
+                    AnimFX.addCaptureEffect(r18.cx, r18.cy, '🚓 VÀO NHÀ TÙ!', '#ef4444', '#3b82f6');
                     p.pos = 6;
                     p.inJail = 2;
-                    SoundFX.playCapture();
+                    this.selectedTileId = 6;
                     this.eventMessage = `🚓 ${p.name} bị đưa vào Nhà Tù (2 lượt)!`;
                     capNote = 'Vào Tù';
                 } else if (tile.type === 'CHANCE' || tile.type === 'CHEST') {
@@ -8551,11 +9844,26 @@
                         { text: 'Ủng hộ quỹ lễ hội văn hóa -$80!', delta: -80 }
                     ];
                     const c = cards[Math.floor(Math.random() * cards.length)];
-                    if (c.delta >= 0) { p.cash += c.delta; SoundFX.playCoin(); }
-                    else {
+                    const rect = this.getTileRect(tile.id);
+                    SoundFX.playCard();
+                    if (c.delta >= 0) {
+                        p.cash += c.delta;
+                        SoundFX.playCoin();
+                        AnimFX.addParticles(rect.cx, rect.cy, 14, ['#fbbf24', '#10b981', '#fef08a'], { speed: 110 });
+                        AnimFX.addCaptureEffect(rect.cx, rect.cy, `🃏 +$${c.delta}!`, '#10b981', '#fbbf24');
+                    } else {
                         const paid = this.payMoney(p, -c.delta, null, true);
                         this.jackpot += paid;
+                        AnimFX.addParticles(rect.cx, rect.cy, 12, ['#ef4444', '#c084fc'], { speed: 100 });
+                        AnimFX.addCaptureEffect(rect.cx, rect.cy, `🃏 -$${paid}`, '#ef4444', '#c084fc');
                     }
+                    this.cardPopup = {
+                        title: tile.name,
+                        text: c.text,
+                        color: tile.color,
+                        startTime: performance.now(),
+                        duration: 2400
+                    };
                     this.eventMessage = `🃏 [${tile.name}] ${c.text}`;
                     capNote = `${c.delta > 0 ? '+' : ''}$${c.delta}`;
                 }
@@ -8566,8 +9874,42 @@
                     captureNote: capNote
                 });
 
-                if (p.bankrupt && !this.gameOver) {
+                if (this.gameOver) {
+                    this.phase = 'DONE';
+                    this.updateButtons();
+                    this.updateUI();
+                    this.render();
+                    return;
+                }
+
+                if (p.bankrupt) {
                     this.endTurn();
+                    return;
+                }
+
+                if (sendingToJail) {
+                    const r18 = this.getTileRect(18);
+                    const r6 = this.getTileRect(6);
+                    this.phase = 'MOVING';
+                    this.updateButtons();
+                    this.updateUI();
+                    AnimFX.animateMove({
+                        game: 'typhu',
+                        fromX: r18.cx, fromY: r18.cy,
+                        toX: r6.cx, toY: r6.cy,
+                        duration: App.moveSpeed === 'slow' ? 560 : (App.moveSpeed === 'normal' ? 360 : 200),
+                        hidePlayerId: p.id,
+                        drawFn: (ctx, x, y) => this.drawPlayerToken(ctx, x, y, p, true, 10),
+                        onDone: () => {
+                            this.phase = 'ACTION';
+                            this.updateButtons();
+                            this.updateUI();
+                            this.render();
+                            if (this.isCurrentTurnAI() && !this.gameOver) {
+                                App.scheduleTask(() => this.runAIDecision(App.difficulty), 480);
+                            }
+                        }
+                    });
                     return;
                 }
 
@@ -8625,8 +9967,12 @@
                 p.cash -= tile.price;
                 tile.owner = p.id;
                 tile.level = 0;
-                SoundFX.playCoin();
-                this.eventMessage = `🏠 ${p.name} đã mua Sổ Đỏ ${tile.name} giá $${tile.price}!`;
+                const rect = this.getTileRect(tile.id);
+                const gotMonopoly = this.hasFullColorGroup(p.id, tile.group);
+                SoundFX.playBuild();
+                AnimFX.addParticles(rect.cx, rect.cy, gotMonopoly ? 22 : 14, ['#10b981', '#fbbf24', '#fef08a'], { speed: 120 });
+                AnimFX.addCaptureEffect(rect.cx, rect.cy, gotMonopoly ? '👑 ĐỘC QUYỀN ×2!' : '🏠 MUA SỔ ĐỎ!', '#10b981', '#fbbf24');
+                this.eventMessage = `🏠 ${p.name} đã mua Sổ Đỏ ${tile.name} giá $${tile.price}${gotMonopoly ? ' (Đủ bộ màu ×2!)' : '!'}`;
                 this.history.push({ side: p.name, notation: `Mua ${tile.name}`, captureNote: `-$${tile.price}` });
                 this.updateButtons();
                 this.updateUI();
@@ -8640,8 +9986,11 @@
                 if (tile.type !== 'PROP' || tile.owner !== p.id || tile.level >= 4 || p.cash < tile.build) return;
                 p.cash -= tile.build;
                 tile.level++;
-                SoundFX.playCoin();
+                const rect = this.getTileRect(tile.id);
+                SoundFX.playBuild();
                 const lvName = tile.level === 4 ? 'Khách Sạn 🏨' : `Nhà cấp ${tile.level}`;
+                AnimFX.addParticles(rect.cx, rect.cy, 16, ['#fbbf24', '#38bdf8', '#ffffff'], { speed: 125 });
+                AnimFX.addCaptureEffect(rect.cx, rect.cy, tile.level === 4 ? '🏨 KHÁCH SẠN!' : `🏗 NHÀ CẤP ${tile.level}`, '#3b82f6', '#fbbf24');
                 this.eventMessage = `🏗 ${p.name} xây ${lvName} tại ${tile.name}!`;
                 this.history.push({ side: p.name, notation: `Xây ${lvName} (${tile.name})`, captureNote: `-$${tile.build}` });
                 this.updateButtons();
@@ -8656,8 +10005,11 @@
                 p.cash -= 100;
                 this.jackpot += 100;
                 p.inJail = 0;
+                const rect = this.getTileRect(p.pos);
                 SoundFX.playCoin();
-                this.eventMessage = `${p.name} đã nộp phạt $100 ra tù! Bấm Đổ Xúc Xắc để đi.`;
+                AnimFX.addParticles(rect.cx, rect.cy, 12, ['#10b981', '#fef08a'], { speed: 100 });
+                AnimFX.addCaptureEffect(rect.cx, rect.cy, '🔓 RA TÙ!', '#10b981', '#34d399');
+                this.eventMessage = `🔓 ${p.name} đã nộp phạt $100 ra tù! Bấm Đổ Xúc Xắc để đi.`;
                 this.history.push({ side: p.name, notation: 'Nộp phạt ra tù', captureNote: '-$100' });
                 this.updateButtons();
                 this.updateUI();
@@ -8722,6 +10074,7 @@
                     this.gameOver = true;
                     SoundFX.playWin();
                     const w = alive[0] || this.players[0];
+                    AnimFX.addParticles(App.boardW / 2, App.boardH / 2, 42, ['#fbbf24', '#10b981', '#3b82f6', '#ef4444', '#ffffff'], { speed: 190, size: 4.2, life: 950 });
                     App.setStatus(`🏆 ${w.name} thắng!`, true);
                     App.showResultModal(`🏆 ${w.name} vô địch Cờ Tỷ Phú!`, `Các đối thủ còn lại đã phá sản. Tổng tài sản: $${this.calcNetWorth(w)}.`);
                 }
@@ -8748,12 +10101,56 @@
             showHint() {
                 const p = this.getCurrentPlayer();
                 const tile = this.tiles[p.pos];
-                if (this.phase === 'ROLL') App.showToast(p.inJail > 0 && p.cash >= 100 ? '💡 Bạn có thể nộp phạt $100 ra tù trước khi đổ xúc xắc!' : '💡 Bấm "🎲 Đổ Xúc Xắc" để đi!');
+                if (this.phase === 'ROLL') App.showToast(p.inJail > 0 && p.cash >= 100 ? '💡 Bạn có thể nộp phạt $100 ra tù trước khi đổ xúc xắc!' : '💡 Bấm "🎲 Đổ Xúc Xắc", Khay Xúc Xắc hoặc phím Space để đi!');
                 else if (tile.type === 'PROP' && tile.owner === null && p.cash >= tile.price) App.showToast(`💡 Gợi ý: Nên mua Sổ Đỏ ${tile.name} ($${tile.price})!`);
+                else if (tile.type === 'PROP' && tile.owner === p.id && tile.level < 4 && p.cash >= tile.build) App.showToast(`💡 Gợi ý: Có thể xây nâng cấp ${tile.name} ($${tile.build})!`);
                 else App.showToast('💡 Gợi ý: Bấm "⏭ Xong Lượt" để chuyển lượt.');
             },
 
+            onHover(x, y) {
+                if (this.gameOver) return;
+                const tray = this.getDiceTrayRect();
+                const canHumanRoll = (this.phase === 'ROLL' && !this.isCurrentTurnAI() && !AnimFX.isBusy());
+                let newHoverTray = false;
+                let newHoverTile = null;
+
+                if (canHumanRoll && x >= tray.x && x <= tray.x + tray.w && y >= tray.y && y <= tray.y + tray.h) {
+                    newHoverTray = true;
+                } else {
+                    for (const t of this.tiles) {
+                        const rect = this.getTileRect(t.id);
+                        if (x >= rect.x && x <= rect.x + rect.w && y >= rect.y && y <= rect.y + rect.h) {
+                            newHoverTile = t.id;
+                            break;
+                        }
+                    }
+                }
+
+                if (App.canvas) App.canvas.style.cursor = (newHoverTray || newHoverTile !== null) ? 'pointer' : 'default';
+                if (this.hoverDiceTray !== newHoverTray || this.hoverTileId !== newHoverTile) {
+                    this.hoverDiceTray = newHoverTray;
+                    this.hoverTileId = newHoverTile;
+                    this.render();
+                }
+            },
+
+            onHoverLeave() {
+                if (App.canvas) App.canvas.style.cursor = 'default';
+                if (this.hoverDiceTray || this.hoverTileId !== null) {
+                    this.hoverDiceTray = false;
+                    this.hoverTileId = null;
+                    this.render();
+                }
+            },
+
             onClick(x, y) {
+                const tray = this.getDiceTrayRect();
+                if (this.phase === 'ROLL' && !this.isCurrentTurnAI() && !this.gameOver && !AnimFX.isBusy() &&
+                    x >= tray.x && x <= tray.x + tray.w && y >= tray.y && y <= tray.y + tray.h) {
+                    this.rollDice();
+                    return;
+                }
+
                 for (const t of this.tiles) {
                     const rect = this.getTileRect(t.id);
                     if (x >= rect.x && x <= rect.x + rect.w && y >= rect.y && y <= rect.y + rect.h) {
@@ -8771,18 +10168,67 @@
                 const tile = this.tiles[p.pos];
                 const isAI = this.isCurrentTurnAI();
 
-                document.getElementById('btnTpRoll').disabled = (this.phase !== 'ROLL' || isAI || this.gameOver);
-                document.getElementById('btnTpBuy').disabled = (this.phase !== 'ACTION' || isAI || this.gameOver || tile.type !== 'PROP' || tile.owner !== null || p.cash < tile.price);
-                document.getElementById('btnTpUpgrade').disabled = (this.phase !== 'ACTION' || isAI || this.gameOver || tile.type !== 'PROP' || tile.owner !== p.id || tile.level >= 4 || p.cash < tile.build);
-                document.getElementById('btnTpEndTurn').disabled = (this.phase !== 'ACTION' || isAI || this.gameOver);
-
+                const btnRoll = document.getElementById('btnTpRoll');
+                const btnBuy = document.getElementById('btnTpBuy');
+                const btnUp = document.getElementById('btnTpUpgrade');
+                const btnEnd = document.getElementById('btnTpEndTurn');
                 const btnBail = document.getElementById('btnTpBail');
+                const pipsBox = document.getElementById('typhuDicePips');
+
+                const canHumanRoll = (this.phase === 'ROLL' && !isAI && !this.gameOver);
+                const canBuy = (this.phase === 'ACTION' && !isAI && !this.gameOver && tile.type === 'PROP' && tile.owner === null && p.cash >= tile.price);
+                const canUpgrade = (this.phase === 'ACTION' && !isAI && !this.gameOver && tile.type === 'PROP' && tile.owner === p.id && tile.level < 4 && p.cash >= tile.build);
+
+                btnRoll.disabled = !canHumanRoll;
+                btnRoll.classList.toggle('btn-roll-ready', canHumanRoll);
+
+                btnBuy.disabled = !canBuy;
+                btnBuy.textContent = (tile.type === 'PROP' && tile.owner === null) ? `🏠 Mua ($${tile.price})` : '🏠 Mua Đất';
+
+                btnUp.disabled = !canUpgrade;
+                if (tile.type === 'PROP' && tile.owner === p.id && tile.level < 4) {
+                    btnUp.textContent = tile.level === 3 ? `🏨 Khách Sạn ($${tile.build})` : `🏗 Cấp ${tile.level + 1} ($${tile.build})`;
+                } else {
+                    btnUp.textContent = '🏗 Xây Nhà';
+                }
+
+                btnEnd.disabled = (this.phase !== 'ACTION' || isAI || this.gameOver);
                 btnBail.style.display = (this.phase === 'ROLL' && p.inJail > 0 && p.cash >= 100 && !isAI && !this.gameOver) ? 'inline-flex' : 'none';
+
+                if (pipsBox) {
+                    const total = this.dice[0] + this.dice[1];
+                    const isDbl = (this.dice[0] === this.dice[1]);
+                    if (this.phase === 'ROLLING') {
+                        pipsBox.innerHTML = DiceFX.renderMiniDiceHTML(this.dice, 'rolling');
+                    } else if (this.history.length > 0 || this.phase === 'ACTION' || this.phase === 'MOVING') {
+                        const badge = isDbl ? `= ${total} ĐÔI!` : `= ${total}`;
+                        pipsBox.innerHTML = DiceFX.renderMiniDiceHTML(this.dice, `landed${isDbl ? ' special' : ''}`, badge);
+                    } else {
+                        pipsBox.innerHTML = DiceFX.renderMiniDiceHTML(this.dice, 'idle', 'Chờ đổ');
+                    }
+                }
             },
 
             updateUI() {
                 this.updateButtons();
                 const curP = this.getCurrentPlayer();
+
+                if (this.gameOver) {
+                    const alive = this.players.filter(pl => !pl.bankrupt);
+                    const w = alive[0] || curP;
+                    App.setStatus(`🏆 ${w.name} thắng!`, true);
+                } else if (this.isCurrentTurnAI()) {
+                    App.setStatus(`🤖 ${curP.name} đang đi...`, false);
+                } else if (this.phase === 'ROLL') {
+                    App.setStatus(`🎲 Lượt ${curP.name}: Đổ xúc xắc`, false);
+                } else if (this.phase === 'ROLLING') {
+                    App.setStatus(`🎲 Đang gieo xúc xắc...`, false);
+                } else if (this.phase === 'MOVING') {
+                    App.setStatus(`🚶 ${curP.name} đang di chuyển...`, false);
+                } else {
+                    App.setStatus(`🏦 ${curP.name}: Mua/Xây hoặc Xong lượt`, false);
+                }
+
                 const nw0 = this.calcNetWorth(this.players[0]) + 100;
                 const nw1 = this.calcNetWorth(this.players[1] || this.players[0]) + 100;
                 App.updateForceBar(nw0, nw1, `Quỹ Phúc Lợi Bãi Đỗ Xe: $${this.jackpot}`, `Tổng Tài Sản`);
@@ -8825,132 +10271,574 @@
                 App.updateHistoryUI(this.history);
             },
 
+            drawWrappedText(ctx, text, x, y, maxW, lineH, maxLines = 2) {
+                const words = String(text).split(/\s+/);
+                const lines = [];
+                let line = '';
+                for (const w of words) {
+                    const test = line ? `${line} ${w}` : w;
+                    if (ctx.measureText(test).width > maxW && line) {
+                        lines.push(line);
+                        line = w;
+                        if (lines.length >= maxLines - 1) break;
+                    } else {
+                        line = test;
+                    }
+                }
+                if (line) {
+                    const remaining = words.slice(lines.join(' ').split(/\s+/).filter(Boolean).length).join(' ');
+                    lines.push(lines.length === maxLines - 1 && remaining ? remaining : line);
+                }
+                const startY = y - ((lines.length - 1) * lineH) / 2;
+                lines.slice(0, maxLines).forEach((ln, idx) => {
+                    ctx.fillText(ln, x, startY + idx * lineH, maxW);
+                });
+            },
+
+            drawBuildingBadge(ctx, x, y, level) {
+                ctx.save();
+                if (level === 4) {
+                    // Hotel icon (crimson + gold roof)
+                    ctx.fillStyle = '#dc2626';
+                    ctx.fillRect(x - 10, y - 4, 12, 10);
+                    ctx.fillStyle = '#fbbf24';
+                    ctx.beginPath();
+                    ctx.moveTo(x - 11.5, y - 4);
+                    ctx.lineTo(x - 4, y - 9.5);
+                    ctx.lineTo(x + 3.5, y - 4);
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.strokeStyle = '#ffffff';
+                    ctx.lineWidth = 0.8;
+                    ctx.stroke();
+                } else {
+                    for (let i = 0; i < level; i++) {
+                        const hx = x - i * 10;
+                        ctx.fillStyle = '#10b981';
+                        ctx.fillRect(hx - 4, y - 2, 7.5, 6.5);
+                        ctx.fillStyle = '#fef08a';
+                        ctx.beginPath();
+                        ctx.moveTo(hx - 5, y - 2);
+                        ctx.lineTo(hx - 0.25, y - 6.5);
+                        ctx.lineTo(hx + 4.5, y - 2);
+                        ctx.closePath();
+                        ctx.fill();
+                    }
+                }
+                ctx.restore();
+            },
+
+            drawPlayerToken(ctx, x, y, pl, isActiveTurn, hopOffset = 0) {
+                const liftScale = 1 + Math.min(0.24, hopOffset * 0.01);
+                const ty = y - hopOffset;
+                const r = 9;
+
+                ctx.save();
+                // Shadow
+                ctx.fillStyle = `rgba(0, 0, 0, ${Math.max(0.18, 0.45 - hopOffset * 0.01).toFixed(2)})`;
+                ctx.beginPath();
+                ctx.ellipse(x, y + 3, 8.5 + hopOffset * 0.08, 4.8, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+                if (isActiveTurn) {
+                    const pulse = 1 + Math.sin(performance.now() * 0.009) * 0.14;
+                    ctx.strokeStyle = '#fef08a';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.arc(x, y, 12 * pulse, 0, Math.PI * 2);
+                    ctx.stroke();
+                }
+
+                ctx.translate(x, ty);
+                ctx.scale(liftScale, liftScale);
+
+                const grad = ctx.createRadialGradient(-2.5, -2.5, 1.5, 0, 0, r);
+                grad.addColorStop(0, '#ffffff');
+                grad.addColorStop(0.28, pl.color);
+                grad.addColorStop(1, '#0f172a');
+                ctx.fillStyle = grad;
+                ctx.beginPath();
+                ctx.arc(0, 0, r, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.fillStyle = pl.color;
+                ctx.beginPath();
+                ctx.arc(0, 0, r - 1.6, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.lineWidth = isActiveTurn ? 2 : 1.4;
+                ctx.strokeStyle = isActiveTurn ? '#fef08a' : '#ffffff';
+                ctx.beginPath();
+                ctx.arc(0, 0, r - 0.5, 0, Math.PI * 2);
+                ctx.stroke();
+
+                ctx.fillStyle = '#ffffff';
+                ctx.font = 'bold 8px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(`P${pl.id + 1}`, 0, 0.5);
+                ctx.restore();
+            },
+
             render() {
                 const ctx = App.ctx;
                 const W = App.boardW, H = App.boardH;
                 const cell = W / 7;
+                const now = performance.now();
 
-                ctx.fillStyle = '#0f172a';
+                const pal = {
+                    'dark-gold': { bg: '#0c1320', tile: '#1a2436', tileSel: '#2c3c56', border: '#475569', dash: '#111826', panel: '#182234', gold: '#fbbf24', goldBorder: '#d97706' },
+                    'classic-wood': { bg: '#21130a', tile: '#2f1c11', tileSel: '#462b1a', border: '#78502e', dash: '#1c1008', panel: '#2a180e', gold: '#f6c968', goldBorder: '#c5892b' },
+                    'tournament-emerald': { bg: '#091815', tile: '#122723', tileSel: '#1d3c36', border: '#2e5e54', dash: '#0c1f1b', panel: '#142d27', gold: '#34d399', goldBorder: '#10b981' }
+                }[App.theme] || { bg: '#0c1320', tile: '#1a2436', tileSel: '#2c3c56', border: '#475569', dash: '#111826', panel: '#182234', gold: '#fbbf24', goldBorder: '#d97706' };
+
+                ctx.fillStyle = pal.bg;
                 ctx.fillRect(0, 0, W, H);
 
+                const curPlayer = this.getCurrentPlayer();
+
+                // 24 Perimeter Tiles
                 for (const t of this.tiles) {
                     const rect = this.getTileRect(t.id);
                     const isSel = t.id === this.selectedTileId;
+                    const isHov = t.id === this.hoverTileId;
+                    const isCurPlayerTile = curPlayer && !curPlayer.bankrupt && curPlayer.pos === t.id;
+                    const tx = rect.x + 1.5, ty = rect.y + 1.5, tw = rect.w - 3, th = rect.h - 3;
 
-                    ctx.fillStyle = isSel ? '#334155' : '#1e293b';
-                    ctx.fillRect(rect.x + 1, rect.y + 1, rect.w - 2, rect.h - 2);
+                    ctx.save();
+                    ctx.fillStyle = isSel ? pal.tileSel : (isHov ? '#27354d' : pal.tile);
+                    ctx.beginPath();
+                    if (ctx.roundRect) ctx.roundRect(tx, ty, tw, th, 7);
+                    else ctx.rect(tx, ty, tw, th);
+                    ctx.fill();
 
+                    // Clip inside tile for clean header & footer ribbons
+                    ctx.save();
+                    ctx.clip();
+
+                    const headerH = t.type === 'PROP' ? 18 : 14;
                     ctx.fillStyle = t.color;
-                    ctx.fillRect(rect.x + 1, rect.y + 1, rect.w - 2, 18);
+                    ctx.fillRect(tx, ty, tw, headerH);
+                    const hGloss = ctx.createLinearGradient(tx, ty, tx, ty + headerH);
+                    hGloss.addColorStop(0, 'rgba(255,255,255,0.25)');
+                    hGloss.addColorStop(1, 'rgba(0,0,0,0.22)');
+                    ctx.fillStyle = hGloss;
+                    ctx.fillRect(tx, ty, tw, headerH);
 
                     if (t.type === 'PROP' && t.owner !== null) {
                         const ownerColor = this.players[t.owner].color;
                         ctx.fillStyle = ownerColor;
-                        ctx.fillRect(rect.x + 3, rect.y + rect.h - 10, rect.w - 6, 7);
-                        if (t.level > 0) {
+                        ctx.fillRect(tx, ty + th - 7, tw, 7);
+                        if (this.hasFullColorGroup(t.owner, t.group)) {
                             ctx.fillStyle = '#fef08a';
-                            ctx.font = 'bold 10px sans-serif';
-                            ctx.textAlign = 'right';
+                            ctx.font = 'bold 9.5px sans-serif';
+                            ctx.textAlign = 'left';
                             ctx.textBaseline = 'middle';
-                            ctx.fillText(t.level === 4 ? '🏨' : '🏠'.repeat(t.level), rect.x + rect.w - 4, rect.y + 11);
+                            ctx.fillText('★', tx + 5, ty + 9.5);
+                        }
+                        if (t.level > 0) {
+                            this.drawBuildingBadge(ctx, tx + tw - 8, ty + 10, t.level);
                         }
                     }
+                    ctx.restore();
 
-                    ctx.strokeStyle = isSel ? '#fbbf24' : '#475569';
-                    ctx.lineWidth = isSel ? 2.5 : 1;
-                    ctx.strokeRect(rect.x + 1, rect.y + 1, rect.w - 2, rect.h - 2);
-
-                    ctx.fillStyle = '#f8fafc';
-                    ctx.font = 'bold 9.5px sans-serif';
-                    ctx.textAlign = 'center';
-                    ctx.textBaseline = 'middle';
-                    ctx.fillText(t.name, rect.cx, rect.y + 34, rect.w - 6);
-
-                    if (t.price > 0) {
-                        ctx.fillStyle = '#fbbf24';
-                        ctx.font = 'bold 10px sans-serif';
-                        ctx.fillText(`$${t.price}`, rect.cx, rect.y + 52);
+                    // Tile border & active player highlight
+                    if (isCurPlayerTile && !this.gameOver) {
+                        const pAlpha = 0.55 + Math.sin(now * 0.008) * 0.35;
+                        ctx.strokeStyle = `rgba(251, 191, 36, ${pAlpha.toFixed(2)})`;
+                        ctx.lineWidth = 2.6;
+                        ctx.stroke();
                     }
-                }
-
-                // Center Sổ Đỏ & Dashboard
-                const cx = cell, cy = cell, cw = cell * 5, ch = cell * 5;
-                ctx.fillStyle = '#151c28';
-                ctx.strokeStyle = '#d97706';
-                ctx.lineWidth = 2;
-                ctx.fillRect(cx + 6, cy + 6, cw - 12, ch - 12);
-                ctx.strokeRect(cx + 6, cy + 6, cw - 12, ch - 12);
-
-                ctx.fillStyle = '#fbbf24';
-                ctx.font = 'bold 16px sans-serif';
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-                ctx.fillText('🏦 CỜ TỶ PHÚ ĐỊA DANH VIỆT NAM', W / 2, cy + 32);
-
-                ctx.fillStyle = '#e2e8f0';
-                ctx.font = 'bold 12px sans-serif';
-                ctx.fillText(`🎲 Xúc xắc: [${this.dice[0]} + ${this.dice[1]}] = ${this.dice[0] + this.dice[1]}   |   🅿 Quỹ Phúc Lợi: $${this.jackpot}`, W / 2, cy + 56);
-
-                ctx.fillStyle = '#93c5fd';
-                ctx.font = '11.5px sans-serif';
-                ctx.fillText(this.eventMessage, W / 2, cy + 78, cw - 30);
-
-                const sel = this.tiles[this.selectedTileId] || this.tiles[23];
-                const cardX = W / 2 - 135, cardY = cy + 98, cardW = 270, cardH = 230;
-                ctx.fillStyle = '#1e293b';
-                ctx.strokeStyle = sel.color;
-                ctx.lineWidth = 2.5;
-                ctx.fillRect(cardX, cardY, cardW, cardH);
-                ctx.strokeRect(cardX, cardY, cardW, cardH);
-
-                ctx.fillStyle = sel.color;
-                ctx.fillRect(cardX, cardY, cardW, 34);
-                ctx.fillStyle = '#ffffff';
-                ctx.font = 'bold 13.5px sans-serif';
-                ctx.fillText(`📜 SỔ ĐỎ: ${sel.name.toUpperCase()}`, W / 2, cardY + 18);
-
-                ctx.fillStyle = '#f3f4f6';
-                ctx.font = '12px sans-serif';
-                if (sel.type === 'PROP') {
-                    const ownerText = sel.owner === null ? 'Chưa có chủ (Có thể mua)' : this.players[sel.owner].name;
-                    ctx.fillText(`Chủ sở hữu: ${ownerText}`, W / 2, cardY + 54);
-                    ctx.fillText(`Giá mua đất: $${sel.price}  |  Giá xây nhà: $${sel.build}`, W / 2, cardY + 76);
-                    ctx.fillStyle = '#fde68a';
-                    ctx.fillText(`• Thuê đất trống: $${sel.rent[0]} (Đủ bộ màu ×2)`, W / 2, cardY + 104);
-                    ctx.fillText(`• Nhà cấp 1: $${sel.rent[1]}   |   Nhà cấp 2: $${sel.rent[2]}`, W / 2, cardY + 126);
-                    ctx.fillText(`• Nhà cấp 3: $${sel.rent[3]}   |   Khách Sạn 🏨: $${sel.rent[4]}`, W / 2, cardY + 148);
-                    ctx.fillStyle = '#9ca3af';
-                    ctx.font = 'italic 11px sans-serif';
-                    ctx.fillText('(Click vào bất kỳ ô địa danh nào để tra cứu)', W / 2, cardY + 205);
-                } else {
-                    ctx.fillText(`Ô Đặc Biệt: ${sel.name}`, W / 2, cardY + 95);
-                    ctx.fillStyle = '#9ca3af';
-                    ctx.fillText('Click vào các ô địa danh để xem biểu phí thuê', W / 2, cardY + 135);
-                }
-
-                const offsets = [[-14, 14], [14, 14], [-14, 28], [14, 28]];
-                this.players.forEach((pl, idx) => {
-                    if (pl.bankrupt) return;
-                    if (AnimFX.moveAnim && AnimFX.moveAnim.game === 'typhu' && AnimFX.moveAnim.hidePlayerId === pl.id) return;
-                    const rect = this.getTileRect(pl.pos);
-                    const [dx, dy] = offsets[idx];
-                    const px = rect.cx + dx, py = rect.cy + dy;
-
-                    ctx.save();
-                    ctx.beginPath();
-                    ctx.arc(px, py, 10, 0, Math.PI * 2);
-                    ctx.fillStyle = pl.color;
-                    ctx.fill();
-                    ctx.lineWidth = idx === this.turnIdx ? 2.5 : 1.5;
-                    ctx.strokeStyle = idx === this.turnIdx ? '#fef08a' : '#ffffff';
+                    ctx.strokeStyle = isSel ? pal.gold : (isHov ? '#94a3b8' : pal.border);
+                    ctx.lineWidth = isSel ? 2.4 : 1.1;
                     ctx.stroke();
 
-                    ctx.fillStyle = '#ffffff';
-                    ctx.font = 'bold 9px sans-serif';
+                    // Tile labels
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'middle';
-                    ctx.fillText(`P${idx + 1}`, px, py);
+                    if (t.type === 'PROP') {
+                        ctx.fillStyle = '#f8fafc';
+                        ctx.font = 'bold 9.5px sans-serif';
+                        this.drawWrappedText(ctx, t.name, rect.cx, rect.y + 32, tw - 8, 11, 2);
+
+                        if (t.owner === null) {
+                            ctx.fillStyle = '#fbbf24';
+                            ctx.font = 'bold 10px sans-serif';
+                            ctx.fillText(`$${t.price}`, rect.cx, rect.y + 50);
+                        } else {
+                            ctx.fillStyle = '#7dd3fc';
+                            ctx.font = 'bold 9.5px sans-serif';
+                            ctx.fillText(`Thuê $${this.getRentAmount(t)}`, rect.cx, rect.y + 50);
+                        }
+                    } else {
+                        const icons = {
+                            START: '🏁', JAIL: '⛓', PARKING: '🅿', GOTOJAIL: '🚓',
+                            CHANCE: '❓', CHEST: '🎁', TAX: '🏛'
+                        };
+                        ctx.font = '14px sans-serif';
+                        ctx.fillText(icons[t.type] || '★', rect.cx, rect.y + 27);
+                        ctx.fillStyle = '#f8fafc';
+                        ctx.font = 'bold 9.5px sans-serif';
+                        this.drawWrappedText(ctx, t.name, rect.cx, rect.y + 45, tw - 8, 10.5, 2);
+
+                        ctx.font = 'bold 9px sans-serif';
+                        if (t.type === 'START') {
+                            ctx.fillStyle = '#34d399';
+                            ctx.fillText('+$200', rect.cx, rect.y + 58);
+                        } else if (t.type === 'TAX') {
+                            ctx.fillStyle = '#fca5a5';
+                            ctx.fillText(`-$${t.price}`, rect.cx, rect.y + 58);
+                        } else if (t.type === 'PARKING') {
+                            ctx.fillStyle = '#fbbf24';
+                            ctx.fillText(`$${this.jackpot}`, rect.cx, rect.y + 58);
+                        } else if (t.type === 'GOTOJAIL') {
+                            ctx.fillStyle = '#fca5a5';
+                            ctx.fillText('2 lượt', rect.cx, rect.y + 58);
+                        }
+                    }
                     ctx.restore();
+                }
+
+                // Center Dashboard (5x5)
+                const cx = cell, cy = cell, cw = cell * 5, ch = cell * 5;
+                const dx = cx + 8, dy = cy + 8, dw = cw - 16, dh = ch - 16;
+
+                ctx.save();
+                ctx.fillStyle = pal.dash;
+                ctx.strokeStyle = pal.goldBorder;
+                ctx.lineWidth = 2.2;
+                ctx.beginPath();
+                if (ctx.roundRect) ctx.roundRect(dx, dy, dw, dh, 12);
+                else ctx.rect(dx, dy, dw, dh);
+                ctx.fill();
+                ctx.stroke();
+
+                // Title
+                ctx.fillStyle = pal.gold;
+                ctx.font = 'bold 14.5px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText('🏦 CỜ TỶ PHÚ ĐỊA DANH VIỆT NAM', W / 2, dy + 20);
+
+                // Top Status Strip: Current Player Pill + Jackpot Pill
+                const stripY = dy + 36, stripH = 26;
+                const pPillW = 216, jPillW = dw - 24 - pPillW - 8;
+
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.34)';
+                ctx.strokeStyle = curPlayer ? curPlayer.color : pal.border;
+                ctx.lineWidth = 1.4;
+                ctx.beginPath();
+                if (ctx.roundRect) ctx.roundRect(dx + 12, stripY, pPillW, stripH, 13);
+                else ctx.rect(dx + 12, stripY, pPillW, stripH);
+                ctx.fill();
+                ctx.stroke();
+
+                if (curPlayer) {
+                    ctx.fillStyle = curPlayer.color;
+                    ctx.beginPath();
+                    ctx.arc(dx + 26, stripY + stripH / 2, 5.5, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.fillStyle = '#f8fafc';
+                    ctx.font = 'bold 11.5px sans-serif';
+                    ctx.textAlign = 'left';
+                    const jailTag = curPlayer.inJail > 0 ? ' 🔒' : '';
+                    ctx.fillText(`${curPlayer.name} • $${curPlayer.cash}${jailTag}`, dx + 37, stripY + stripH / 2 + 0.5, pPillW - 32);
+                }
+
+                ctx.fillStyle = 'rgba(16, 185, 129, 0.14)';
+                ctx.strokeStyle = 'rgba(16, 185, 129, 0.5)';
+                ctx.lineWidth = 1.2;
+                ctx.beginPath();
+                if (ctx.roundRect) ctx.roundRect(dx + 12 + pPillW + 8, stripY, jPillW, stripH, 13);
+                else ctx.rect(dx + 12 + pPillW + 8, stripY, jPillW, stripH);
+                ctx.fill();
+                ctx.stroke();
+
+                ctx.fillStyle = '#6ee7b7';
+                ctx.font = 'bold 11.5px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText(`🅿 Quỹ Phúc Lợi: $${this.jackpot}`, dx + 12 + pPillW + 8 + jPillW / 2, stripY + stripH / 2 + 0.5, jPillW - 10);
+
+                // Semantic Event Ticker Bar
+                const tickY = dy + 69, tickH = 27;
+                const isNegEvt = /trả \$|Thuế|Nhà Tù|phá sản|-\$/i.test(this.eventMessage);
+                const isPosEvt = /mua|xây|nhận|đổ đôi|ra tù|\+\$/i.test(this.eventMessage);
+                ctx.fillStyle = isNegEvt ? 'rgba(239, 68, 68, 0.14)' : (isPosEvt ? 'rgba(16, 185, 129, 0.14)' : 'rgba(56, 189, 248, 0.12)');
+                ctx.strokeStyle = isNegEvt ? 'rgba(239, 68, 68, 0.4)' : (isPosEvt ? 'rgba(16, 185, 129, 0.4)' : 'rgba(56, 189, 248, 0.35)');
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                if (ctx.roundRect) ctx.roundRect(dx + 12, tickY, dw - 24, tickH, 7);
+                else ctx.rect(dx + 12, tickY, dw - 24, tickH);
+                ctx.fill();
+                ctx.stroke();
+
+                ctx.fillStyle = isNegEvt ? '#fecaca' : (isPosEvt ? '#a7f3d0' : '#bae6fd');
+                ctx.font = 'bold 11px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText(this.eventMessage, W / 2, tickY + tickH / 2 + 0.5, dw - 38);
+
+                // Left Panel: Sổ Đỏ Card
+                const sel = this.tiles[this.selectedTileId] || this.tiles[23];
+                const cardX = dx + 12, cardY = dy + 104, cardW = 228, cardH = 286;
+                ctx.fillStyle = pal.panel;
+                ctx.strokeStyle = sel.color;
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                if (ctx.roundRect) ctx.roundRect(cardX, cardY, cardW, cardH, 10);
+                else ctx.rect(cardX, cardY, cardW, cardH);
+                ctx.fill();
+                ctx.stroke();
+
+                ctx.save();
+                ctx.beginPath();
+                if (ctx.roundRect) ctx.roundRect(cardX, cardY, cardW, 34, [10, 10, 0, 0]);
+                else ctx.rect(cardX, cardY, cardW, 34);
+                ctx.fillStyle = sel.color;
+                ctx.fill();
+                ctx.fillStyle = '#ffffff';
+                ctx.font = 'bold 12.5px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText(`📜 ${sel.name.toUpperCase()}`, cardX + cardW / 2, cardY + 18, cardW - 14);
+                ctx.restore();
+
+                if (sel.type === 'PROP') {
+                    const hasOwner = sel.owner !== null;
+                    const ownerObj = hasOwner ? this.players[sel.owner] : null;
+                    const isMon = hasOwner && this.hasFullColorGroup(sel.owner, sel.group);
+
+                    ctx.textAlign = 'center';
+                    ctx.fillStyle = hasOwner ? ownerObj.color : '#94a3b8';
+                    ctx.font = 'bold 11px sans-serif';
+                    ctx.fillText(hasOwner ? `Chủ: ${ownerObj.name}${isMon ? ' ★ ×2' : ''}` : 'Chưa có chủ (Có thể mua)', cardX + cardW / 2, cardY + 49, cardW - 14);
+
+                    // Price & Build boxes
+                    const pillW = (cardW - 26) / 2;
+                    ctx.fillStyle = 'rgba(0,0,0,0.28)';
+                    ctx.fillRect(cardX + 10, cardY + 62, pillW, 32);
+                    ctx.fillRect(cardX + 16 + pillW, cardY + 62, pillW, 32);
+                    ctx.fillStyle = '#94a3b8';
+                    ctx.font = '10px sans-serif';
+                    ctx.fillText('Giá Đất', cardX + 10 + pillW / 2, cardY + 72);
+                    ctx.fillText('Xây Nhà', cardX + 16 + pillW * 1.5, cardY + 72);
+                    ctx.fillStyle = '#fbbf24';
+                    ctx.font = 'bold 12px sans-serif';
+                    ctx.fillText(`$${sel.price}`, cardX + 10 + pillW / 2, cardY + 86);
+                    ctx.fillText(`$${sel.build}`, cardX + 16 + pillW * 1.5, cardY + 86);
+
+                    // Rent table with active level highlight
+                    const rentLabels = ['Đất trống', '🏠 Nhà cấp 1', '🏠🏠 Nhà cấp 2', '🏠🏠🏠 Nhà cấp 3', '🏨 Khách Sạn'];
+                    for (let lv = 0; lv < 5; lv++) {
+                        const rowY = cardY + 104 + lv * 30;
+                        const isCurLv = hasOwner && sel.level === lv;
+                        ctx.fillStyle = isCurLv ? 'rgba(245, 158, 11, 0.22)' : (lv % 2 === 0 ? 'rgba(255,255,255,0.03)' : 'transparent');
+                        ctx.beginPath();
+                        if (ctx.roundRect) ctx.roundRect(cardX + 10, rowY, cardW - 20, 26, 5);
+                        else ctx.rect(cardX + 10, rowY, cardW - 20, 26);
+                        ctx.fill();
+                        if (isCurLv) {
+                            ctx.strokeStyle = '#fbbf24';
+                            ctx.lineWidth = 1.2;
+                            ctx.stroke();
+                        }
+
+                        ctx.textAlign = 'left';
+                        ctx.fillStyle = isCurLv ? '#fef08a' : '#cbd5e1';
+                        ctx.font = isCurLv ? 'bold 11px sans-serif' : '11px sans-serif';
+                        ctx.fillText(rentLabels[lv], cardX + 18, rowY + 13.5);
+
+                        ctx.textAlign = 'right';
+                        const val = (lv === 0 && isMon) ? sel.rent[0] * 2 : sel.rent[lv];
+                        ctx.fillStyle = isCurLv ? '#fbbf24' : '#e2e8f0';
+                        ctx.font = 'bold 11.5px sans-serif';
+                        ctx.fillText(`$${val}${lv === 0 && isMon ? ' (×2)' : ''}`, cardX + cardW - 18, rowY + 13.5);
+                    }
+
+                    ctx.textAlign = 'center';
+                    ctx.fillStyle = '#94a3b8';
+                    ctx.font = 'italic 10px sans-serif';
+                    ctx.fillText('Đủ bộ màu: ×2 tiền thuê đất trống', cardX + cardW / 2, cardY + cardH - 14);
+                } else {
+                    const descMap = {
+                        START: 'Mỗi lần đi qua hoặc dừng tại Ô Khởi Hành, bạn nhận ngay +$200 tiền lương!',
+                        JAIL: 'Nơi giam giữ 2 lượt. Có thể nộp phạt $100 trước khi đổ, hoặc chờ đổ đôi để ra tù!',
+                        PARKING: `Bãi Đỗ Xe miễn phí! Dừng tại đây được nhận toàn bộ Quỹ Phúc Lợi ($${this.jackpot}).`,
+                        GOTOJAIL: 'Bị áp giải thẳng vào Nhà Tù (2 lượt) và không được nhận lương qua Khởi Hành.',
+                        CHANCE: 'Rút thẻ Cơ Hội ngẫu nhiên: có thể nhận thưởng du lịch hoặc đóng góp nâng cấp hạ tầng.',
+                        CHEST: 'Rút thẻ Khí Vận ngẫu nhiên: nhận thưởng dự án xanh hoặc hỗ trợ quỹ lễ hội văn hóa.',
+                        TAX: `Đóng thuế thu nhập $${sel.price} trực tiếp vào Quỹ Phúc Lợi Bãi Đỗ Xe.`
+                    };
+                    const iconMap = { START: '🏁', JAIL: '⛓', PARKING: '🅿', GOTOJAIL: '🚓', CHANCE: '❓', CHEST: '🎁', TAX: '🏛' };
+                    ctx.textAlign = 'center';
+                    ctx.font = '36px sans-serif';
+                    ctx.fillText(iconMap[sel.type] || '★', cardX + cardW / 2, cardY + 86);
+                    ctx.fillStyle = '#e2e8f0';
+                    ctx.font = '12px sans-serif';
+                    this.drawWrappedText(ctx, descMap[sel.type] || sel.name, cardX + cardW / 2, cardY + 165, cardW - 28, 18, 6);
+                }
+
+                // Right-Top Panel: Interactive Felt Dice Tray
+                const tray = this.getDiceTrayRect();
+                const canHumanRoll = (this.phase === 'ROLL' && !this.isCurrentTurnAI() && !this.gameOver && !AnimFX.isBusy());
+                ctx.save();
+                const feltGrad = ctx.createLinearGradient(tray.x, tray.y, tray.x, tray.y + tray.h);
+                feltGrad.addColorStop(0, '#0f342c');
+                feltGrad.addColorStop(1, '#08201b');
+                ctx.fillStyle = feltGrad;
+                ctx.beginPath();
+                if (ctx.roundRect) ctx.roundRect(tray.x, tray.y, tray.w, tray.h, 10);
+                else ctx.rect(tray.x, tray.y, tray.w, tray.h);
+                ctx.fill();
+
+                ctx.strokeStyle = this.hoverDiceTray ? '#fef08a' : (canHumanRoll ? pal.gold : pal.goldBorder);
+                ctx.lineWidth = (this.hoverDiceTray || canHumanRoll) ? 2.2 : 1.5;
+                ctx.stroke();
+
+                // Inner dashed felt seam
+                ctx.strokeStyle = 'rgba(251, 191, 36, 0.25)';
+                ctx.setLineDash([4, 3]);
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                if (ctx.roundRect) ctx.roundRect(tray.x + 5, tray.y + 5, tray.w - 10, tray.h - 10, 7);
+                else ctx.rect(tray.x + 5, tray.y + 5, tray.w - 10, tray.h - 10);
+                ctx.stroke();
+                ctx.setLineDash([]);
+
+                ctx.fillStyle = '#a7f3d0';
+                ctx.font = 'bold 10.5px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText('🎲 KHAY XÚC XẮC', tray.cx, tray.y + 16);
+
+                if (!DiceFX.isRolling()) {
+                    const isDbl = this.dice[0] === this.dice[1] && this.history.length > 0;
+                    DiceFX.renderStaticDie(ctx, tray.cx - 34, tray.cy - 2, 22, this.dice[0], -0.09, isDbl);
+                    DiceFX.renderStaticDie(ctx, tray.cx + 34, tray.cy - 2, 22, this.dice[1], 0.11, isDbl);
+                }
+
+                // Tray bottom prompt / score badge
+                if (canHumanRoll) {
+                    const pulseAlpha = 0.72 + Math.sin(now * 0.008) * 0.28;
+                    ctx.fillStyle = `rgba(245, 158, 11, ${pulseAlpha.toFixed(2)})`;
+                    ctx.beginPath();
+                    if (ctx.roundRect) ctx.roundRect(tray.cx - 64, tray.y + tray.h - 27, 128, 19, 9.5);
+                    else ctx.rect(tray.cx - 64, tray.y + tray.h - 27, 128, 19);
+                    ctx.fill();
+                    ctx.fillStyle = '#090d14';
+                    ctx.font = 'bold 10px sans-serif';
+                    ctx.fillText('👆 BẤM ĐỂ ĐỔ (Space)', tray.cx, tray.y + tray.h - 17.5);
+                } else {
+                    const total = this.dice[0] + this.dice[1];
+                    const isDbl = (this.dice[0] === this.dice[1] && this.history.length > 0);
+                    ctx.fillStyle = isDbl ? '#fef08a' : '#cbd5e1';
+                    ctx.font = 'bold 11px sans-serif';
+                    ctx.fillText(
+                        this.phase === 'ROLLING' ? 'Đang tung xúc xắc...' : (isDbl ? `Tổng: ${total} ✨ ĐÔI!` : `Tổng: ${total}`),
+                        tray.cx, tray.y + tray.h - 16
+                    );
+                }
+                ctx.restore();
+
+                // Right-Bottom Panel: Mini Leaderboard
+                const lbX = tray.x, lbY = tray.y + tray.h + 8, lbW = tray.w, lbH = cardH - tray.h - 8;
+                ctx.save();
+                ctx.fillStyle = pal.panel;
+                ctx.strokeStyle = pal.border;
+                ctx.lineWidth = 1.4;
+                ctx.beginPath();
+                if (ctx.roundRect) ctx.roundRect(lbX, lbY, lbW, lbH, 10);
+                else ctx.rect(lbX, lbY, lbW, lbH);
+                ctx.fill();
+                ctx.stroke();
+
+                ctx.fillStyle = pal.gold;
+                ctx.font = 'bold 10.5px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText('🏆 BẢNG TỶ PHÚ', lbX + lbW / 2, lbY + 14);
+
+                this.players.forEach((pl, idx) => {
+                    const rowY = lbY + 25 + idx * 27;
+                    const isCur = idx === this.turnIdx && !this.gameOver;
+                    const propCnt = this.tiles.filter(t => t.type === 'PROP' && t.owner === pl.id).length;
+
+                    if (isCur) {
+                        ctx.fillStyle = 'rgba(245, 158, 11, 0.16)';
+                        ctx.beginPath();
+                        if (ctx.roundRect) ctx.roundRect(lbX + 6, rowY, lbW - 12, 23, 6);
+                        else ctx.rect(lbX + 6, rowY, lbW - 12, 23);
+                        ctx.fill();
+                        ctx.strokeStyle = pl.color;
+                        ctx.lineWidth = 1;
+                        ctx.stroke();
+                    }
+
+                    ctx.fillStyle = pl.bankrupt ? '#64748b' : pl.color;
+                    ctx.beginPath();
+                    ctx.arc(lbX + 16, rowY + 11.5, 4.5, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    ctx.textAlign = 'left';
+                    ctx.fillStyle = pl.bankrupt ? '#64748b' : '#f1f5f9';
+                    ctx.font = isCur ? 'bold 10.5px sans-serif' : '10.5px sans-serif';
+                    ctx.fillText(`${pl.short || pl.name}${pl.inJail > 0 ? ' 🔒' : ''}`, lbX + 25, rowY + 12);
+
+                    ctx.textAlign = 'right';
+                    ctx.fillStyle = pl.bankrupt ? '#ef4444' : '#fbbf24';
+                    ctx.font = 'bold 10.5px sans-serif';
+                    ctx.fillText(pl.bankrupt ? 'Phá sản' : `$${pl.cash} (${propCnt})`, lbX + lbW - 10, rowY + 12);
+                });
+                ctx.restore();
+
+                // Bottom Tip or Animated Card Reveal Banner
+                const footY = dy + 398, footH = dh - 404;
+                if (this.cardPopup && (now - this.cardPopup.startTime) < this.cardPopup.duration) {
+                    const age = now - this.cardPopup.startTime;
+                    const alpha = age > this.cardPopup.duration - 350 ? Math.max(0, (this.cardPopup.duration - age) / 350) : 1;
+                    ctx.save();
+                    ctx.globalAlpha = alpha;
+                    ctx.fillStyle = 'rgba(15, 23, 42, 0.96)';
+                    ctx.strokeStyle = this.cardPopup.color;
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    if (ctx.roundRect) ctx.roundRect(dx + 12, footY, dw - 24, Math.max(26, footH), 8);
+                    else ctx.rect(dx + 12, footY, dw - 24, Math.max(26, footH));
+                    ctx.fill();
+                    ctx.stroke();
+                    ctx.fillStyle = '#fef08a';
+                    ctx.font = 'bold 11.5px sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(`🃏 [${this.cardPopup.title}] ${this.cardPopup.text}`, W / 2, footY + Math.max(26, footH) / 2 + 0.5, dw - 40);
+                    ctx.restore();
+                } else {
+                    this.cardPopup = null;
+                    ctx.fillStyle = '#94a3b8';
+                    ctx.font = 'italic 10.5px sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('💡 Click ô đất để xem Sổ Đỏ • Bấm Khay Xúc Xắc hoặc Space để đổ', W / 2, footY + Math.max(24, footH) / 2);
+                }
+                ctx.restore();
+
+                // Dynamic non-overlapping player token clusters per tile
+                const clusterOffsets = {
+                    1: [[0, 0]],
+                    2: [[-12, 0], [12, 0]],
+                    3: [[-14, -5], [14, -5], [0, 8]],
+                    4: [[-12, -5], [12, -5], [-12, 8], [12, 8]]
+                };
+                const tileGroups = new Map();
+                this.players.forEach(pl => {
+                    if (pl.bankrupt) return;
+                    if (AnimFX.moveAnim && AnimFX.moveAnim.game === 'typhu' && AnimFX.moveAnim.hidePlayerId === pl.id) return;
+                    if (!tileGroups.has(pl.pos)) tileGroups.set(pl.pos, []);
+                    tileGroups.get(pl.pos).push(pl);
+                });
+
+                tileGroups.forEach((group, pos) => {
+                    const rect = this.getTileRect(pos);
+                    const offs = clusterOffsets[group.length] || clusterOffsets[4];
+                    group.forEach((pl, i) => {
+                        const [ox, oy] = offs[i];
+                        const baseCenterY = rect.y + 70;
+                        this.drawPlayerToken(ctx, rect.cx + ox, baseCenterY + oy, pl, pl.id === (curPlayer && curPlayer.id) && !this.gameOver, 0);
+                    });
                 });
 
                 AnimFX.renderOverlays(ctx);

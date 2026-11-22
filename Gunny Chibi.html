@@ -1157,6 +1157,7 @@
         }
 
         .modal-backdrop.hidden { display: none; }
+        .hidden { display: none !important; }
 
         .modal-card {
             background: linear-gradient(180deg, #1b2b4d 0%, #0d1629 100%);
@@ -1595,17 +1596,23 @@
             border-radius: 99px;
         }
 
+        .formula-table-wrap {
+            width: 100%;
+            overflow-x: auto;
+            margin-top: 6px;
+        }
+
         .formula-table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 8px;
-            font-size: 0.79rem;
+            font-size: 0.73rem;
         }
 
         .formula-table th, .formula-table td {
             border: 1px solid rgba(255, 255, 255, 0.15);
-            padding: 5px 6px;
+            padding: 4px 4px;
             text-align: center;
+            white-space: nowrap;
         }
 
         .formula-table th {
@@ -1672,7 +1679,7 @@
                 </div>
 
                 <div class="timer-box" id="timerBox" title="Thời gian còn lại của lượt">
-                    <span class="timer-num" id="timerText">30</span>
+                    <span class="timer-num" id="timerText">60</span>
                     <span class="timer-sub">GIÂY</span>
                 </div>
             </div>
@@ -1682,8 +1689,8 @@
                     <canvas id="minimapCanvas" width="140" height="42"></canvas>
                 </div>
                 <div class="top-actions">
-                    <button class="btn-ui active-toggle" id="btnRuler" title="Bật/Tắt thước đo 10 cự ly Gunny">📏 Thước</button>
-                    <button class="btn-ui" id="btnFormula" title="Bảng công thức Góc 65 / 50 / Siêu Cao & Combo">📖 Công Thức</button>
+                    <button class="btn-ui active-toggle" id="btnRuler" title="Bật/Tắt thước đo cự ly toàn bản đồ (16 cự)">📏 Thước</button>
+                    <button class="btn-ui" id="btnFormula" title="Bảng công thức Góc 65 / 50 / 30 / Siêu Cao (1-16 cự) & Combo">📖 Công Thức</button>
                     <button class="btn-ui" id="btnBgm" title="Bật/Tắt nhạc nền Gunny Chiptune">🎵 Nhạc</button>
                     <button class="btn-ui active-toggle" id="btnSound" title="Bật/Tắt hiệu ứng âm thanh">🔊 SFX</button>
                     <button class="btn-ui primary" id="btnNewMatch" title="Mở Phòng Chờ (Chọn Đấu Trường, Boss, Phó Bản)">⚙️ Phòng Chờ</button>
@@ -1776,65 +1783,65 @@
                     </div>
 
                     <div class="items-row" id="itemsRow">
-                        <button class="item-slot" id="item_double2" onclick="game.useItem('double2')" title="Bắn 3 loạt đạn (62% sát thương/loạt) • +160 Delay">
+                        <button class="item-slot" id="item_double2" onclick="game.useItem('double2')" title="Bắn 3 loạt đạn (62% sát thương/loạt) • +35 Delay">
                             <span class="item-key">1</span>
                             <span class="item-icon" style="color:#fde047">+2</span>
                             <span class="item-name">Bắn +2</span>
-                            <span class="item-cost">130 TL</span>
+                            <span class="item-cost">110 TL</span>
                         </button>
-                        <button class="item-slot" id="item_double1" onclick="game.useItem('double1')" title="Bắn 2 loạt đạn (76% sát thương/loạt) • +110 Delay">
+                        <button class="item-slot" id="item_double1" onclick="game.useItem('double1')" title="Bắn 2 loạt đạn (76% sát thương/loạt) • +22 Delay">
                             <span class="item-key">2</span>
                             <span class="item-icon" style="color:#fb923c">+1</span>
                             <span class="item-name">Bắn +1</span>
-                            <span class="item-cost">95 TL</span>
+                            <span class="item-cost">85 TL</span>
                         </button>
-                        <button class="item-slot" id="item_triple" onclick="game.useItem('triple')" title="Chia 3 tia -5°/0°/+5° • +100 Delay">
+                        <button class="item-slot" id="item_triple" onclick="game.useItem('triple')" title="Chia 3 tia -5°/0°/+5° • +25 Delay">
                             <span class="item-key">3</span>
                             <span class="item-icon">🔱</span>
                             <span class="item-name">3 Tia</span>
-                            <span class="item-cost">85 TL</span>
+                            <span class="item-cost">80 TL</span>
                         </button>
-                        <button class="item-slot" id="item_pow50" onclick="game.useItem('pow50')" title="Tăng 50% sát thương (cộng dồn +30%) • +90 Delay">
+                        <button class="item-slot" id="item_pow50" onclick="game.useItem('pow50')" title="Tăng 50% sát thương (cộng dồn +30%) • +22 Delay">
                             <span class="item-key">4</span>
                             <span class="item-icon" style="color:#f87171">50%</span>
                             <span class="item-name">Lực +50</span>
-                            <span class="item-cost">80 TL</span>
+                            <span class="item-cost">75 TL</span>
                         </button>
-                        <button class="item-slot" id="item_pow30" onclick="game.useItem('pow30')" title="Tăng 30% sát thương • +60 Delay">
+                        <button class="item-slot" id="item_pow30" onclick="game.useItem('pow30')" title="Tăng 30% sát thương • +15 Delay">
                             <span class="item-key">5</span>
                             <span class="item-icon" style="color:#fbbf24">30%</span>
                             <span class="item-name">Lực +30</span>
                             <span class="item-cost">50 TL</span>
                         </button>
-                        <button class="item-slot" id="item_ice" onclick="game.useItem('ice')" title="Đạn Băng: Đóng băng địch & Ngắt chiêu Boss! • +100 Delay">
+                        <button class="item-slot" id="item_ice" onclick="game.useItem('ice')" title="Đạn Băng: Đóng băng địch & Ngắt chiêu Boss! • +25 Delay">
                             <span class="item-key">6</span>
                             <span class="item-icon">❄️</span>
                             <span class="item-name">Đạn Băng</span>
-                            <span class="item-cost">85 TL</span>
+                            <span class="item-cost">90 TL</span>
                         </button>
-                        <button class="item-slot" id="item_homing" onclick="game.useItem('homing')" title="Đạn tự dẫn hướng vào mục tiêu gần nhất • +110 Delay">
+                        <button class="item-slot" id="item_homing" onclick="game.useItem('homing')" title="Đạn tự dẫn hướng vào mục tiêu gần nhất • +28 Delay">
                             <span class="item-key">7</span>
                             <span class="item-icon">🎯</span>
                             <span class="item-name">Dẫn Đường</span>
                             <span class="item-cost">95 TL</span>
                         </button>
-                        <button class="item-slot" id="item_heal" onclick="game.useItem('heal')" title="Hồi 380 HP bản thân & 180 HP đồng đội • +70 Delay">
+                        <button class="item-slot" id="item_heal" onclick="game.useItem('heal')" title="Hồi 380 HP bản thân & 180 HP đồng đội (1 lần/lượt) • +20 Delay">
                             <span class="item-key">8</span>
                             <span class="item-icon">💖</span>
                             <span class="item-name">Hồi Máu</span>
                             <span class="item-cost">80 TL</span>
                         </button>
-                        <button class="item-slot" id="item_fly" onclick="game.useItem('fly')" title="Bay bằng Máy Bay Giấy tới vị trí mới • +110 Delay">
+                        <button class="item-slot" id="item_fly" onclick="game.useItem('fly')" title="Bay bằng Máy Bay Giấy tới vị trí mới (kết hợp được Khiên Ẩn) • +15 Delay">
                             <span class="item-key">F</span>
                             <span class="item-icon">✈️</span>
                             <span class="item-name">Bay</span>
-                            <span class="item-cost">100 TL</span>
+                            <span class="item-cost">150 TL</span>
                         </button>
-                        <button class="item-slot" id="item_shield" onclick="game.useItem('shield')" title="Giảm 45% sát thương nhận & Tàng hình 2 lượt • +60 Delay">
+                        <button class="item-slot" id="item_shield" onclick="game.useItem('shield')" title="Giảm 45% sát thương nhận & Tàng hình 2 lượt (1 lần/lượt) • +15 Delay">
                             <span class="item-key">C</span>
                             <span class="item-icon">🛡️</span>
                             <span class="item-name">Khiên Ẩn</span>
-                            <span class="item-cost">65 TL</span>
+                            <span class="item-cost">50 TL</span>
                         </button>
                     </div>
                 </div>
@@ -1882,7 +1889,7 @@
                     <span class="fire-sub">Giữ SPACE / Thả</span>
                 </button>
 
-                <button class="btn-ui" id="btnSkip" style="height:60px; flex-direction:column; padding:4px 6px;" title="Bỏ lượt: chỉ tốn +50 Delay & hồi +25% Nộ [Phím P]">
+                <button class="btn-ui" id="btnSkip" style="height:60px; flex-direction:column; padding:4px 6px;" title="Bỏ lượt: tốn +50 Delay (+Delay đạo cụ đã dùng) & hồi +25% Nộ [Phím P]">
                     <span style="font-size:1rem;">⏭️</span>
                     <span style="font-size:0.6rem;">Pass [P]</span>
                 </button>
@@ -2033,38 +2040,76 @@
 
     <!-- ==================== MODAL 2: FORMULA & STRATEGY GUIDE ==================== -->
     <div class="modal-backdrop hidden" id="formulaModal">
-        <div class="modal-card" style="max-width:740px;">
+        <div class="modal-card" style="max-width:920px;">
             <div class="lobby-header">
-                <div class="modal-title">📖 CẨM NANG CÔNG THỨC & CHIẾN THUẬT GUNNY</div>
+                <div class="modal-title">📖 CẨM NANG CÔNG THỨC & CHIẾN THUẬT GUNNY (FULL BẢN ĐỒ 16 CỰ)</div>
                 <button class="btn-ui" onclick="document.getElementById('formulaModal').classList.add('hidden')">✖ Đóng</button>
             </div>
-            <p style="font-size:0.82rem; color:#cbd5e1; line-height:1.5;">
-                Bật <b>"📏 Thước"</b> để xem khoảng cách (100px = <b>1 Cự ly</b>). Nhấn vào <b>Thanh Lực</b> để ghim mốc lực mục tiêu.<br>
-                • <b>Gió Thuận</b> (mũi tên cùng hướng bắn): Cộng góc hoặc Giảm lực. • <b>Gió Ngược</b>: Trừ góc hoặc Tăng lực.
+            <p style="font-size:0.8rem; color:#cbd5e1; line-height:1.5;">
+                • <b>1 cự ly = 100px</b>. Màn hình hiển thị rộng <b>12.8 cự (1280px)</b>, toàn bản đồ rộng <b>16 cự (1600px)</b> — kéo chuột hoặc bấm bản đồ nhỏ để soi qua màn hình.<br>
+                • Bật <b>"📏 Thước"</b> để xem chính xác cự ly &amp; chênh lệch độ cao (<code>↑/↓ cự cao</code> khi địch ở vùng đất trên không). Nhấn vào <b>Thanh Lực</b> để ghim mốc lực.<br>
+                • <b>Gió Thuận</b> (mũi tên cùng hướng bắn) / <b>Gió Ngược</b> (ngược hướng bắn). Lưu ý: <b>Thánh Cung Ánh Sáng</b> kháng 45% gió (hệ số gió × <code>0.55</code>), <b>VIP Sấm Sét</b> × <code>0.92</code>, <b>Hỏa Phụng Hoàng</b> × <code>0.90</code>.
             </p>
 
-            <h4 style="color:#fbbf24; margin-top:10px; font-size:0.86rem;">1. Công thức Góc 65° Chuẩn Gunny: Góc = 65 ± (Gió × 2)</h4>
-            <table class="formula-table">
-                <thead><tr><th>Cự ly</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th><th>10</th></tr></thead>
-                <tbody><tr><td><b>Lực</b></td><td>26</td><td>38</td><td>47</td><td>55</td><td>62</td><td>68</td><td>74</td><td>80</td><td>86</td><td>91</td></tr></tbody>
-            </table>
+            <h4 style="color:#fbbf24; margin-top:10px; font-size:0.84rem;">1. Công thức Góc 65° Chuẩn Gunny (Full 1–16 cự): Góc = 65 ± (Gió × 2) <span style="font-weight:600; color:#cbd5e1;">(Gió Thuận cộng góc, Gió Ngược trừ góc)</span></h4>
+            <div class="formula-table-wrap">
+                <table class="formula-table">
+                    <thead><tr><th>Cự ly</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th><th>10</th><th>11</th><th>12</th><th>13</th><th>14</th><th>15</th><th>16</th></tr></thead>
+                    <tbody><tr><td><b>Lực</b></td><td>18</td><td>27</td><td>34</td><td>39.5</td><td>44.5</td><td>48.5</td><td>52.5</td><td>56.5</td><td>60</td><td>63.5</td><td>66.5</td><td>69.5</td><td>72.5</td><td>75</td><td>78</td><td>80.5</td></tr></tbody>
+                </table>
+            </div>
 
-            <h4 style="color:#38bdf8; margin-top:10px; font-size:0.86rem;">2. Công thức Góc 50° (Vượt trần hang động / Gió mạnh): Góc = 50 ± (Gió × 2)</h4>
-            <table class="formula-table">
-                <thead><tr><th>Cự ly</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th><th>10</th></tr></thead>
-                <tbody><tr><td><b>Lực</b></td><td>23</td><td>34</td><td>42</td><td>49</td><td>55</td><td>61</td><td>66</td><td>71</td><td>76</td><td>81</td></tr></tbody>
-            </table>
+            <h4 style="color:#38bdf8; margin-top:10px; font-size:0.84rem;">2. Công thức Góc 50° (Bắn tầm trung / Dưới vùng đất trên không / Gió mạnh): Giữ góc 50°, Lực = Bảng 50° ∓ (Gió × 0.9)</h4>
+            <p style="font-size:0.75rem; color:#94a3b8; margin-top:2px;">
+                Gió Thuận <b>trừ lực</b>, Gió Ngược <b>cộng lực</b> (cự gần 1–5 nhân ~0.7, cự xa 10–16 nhân ~1.0–1.1 — vì gần 45° không bù góc được).
+            </p>
+            <div class="formula-table-wrap">
+                <table class="formula-table">
+                    <thead><tr><th>Cự ly</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th><th>10</th><th>11</th><th>12</th><th>13</th><th>14</th><th>15</th><th>16</th></tr></thead>
+                    <tbody><tr><td><b>Lực</b></td><td>15</td><td>23</td><td>29</td><td>34</td><td>38.5</td><td>42.5</td><td>46</td><td>49.5</td><td>52.5</td><td>55.5</td><td>58.5</td><td>61</td><td>63.5</td><td>66</td><td>68.5</td><td>70.5</td></tr></tbody>
+                </table>
+            </div>
 
-            <h4 style="color:#a855f7; margin-top:10px; font-size:0.86rem;">3. Công thức Siêu Cao (Lực cố định 90): Góc = 90 - Cự ly ± (Gió × 2)</h4>
-            <p style="font-size:0.78rem; color:#94a3b8; margin-top:4px;">
-                Ví dụ: Khoảng cách 4 cự ly, gió ngược 1.5 ➡️ Góc = 90 - 4 - (1.5 × 2) = <b>83°</b>, bắn lực <b>90</b>!
+            <h4 style="color:#fb923c; margin-top:10px; font-size:0.84rem;">3. Công thức Góc 30° (Bắn góc thấp xuyên gầm đảo bay): Góc = 30 ∓ (Gió × 0.8)</h4>
+            <p style="font-size:0.75rem; color:#94a3b8; margin-top:2px;">
+                Lưu ý dưới 45° chiều bù gió ngược lại: Gió Thuận <b>trừ</b> góc, Gió Ngược <b>cộng</b> góc.
+            </p>
+            <div class="formula-table-wrap">
+                <table class="formula-table">
+                    <thead><tr><th>Cự ly</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th><th>10</th><th>11</th><th>12</th><th>13</th><th>14</th><th>15</th><th>16</th></tr></thead>
+                    <tbody><tr><td><b>Lực</b></td><td>14.5</td><td>23.5</td><td>30.5</td><td>36</td><td>40.5</td><td>45</td><td>48.5</td><td>52.5</td><td>55.5</td><td>59</td><td>62</td><td>65</td><td>67.5</td><td>70</td><td>72.5</td><td>75</td></tr></tbody>
+                </table>
+            </div>
+
+            <h4 style="color:#a855f7; margin-top:10px; font-size:0.84rem;">4. Công thức Siêu Cao (Full 1–16 cự): Góc = 90 - Cự ly ± (Gió × 1.6) <span style="font-weight:600; color:#cbd5e1;">(Thuận cộng, Ngược trừ)</span></h4>
+            <div class="formula-table-wrap">
+                <table class="formula-table">
+                    <thead><tr><th>Cự ly</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th><th>10</th><th>11</th><th>12</th><th>13</th><th>14</th><th>15</th><th>16</th></tr></thead>
+                    <tbody>
+                        <tr><td><b>Góc (Gió 0)</b></td><td>89°</td><td>88°</td><td>87°</td><td>86°</td><td>85°</td><td>84°</td><td>83°</td><td>82°</td><td>81°</td><td>80°</td><td>79°</td><td>78°</td><td>77°</td><td>76°</td><td>75°</td><td>74°</td></tr>
+                        <tr><td><b>Lực chuẩn</b></td><td>95</td><td>95</td><td>95</td><td>95</td><td>95</td><td>95</td><td>95</td><td>95</td><td>95</td><td>95</td><td>95</td><td>96</td><td>96</td><td>96</td><td>97</td><td>97</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <p style="font-size:0.76rem; color:#94a3b8; margin-top:4px;">
+                Ví dụ: Khoảng cách <b>12 cự</b>, gió ngược <b>2.0</b> ➡️ Góc = 90 - 12 - (2.0 × 1.6) = <b>74.8° (~75°)</b>, bắn lực <b>96</b>!
             </p>
 
-            <h4 style="color:#4ade80; margin-top:10px; font-size:0.86rem;">4. Cơ Chế Delay & Mẹo Đánh Boss / Phó Bản</h4>
-            <ul style="font-size:0.78rem; color:#cbd5e1; padding-left:18px; line-height:1.55; margin-top:4px;">
-                <li><b>Hệ thống Delay:</b> Dùng càng nhiều đạo cụ (+2, +50%, 3 Tia), Delay cộng thêm càng lớn — địch có thể cướp 2 lượt liên tiếp nếu bạn lạm dụng! Nhấn <b>Pass [P]</b> chỉ tốn +50 Delay và hồi +25% Nộ.</li>
-                <li><b>Combo Sát Thương Chuẩn:</b> Bấm <b>[1] (+2) + [4] (+50%) + [5] (+30%)</b> hoặc <b>[2] (+1) + [3] (3 Tia) + [4] (+50%)</b> để dồn sát thương cực đại!</li>
-                <li><b>Ngắt Chiêu Boss & Điểm Yếu:</b> Bắn vào viên ngọc phát sáng trên đầu/ngực Boss gây <b>1.35× Điểm Yếu</b>! Khi Hắc Long Vương tụ <i>Long Nộ</i>, dùng <b>[6] Đạn Băng</b> để đóng băng và phá chiêu ngay!</li>
+            <h4 style="color:#34d399; margin-top:10px; font-size:0.84rem;">5. Bù Chênh Lệch Độ Cao (Vùng Đất Trên Không)</h4>
+            <p style="font-size:0.77rem; color:#cbd5e1; line-height:1.45; margin-top:3px;">
+                Địch cao hơn mỗi <b>1.0 cự cao (100px)</b>: Góc 65° cộng thêm <b>+0.5 cự</b> (≈ <code>+2</code> lực); Góc 50° cộng <b>+0.85 cự</b>; Siêu Cao hầu như không bị ảnh hưởng (<code>+0.2 cự</code>). Địch thấp hơn thì trừ tương ứng.
+            </p>
+
+            <h4 style="color:#4ade80; margin-top:10px; font-size:0.84rem;">6. Cơ Chế Turn (Delay), Thể Lực (240 TL) &amp; Combo Chuẩn Gunny</h4>
+            <ul style="font-size:0.77rem; color:#cbd5e1; padding-left:18px; line-height:1.5; margin-top:4px;">
+                <li><b>Thể lực (240 TL/lượt):</b> Hồi đầy mỗi đầu lượt (<i>Tủ Lạnh</i> giảm <code>-40 TL</code>). Di chuyển tốn <code>0.8 TL/px</code> (tối đa <code>3 cự</code> nếu không dùng đạo cụ) và tốn <b>0 Delay</b>.</li>
+                <li><b>Hệ thống Delay chuẩn Gunny:</b> Mỗi phát bắn cộng <code>Delay Vũ Khí (85–112)</code> + <code>Delay Đạo Cụ (+15 đến +35)</code> + <code>POW (+45)</code>. Dùng 1 đạo cụ lẻ không bị mất lượt ngay; dồn Full Combo (<code>+72 DL</code>) hoặc POW đối thủ có thể cướp thêm 1 lượt. <b>Pass [P]</b> tốn <code>+50 DL</code> (+Delay đạo cụ đã dùng) &amp; hồi <code>+25% Nộ</code>. Hết <b>60 giây</b> bị phạt <code>+100 DL</code>.</li>
+                <li><b>Combo Chuẩn 240 TL:</b>
+                    • Full Sát Thương (<code>235 TL</code>): <b>[1] +2 (110) + [4] +50% (75) + [5] +30% (50)</b><br>
+                    • Siêu Đào Hố (<code>240 TL</code>): <b>[2] +1 (85) + [3] 3 Tia (80) + [4] +50% (75)</b> hoặc <b>[1] +2 (110) + [3] 3 Tia (80) + [5] +30% (50)</b><br>
+                    • Đào Thoát Gunny (<code>200 TL</code>): <b>[C] Khiên Ẩn (50) + [F] Bay (150)</b>
+                </li>
+                <li><b>Mẹo Boss:</b> Bắn ngọc phát sáng gây <code>1.35× Điểm Yếu</code>; dùng <b>[6] Đạn Băng</b> ngắt chiêu <i>Long Nộ</i> của Hắc Long Vương.</li>
             </ul>
         </div>
     </div>
@@ -2082,8 +2127,8 @@
 
             <div style="display:flex; justify-content:center; gap:10px; flex-wrap:wrap;">
                 <button class="btn-ui" id="btnBackLobby" onclick="document.getElementById('victoryModal').classList.add('hidden'); document.getElementById('setupModal').classList.remove('hidden');">⚙️ Về Phòng Chờ</button>
-                <button class="btn-ui primary" id="btnReplayMatch" onclick="document.getElementById('victoryModal').classList.add('hidden'); game.startNewMatch();">🔄 Đánh Lại</button>
-                <button class="btn-ui primary hidden" id="btnNextStage" onclick="document.getElementById('victoryModal').classList.add('hidden'); game.nextDungeonCampaign();">➡️ Phó Bản Kế Tiếp</button>
+                <button class="btn-ui primary" id="btnReplayMatch" onclick="game.replayCurrentMatch();">🔄 Đánh Lại</button>
+                <button class="btn-ui primary hidden" id="btnNextStage" onclick="game.handleNextStage();">➡️ Phó Bản Kế Tiếp</button>
             </div>
         </div>
     </div>
@@ -2457,7 +2502,7 @@
         const WEAPONS = {
             brick: {
                 id: 'brick', name: '+12 Lu Gạch', badge: '+12',
-                damage: 278, radius: 44, critChance: 0.24, delay: 95,
+                damage: 278, radius: 44, critChance: 0.24, delay: 100,
                 minAngle: 10, maxAngle: 86, lifesteal: 0, bossBonus: 1.0, windResist: 1.0,
                 color: '#dc2626', glow: '#fca5a5', icon: '🧱',
                 powName: 'Thiên Thạch Lu Gạch',
@@ -2473,7 +2518,7 @@
             },
             dart: {
                 id: 'dart', name: 'VIP Sấm Sét', badge: 'VIP',
-                damage: 250, radius: 34, critChance: 0.45, delay: 80,
+                damage: 250, radius: 34, critChance: 0.45, delay: 88,
                 minAngle: 10, maxAngle: 88, lifesteal: 0, bossBonus: 1.05, windResist: 0.92,
                 color: '#0284c7', glow: '#fef08a', icon: '⚡',
                 powName: 'Thiên Lôi Giáng Thế',
@@ -2481,7 +2526,7 @@
             },
             fruit: {
                 id: 'fruit', name: 'Giỏ Trái Cây', badge: '+12',
-                damage: 252, radius: 49, critChance: 0.28, delay: 94,
+                damage: 252, radius: 49, critChance: 0.28, delay: 98,
                 minAngle: 10, maxAngle: 86, lifesteal: 0, bossBonus: 1.0, windResist: 1.0,
                 color: '#16a34a', glow: '#86efac', icon: '🧺',
                 powName: 'Bão Hoa Quả Nổ Tung',
@@ -2489,7 +2534,7 @@
             },
             fridge: {
                 id: 'fridge', name: 'Tủ Lạnh Mini', badge: '+12',
-                damage: 286, radius: 56, critChance: 0.18, delay: 105,
+                damage: 286, radius: 56, critChance: 0.18, delay: 106,
                 minAngle: 12, maxAngle: 85, lifesteal: 0, bossBonus: 1.0, windResist: 1.0,
                 color: '#06b6d4', glow: '#e0f2fe', icon: '🧊',
                 powName: 'Bão Tuyết Cực Hàn',
@@ -2497,7 +2542,7 @@
             },
             medkit: {
                 id: 'medkit', name: 'Túi Y Tế', badge: '+12',
-                damage: 238, radius: 42, critChance: 0.30, delay: 90,
+                damage: 238, radius: 42, critChance: 0.30, delay: 95,
                 minAngle: 10, maxAngle: 86, lifesteal: 0.22, bossBonus: 1.0, windResist: 1.0,
                 color: '#ec4899', glow: '#fbcfe8', icon: '🧰',
                 powName: 'Thiên Thần Phán Quyết',
@@ -2505,11 +2550,11 @@
             },
             boomerang: {
                 id: 'boomerang', name: 'VIP Boomerang', badge: 'VIP',
-                damage: 244, radius: 36, critChance: 0.55, delay: 78,
+                damage: 244, radius: 36, critChance: 0.55, delay: 85,
                 minAngle: 10, maxAngle: 88, lifesteal: 0, bossBonus: 1.05, windResist: 1.05,
                 color: '#eab308', glow: '#fef08a', icon: '🪃',
                 powName: 'Loạn Vũ Boomerang',
-                desc: 'Delay thấp nhất (78), Chí Mạng tới 55%! Đường đạn lượn nhẹ đặc trưng.'
+                desc: 'Delay thấp nhất (85), Chí Mạng tới 55%! Đường đạn lượn nhẹ đặc trưng.'
             },
             bazooka: {
                 id: 'bazooka', name: 'Hỏa Tiễn Hoàng Kim', badge: 'GOLD',
@@ -2521,7 +2566,7 @@
             },
             phoenix: {
                 id: 'phoenix', name: 'Hỏa Phụng Hoàng', badge: 'LEGEND',
-                damage: 268, radius: 48, critChance: 0.32, delay: 96,
+                damage: 268, radius: 48, critChance: 0.32, delay: 100,
                 minAngle: 10, maxAngle: 87, lifesteal: 0, bossBonus: 1.12, windResist: 0.9,
                 color: '#ea580c', glow: '#fdba74', icon: '🔥',
                 powName: 'Phượng Hoàng Niết Bàn',
@@ -2529,7 +2574,7 @@
             },
             holylight: {
                 id: 'holylight', name: 'Thánh Cung Ánh Sáng', badge: 'THẦN',
-                damage: 262, radius: 40, critChance: 0.38, delay: 86,
+                damage: 262, radius: 40, critChance: 0.38, delay: 92,
                 minAngle: 12, maxAngle: 89, lifesteal: 0.08, bossBonus: 1.28, windResist: 0.55,
                 color: '#a855f7', glow: '#f5d0fe', icon: '🏹',
                 powName: 'Thánh Quang Phán Xét',
@@ -2538,16 +2583,16 @@
         };
 
         const ITEMS_CONFIG = {
-            double2: { key: '1', name: '+2', cost: 130, delay: 160 },
-            double1: { key: '2', name: '+1', cost: 95, delay: 110 },
-            triple:  { key: '3', name: '3 Tia', cost: 85, delay: 100 },
-            pow50:   { key: '4', name: '+50%', cost: 80, delay: 90 },
-            pow30:   { key: '5', name: '+30%', cost: 50, delay: 60 },
-            ice:     { key: '6', name: 'Đạn Băng', cost: 85, delay: 100 },
-            homing:  { key: '7', name: 'Dẫn Đường', cost: 95, delay: 110 },
-            heal:    { key: '8', name: 'Hồi Máu', cost: 80, delay: 70 },
-            fly:     { key: 'F', name: 'Bay', cost: 100, delay: 110 },
-            shield:  { key: 'C', name: 'Khiên Ẩn', cost: 65, delay: 60 }
+            double2: { key: '1', name: '+2',        cost: 110, delay: 35, instant: false },
+            double1: { key: '2', name: '+1',        cost: 85,  delay: 22, instant: false },
+            triple:  { key: '3', name: '3 Tia',     cost: 80,  delay: 25, instant: false },
+            pow50:   { key: '4', name: '+50%',      cost: 75,  delay: 22, instant: false },
+            pow30:   { key: '5', name: '+30%',      cost: 50,  delay: 15, instant: false },
+            ice:     { key: '6', name: 'Đạn Băng',  cost: 90,  delay: 25, instant: false },
+            homing:  { key: '7', name: 'Dẫn Đường', cost: 95,  delay: 28, instant: false },
+            heal:    { key: '8', name: 'Hồi Máu',   cost: 80,  delay: 20, instant: true  },
+            fly:     { key: 'F', name: 'Bay',       cost: 150, delay: 15, instant: false },
+            shield:  { key: 'C', name: 'Khiên Ẩn',  cost: 50,  delay: 15, instant: true  }
         };
 
         const COSMETICS = {
@@ -2907,6 +2952,7 @@
                 this.ctx = this.canvas.getContext('2d', { willReadFrequently: true });
                 this.alphaMap = new Uint8Array(width * height);
                 this.props = [];
+                this.aerialPlatforms = [];
                 this.mapKey = 'tropical';
             }
 
@@ -2916,13 +2962,14 @@
                 const ctx = this.ctx;
                 ctx.clearRect(0, 0, this.width, this.height);
                 this.props = [];
+                this.aerialPlatforms = [];
 
                 const heights = new Float32Array(this.width);
                 const s1 = Math.random() * 6.28;
                 const s2 = Math.random() * 6.28;
 
                 if (mapKey === 'sky') {
-                    // 4 Distinct Floating Islands with solid guarantees
+                    // Multi-tier Floating Islands (lower + upper aerial shelves)
                     this._generateFloatingIslands(theme);
                     this.refreshAlphaCache();
                     return;
@@ -2939,8 +2986,8 @@
                         const center = Math.exp(-Math.pow((nx - 0.5) / 0.18, 2)) * 75;
                         h = 445 - hillL - hillR - center + Math.sin(nx * 24 + s1) * 14;
                     } else if (mapKey === 'ice') {
-                        // Sharp alpine ridges + central glacier dip
-                        h = 370 - Math.abs(Math.sin(nx * Math.PI * 3 + 0.3)) * 110 + Math.cos(nx * 18 + s2) * 18;
+                        // Sharp alpine ridges + central glacier dip (with headroom for aerial ice shelves)
+                        h = 425 - Math.abs(Math.sin(nx * Math.PI * 3 + 0.3)) * 100 + Math.cos(nx * 18 + s2) * 16;
                     } else if (mapKey === 'volcano') {
                         // High obsidian cliffs on flanks + rugged volcanic span
                         const flank = Math.pow(Math.abs(nx - 0.5) * 2, 1.8) * 135;
@@ -2980,7 +3027,7 @@
                         // Cavern floor with crystal mounds & low center pit
                         h = 415 - Math.exp(-Math.pow((nx - 0.22) / 0.11, 2)) * 95 - Math.exp(-Math.pow((nx - 0.78) / 0.11, 2)) * 95 + Math.sin(nx * 20 + s1) * 16;
                     }
-                    heights[x] = Math.max(245, Math.min(620, h));
+                    heights[x] = Math.max(305, Math.min(620, h));
                 }
 
                 // Draw primary terrain polygon
@@ -3070,19 +3117,178 @@
                 ctx.stroke();
                 ctx.restore();
 
+                // Generate destructible aerial platforms above ground
+                this._generateAerialPlatforms(mapKey, theme, heights);
+
                 // Populate decorative surface props (flags, lamps, mushrooms, crystals)
                 this._populateProps(mapKey, heights);
                 this.refreshAlphaCache();
             }
 
+            _generateAerialPlatforms(mapKey, theme, heights) {
+                const ctx = this.ctx;
+                const templates = {
+                    tropical:  [
+                        { cx: 410,  topY: 205, halfW: 95,  thickness: 34, style: 'island' },
+                        { cx: 800,  topY: 170, halfW: 105, thickness: 36, style: 'island' },
+                        { cx: 1190, topY: 205, halfW: 95,  thickness: 34, style: 'island' }
+                    ],
+                    ice: [
+                        { cx: 360,  topY: 195, halfW: 95,  thickness: 36, style: 'ice' },
+                        { cx: 800,  topY: 165, halfW: 110, thickness: 38, style: 'ice' },
+                        { cx: 1240, topY: 195, halfW: 95,  thickness: 36, style: 'ice' }
+                    ],
+                    volcano: [
+                        { cx: 450,  topY: 210, halfW: 95,  thickness: 36, style: 'island' },
+                        { cx: 800,  topY: 175, halfW: 105, thickness: 38, style: 'island' },
+                        { cx: 1150, topY: 210, halfW: 95,  thickness: 36, style: 'island' }
+                    ],
+                    pagoda: [
+                        { cx: 380,  topY: 200, halfW: 100, thickness: 30, style: 'deck' },
+                        { cx: 800,  topY: 165, halfW: 115, thickness: 32, style: 'deck' },
+                        { cx: 1220, topY: 200, halfW: 100, thickness: 30, style: 'deck' }
+                    ],
+                    cyber: [
+                        { cx: 360,  topY: 190, halfW: 105, thickness: 28, style: 'cyber' },
+                        { cx: 800,  topY: 165, halfW: 120, thickness: 28, style: 'cyber' },
+                        { cx: 1240, topY: 190, halfW: 105, thickness: 28, style: 'cyber' }
+                    ],
+                    pirate: [
+                        { cx: 410,  topY: 205, halfW: 95,  thickness: 28, style: 'deck' },
+                        { cx: 800,  topY: 175, halfW: 115, thickness: 30, style: 'deck' },
+                        { cx: 1190, topY: 205, halfW: 95,  thickness: 28, style: 'deck' }
+                    ],
+                    mushroom: [
+                        { cx: 420,  topY: 205, halfW: 95,  thickness: 34, style: 'mushroom' },
+                        { cx: 800,  topY: 170, halfW: 105, thickness: 36, style: 'mushroom' },
+                        { cx: 1180, topY: 205, halfW: 95,  thickness: 34, style: 'mushroom' }
+                    ],
+                    desert: [
+                        { cx: 380,  topY: 205, halfW: 100, thickness: 30, style: 'deck' },
+                        { cx: 800,  topY: 170, halfW: 105, thickness: 32, style: 'deck' },
+                        { cx: 1220, topY: 205, halfW: 100, thickness: 30, style: 'deck' }
+                    ],
+                    colosseum: [
+                        { cx: 420,  topY: 200, halfW: 100, thickness: 30, style: 'deck' },
+                        { cx: 800,  topY: 165, halfW: 105, thickness: 32, style: 'deck' },
+                        { cx: 1180, topY: 200, halfW: 100, thickness: 30, style: 'deck' }
+                    ],
+                    antcave: [
+                        { cx: 400,  topY: 200, halfW: 95,  thickness: 34, style: 'island' },
+                        { cx: 800,  topY: 175, halfW: 115, thickness: 36, style: 'island' },
+                        { cx: 1200, topY: 200, halfW: 95,  thickness: 34, style: 'island' }
+                    ]
+                };
+
+                const list = templates[mapKey] || templates.tropical;
+                list.forEach((tpl, idx) => {
+                    const halfW = tpl.halfW;
+                    const thickness = tpl.thickness;
+                    const cx = Math.max(halfW + 70, Math.min(this.width - halfW - 70, Math.round(tpl.cx + (Math.random() - 0.5) * 50)));
+                    const desiredTopY = tpl.topY + (Math.random() - 0.5) * 18;
+
+                    let minGroundY = this.height;
+                    const x0 = Math.max(0, Math.floor(cx - halfW - 12));
+                    const x1 = Math.min(this.width - 1, Math.ceil(cx + halfW + 12));
+                    for (let x = x0; x <= x1; x++) {
+                        if (heights[x] < minGroundY) minGroundY = heights[x];
+                    }
+
+                    const topY = Math.round(Math.max(145, Math.min(desiredTopY, minGroundY - thickness - 105)));
+                    if (minGroundY - (topY + thickness) < 95) return;
+
+                    this._drawSingleAerialPlatform(ctx, theme, cx, topY, halfW, thickness, tpl.style);
+                    this.aerialPlatforms.push({ cx, topY, halfW, thickness });
+
+                    if (idx === 1 || Math.random() < 0.6) {
+                        const propType = mapKey === 'pagoda' ? 'lantern' :
+                                         mapKey === 'mushroom' ? 'mushroom' :
+                                         mapKey === 'antcave' ? 'crystal' :
+                                         mapKey === 'cyber' ? 'pylon' : 'banner';
+                        this.props.push({ type: propType, x: cx + (idx === 1 ? 0 : (idx === 0 ? -35 : 35)), y: topY - 4, color: theme.topSoil });
+                    }
+                });
+            }
+
+            _drawSingleAerialPlatform(ctx, theme, cx, topY, halfW, thickness, style) {
+                const grad = ctx.createLinearGradient(cx, topY - 6, cx, topY + thickness + 14);
+                grad.addColorStop(0, theme.midSoil);
+                grad.addColorStop(1, theme.deepRock);
+
+                ctx.save();
+                ctx.fillStyle = grad;
+                ctx.beginPath();
+                ctx.moveTo(cx - halfW, topY + 2);
+                ctx.quadraticCurveTo(cx, topY - 12, cx + halfW, topY + 2);
+
+                if (style === 'ice') {
+                    ctx.lineTo(cx + halfW * 0.86, topY + thickness * 0.65);
+                    ctx.lineTo(cx + halfW * 0.52, topY + thickness * 1.25);
+                    ctx.lineTo(cx + halfW * 0.24, topY + thickness * 0.8);
+                    ctx.lineTo(cx, topY + thickness * 1.45);
+                    ctx.lineTo(cx - halfW * 0.28, topY + thickness * 0.85);
+                    ctx.lineTo(cx - halfW * 0.58, topY + thickness * 1.2);
+                    ctx.lineTo(cx - halfW * 0.86, topY + thickness * 0.6);
+                } else if (style === 'deck' || style === 'cyber') {
+                    ctx.lineTo(cx + halfW * 0.88, topY + thickness);
+                    ctx.lineTo(cx - halfW * 0.88, topY + thickness);
+                } else if (style === 'mushroom') {
+                    ctx.quadraticCurveTo(cx + halfW * 0.92, topY + thickness * 0.9, cx + halfW * 0.5, topY + thickness * 0.95);
+                    ctx.lineTo(cx + halfW * 0.16, topY + thickness * 1.2);
+                    ctx.lineTo(cx - halfW * 0.16, topY + thickness * 1.2);
+                    ctx.lineTo(cx - halfW * 0.5, topY + thickness * 0.95);
+                    ctx.quadraticCurveTo(cx - halfW * 0.92, topY + thickness * 0.9, cx - halfW, topY + 2);
+                } else {
+                    ctx.lineTo(cx + halfW * 0.78, topY + thickness * 0.72);
+                    ctx.lineTo(cx + halfW * 0.26, topY + thickness * 1.15);
+                    ctx.lineTo(cx - halfW * 0.22, topY + thickness * 1.08);
+                    ctx.lineTo(cx - halfW * 0.78, topY + thickness * 0.68);
+                }
+                ctx.closePath();
+                ctx.fill();
+
+                if (style === 'cyber' || style === 'deck') {
+                    ctx.strokeStyle = style === 'cyber' ? 'rgba(34, 211, 238, 0.75)' : 'rgba(251, 191, 36, 0.55)';
+                    ctx.lineWidth = 2.5;
+                    ctx.beginPath();
+                    ctx.moveTo(cx - halfW * 0.84, topY + thickness - 1);
+                    ctx.lineTo(cx + halfW * 0.84, topY + thickness - 1);
+                    ctx.stroke();
+                }
+
+                // Walkable top crust
+                ctx.strokeStyle = theme.topSoil;
+                ctx.lineWidth = 11;
+                ctx.lineCap = 'round';
+                ctx.beginPath();
+                ctx.moveTo(cx - halfW + 5, topY + 3);
+                ctx.quadraticCurveTo(cx, topY - 10, cx + halfW - 5, topY + 3);
+                ctx.stroke();
+
+                // Top highlight rim
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(cx - halfW + 7, topY);
+                ctx.quadraticCurveTo(cx, topY - 13, cx + halfW - 7, topY);
+                ctx.stroke();
+                ctx.restore();
+            }
+
             _generateFloatingIslands(theme) {
                 const ctx = this.ctx;
-                const islands = [
-                    { cx: 230, cy: 385, rx: 165, ry: 55 },
-                    { cx: 590, cy: 325, rx: 135, ry: 48 },
-                    { cx: 990, cy: 345, rx: 145, ry: 50 },
-                    { cx: 1370, cy: 380, rx: 165, ry: 55 }
+                const lowerIslands = [
+                    { cx: 230,  cy: 405, rx: 165, ry: 52 },
+                    { cx: 590,  cy: 365, rx: 135, ry: 46 },
+                    { cx: 990,  cy: 380, rx: 145, ry: 48 },
+                    { cx: 1370, cy: 405, rx: 165, ry: 52 }
                 ];
+                const upperIslands = [
+                    { cx: Math.round(410 + (Math.random() - 0.5) * 40),  cy: Math.round(205 + (Math.random() - 0.5) * 16), rx: 115, ry: 34 },
+                    { cx: Math.round(800 + (Math.random() - 0.5) * 40),  cy: Math.round(175 + (Math.random() - 0.5) * 14), rx: 110, ry: 32 },
+                    { cx: Math.round(1190 + (Math.random() - 0.5) * 40), cy: Math.round(205 + (Math.random() - 0.5) * 16), rx: 115, ry: 34 }
+                ];
+                const islands = [...lowerIslands, ...upperIslands];
 
                 for (const isl of islands) {
                     const grad = ctx.createLinearGradient(isl.cx, isl.cy - isl.ry, isl.cx, isl.cy + isl.ry * 2.2);
@@ -3102,7 +3308,7 @@
 
                     // Fluffy pink/white top cloud grass
                     ctx.strokeStyle = theme.topSoil;
-                    ctx.lineWidth = 15;
+                    ctx.lineWidth = 14;
                     ctx.lineCap = 'round';
                     ctx.beginPath();
                     ctx.moveTo(isl.cx - isl.rx + 6, isl.cy + 2);
@@ -3110,6 +3316,10 @@
                     ctx.stroke();
 
                     this.props.push({ type: 'banner', x: isl.cx, y: isl.cy - isl.ry * 0.36, color: '#f472b6' });
+                }
+
+                for (const uIsl of upperIslands) {
+                    this.aerialPlatforms.push({ cx: uIsl.cx, topY: uIsl.cy - uIsl.ry * 0.38, halfW: uIsl.rx, thickness: uIsl.ry * 1.6 });
                 }
 
                 this._paintTerrainTexture(ctx, 'sky', theme);
@@ -3260,10 +3470,94 @@
                 return (lo + hi) * 0.5;
             }
 
+            getLandingSurfaces(x, minHeadroom = 68, waterLevel = 602) {
+                const ix = Math.max(16, Math.min(this.width - 17, Math.floor(x)));
+                const surfaces = [];
+                let airRun = 0;
+                const maxY = Math.min(this.height - 14, Math.floor(waterLevel - 40));
+
+                for (let y = 26; y < maxY; y++) {
+                    const solid = this.alphaMap[y * this.width + ix] > 90;
+                    if (!solid) {
+                        airRun++;
+                    } else {
+                        if (airRun >= minHeadroom) {
+                            let solidDepth = 0;
+                            for (let dy = 0; dy < 12 && (y + dy) < this.height; dy++) {
+                                if (this.alphaMap[(y + dy) * this.width + ix] > 90) solidDepth++;
+                            }
+                            if (solidDepth >= 10) {
+                                // Ensure left & right footing so units don't spawn on 1px spikes
+                                let leftOk = false, rightOk = false;
+                                for (let dy = -16; dy <= 16; dy++) {
+                                    const ty = y + dy;
+                                    if (ty < 0 || ty >= this.height) continue;
+                                    if (this.alphaMap[ty * this.width + (ix - 14)] > 90) leftOk = true;
+                                    if (this.alphaMap[ty * this.width + (ix + 14)] > 90) rightOk = true;
+                                }
+                                if (leftOk && rightOk) {
+                                    surfaces.push(y);
+                                }
+                            }
+                        }
+                        airRun = 0;
+                    }
+                }
+                return surfaces;
+            }
+
+            findRandomSpawnPoint(usedSpots = [], opts = {}) {
+                const minX = Math.max(60, Math.floor(opts.minX ?? 95));
+                const maxX = Math.min(this.width - 60, Math.floor(opts.maxX ?? (this.width - 95)));
+                const minHeadroom = opts.minHeadroom ?? 68;
+                const waterLevel = opts.waterLevel ?? 602;
+                const minSameDist = opts.minSameDist ?? 115;
+                const minEnemyDist = opts.minEnemyDist ?? 250;
+                const team = opts.team ?? 'blue';
+                const preferAerialChance = opts.preferAerialChance ?? 0.45;
+
+                const candidates = [];
+                for (let x = minX; x <= maxX; x += 22) {
+                    const jx = Math.max(minX, Math.min(maxX, Math.round(x + (Math.random() - 0.5) * 14)));
+                    const ys = this.getLandingSurfaces(jx, minHeadroom, waterLevel);
+                    for (const y of ys) {
+                        const isAerial = y < 285 || this.aerialPlatforms.some(ap =>
+                            Math.abs(jx - ap.cx) <= ap.halfW + 8 && Math.abs(y - ap.topY) <= 26
+                        );
+                        candidates.push({ x: jx, y, isAerial });
+                    }
+                }
+
+                const filterBySpacing = (sameD, enemyD) => candidates.filter(c => {
+                    for (const sp of usedSpots) {
+                        const dist = Math.hypot(c.x - sp.x, (c.y - sp.y) * 0.7);
+                        if (sp.team === team && dist < sameD) return false;
+                        if (sp.team !== team && dist < enemyD) return false;
+                    }
+                    return true;
+                });
+
+                let pool = filterBySpacing(minSameDist, minEnemyDist);
+                if (!pool.length) pool = filterBySpacing(minSameDist * 0.65, minEnemyDist * 0.65);
+                if (!pool.length) pool = filterBySpacing(65, 130);
+                if (!pool.length) pool = candidates;
+
+                if (pool.length > 0) {
+                    const aerialPool = pool.filter(c => c.isAerial);
+                    const pickPool = (aerialPool.length > 0 && Math.random() < preferAerialChance) ? aerialPool : pool;
+                    return pickPool[Math.floor(Math.random() * pickPool.length)];
+                }
+
+                const fx = this.findSafeX(minX, maxX, waterLevel);
+                return { x: fx, y: this.getSurfaceY(fx, 30), isAerial: false };
+            }
+
             getGroundSlope(x, y) {
-                const leftY = this.getSurfaceY(Math.max(4, x - 10), Math.max(10, y - 24));
-                const rightY = this.getSurfaceY(Math.min(this.width - 4, x + 10), Math.max(10, y - 24));
-                if (leftY > this.height || rightY > this.height) return 0;
+                const startY = Math.max(10, y - 24);
+                let leftY = this.getSurfaceY(Math.max(4, x - 10), startY);
+                let rightY = this.getSurfaceY(Math.min(this.width - 4, x + 10), startY);
+                if (leftY > this.height || Math.abs(leftY - y) > 24) leftY = y;
+                if (rightY > this.height || Math.abs(rightY - y) > 24) rightY = y;
                 const slope = Math.atan2(rightY - leftY, 20);
                 return Math.max(-0.52, Math.min(0.52, slope));
             }
@@ -3487,8 +3781,9 @@
             ctx.restore();
         }
 
-        function drawTerrainProps(ctx, props, wind, now) {
+        function drawTerrainProps(ctx, props, wind, now, terrain = null) {
             for (const pr of props) {
+                if (terrain && !terrain.isSolid(pr.x, pr.y + 6)) continue;
                 ctx.save();
                 ctx.translate(pr.x, pr.y);
                 if (pr.type === 'banner') {
@@ -3594,7 +3889,8 @@
                 this.stamina = this.maxStamina;
                 this.rage = 0;
                 this.delay = opts.delay || 0;
-                this.baseDelay = opts.baseDelay || this.weapon.delay || 95;
+                this.baseDelay = opts.baseDelay || this.weapon.delay || 100;
+                this.lastActedTurn = opts.lastActedTurn ?? -1;
                 this.hitRadius = opts.hitRadius || 21;
                 this.flying = !!opts.flying;
                 this.hoverY = opts.hoverY || 210;
@@ -3651,6 +3947,8 @@
                 this.buffHoming = false;
                 this.buffFly = false;
                 this.buffPow = false;
+                this.usedHealThisTurn = false;
+                this.usedShieldThisTurn = false;
             }
 
             getSlopeTiltDeg() {
@@ -3662,7 +3960,7 @@
             getValidAngleRange() {
                 const tilt = this.getSlopeTiltDeg();
                 const minA = Math.max(5, Math.min(82, (this.weapon.minAngle || 10) + tilt * 0.65));
-                const maxA = Math.min(92, Math.max(minA + 15, (this.weapon.maxAngle || 86) + tilt * 0.65));
+                const maxA = Math.min(90, Math.max(minA + 15, (this.weapon.maxAngle || 86) + tilt * 0.65));
                 return { min: Math.round(minA), max: Math.round(maxA) };
             }
 
@@ -3700,17 +3998,38 @@
                     return;
                 }
 
-                if (!terrain.isSolid(this.x, this.y + 1)) {
+                if (this.vy < 0) {
+                    const bodyH = this.role === 'boss' ? 76 : 46;
+                    let rem = -this.vy * physDt;
+                    while (rem > 0) {
+                        const s = Math.min(1, rem);
+                        if (this.y - s <= 14 || terrain.isSolid(this.x, this.y - bodyH)) {
+                            this.vy = 0;
+                            break;
+                        }
+                        this.y -= s;
+                        rem -= s;
+                    }
                     this.vy += 0.45 * physDt;
-                    this.y += this.vy * physDt;
-                    while (terrain.isSolid(this.x, this.y) && this.y > 0) {
-                        this.y -= 1;
-                        this.vy = 0;
+                } else if (!terrain.isSolid(this.x, this.y + 1)) {
+                    this.vy = Math.min(18, this.vy + 0.45 * physDt);
+                    let rem = this.vy * physDt;
+                    while (rem > 0) {
+                        const s = Math.min(1, rem);
+                        if (terrain.isSolid(this.x, this.y + s)) {
+                            while (terrain.isSolid(this.x, this.y) && this.y > 0) this.y -= 1;
+                            this.vy = 0;
+                            break;
+                        }
+                        this.y += s;
+                        rem -= s;
                     }
                 } else {
                     this.vy = 0;
-                    while (terrain.isSolid(this.x, this.y - 1) && this.y > 10) {
+                    let guard = 0;
+                    while (terrain.isSolid(this.x, this.y - 1) && this.y > 10 && guard < 12) {
                         this.y -= 1;
+                        guard++;
                     }
                 }
 
@@ -3722,15 +4041,18 @@
             }
 
             move(dir, terrain, dtSec = 1 / 60) {
-                if (!this.alive || this.frozenTurns > 0 || this.stamina < 1.2 || this.totem) return false;
+                const staminaPerPx = 0.80;
+                if (!this.alive || this.frozenTurns > 0 || this.stamina < 0.5 || this.totem) return false;
                 this.facing = dir;
-                const speed = (this.role === 'minion' ? 75 : 70) * dtSec;
-                const nextX = this.x + dir * speed;
+                const maxDistByStamina = this.stamina / staminaPerPx;
+                const moveDist = Math.min((this.role === 'minion' ? 78 : 75) * dtSec, maxDistByStamina);
+                if (moveDist <= 0.01) return false;
+                const nextX = this.x + dir * moveDist;
                 if (nextX < 28 || nextX > terrain.width - 28) return false;
 
                 if (this.flying) {
                     this.x = nextX;
-                    this.stamina = Math.max(0, this.stamina - 24 * dtSec);
+                    this.stamina = Math.max(0, this.stamina - moveDist * staminaPerPx);
                     this.walkCycle += 9.5 * dtSec;
                     return true;
                 }
@@ -3754,12 +4076,14 @@
                         }
                     }
                 }
+                if (terrain.isSolid(nextX, targetY - 20)) return false;
 
+                const movedPx = Math.abs(nextX - this.x);
                 this.x = nextX;
                 this.y = targetY;
                 this.slopeAngle = terrain.getGroundSlope(this.x, this.y);
                 this.clampAimAngle();
-                this.stamina = Math.max(0, this.stamina - 25 * dtSec);
+                this.stamina = Math.max(0, this.stamina - movedPx * staminaPerPx);
                 this.walkCycle += 10 * dtSec;
                 return true;
             }
@@ -4608,8 +4932,9 @@
 
                 // EXACT GUNNY PHYSICS CONSTANTS (100px = 1 Cự ly)
                 this.gravity = 0.24;
-                this.powerSpeedFactor = 0.1985;
+                this.powerSpeedFactor = 0.276;
                 this.windAccelFactor = 0.0065;
+                this.turnDuration = 60;
                 this.lastFrameTime = 0;
 
                 this.sound = new SoundEffects();
@@ -4646,9 +4971,10 @@
                 this.activeUnit = null;
                 this.wind = 0;
                 this.turnCount = 0;
-                this.turnTimeLeft = 30;
+                this.turnTimeLeft = this.turnDuration;
                 this.lastTimerTick = 0;
-                this.turnDelayCost = 0;
+                this.instantDelayCost = 0;
+                this.shotBuffDelayCost = 0;
 
                 // Entities & VFX
                 this.projectiles = [];
@@ -4925,7 +5251,7 @@
                 const atkPct = Math.min(100, Math.round((activeW.damage / 320) * 100));
                 const digPct = Math.min(100, Math.round((activeW.radius / 68) * 100));
                 const critPct = Math.min(100, Math.round((activeW.critChance / 0.58) * 100));
-                const spdPct = Math.min(100, Math.round(((130 - activeW.delay) / 55) * 100));
+                const spdPct = Math.min(100, Math.max(15, Math.round(((125 - activeW.delay) / 45) * 100)));
                 document.getElementById('weaponTooltipText').innerHTML = `
                     <div><b>${activeW.icon} ${activeW.name} (${activeW.badge}):</b> ${activeW.desc} <span style="color:#fbbf24;">• POW: ${activeW.powName}</span></div>
                     <div class="w-stat-grid">
@@ -4950,11 +5276,36 @@
              * MATCH & CAMPAIGN STARTUP
              * =========================================================================
              */
-            startNewMatch() {
+            getTurnDelayCost() {
+                return this.instantDelayCost + this.shotBuffDelayCost;
+            }
+
+            getProjectedTurnDelay(unit) {
+                if (!unit) return 0;
+                if (unit.buffFly) {
+                    return Math.round(unit.baseDelay * 0.85) + this.instantDelayCost + this.shotBuffDelayCost;
+                }
+                return unit.baseDelay + this.instantDelayCost + this.shotBuffDelayCost + (unit.buffPow ? 45 : 0);
+            }
+
+            _syncLobbyTabUI(tab) {
+                this.lobbyTab = tab;
+                document.getElementById('tabArena').classList.toggle('active', tab === 'arena');
+                document.getElementById('tabBoss').classList.toggle('active', tab === 'boss');
+                document.getElementById('tabDungeon').classList.toggle('active', tab === 'dungeon');
+                document.getElementById('paneArena').classList.toggle('hidden', tab !== 'arena');
+                document.getElementById('paneBoss').classList.toggle('hidden', tab !== 'boss');
+                document.getElementById('paneDungeon').classList.toggle('hidden', tab !== 'dungeon');
+                this.onLobbyConfigChange();
+            }
+
+            startNewMatch(modeOverride = null) {
                 this.matchToken++;
                 this.state = 'IDLE';
                 this.lockedShotParams = null;
                 this.pendingVolleys = 0;
+                this.instantDelayCost = 0;
+                this.shotBuffDelayCost = 0;
                 this.keys = {};
                 this.sound.stopCharge();
                 document.getElementById('btnFire').classList.remove('charging');
@@ -4962,7 +5313,9 @@
                 document.getElementById('powCutin').classList.add('hidden');
                 document.getElementById('bossHudBar').classList.add('hidden');
 
-                this.gameMode = this.lobbyTab;
+                const targetMode = modeOverride || this.lobbyTab;
+                this.gameMode = targetMode;
+                this._syncLobbyTabUI(targetMode);
                 this.aimGuide = document.getElementById('selAimGuide').value;
                 this.sound.setBgmMode(this.gameMode);
                 if (this.sound.bgmEnabled) this.sound.startBgmLoop();
@@ -4999,21 +5352,121 @@
                 this.beginNextTurn(true);
             }
 
-            _createChibiUnit(slotIdx, id, name, team, role, isAI, xMin, xMax) {
+            replayCurrentMatch() {
+                this.sound.playClick();
+                document.getElementById('victoryModal').classList.add('hidden');
+                this.startNewMatch(this.gameMode);
+            }
+
+            handleNextStage() {
+                this.sound.playClick();
+                if (this.gameMode === 'dungeon') {
+                    const keys = Object.keys(DUNGEONS);
+                    const idx = keys.indexOf(this.dungeonId);
+                    if (idx >= 0 && idx < keys.length - 1) {
+                        const nextKey = keys[idx + 1];
+                        this.selectedDungeon = nextKey;
+                        document.querySelectorAll('#dungeonSelectorGrid .raid-card').forEach(c =>
+                            c.classList.toggle('selected', c.dataset.dunId === nextKey)
+                        );
+                        document.getElementById('victoryModal').classList.add('hidden');
+                        this.startNewMatch('dungeon');
+                        return;
+                    }
+                } else if (this.gameMode === 'boss') {
+                    const keys = Object.keys(BOSSES);
+                    const idx = keys.indexOf(this.selectedBoss);
+                    if (idx >= 0 && idx < keys.length - 1) {
+                        const nextKey = keys[idx + 1];
+                        this.selectedBoss = nextKey;
+                        document.querySelectorAll('#bossSelectorGrid .raid-card').forEach(c =>
+                            c.classList.toggle('selected', c.dataset.bossId === nextKey)
+                        );
+                        document.getElementById('victoryModal').classList.add('hidden');
+                        this.startNewMatch('boss');
+                        return;
+                    }
+                } else if (this.gameMode === 'arena' && this.subMode !== 'pvp_local') {
+                    const keys = Object.keys(MAPS);
+                    const curIdx = Math.max(0, keys.indexOf(this.selectedMap));
+                    const nextKey = keys[(curIdx + 1) % keys.length];
+                    this.selectedMap = nextKey;
+                    document.querySelectorAll('#mapSelectorGrid .map-card').forEach(c =>
+                        c.classList.toggle('selected', c.dataset.mapId === nextKey)
+                    );
+                    document.getElementById('victoryModal').classList.add('hidden');
+                    this.startNewMatch('arena');
+                    return;
+                }
+
+                document.getElementById('victoryModal').classList.add('hidden');
+                document.getElementById('setupModal').classList.remove('hidden');
+            }
+
+            _createChibiUnit(slotIdx, id, name, team, role, isAI, usedSpots = []) {
                 const cfg = this.slotConfigs[slotIdx] || this.slotConfigs[0];
-                const sx = this.terrain.findSafeX(xMin, xMax, this.waterLevel);
-                const sy = this.terrain.getSurfaceY(sx) - 1;
+                const sp = this.terrain.findRandomSpawnPoint(usedSpots, {
+                    team,
+                    minHeadroom: 68,
+                    waterLevel: this.waterLevel,
+                    minSameDist: 120,
+                    minEnemyDist: 260,
+                    preferAerialChance: 0.45
+                });
+                usedSpots.push({ x: sp.x, y: sp.y, team });
+
                 const unit = new CombatUnit({
                     id, name, team, role, kind: 'chibi', isAI,
-                    x: sx, y: sy,
+                    x: sp.x,
+                    y: Math.max(45, sp.y - 40),
                     facing: team === 'blue' ? 1 : -1,
                     color: cfg.color, hat: cfg.hat, wing: cfg.wing,
                     weapon: WEAPONS[cfg.weapon] || WEAPONS.brick,
-                    maxHp: 1200, maxStamina: 240, delay: id * 14
+                    maxHp: 1200, maxStamina: 240, delay: 0
                 });
-                unit.slopeAngle = this.terrain.getGroundSlope(sx, sy);
+                unit.slopeAngle = this.terrain.getGroundSlope(sp.x, sp.y);
                 unit.clampAimAngle();
                 return unit;
+            }
+
+            _assignInitialFacing() {
+                for (const u of this.units) {
+                    const foes = this.units.filter(f => f.alive && f.team !== u.team);
+                    if (foes.length > 0) {
+                        foes.sort((a, b) => Math.hypot(a.x - u.x, a.y - u.y) - Math.hypot(b.x - u.x, b.y - u.y));
+                        u.facing = foes[0].x >= u.x ? 1 : -1;
+                    }
+                    u.slopeAngle = this.terrain.getGroundSlope(u.x, u.y);
+                    u.clampAimAngle();
+                }
+            }
+
+            _initializeTurnDelays() {
+                if (!this.units.length) return;
+                for (const u of this.units) u.lastActedTurn = -1;
+
+                if (this.gameMode === 'arena' && this.units.length === 2) {
+                    const ordered = [...this.units].sort((a, b) => (a.baseDelay - b.baseDelay) || (a.id - b.id));
+                    ordered[0].delay = 0;
+                    ordered[1].delay = 50 + Math.max(-15, Math.min(20, ordered[1].baseDelay - ordered[0].baseDelay));
+                } else if (this.gameMode === 'arena' && this.units.length === 4) {
+                    const blue = this.units.filter(u => u.team === 'blue').sort((a, b) => (a.baseDelay - b.baseDelay) || (a.id - b.id));
+                    const red = this.units.filter(u => u.team === 'red').sort((a, b) => (a.baseDelay - b.baseDelay) || (a.id - b.id));
+                    const interleaved = [blue[0], red[0], blue[1], red[1]].filter(Boolean);
+                    interleaved.forEach((u, idx) => {
+                        u.delay = Math.max(0, idx * 25 + Math.round((u.baseDelay - 100) * 0.4));
+                    });
+                } else {
+                    const blue = this.units.filter(u => u.team === 'blue').sort((a, b) => (a.baseDelay - b.baseDelay) || (a.id - b.id));
+                    const red = this.units.filter(u => u.team === 'red').sort((a, b) => (a.baseDelay - b.baseDelay) || (a.id - b.id));
+                    blue.forEach((u, idx) => { u.delay = idx * 30; });
+                    red.forEach((u, idx) => {
+                        u.delay = 55 + Math.round((idx / Math.max(1, red.length)) * 40);
+                    });
+                }
+
+                const minD = Math.min(...this.units.map(u => u.delay));
+                for (const u of this.units) u.delay -= minD;
             }
 
             setupArenaMatch() {
@@ -5024,25 +5477,28 @@
 
                 document.getElementById('stageBadge').textContent = `⚔️ ${MAPS[this.mapKey].name}`;
                 this.units = [];
+                const usedSpots = [];
 
-                const p1 = this._createChibiUnit(0, 1, 'Pháo Thủ 1', 'blue', 'player', false, 110, 320);
+                const p1 = this._createChibiUnit(0, 1, 'Pháo Thủ 1', 'blue', 'player', false, usedSpots);
                 this.units.push(p1);
 
                 if (this.subMode === 'pve_1v1') {
                     const aiName = this.aiDiff === 'hard' ? 'AI Thần Gió' : this.aiDiff === 'medium' ? 'AI Cao Thủ' : 'AI Gà Con';
-                    const p2 = this._createChibiUnit(1, 2, aiName, 'red', 'ai', true, this.worldW - 340, this.worldW - 110);
+                    const p2 = this._createChibiUnit(1, 2, aiName, 'red', 'ai', true, usedSpots);
                     this.units.push(p2);
                 } else if (this.subMode === 'pve_2v2') {
-                    const ally = this._createChibiUnit(1, 2, 'Đồng Đội AI', 'blue', 'ally', true, 340, 520);
-                    const e1 = this._createChibiUnit(1, 3, 'AI Tiên Phong', 'red', 'ai', true, this.worldW - 520, this.worldW - 340);
-                    const e2 = this._createChibiUnit(0, 4, 'AI Hậu Vệ', 'red', 'ai', true, this.worldW - 310, this.worldW - 110);
+                    const ally = this._createChibiUnit(1, 2, 'Đồng Đội AI', 'blue', 'ally', true, usedSpots);
+                    const e1 = this._createChibiUnit(1, 3, 'AI Tiên Phong', 'red', 'ai', true, usedSpots);
+                    const e2 = this._createChibiUnit(0, 4, 'AI Hậu Vệ', 'red', 'ai', true, usedSpots);
                     e2.color = '#dc2626';
                     this.units.push(ally, e1, e2);
                 } else {
-                    const p2 = this._createChibiUnit(1, 2, 'Pháo Thủ 2', 'red', 'player', false, this.worldW - 340, this.worldW - 110);
+                    const p2 = this._createChibiUnit(1, 2, 'Pháo Thủ 2', 'red', 'player', false, usedSpots);
                     this.units.push(p2);
                 }
 
+                this._assignInitialFacing();
+                this._initializeTurnDelays();
                 this.showBanner(`⚔️ ${MAPS[this.mapKey].name.toUpperCase()}`, 'Khai hỏa chiến thắng!');
             }
 
@@ -5056,21 +5512,24 @@
 
                 document.getElementById('stageBadge').textContent = `👹 Săn Boss: ${bossDef.name}`;
                 this.units = [];
+                const usedSpots = [];
 
-                const p1 = this._createChibiUnit(0, 1, 'Pháo Thủ 1', 'blue', 'player', false, 120, 320);
+                const p1 = this._createChibiUnit(0, 1, 'Pháo Thủ 1', 'blue', 'player', false, usedSpots);
                 this.units.push(p1);
 
                 if (party === 'duo_ai') {
-                    const ally = this._createChibiUnit(1, 2, 'Đồng Đội AI', 'blue', 'ally', true, 350, 520);
+                    const ally = this._createChibiUnit(1, 2, 'Đồng Đội AI', 'blue', 'ally', true, usedSpots);
                     this.units.push(ally);
                 } else if (party === 'duo_pvp') {
-                    const p2 = this._createChibiUnit(1, 2, 'Pháo Thủ 2', 'blue', 'player', false, 350, 520);
+                    const p2 = this._createChibiUnit(1, 2, 'Pháo Thủ 2', 'blue', 'player', false, usedSpots);
                     this.units.push(p2);
                 }
 
-                const bossUnit = this._spawnBossUnit(bossDef, diff, party === 'solo' ? 0.85 : 1.0);
+                const bossUnit = this._spawnBossUnit(bossDef, diff, party === 'solo' ? 0.85 : 1.0, usedSpots);
                 this.units.push(bossUnit);
 
+                this._assignInitialFacing();
+                this._initializeTurnDelays();
                 this.sound.playBossRoar();
                 this.showBanner(`${bossDef.icon} ${bossDef.name.toUpperCase()}`, bossDef.title);
             }
@@ -5080,12 +5539,18 @@
                 this.state = 'IDLE';
                 this.lockedShotParams = null;
                 this.pendingVolleys = 0;
+                this.instantDelayCost = 0;
+                this.shotBuffDelayCost = 0;
+                this.currentPower = 0;
+                this.manualCamFrames = 0;
                 this.keys = {};
                 this.sound.stopCharge();
                 document.getElementById('btnFire').classList.remove('charging');
                 document.getElementById('victoryModal').classList.add('hidden');
+                document.getElementById('powCutin').classList.add('hidden');
                 const dun = DUNGEONS[this.dungeonId];
                 const stage = dun.stages[this.dungeonStageIdx];
+                if (!stage.boss) document.getElementById('bossHudBar').classList.add('hidden');
                 const party = document.getElementById('selDungeonParty').value;
                 const diff = this.dungeonDiff;
                 this.aiDiff = diff === 'hero' ? 'hard' : 'medium';
@@ -5105,59 +5570,84 @@
                 this.hitstopMs = 0;
 
                 document.getElementById('stageBadge').textContent = `🏰 ${dun.name} • Ải ${this.dungeonStageIdx + 1}/3`;
+                const usedSpots = [];
 
                 if (freshStart) {
                     this.units = [];
-                    const p1 = this._createChibiUnit(0, 1, 'Pháo Thủ 1', 'blue', 'player', false, 110, 300);
+                    const p1 = this._createChibiUnit(0, 1, 'Pháo Thủ 1', 'blue', 'player', false, usedSpots);
                     this.units.push(p1);
                     if (party === 'duo_ai') {
-                        this.units.push(this._createChibiUnit(1, 2, 'Đồng Đội AI', 'blue', 'ally', true, 320, 490));
+                        this.units.push(this._createChibiUnit(1, 2, 'Đồng Đội AI', 'blue', 'ally', true, usedSpots));
                     } else if (party === 'duo_pvp') {
-                        this.units.push(this._createChibiUnit(1, 2, 'Pháo Thủ 2', 'blue', 'player', false, 320, 490));
+                        this.units.push(this._createChibiUnit(1, 2, 'Pháo Thủ 2', 'blue', 'player', false, usedSpots));
                     }
                 } else {
-                    // Carry over surviving blue team, heal +40% HP & revive fallen allies at 50%
+                    // Carry over surviving blue team, heal +42% HP & revive fallen allies at 50%, drop at fresh random spots
                     const blueUnits = this.units.filter(u => u.team === 'blue');
-                    blueUnits.forEach((u, idx) => {
+                    blueUnits.forEach((u) => {
                         u.alive = true;
                         u.hp = u.hp <= 0 ? Math.round(u.maxHp * 0.5) : Math.min(u.maxHp, u.hp + Math.round(u.maxHp * 0.42));
                         u.rage = Math.min(100, u.rage + 30);
                         u.frozenTurns = 0; u.burnTurns = 0; u.poisonTurns = 0; u.chilled = false;
+                        u.shieldTurns = 0; u.invisibleTurns = 0; u.vy = 0;
                         u.resetTurnBuffs();
-                        u.x = this.terrain.findSafeX(110 + idx * 190, 290 + idx * 190, this.waterLevel);
-                        u.y = this.terrain.getSurfaceY(u.x) - 1;
-                        u.facing = 1;
-                        u.delay = idx * 15;
+                        const sp = this.terrain.findRandomSpawnPoint(usedSpots, {
+                            team: 'blue', minHeadroom: 68, waterLevel: this.waterLevel,
+                            minSameDist: 120, minEnemyDist: 260, preferAerialChance: 0.45
+                        });
+                        usedSpots.push({ x: sp.x, y: sp.y, team: 'blue' });
+                        u.x = sp.x;
+                        u.y = Math.max(45, sp.y - 40);
                     });
                     this.units = blueUnits;
                 }
 
-                // Spawn Enemy Wave
+                // Spawn Enemy Wave at random positions
                 const diffMult = diff === 'hero' ? 1.45 : diff === 'hard' ? 1.2 : 1.0;
                 const soloMult = party === 'solo' ? 0.85 : 1.0;
-                stage.enemies.forEach((eKey, idx) => {
-                    const minX = 760 + idx * 180;
-                    const maxX = Math.min(this.worldW - 90, minX + 160);
-                    const mUnit = this._spawnMonsterUnit(eKey, minX, maxX, diffMult * soloMult, 20 + idx * 18);
+                stage.enemies.forEach((eKey) => {
+                    const mUnit = this._spawnMonsterUnit(eKey, diffMult * soloMult, usedSpots);
                     this.units.push(mUnit);
                 });
 
                 if (stage.boss) {
                     const bossDef = BOSSES[stage.boss];
-                    const bossUnit = this._spawnBossUnit(bossDef, diff, soloMult);
+                    const bossUnit = this._spawnBossUnit(bossDef, diff, soloMult, usedSpots);
                     this.units.push(bossUnit);
                     this.sound.playBossRoar();
                 }
 
+                this._assignInitialFacing();
+                this._initializeTurnDelays();
                 this.showBanner(`🏰 ${stage.title}`, stage.boss ? `Đại Chiến ${BOSSES[stage.boss].name}!` : 'Tiêu diệt toàn bộ quái vật!');
                 this.beginNextTurn(true);
             }
 
-            _spawnBossUnit(bossDef, diff, soloMult) {
+            _spawnBossUnit(bossDef, diff, soloMult, usedSpots = []) {
                 const diffMult = diff === 'hero' ? 1.75 : diff === 'hard' ? 1.35 : 1.0;
                 const hp = Math.round(bossDef.baseHp * diffMult * soloMult);
-                const bx = bossDef.flying ? (this.worldW - 260) : this.terrain.findSafeX(this.worldW - 390, this.worldW - 140, this.waterLevel);
-                const by = bossDef.flying ? 215 : this.terrain.getSurfaceY(bx) - 1;
+                let bx, by;
+                if (bossDef.flying) {
+                    bx = 260 + Math.random() * (this.worldW - 520);
+                    for (let attempt = 0; attempt < 20; attempt++) {
+                        const tx = 260 + Math.random() * (this.worldW - 520);
+                        if (usedSpots.every(sp => sp.team === 'red' || Math.abs(tx - sp.x) >= 280)) {
+                            bx = tx;
+                            break;
+                        }
+                    }
+                    by = 175 + Math.random() * 70;
+                } else {
+                    const sp = this.terrain.findRandomSpawnPoint(usedSpots, {
+                        minX: 160, maxX: this.worldW - 160, team: 'red',
+                        minHeadroom: 115, waterLevel: this.waterLevel,
+                        minSameDist: 140, minEnemyDist: 320, preferAerialChance: 0.25
+                    });
+                    bx = sp.x;
+                    by = Math.max(45, sp.y - 36);
+                }
+                usedSpots.push({ x: bx, y: by, team: 'red' });
+
                 return new CombatUnit({
                     id: 900,
                     bossId: bossDef.id,
@@ -5173,7 +5663,7 @@
                     hpBars: bossDef.hpBars,
                     hitRadius: bossDef.hitRadius,
                     flying: bossDef.flying,
-                    hoverY: 215,
+                    hoverY: bossDef.flying ? by : 215,
                     weakpointOffset: bossDef.weakpointOffset,
                     enrageThreshold: bossDef.enrageThreshold,
                     baseDelay: bossDef.delayBase,
@@ -5182,10 +5672,29 @@
                 });
             }
 
-            _spawnMonsterUnit(defKey, minX, maxX, mult, initDelay) {
+            _spawnMonsterUnit(defKey, mult, usedSpots = []) {
                 const def = MONSTER_DEFS[defKey];
-                const sx = def.flying ? ((minX + maxX) * 0.5) : this.terrain.findSafeX(minX, maxX, this.waterLevel);
-                const sy = def.flying ? (175 + Math.random() * 85) : this.terrain.getSurfaceY(sx) - 1;
+                let sx, sy;
+                if (def.flying) {
+                    sx = 140 + Math.random() * (this.worldW - 280);
+                    for (let attempt = 0; attempt < 20; attempt++) {
+                        const tx = 140 + Math.random() * (this.worldW - 280);
+                        const ok = usedSpots.every(sp =>
+                            sp.team === 'red' ? Math.abs(tx - sp.x) >= 100 : Math.abs(tx - sp.x) >= 220
+                        );
+                        if (ok) { sx = tx; break; }
+                    }
+                    sy = 155 + Math.random() * 100;
+                } else {
+                    const sp = this.terrain.findRandomSpawnPoint(usedSpots, {
+                        team: 'red', minHeadroom: 72, waterLevel: this.waterLevel,
+                        minSameDist: 115, minEnemyDist: 240, preferAerialChance: 0.45
+                    });
+                    sx = sp.x;
+                    sy = Math.max(45, sp.y - 38);
+                }
+                usedSpots.push({ x: sx, y: sy, team: 'red' });
+
                 return new CombatUnit({
                     id: Math.floor(Math.random() * 90000) + 100,
                     name: def.name,
@@ -5201,7 +5710,7 @@
                     flying: def.flying,
                     hoverY: sy,
                     baseDelay: def.delay,
-                    delay: initDelay,
+                    delay: 50,
                     dmgBase: Math.round(def.dmg * (0.9 + (mult - 1) * 0.45)),
                     blastRadius: def.radius,
                     meleeBomb: def.meleeBomb,
@@ -5215,26 +5724,37 @@
              * DELAY TURN SCHEDULER & STATUS RESOLUTION
              * =========================================================================
              */
+            _compareTurnOrder(a, b) {
+                if (a.delay !== b.delay) return a.delay - b.delay;
+                if (a.lastActedTurn !== b.lastActedTurn) return a.lastActedTurn - b.lastActedTurn;
+                if (a.baseDelay !== b.baseDelay) return a.baseDelay - b.baseDelay;
+                return a.id - b.id;
+            }
+
             beginNextTurn(isFirst = false) {
-                if (this.state === 'GAMEOVER') return;
+                if (this.state === 'GAMEOVER' || this.state === 'STAGE_TRANSITION') return;
                 const alive = this.units.filter(u => u.alive);
                 if (alive.length === 0) return;
 
-                // Sort by lowest Delay
-                alive.sort((a, b) => a.delay - b.delay);
+                // Sort by lowest Delay (tie-break: earliest lastActedTurn -> faster baseDelay -> id)
+                alive.sort((a, b) => this._compareTurnOrder(a, b));
                 const minD = alive[0].delay;
                 for (const u of alive) u.delay -= minD;
 
                 const p = alive[0];
                 this.activeUnit = p;
                 this.turnCount++;
+                p.lastActedTurn = this.turnCount;
                 this.matchStats.turns++;
-                this.turnDelayCost = 0;
+                this.instantDelayCost = 0;
+                this.shotBuffDelayCost = 0;
                 this.currentPower = 0;
                 this.pendingVolleys = 0;
-                this.turnTimeLeft = 30;
+                this.turnTimeLeft = this.turnDuration;
                 this.lastTimerTick = performance.now();
                 this.manualCamFrames = 0;
+                document.getElementById('timerText').textContent = this.turnTimeLeft;
+                document.getElementById('timerBox').classList.remove('low-time');
 
                 // Start-of-turn status ticks
                 if (p.shieldTurns > 0) p.shieldTurns--;
@@ -5257,9 +5777,9 @@
                 }
 
                 // Stamina & chill recovery
-                p.stamina = p.chilled ? Math.max(85, p.maxStamina - 45) : p.maxStamina;
+                p.stamina = p.chilled ? Math.max(80, p.maxStamina - 40) : p.maxStamina;
                 if (p.chilled) {
-                    this.addFloatingText(p.x, p.y - 90, '❄️ TÊ CÓNG (-45 TL)', '#38bdf8', 1.05);
+                    this.addFloatingText(p.x, p.y - 90, '❄️ TÊ CÓNG (-40 TL)', '#38bdf8', 1.05);
                     p.chilled = false;
                 }
                 p.resetTurnBuffs();
@@ -5280,7 +5800,7 @@
                 // Handle Frozen Turn Skip
                 if (p.frozenTurns > 0) {
                     p.frozenTurns--;
-                    p.delay += 85;
+                    p.delay += 100;
                     this.state = 'SETTLING';
                     this.addFloatingText(p.x, p.y - 80, '❄️ ĐÓNG BĂNG - MẤT LƯỢT!', '#7dd3fc', 1.25);
                     this.syncHUD();
@@ -5350,9 +5870,14 @@
                     relBadge.className = 'wind-rel ' + (isTailwind ? 'tailwind' : 'headwind');
                 }
 
-                // Active player info
+                // Active player info & turn timer
+                document.getElementById('timerText').textContent = this.turnTimeLeft;
+                document.getElementById('timerBox').classList.toggle('low-time', this.turnTimeLeft <= 10);
                 document.getElementById('hudPlayerName').textContent = p.name;
-                document.getElementById('hudDelayBadge').textContent = `Delay: ${Math.round(p.delay)}`;
+                const delayPending = (this.state === 'IDLE' || this.state === 'CHARGING' || this.state === 'AI_THINKING');
+                document.getElementById('hudDelayBadge').textContent = delayPending
+                    ? `DL: +${this.getProjectedTurnDelay(p)}`
+                    : `DL: ${Math.round(p.delay)}`;
                 document.getElementById('angleValue').textContent = `${Math.round(p.aimAngle)}°`;
                 document.getElementById('weaponBadgeName').textContent = p.kind === 'chibi' ? p.weapon.name : p.name;
                 drawWeaponEmblem(document.getElementById('hudWeaponCanvas'), p.kind === 'chibi' ? p.weapon.id : 'cannon');
@@ -5419,9 +5944,20 @@
                 setSlot('item_pow30',   p.buffPow30,   ITEMS_CONFIG.pow30.cost);
                 setSlot('item_ice',     p.buffIce,     ITEMS_CONFIG.ice.cost);
                 setSlot('item_homing',  p.buffHoming,  ITEMS_CONFIG.homing.cost);
-                setSlot('item_heal',    false,         ITEMS_CONFIG.heal.cost);
                 setSlot('item_fly',     p.buffFly,     ITEMS_CONFIG.fly.cost);
-                setSlot('item_shield',  false,         ITEMS_CONFIG.shield.cost);
+
+                const healEl = document.getElementById('item_heal');
+                if (healEl) {
+                    healEl.classList.toggle('active', p.usedHealThisTurn);
+                    healEl.disabled = disableItems || p.usedHealThisTurn || p.stamina < ITEMS_CONFIG.heal.cost;
+                    healEl.classList.toggle('option-lit', isMyTurnReady && !healEl.disabled);
+                }
+                const shieldEl = document.getElementById('item_shield');
+                if (shieldEl) {
+                    shieldEl.classList.toggle('active', p.usedShieldThisTurn);
+                    shieldEl.disabled = disableItems || p.usedShieldThisTurn || p.stamina < ITEMS_CONFIG.shield.cost;
+                    shieldEl.classList.toggle('option-lit', isMyTurnReady && !shieldEl.disabled);
+                }
 
                 document.getElementById('btnAngleUp').disabled = !isMyTurnReady;
                 document.getElementById('btnAngleDown').disabled = !isMyTurnReady;
@@ -5480,18 +6016,37 @@
                 const alive = this.units.filter(u => u.alive);
                 if (!alive.length) { strip.innerHTML = ''; return; }
 
-                // Simulate next 5 turns using delay queue
+                const delayPending = (this.state === 'IDLE' || this.state === 'CHARGING' || this.state === 'AI_THINKING');
                 const sim = alive.map(u => ({
                     unit: u,
-                    d: u.delay,
-                    isNow: u === this.activeUnit
+                    delay: u.delay,
+                    lastActedTurn: u.lastActedTurn,
+                    baseDelay: u.baseDelay,
+                    id: u.id
                 }));
+
                 const queue = [];
+                const active = this.activeUnit;
+                if (active && active.alive) {
+                    const projectedCost = this.getProjectedTurnDelay(active);
+                    queue.push({
+                        unit: active,
+                        d: delayPending ? projectedCost : Math.round(active.delay),
+                        isNow: true
+                    });
+                    const activeSim = sim.find(s => s.unit === active);
+                    if (activeSim && delayPending) {
+                        activeSim.delay += projectedCost;
+                        activeSim.lastActedTurn = this.turnCount + 1;
+                    }
+                }
+
                 for (let i = 0; i < 4; i++) {
-                    sim.sort((a, b) => a.d - b.d);
+                    sim.sort((a, b) => this._compareTurnOrder(a, b));
                     const next = sim[0];
-                    queue.push({ unit: next.unit, d: Math.round(next.d), isNow: i === 0 && next.unit === this.activeUnit });
-                    next.d += next.unit.baseDelay;
+                    queue.push({ unit: next.unit, d: Math.round(next.delay), isNow: false });
+                    next.delay += next.baseDelay;
+                    next.lastActedTurn = this.turnCount + 2 + i;
                 }
 
                 strip.innerHTML = '<span class="turn-order-label">Lượt</span>';
@@ -5501,7 +6056,9 @@
                     const hpPct = Math.max(0, Math.min(100, (u.hp / u.maxHp) * 100));
                     const div = document.createElement('div');
                     div.className = 'turn-card' + (u.team === 'red' ? ' enemy' : '') + (q.isNow ? ' active' : '');
-                    div.title = `${u.name} (HP: ${Math.ceil(u.hp)}/${u.maxHp}, Delay: ${q.d})`;
+                    div.title = q.isNow
+                        ? `${u.name} (HP: ${Math.ceil(u.hp)}/${u.maxHp}, Lượt hiện tại • +${q.d} DL)`
+                        : `${u.name} (HP: ${Math.ceil(u.hp)}/${u.maxHp}, Delay chờ: ${q.d})`;
                     div.innerHTML = `
                         <div class="turn-card-icon">${icon}</div>
                         <div class="turn-card-delay">${q.isNow ? 'NOW' : q.d}</div>
@@ -5516,6 +6073,28 @@
              * ITEMS, POW & FIRING
              * =========================================================================
              */
+            _refundShotBuff(p, itemKey, prop) {
+                if (!p || !p[prop]) return;
+                const cfg = ITEMS_CONFIG[itemKey];
+                p[prop] = false;
+                if (cfg) {
+                    p.stamina = Math.min(p.maxStamina, p.stamina + cfg.cost);
+                    this.shotBuffDelayCost = Math.max(0, this.shotBuffDelayCost - cfg.delay);
+                }
+            }
+
+            _refundAllShotBuffs(p) {
+                if (!p) return;
+                for (const [k, prop] of [
+                    ['double2', 'buffDouble2'], ['double1', 'buffDouble1'], ['triple', 'buffTriple'],
+                    ['pow50', 'buffPow50'], ['pow30', 'buffPow30'], ['ice', 'buffIce'],
+                    ['homing', 'buffHoming'], ['fly', 'buffFly']
+                ]) {
+                    this._refundShotBuff(p, k, prop);
+                }
+                p.buffPow = false;
+            }
+
             useItem(type) {
                 const p = this.activeUnit;
                 if (!p || (!p.isAI && this.state !== 'IDLE')) return;
@@ -5526,34 +6105,30 @@
 
                 const toggleBuff = (prop, label, color, cancelFly = true) => {
                     if (p[prop]) {
-                        p[prop] = false;
-                        p.stamina = Math.min(p.maxStamina, p.stamina + cfg.cost);
-                        this.turnDelayCost = Math.max(0, this.turnDelayCost - cfg.delay);
+                        this._refundShotBuff(p, type, prop);
                         this.sound.playClick();
                         return true;
                     }
                     if (p.stamina < cfg.cost) return false;
                     if (cancelFly && p.buffFly) {
-                        p.buffFly = false;
-                        p.stamina = Math.min(p.maxStamina, p.stamina + ITEMS_CONFIG.fly.cost);
-                        this.turnDelayCost = Math.max(0, this.turnDelayCost - ITEMS_CONFIG.fly.delay);
+                        this._refundShotBuff(p, 'fly', 'buffFly');
                     }
                     p.stamina -= cfg.cost;
                     p[prop] = true;
-                    this.turnDelayCost += cfg.delay;
+                    this.shotBuffDelayCost += cfg.delay;
                     this.sound.playItem();
-                    this.addFloatingText(p.x, p.y - 68, label, color, 1.08);
+                    if (label) this.addFloatingText(p.x, p.y - 68, label, color, 1.08);
                     return true;
                 };
 
                 if (type === 'double2') {
                     if (!p.buffDouble2 && p.buffDouble1 && p.stamina + ITEMS_CONFIG.double1.cost >= cfg.cost) {
-                        toggleBuff('buffDouble1', '', ''); // refund +1 first
+                        this._refundShotBuff(p, 'double1', 'buffDouble1');
                     }
                     if (!p.buffDouble1) toggleBuff('buffDouble2', '💥 BẮN +2!', '#fde047');
                 } else if (type === 'double1') {
                     if (!p.buffDouble1 && p.buffDouble2 && p.stamina + ITEMS_CONFIG.double2.cost >= cfg.cost) {
-                        toggleBuff('buffDouble2', '', '');
+                        this._refundShotBuff(p, 'double2', 'buffDouble2');
                     }
                     if (!p.buffDouble2) toggleBuff('buffDouble1', '💥 BẮN +1!', '#fb923c');
                 } else if (type === 'triple') {
@@ -5563,13 +6138,15 @@
                 } else if (type === 'pow30') {
                     toggleBuff('buffPow30', '⚡ +30% SÁT THƯƠNG!', '#fbbf24');
                 } else if (type === 'ice') {
+                    if (!p.buffIce && p.buffPow) p.buffPow = false;
                     toggleBuff('buffIce', '❄️ ĐẠN BĂNG!', '#7dd3fc');
                 } else if (type === 'homing') {
                     toggleBuff('buffHoming', '🎯 DẪN ĐƯỜNG!', '#c084fc');
                 } else if (type === 'heal') {
-                    if (p.stamina < cfg.cost) return;
+                    if (p.usedHealThisTurn || p.stamina < cfg.cost) return;
+                    p.usedHealThisTurn = true;
                     p.stamina -= cfg.cost;
-                    this.turnDelayCost += cfg.delay;
+                    this.instantDelayCost += cfg.delay;
                     const selfHeal = Math.min(380, p.maxHp - p.hp);
                     p.hp += selfHeal;
                     this.sound.playItem('heal');
@@ -5585,22 +6162,23 @@
                         }
                     }
                 } else if (type === 'shield') {
-                    if (p.stamina < cfg.cost) return;
+                    if (p.usedShieldThisTurn || p.stamina < cfg.cost) return;
+                    p.usedShieldThisTurn = true;
                     p.stamina -= cfg.cost;
-                    this.turnDelayCost += cfg.delay;
+                    this.instantDelayCost += cfg.delay;
                     p.shieldTurns = 2;
                     p.invisibleTurns = 2;
                     this.sound.playItem();
                     this.addFloatingText(p.x, p.y - 68, '🛡️ KHIÊN & ẨN THÂN!', '#38bdf8', 1.12);
                 } else if (type === 'fly') {
                     if (!p.buffFly) {
-                        for (const [k, prop] of [['double2', 'buffDouble2'], ['double1', 'buffDouble1'], ['triple', 'buffTriple'], ['pow50', 'buffPow50'], ['pow30', 'buffPow30'], ['ice', 'buffIce'], ['homing', 'buffHoming']]) {
-                            if (p[prop]) {
-                                p[prop] = false;
-                                p.stamina = Math.min(p.maxStamina, p.stamina + ITEMS_CONFIG[k].cost);
-                                this.turnDelayCost = Math.max(0, this.turnDelayCost - ITEMS_CONFIG[k].delay);
-                            }
+                        for (const [k, prop] of [
+                            ['double2', 'buffDouble2'], ['double1', 'buffDouble1'], ['triple', 'buffTriple'],
+                            ['pow50', 'buffPow50'], ['pow30', 'buffPow30'], ['ice', 'buffIce'], ['homing', 'buffHoming']
+                        ]) {
+                            this._refundShotBuff(p, k, prop);
                         }
+                        p.buffPow = false;
                     }
                     toggleBuff('buffFly', '✈️ MÁY BAY GIẤY!', '#e0f2fe', false);
                 }
@@ -5612,6 +6190,8 @@
                 if (!p || p.isAI || this.state !== 'IDLE' || p.rage < 100) return;
                 p.buffPow = !p.buffPow;
                 if (p.buffPow) {
+                    this._refundShotBuff(p, 'fly', 'buffFly');
+                    this._refundShotBuff(p, 'ice', 'buffIce');
                     this.sound.playPow();
                     this.addFloatingText(p.x, p.y - 78, `🔥 ${p.weapon.powName.toUpperCase()}!`, '#ef4444', 1.3);
                 } else {
@@ -5643,8 +6223,8 @@
                 const isPow = p.buffPow;
                 if (isPow) p.rage = 0;
 
-                // Apply Gunny Delay cost
-                p.delay += p.baseDelay + this.turnDelayCost + (isPow ? 70 : 0);
+                // Apply authentic Gunny Delay cost (single source of truth matching HUD & Turn Strip)
+                p.delay += this.getProjectedTurnDelay(p);
 
                 // Volley count & Gunny authentic per-shot scaling
                 let volleys = 1;
@@ -5762,23 +6342,32 @@
                 let bestPower = 60;
                 let minDist = Infinity;
 
-                const angles = [65, 58, 50, 72, 42, 78, 34];
+                const r = shooter.getValidAngleRange();
+                const candidates = [65, 58, 50, 72, 42, 78, 34, 82, 25];
+                let angles = shooter.kind === 'chibi' ? candidates.filter(a => a >= r.min && a <= r.max) : candidates;
+                if (!angles.length) angles = [Math.round((r.min + r.max) / 2)];
+
+                const bodyCenterY = shooter.y - (shooter.role === 'boss' ? 44 : 19);
+                const reach = shooter.role === 'boss' ? 42 : 28;
+                const ax = this.wind * this.windAccelFactor * windResist;
+                const ay = this.gravity;
+
                 for (const ang of angles) {
                     const rad = shooter.facing === 1 ? (ang * Math.PI / 180) : ((180 - ang) * Math.PI / 180);
-                    const mx = shooter.x + Math.cos(rad) * 30;
-                    const my = (shooter.y - 24) - Math.sin(rad) * 30;
+                    const mx = shooter.x + Math.cos(rad) * reach;
+                    const my = bodyCenterY - Math.sin(rad) * reach;
 
-                    for (let pwr = 16; pwr <= 99; pwr += 1.8) {
+                    for (let pwr = 10; pwr <= 99; pwr += 1.5) {
                         const spd = pwr * this.powerSpeedFactor;
                         let sx = mx, sy = my;
                         let svx = Math.cos(rad) * spd;
                         let svy = -Math.sin(rad) * spd;
 
-                        for (let step = 0; step < 340; step++) {
-                            svx += this.wind * this.windAccelFactor * windResist;
-                            svy += this.gravity;
-                            sx += svx;
-                            sy += svy;
+                        for (let step = 0; step < 360; step++) {
+                            sx += svx + 0.5 * ax;
+                            sy += svy + 0.5 * ay;
+                            svx += ax;
+                            svy += ay;
 
                             const d = Math.hypot(sx - targetX, sy - targetY);
                             if (d < minDist) {
@@ -5792,7 +6381,7 @@
                 }
                 return {
                     angle: Math.round(bestAngle),
-                    power: Math.max(12, Math.min(100, bestPower + (Math.random() * 2 - 1) * errRange))
+                    power: Math.max(10, Math.min(100, bestPower + (Math.random() * 2 - 1) * errRange))
                 };
             }
 
@@ -5818,15 +6407,15 @@
 
                 ai.facing = target.x >= ai.x ? 1 : -1;
 
-                if (ai.hp < 460 && ai.stamina >= 80 && Math.random() < 0.72) {
+                if (ai.hp < 460 && ai.stamina >= ITEMS_CONFIG.heal.cost && Math.random() < 0.72) {
                     this.useItem('heal');
                 }
                 if (ai.rage >= 100) {
                     ai.buffPow = true;
                     this.addFloatingText(ai.x, ai.y - 78, `🔥 ${ai.name.toUpperCase()} BẬT POW!`, '#ef4444', 1.25);
                 } else if (this.aiDiff !== 'easy' && Math.random() < 0.62) {
-                    if (Math.random() < 0.5 && ai.stamina >= 95) this.useItem('double1');
-                    else if (ai.stamina >= 80) this.useItem('pow50');
+                    if (Math.random() < 0.5 && ai.stamina >= ITEMS_CONFIG.double1.cost) this.useItem('double1');
+                    else if (ai.stamina >= ITEMS_CONFIG.pow50.cost) this.useItem('pow50');
                 }
 
                 let err = this.aiDiff === 'easy' ? 7.5 : this.aiDiff === 'medium' ? 2.6 : 0.6;
@@ -6005,7 +6594,9 @@
                     const summonKey = bid === 'king_chicken' ? 'chick_bomber' :
                                       bid === 'queen_ant' ? 'ant_worker' :
                                       bid === 'chief_matias' ? (Math.random() < 0.5 ? 'totem_heal' : 'totem_bolt') : 'baby_dragon';
-                    const minion = this._spawnMonsterUnit(summonKey, Math.max(600, boss.x - 360), Math.min(this.worldW - 100, boss.x - 140), 1.0, 55);
+                    const usedSpots = this.units.filter(u => u.alive).map(u => ({ x: u.x, y: u.y, team: u.team }));
+                    const minion = this._spawnMonsterUnit(summonKey, 1.0, usedSpots);
+                    minion.delay = 55;
                     this.units.push(minion);
                     this.spawnBurst(minion.x, minion.y - 20, '#fbbf24', 24);
                     boss.speechText = `📢 Triệu hồi ${minion.name}!`;
@@ -6072,10 +6663,11 @@
                 } else if (bid === 'king_chicken') {
                     boss.speechText = '💥 NHẢY ĐÈ NGHIỀN NÁT!';
                     boss.speechTimer = 110;
-                    const jumpX = Math.max(120, Math.min(this.worldW - 120, target.x + (Math.random() - 0.5) * 40));
+                    const jumpX = this.terrain.findSafeX(Math.max(120, target.x - 95), Math.min(this.worldW - 120, target.x + 95), this.waterLevel);
                     this.spawnBurst(boss.x, boss.y - 15, '#fef08a', 20);
                     boss.x = jumpX;
                     boss.y = Math.min(this.waterLevel - 60, this.terrain.getSurfaceY(jumpX) - 1);
+                    boss.vy = 0;
                     this.terrain.explodeCrater(boss.x, boss.y + 8, 56, 'cannon');
                     this.sound.playExplosion(56, 'cannon');
                     this.cameraShake = 15;
@@ -6221,15 +6813,17 @@
                         }
                     }
 
-                    // 4 Sub-steps per tick for pixel accuracy
+                    // 4 Sub-steps per tick with exact midpoint kinematics
                     const steps = 4;
                     const subDt = physDt / steps;
+                    const ax = this.wind * this.windAccelFactor * proj.windResist;
+                    const ay = this.gravity;
                     let hit = false;
                     for (let s = 0; s < steps; s++) {
-                        proj.vx += this.wind * this.windAccelFactor * proj.windResist * subDt;
-                        proj.vy += this.gravity * subDt;
-                        proj.x += proj.vx * subDt;
-                        proj.y += proj.vy * subDt;
+                        proj.x += proj.vx * subDt + 0.5 * ax * subDt * subDt;
+                        proj.y += proj.vy * subDt + 0.5 * ay * subDt * subDt;
+                        proj.vx += ax * subDt;
+                        proj.vy += ay * subDt;
 
                         // Check Supply Crates
                         if (!proj.isFly) {
@@ -6419,7 +7013,22 @@
                 if (proj.isFly) {
                     if (proj.y < this.waterLevel - 6) {
                         owner.x = Math.max(28, Math.min(this.worldW - 28, proj.x));
-                        owner.y = proj.y - 5;
+                        if (proj.vy < 0) {
+                            owner.y = proj.y + 4;
+                            let g = 0;
+                            while (this.terrain.isSolid(owner.x, owner.y) && g < 60) {
+                                owner.y += 2;
+                                g++;
+                            }
+                        } else {
+                            owner.y = proj.y - 2;
+                            let g = 0;
+                            while (this.terrain.isSolid(owner.x, owner.y) && g < 30) {
+                                owner.y -= 1;
+                                g++;
+                            }
+                        }
+                        owner.vy = 0;
                         this.spawnBurst(owner.x, owner.y, '#38bdf8', 24);
                         this.shockwaves.push({ x: owner.x, y: owner.y, r: 6, maxR: 58, color: '#38bdf8', alpha: 1 });
                         this.addFloatingText(owner.x, owner.y - 45, '✈️ DỊCH CHUYỂN!', '#38bdf8', 1.15);
@@ -6597,7 +7206,7 @@
             }
 
             checkWinOrNextTurn() {
-                if (this.state === 'GAMEOVER') return;
+                if (this.state === 'GAMEOVER' || this.state === 'STAGE_TRANSITION') return;
                 const blueAlive = this.units.some(u => u.alive && u.team === 'blue');
                 const redAlive = this.units.some(u => u.alive && u.team === 'red');
 
@@ -6608,7 +7217,7 @@
                 if (!redAlive) {
                     if (this.gameMode === 'dungeon' && this.dungeonStageIdx < 2) {
                         this.dungeonStageIdx++;
-                        this.state = 'SETTLING';
+                        this.state = 'STAGE_TRANSITION';
                         this.sound.playVictory();
                         this.showBanner(`✨ VƯỢT ẢI ${this.dungeonStageIdx}/3 THÀNH CÔNG!`, 'Đang hồi phục & tiến vào ải tiếp theo...');
                         const tok = this.matchToken;
@@ -6669,20 +7278,28 @@
 
                 const nextBtn = document.getElementById('btnNextStage');
                 const dunKeys = Object.keys(DUNGEONS);
-                const curIdx = dunKeys.indexOf(this.dungeonId);
-                nextBtn.classList.toggle('hidden', !(isBlueWin && this.gameMode === 'dungeon' && curIdx >= 0 && curIdx < dunKeys.length - 1));
+                const curDunIdx = dunKeys.indexOf(this.dungeonId);
+                const bossKeys = Object.keys(BOSSES);
+                const curBossIdx = bossKeys.indexOf(this.selectedBoss);
+
+                if (isBlueWin && this.gameMode === 'dungeon' && curDunIdx >= 0 && curDunIdx < dunKeys.length - 1) {
+                    nextBtn.classList.remove('hidden');
+                    nextBtn.textContent = '➡️ Phó Bản Kế Tiếp';
+                } else if (isBlueWin && this.gameMode === 'boss' && curBossIdx >= 0 && curBossIdx < bossKeys.length - 1) {
+                    nextBtn.classList.remove('hidden');
+                    nextBtn.textContent = '➡️ Săn Boss Kế Tiếp';
+                } else if (isBlueWin && this.gameMode === 'arena' && this.subMode !== 'pvp_local') {
+                    nextBtn.classList.remove('hidden');
+                    nextBtn.textContent = '➡️ Màn Kế Tiếp';
+                } else {
+                    nextBtn.classList.add('hidden');
+                }
 
                 document.getElementById('victoryModal').classList.remove('hidden');
             }
 
             nextDungeonCampaign() {
-                const keys = Object.keys(DUNGEONS);
-                const idx = keys.indexOf(this.dungeonId);
-                if (idx >= 0 && idx < keys.length - 1) {
-                    this.selectedDungeon = keys[idx + 1];
-                    this.lobbyTab = 'dungeon';
-                    this.startNewMatch();
-                }
+                this.handleNextStage();
             }
 
             showBanner(title, sub) {
@@ -6733,18 +7350,24 @@
                     return;
                 }
 
-                // Turn Timer
-                if (this.state === 'IDLE' || this.state === 'CHARGING' || this.state === 'AI_THINKING') {
+                // Turn Timer (60s per turn; paused while modals are open)
+                if (this.isModalOpen()) {
+                    this.lastTimerTick = now;
+                } else if (this.state === 'IDLE' || this.state === 'CHARGING' || this.state === 'AI_THINKING') {
                     if (now - this.lastTimerTick >= 1000) {
                         this.lastTimerTick = now;
                         this.turnTimeLeft = Math.max(0, this.turnTimeLeft - 1);
                         document.getElementById('timerText').textContent = this.turnTimeLeft;
-                        document.getElementById('timerBox').classList.toggle('low-time', this.turnTimeLeft <= 5);
+                        document.getElementById('timerBox').classList.toggle('low-time', this.turnTimeLeft <= 10);
                         if (this.turnTimeLeft <= 5 && this.turnTimeLeft > 0) this.sound.playClick();
                         if (this.turnTimeLeft <= 0 && this.activeUnit) {
                             this.sound.stopCharge();
-                            this.activeUnit.delay += 75;
-                            this.activeUnit.rage = Math.min(100, this.activeUnit.rage + 15);
+                            document.getElementById('btnFire').classList.remove('charging');
+                            this.keys = {};
+                            this._refundAllShotBuffs(this.activeUnit);
+                            const timeoutDelay = 100 + this.instantDelayCost;
+                            this.activeUnit.delay += timeoutDelay;
+                            this.addFloatingText(this.activeUnit.x, this.activeUnit.y - 68, `⌛ HẾT GIỜ (+${timeoutDelay} DL)`, '#f87171', 1.15);
                             this.beginNextTurn(false);
                         }
                     }
@@ -6782,8 +7405,8 @@
                 }
 
                 if (this.state === 'CHARGING') {
-                    // Authentic ~3.2s sweep from 0 to 100 power
-                    this.currentPower += this.chargeDir * (48 * dtSec);
+                    // Precision sweep (~2.63s from 0 to 100 power)
+                    this.currentPower += this.chargeDir * (38 * dtSec);
                     if (this.currentPower >= 100) { this.currentPower = 100; this.chargeDir = -1; }
                     else if (this.currentPower <= 0) { this.currentPower = 0; this.chargeDir = 1; }
                     this.sound.updateCharge(this.currentPower);
@@ -6808,7 +7431,13 @@
                             this.sound.playSplash();
                             this.spawnBurst(fallen.x, this.waterLevel, mapTheme.liquidGlow, 30);
                             this.addFloatingText(fallen.x, this.waterLevel - 35, mapTheme.abyssText, '#fde047', 1.3);
-                            if (this.state !== 'FIRING' && this.state !== 'GAMEOVER') {
+                            if (fallen === this.activeUnit && (this.state === 'IDLE' || this.state === 'CHARGING')) {
+                                this.sound.stopCharge();
+                                document.getElementById('btnFire').classList.remove('charging');
+                                this.keys = {};
+                                this.state = 'SETTLING';
+                            }
+                            if (this.state !== 'FIRING' && this.state !== 'GAMEOVER' && this.state !== 'STAGE_TRANSITION') {
                                 const tok = this.matchToken;
                                 setTimeout(() => {
                                     if (tok === this.matchToken) this.checkWinOrNextTurn();
@@ -6937,7 +7566,7 @@
 
                 // Terrain & Decorative Props
                 ctx.drawImage(this.terrain.canvas, 0, 0);
-                drawTerrainProps(ctx, this.terrain.props, this.wind, now);
+                drawTerrainProps(ctx, this.terrain.props, this.wind, now, this.terrain);
 
                 // Supply Crates with Parachutes
                 for (const cr of this.crates) {
@@ -7327,12 +7956,15 @@
                     let sx = muzzle.x, sy = muzzle.y;
                     let svx = Math.cos(rad) * spd, svy = -Math.sin(rad) * spd;
                     const wr = player.weapon.windResist || 1.0;
-                    for (let i = 0; i < 110; i++) {
-                        svx += this.wind * this.windAccelFactor * wr;
-                        svy += this.gravity;
-                        sx += svx; sy += svy;
+                    const ax = this.wind * this.windAccelFactor * wr;
+                    const ay = this.gravity;
+                    for (let i = 0; i < 220; i++) {
+                        sx += svx + 0.5 * ax;
+                        sy += svy + 0.5 * ay;
+                        svx += ax;
+                        svy += ay;
                         if (i % 3 === 0) {
-                            ctx.fillStyle = `rgba(56, 189, 248, ${1 - i / 130})`;
+                            ctx.fillStyle = `rgba(56, 189, 248, ${Math.max(0.08, 1 - i / 240)})`;
                             ctx.beginPath(); ctx.arc(sx, sy, 3, 0, Math.PI * 2); ctx.fill();
                         }
                         if (this.terrain.isSolid(sx, sy) || sy > this.waterLevel) break;
@@ -7352,7 +7984,7 @@
                 ctx.font = '800 10px "Segoe UI", sans-serif';
                 ctx.textAlign = 'center';
 
-                for (let u = -15; u <= 15; u++) {
+                for (let u = -16; u <= 16; u++) {
                     if (u === 0) continue;
                     const rx = activeP.x + u * 100;
                     if (rx < 15 || rx > this.worldW - 15) continue;
@@ -7366,16 +7998,20 @@
                     ctx.fillText(`${Math.abs(u)} cự`, rx, 18);
                 }
 
-                // Distance tags above enemies (elevated cleanly above nameplate)
+                // Distance & elevation tags above enemies
                 for (const en of enemies) {
                     const d = (Math.abs(en.x - activeP.x) / 100).toFixed(1);
+                    const dyPx = activeP.y - en.y;
+                    const hasElev = Math.abs(dyPx) >= 30;
+                    const elevStr = hasElev ? ` ${dyPx > 0 ? '↑' : '↓'}${(Math.abs(dyPx) / 100).toFixed(1)}` : '';
+                    const boxW = hasElev ? 116 : 84;
                     const y = en.role === 'boss' ? en.y - 146 : en.y - 104;
                     ctx.fillStyle = 'rgba(2, 6, 23, 0.88)';
                     ctx.strokeStyle = en === nearest ? '#38bdf8' : 'rgba(248, 113, 113, 0.6)';
                     ctx.lineWidth = 1.5;
-                    ctx.beginPath(); ctx.roundRect(en.x - 42, y, 84, 18, 5); ctx.fill(); ctx.stroke();
+                    ctx.beginPath(); ctx.roundRect(en.x - boxW / 2, y, boxW, 18, 5); ctx.fill(); ctx.stroke();
                     ctx.fillStyle = en === nearest ? '#7dd3fc' : '#fecaca';
-                    ctx.fillText(`📏 ${d} cự ly`, en.x, y + 13);
+                    ctx.fillText(`📏 ${d} cự${elevStr}`, en.x, y + 13);
                 }
                 ctx.restore();
             }
@@ -7561,22 +8197,25 @@
                 document.getElementById('btnStartMatch').addEventListener('click', () => {
                     this.sound.playClick();
                     document.getElementById('setupModal').classList.add('hidden');
-                    this.startNewMatch();
+                    this.startNewMatch(this.lobbyTab);
                 });
             }
 
             passTurn() {
                 if (this.state === 'IDLE' && this.activeUnit && !this.activeUnit.isAI) {
                     this.sound.playClick();
-                    this.activeUnit.delay += 50; // Pass costs very little delay!
+                    this._refundAllShotBuffs(this.activeUnit);
+                    const passDelay = 50 + this.instantDelayCost;
+                    this.activeUnit.delay += passDelay;
                     this.activeUnit.rage = Math.min(100, this.activeUnit.rage + 25);
-                    this.addFloatingText(this.activeUnit.x, this.activeUnit.y - 65, '⏭️ BỎ LƯỢT (+50 DL, +25% NỘ)', '#93c5fd', 1.05);
+                    this.addFloatingText(this.activeUnit.x, this.activeUnit.y - 65, `⏭️ BỎ LƯỢT (+${passDelay} DL, +25% NỘ)`, '#93c5fd', 1.05);
                     this.beginNextTurn(false);
                 }
             }
 
             scoutTarget() {
-                const enemies = this.units.filter(u => u.alive && u.team === 'red');
+                const myTeam = this.activeUnit ? this.activeUnit.team : 'blue';
+                const enemies = this.units.filter(u => u.alive && u.team !== myTeam);
                 if (!enemies.length) return;
                 this.scoutIndex = (this.scoutIndex + 1) % (enemies.length + 1);
                 const target = this.scoutIndex === enemies.length ? this.activeUnit : enemies[this.scoutIndex];
