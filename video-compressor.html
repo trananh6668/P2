@@ -828,6 +828,13 @@
       line-height: 1.35;
     }
 
+    .item-warn-text {
+      font-size: 12px;
+      color: var(--amber);
+      font-weight: 600;
+      line-height: 1.35;
+    }
+
     /* =========================================================================
        9. SIDE-BY-SIDE COMPARISON
        ========================================================================= */
@@ -1010,7 +1017,7 @@
             <span>Video Compressor</span>
             <span class="badge badge-fb">Hàng loạt &amp; Offline</span>
           </h1>
-          <p class="brand-sub">Nén mọi video về chuẩn nhẹ Facebook (H.264 / AAC / FastStart) — 100% xử lý cục bộ trên máy bạn</p>
+          <p class="brand-sub">Giữ nguyên độ phân giải &amp; FPS gốc — Tự động tối ưu Video Bitrate thông minh (H.264 / AAC / FastStart) • 100% xử lý cục bộ</p>
         </div>
       </div>
 
@@ -1165,7 +1172,7 @@
               </button>
             </div>
             <div id="exportOfflineNote" style="font-size:12px;color:var(--text-sec);line-height:1.45">
-              Bản <b>Full Offline</b> nén Gzip + nhúng trực tiếp FFmpeg.wasm &amp; MP4-Muxer vào tệp HTML sạch. Mở ở chế độ ngắt mạng vẫn nén chuẩn Facebook ngay lập tức!
+              Bản <b>Full Offline</b> nén Gzip + nhúng trực tiếp FFmpeg.wasm &amp; MP4-Muxer vào tệp HTML sạch. Mở ở chế độ ngắt mạng vẫn nén video mượt mà ngay lập tức!
             </div>
           </div>
         </div>
@@ -1206,8 +1213,8 @@
     <section class="card" id="configCard">
       <div class="card-body" style="display:flex;flex-direction:column;gap:16px">
         <div>
-          <h2 class="section-title">Chọn chế độ nén chuẩn Facebook</h2>
-          <p class="section-sub">Áp dụng đồng bộ cho toàn bộ video trong hàng đợi — luôn làm tròn kích thước chẵn chia hết cho 2 &amp; giữ đúng tỉ lệ khung hình</p>
+          <h2 class="section-title">Chọn chế độ nén thông minh</h2>
+          <p class="section-sub">Các chế độ mẫu giữ nguyên độ phân giải &amp; FPS gốc, chỉ điều chỉnh Bitrate tự động dựa trên Video Bitrate đầu vào để giảm dung lượng hiệu quả mà vẫn giữ độ sắc nét</p>
         </div>
 
         <!-- Thanh chọn bộ máy nén nhanh -->
@@ -1218,9 +1225,9 @@
           </div>
           <div style="min-width:250px;flex:1;max-width:460px">
             <select id="optEngineQuick" class="select-input" aria-label="Chọn bộ máy nén">
-              <option value="auto" selected="">Tự động thông minh (AV1→WebCodecs | Khác→FFmpeg→WebCodecs→Native)</option>
-              <option value="ffmpeg">FFmpeg.wasm (libx264 + AAC — Chuẩn Facebook 100%)</option>
-              <option value="webcodecs">WebCodecs + MP4-Muxer (Tăng tốc phần cứng GPU)</option>
+              <option value="auto" selected="">Tự động thông minh (GPU WebCodecs → FFmpeg → Native)</option>
+              <option value="ffmpeg">FFmpeg.wasm (libx264 + AAC — Chuẩn MP4 tương thích cao)</option>
+              <option value="webcodecs">WebCodecs + MP4-Muxer (Tăng tốc phần cứng GPU — nhanh nhất)</option>
               <option value="native">Smart Native MediaRecorder (0 KB, luôn sẵn sàng)</option>
             </select>
           </div>
@@ -1238,37 +1245,37 @@
 
         <!-- 4 Thẻ Preset -->
         <div class="preset-grid" id="presetGrid">
-          <button type="button" class="preset-card active" data-preset="feed720">
+          <button type="button" class="preset-card active" data-preset="balanced">
             <div class="preset-top">
               <div class="preset-icon">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1"><rect x="2" y="3" width="20" height="14" rx="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
               </div>
-              <span class="badge badge-fb">Khuyên dùng</span>
+              <span class="badge badge-fb">Mặc định</span>
             </div>
-            <h3 class="preset-name">Facebook Feed (720p - Chuẩn nhẹ)</h3>
-            <p class="preset-spec">Cạnh ngắn ≤ 720px • 30 FPS • 1.8 Mbps • Audio 128 kbps</p>
+            <h3 class="preset-name">Cân bằng tối ưu (Nét &amp; Nhẹ)</h3>
+            <p class="preset-spec">Giữ nguyên Độ phân giải &amp; FPS gốc • Tự chọn Bitrate tối ưu theo video gốc • Audio 128 kbps</p>
           </button>
 
-          <button type="button" class="preset-card" data-preset="reels1080">
+          <button type="button" class="preset-card" data-preset="sharp">
             <div class="preset-top">
               <div class="preset-icon">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1"><rect x="5" y="2" width="14" height="20" rx="2.5"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line></svg>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
               </div>
-              <span class="badge badge-indigo">Sắc nét</span>
+              <span class="badge badge-indigo">Giữ nét cao</span>
             </div>
-            <h3 class="preset-name">Facebook Reels / Story (1080p)</h3>
-            <p class="preset-spec">Cạnh ngắn ≤ 1080px • 30 FPS • 2.8 Mbps • Audio 128 kbps</p>
+            <h3 class="preset-name">Ưu tiên sắc nét (Chi tiết cao)</h3>
+            <p class="preset-spec">Giữ nguyên Độ phân giải &amp; FPS gốc • Lọc bỏ Bitrate dư thừa, giữ trọn chi tiết • Audio 160 kbps</p>
           </button>
 
-          <button type="button" class="preset-card" data-preset="messenger480">
+          <button type="button" class="preset-card" data-preset="compact">
             <div class="preset-top">
               <div class="preset-icon">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1"><polyline points="4 14 10 14 10 20"></polyline><polyline points="20 10 14 10 14 4"></polyline><line x1="14" y1="10" x2="21" y2="3"></line><line x1="3" y1="21" x2="10" y2="14"></line></svg>
               </div>
-              <span class="badge badge-emerald">Gửi &lt;25MB</span>
+              <span class="badge badge-emerald">Tiết kiệm mạnh</span>
             </div>
-            <h3 class="preset-name">Messenger / Siêu nhẹ (480p)</h3>
-            <p class="preset-spec">Cạnh ngắn ≤ 480px • 24 FPS • 850 kbps • Audio 96 kbps</p>
+            <h3 class="preset-name">Tiết kiệm dung lượng (Nén sâu)</h3>
+            <p class="preset-spec">Giữ nguyên Độ phân giải &amp; FPS gốc • Giảm sâu Bitrate trong ngưỡng an toàn nét • Audio 96 kbps</p>
           </button>
 
           <button type="button" class="preset-card" data-preset="custom">
@@ -1279,7 +1286,7 @@
               <span class="badge badge-slate">Chuyên sâu</span>
             </div>
             <h3 class="preset-name">Tùy chỉnh nâng cao</h3>
-            <p class="preset-spec">Tự chọn Bộ máy, độ phân giải, FPS, Bitrate, Audio &amp; tốc độ x264</p>
+            <p class="preset-spec">Tự chọn Bộ máy, Độ phân giải, FPS, Bitrate (Gợi ý / Thủ công), Audio &amp; tốc độ x264</p>
           </button>
         </div>
 
@@ -1296,30 +1303,34 @@
           </div>
 
           <div class="field">
-            <label for="optResolution">Giới hạn cạnh ngắn</label>
+            <label for="optResolution">Độ phân giải xuất</label>
             <select id="optResolution" class="select-input">
-              <option value="480">480p (Siêu nhẹ)</option>
-              <option value="720" selected="">720p (Chuẩn Facebook Feed)</option>
-              <option value="1080">1080p (Full HD / Reels)</option>
-              <option value="original">Giữ nguyên độ phân giải gốc</option>
+              <option value="original" selected="">Giữ nguyên độ phân giải gốc</option>
+              <option value="1080">Giới hạn cạnh ngắn 1080p (Full HD)</option>
+              <option value="720">Giới hạn cạnh ngắn 720p (HD)</option>
+              <option value="480">Giới hạn cạnh ngắn 480p (SD nhẹ)</option>
             </select>
           </div>
 
           <div class="field">
-            <label for="optFps">Khung hình / giây (FPS)</label>
+            <label for="optFps">Tốc độ khung hình (FPS)</label>
             <select id="optFps" class="select-input">
-              <option value="24">24 FPS (Nhẹ, điện ảnh)</option>
-              <option value="30" selected="">30 FPS (Chuẩn Facebook)</option>
-              <option value="60">60 FPS (Mượt cao)</option>
+              <option value="original" selected="">Giữ nguyên FPS gốc</option>
+              <option value="60">Tối đa 60 FPS</option>
+              <option value="30">Tối đa 30 FPS</option>
+              <option value="24">Tối đa 24 FPS</option>
             </select>
           </div>
 
           <div class="field">
             <label for="optBitrate">
               <span>Video Bitrate</span>
-              <span id="optBitrateVal" style="color:var(--fb)">1800 kbps</span>
+              <span style="display:inline-flex;align-items:center;gap:6px">
+                <button type="button" id="btnSuggestBitrate" class="btn btn-ghost btn-sm" style="padding:1px 7px;min-height:22px;font-size:11.5px;color:var(--fb)">Gợi ý từ video gốc</button>
+                <span id="optBitrateVal" style="color:var(--fb)">2500 kbps</span>
+              </span>
             </label>
-            <input type="range" id="optBitrate" min="400" max="5000" step="50" value="1800">
+            <input type="range" id="optBitrate" min="300" max="25000" step="50" value="2500">
           </div>
 
           <div class="field">
@@ -1327,7 +1338,7 @@
             <select id="optAudio" class="select-input">
               <option value="64">64 kbps AAC (Siêu nhẹ)</option>
               <option value="96">96 kbps AAC (Nhẹ)</option>
-              <option value="128" selected="">128 kbps AAC (Chuẩn Facebook)</option>
+              <option value="128" selected="">128 kbps AAC (Tiêu chuẩn)</option>
               <option value="160">160 kbps AAC (Chất lượng cao)</option>
               <option value="mute">Tắt tiếng (Xóa luồng âm thanh)</option>
             </select>
@@ -1348,7 +1359,7 @@
         <div class="estimate-strip">
           <div class="est-item">
             <span class="est-label">Thông số xuất</span>
-            <span id="estSpecText" class="est-val">720p • 30 FPS • 1.8M</span>
+            <span id="estSpecText" class="est-val">Giữ gốc (Res &amp; FPS) • Bitrate thông minh</span>
           </div>
           <div class="est-item">
             <span class="est-label">Ước tính cả hàng đợi</span>
@@ -1492,7 +1503,7 @@
 
           <div class="video-box">
             <div class="video-box-head" style="background:#064E3B">
-              <span>Video đã nén chuẩn Facebook</span>
+              <span>Video đã nén tối ưu</span>
               <span id="cmpOutBadge" class="badge badge-emerald">—</span>
             </div>
             <video id="cmpOutVideo" controls="" playsinline="" preload="metadata"></video>
@@ -1568,7 +1579,7 @@
   </main>
 
   <footer class="app-footer">
-    FB Video Compressor • Xử lý 100% cục bộ trên trình duyệt — Không tải video lên máy chủ • Hỗ trợ nén hàng loạt, xuất ZIP &amp; đóng gói HTML Offline độc lập
+    Video Compressor • Xử lý 100% cục bộ trên trình duyệt — Không tải video lên máy chủ • Hỗ trợ nén hàng loạt, xuất ZIP &amp; đóng gói HTML Offline độc lập
   </footer>
 
   <!-- Toast thông báo -->
@@ -1582,7 +1593,7 @@
       'use strict';
 
       /* =========================================================================
-       * 1. HẰNG SỐ THƯ VIỆN CODEC & PRESET CHUẨN FACEBOOK
+       * 1. HẰNG SỐ THƯ VIỆN CODEC & CẤU HÌNH NÉN THÔNG MINH
        * ========================================================================= */
       const LIB_DEFS = {
         ffmpegJs: {
@@ -1618,35 +1629,80 @@
       };
 
       const PRESETS = {
-        feed720: {
-          id: 'feed720',
-          name: 'Facebook Feed (720p)',
-          maxShortSide: 720,
-          fps: 30,
-          videoBitrateKbps: 1800,
+        balanced: {
+          id: 'balanced',
+          name: 'Cân bằng tối ưu (Nét & Nhẹ)',
+          shortLabel: 'Cân bằng',
+          maxShortSide: 'original',
+          fps: 'original',
+          autoBitrate: true,
+          bitrateProfile: 'balanced',
+          nominalBitrateKbps: 2500,
+          crf: 20,
           audioBitrateKbps: 128,
           muteAudio: false,
           x264Preset: 'veryfast',
         },
-        reels1080: {
-          id: 'reels1080',
-          name: 'Facebook Reels / Story (1080p)',
-          maxShortSide: 1080,
-          fps: 30,
-          videoBitrateKbps: 2800,
-          audioBitrateKbps: 128,
+        sharp: {
+          id: 'sharp',
+          name: 'Ưu tiên sắc nét (Chi tiết cao)',
+          shortLabel: 'Sắc nét',
+          maxShortSide: 'original',
+          fps: 'original',
+          autoBitrate: true,
+          bitrateProfile: 'sharp',
+          nominalBitrateKbps: 3800,
+          crf: 18,
+          audioBitrateKbps: 160,
           muteAudio: false,
           x264Preset: 'veryfast',
         },
-        messenger480: {
-          id: 'messenger480',
-          name: 'Messenger / Siêu nhẹ (480p)',
-          maxShortSide: 480,
-          fps: 24,
-          videoBitrateKbps: 850,
+        compact: {
+          id: 'compact',
+          name: 'Tiết kiệm dung lượng (Nén sâu)',
+          shortLabel: 'Tiết kiệm',
+          maxShortSide: 'original',
+          fps: 'original',
+          autoBitrate: true,
+          bitrateProfile: 'compact',
+          nominalBitrateKbps: 1600,
+          crf: 22,
           audioBitrateKbps: 96,
           muteAudio: false,
           x264Preset: 'veryfast',
+        },
+      };
+
+      const SMART_BITRATE_PROFILES = {
+        sharp: {
+          base1080p30: 5800,
+          lowKeep: 0.85,
+          headroomW: 0.10,
+          maxKeepRatio: 0.88,
+          floorScale: 0.48,
+          minKbps: 300,
+          nominalKbps: 3800,
+          crf: 18,
+        },
+        balanced: {
+          base1080p30: 4200,
+          lowKeep: 0.76,
+          headroomW: 0.09,
+          maxKeepRatio: 0.82,
+          floorScale: 0.38,
+          minKbps: 250,
+          nominalKbps: 2500,
+          crf: 20,
+        },
+        compact: {
+          base1080p30: 2850,
+          lowKeep: 0.66,
+          headroomW: 0.06,
+          maxKeepRatio: 0.72,
+          floorScale: 0.30,
+          minKbps: 200,
+          nominalKbps: 1600,
+          crf: 22,
         },
       };
 
@@ -1655,6 +1711,9 @@
 
       let PRISTINE_BODY_HTML = '';
       let uidCounter = 1;
+      let ffmpegModulePromise = null;
+      let queueRenderRaf = 0;
+      let lastSummaryUpdateTs = 0;
 
       /* =========================================================================
        * 2. TRẠNG THÁI ỨNG DỤNG & THAM CHIẾU DOM
@@ -1662,12 +1721,13 @@
       const $ = (id) => document.getElementById(id);
 
       const state = {
-        activePreset: 'feed720',
+        activePreset: 'balanced',
         enginePref: 'auto',
         isBatchRunning: false,
         cancelRequested: false,
         activeCancelFn: null,
         isStandaloneOffline: false,
+        ffmpegModuleBroken: false,
         compareItemId: null,
         logs: [],
         queue: [],
@@ -1726,6 +1786,7 @@
         optFps: $('optFps'),
         optBitrate: $('optBitrate'),
         optBitrateVal: $('optBitrateVal'),
+        btnSuggestBitrate: $('btnSuggestBitrate'),
         optAudio: $('optAudio'),
         optX264Preset: $('optX264Preset'),
 
@@ -1814,6 +1875,31 @@
         const mm = String(m).padStart(2, '0');
         const ss = String(s).padStart(2, '0');
         return h > 0 ? `${h}:${mm}:${ss}` : `${mm}:${ss}`;
+      }
+
+      function formatBitrateKbps(kbps) {
+        const k = Math.round(Number(kbps) || 0);
+        if (k <= 0) return '—';
+        if (k >= 1000) {
+          const mbps = k / 1000;
+          return `${mbps >= 10 ? mbps.toFixed(1) : mbps.toFixed(2)} Mbps (${k.toLocaleString('en-US')} kbps)`;
+        }
+        return `${k} kbps`;
+      }
+
+      function formatBitrateShort(kbps) {
+        const k = Math.round(Number(kbps) || 0);
+        if (k <= 0) return '—';
+        if (k >= 1000) {
+          const mbps = k / 1000;
+          return `${mbps >= 10 ? mbps.toFixed(1) : mbps.toFixed(2)}M`;
+        }
+        return `${k}k`;
+      }
+
+      function formatFpsLabel(fps) {
+        if (!fps || fps <= 0) return 'FPS gốc';
+        return Number.isInteger(fps) ? `${fps} FPS` : `${Number(fps.toFixed(2))} FPS`;
       }
 
       function escapeHtml(str) {
@@ -1950,7 +2036,7 @@
         if (state.logs.length > 600) {
           state.logs.splice(0, state.logs.length - 600);
         }
-        if (dom.techLogPre) {
+        if (dom.techLogPre && dom.techLogBody && !dom.techLogBody.classList.contains('hidden')) {
           dom.techLogPre.textContent = state.logs.join('\n');
           dom.techLogPre.scrollTop = dom.techLogPre.scrollHeight;
         }
@@ -2173,7 +2259,7 @@
 
         updateEstimatePanel();
         if (state.queue.length > 0) {
-          renderQueueList();
+          scheduleQueueRender();
         }
       }
 
@@ -2254,6 +2340,10 @@
 
             completedBytes += bytes.byteLength;
             state.libs[def.key] = { bytes, source: 'cdn' };
+            if (def.key === 'ffmpegWasm') {
+              ffmpegModulePromise = null;
+              state.ffmpegModuleBroken = false;
+            }
             await idbSaveLib(def.key, bytes);
             updateCodecCenterUI();
           }
@@ -2310,6 +2400,10 @@
           }
 
           state.libs[key] = { bytes, source: 'manual' };
+          if (key === 'ffmpegWasm') {
+            ffmpegModulePromise = null;
+            state.ffmpegModuleBroken = false;
+          }
           await idbSaveLib(key, bytes);
           imported++;
           appendTechLog(`[Nạp thủ công] Đã nạp ${LIB_DEFS[key].filename} (${formatBytes(bytes.byteLength)}) từ máy.`);
@@ -2375,6 +2469,7 @@
         if (embEl && embEl.textContent && embEl.textContent.trim().length > 2) {
           try {
             const payload = JSON.parse(embEl.textContent.trim());
+            embEl.textContent = '';
             const keys = ['ffmpegJs', 'ffmpegWasm', 'mp4muxer'];
             for (const k of keys) {
               const entry = payload && payload.libs ? payload.libs[k] : null;
@@ -2474,7 +2569,7 @@
             '<head>',
             '  <meta charset="UTF-8" />',
             '  <meta name="viewport" content="width=device-width, initial-scale=1.0" />',
-            '  <title>FB Video Compressor — Nén Video Hàng Loạt Chuẩn Facebook (Offline)</title>',
+            '  <title>' + escapeHtml(document.title || 'Video Compressor') + '</title>',
             '  <style>' + cssText + '</style>',
             '</head>',
             '<body>',
@@ -2485,8 +2580,8 @@
 
           const blob = new Blob([fullHtml], { type: 'text/html;charset=utf-8' });
           const fname = isFull
-            ? 'fb-video-compressor-full-offline.html'
-            : 'fb-video-compressor-lite-offline.html';
+            ? 'video-compressor-full-offline.html'
+            : 'video-compressor-lite-offline.html';
 
           triggerBlobDownload(blob, fname);
           appendTechLog(`[Xuất Offline] Đã lưu ${fname} (${formatBytes(blob.size)}).`);
@@ -2522,9 +2617,158 @@
         return false;
       }
 
+      function readU32BE(buf, off) {
+        if (off < 0 || off + 4 > buf.length) return 0;
+        return (
+          ((buf[off] << 24) >>> 0) |
+          (buf[off + 1] << 16) |
+          (buf[off + 2] << 8) |
+          buf[off + 3]
+        ) >>> 0;
+      }
+
+      function readFourCC(buf, off) {
+        if (off < 0 || off + 4 > buf.length) return '';
+        return String.fromCharCode(buf[off], buf[off + 1], buf[off + 2], buf[off + 3]);
+      }
+
+      function iterIsoBoxes(buf, start, end) {
+        const boxes = [];
+        let pos = start;
+        const limit = Math.min(end, buf.length);
+        while (pos + 8 <= limit) {
+          let size = readU32BE(buf, pos);
+          const type = readFourCC(buf, pos + 4);
+          let hdr = 8;
+          if (size === 1) {
+            if (pos + 16 > limit) break;
+            const hi = readU32BE(buf, pos + 8);
+            const lo = readU32BE(buf, pos + 12);
+            size = hi * 4294967296 + lo;
+            hdr = 16;
+          } else if (size === 0) {
+            size = limit - pos;
+          }
+          if (size < hdr || pos + size > limit) break;
+          boxes.push({ type, payloadStart: pos + hdr, boxEnd: pos + size });
+          pos += size;
+        }
+        return boxes;
+      }
+
+      function normalizeDetectedFps(rawFps) {
+        if (!Number.isFinite(rawFps) || rawFps < 5 || rawFps > 240) return 0;
+        const std = [23.976, 24, 25, 29.97, 30, 48, 50, 59.94, 60, 90, 120];
+        for (let i = 0; i < std.length; i++) {
+          if (Math.abs(rawFps - std[i]) < 0.08) return std[i];
+        }
+        return Math.round(rawFps * 100) / 100;
+      }
+
+      function parseMp4StreamMeta(buffers) {
+        const result = { fps: 0, hasAudio: null, videoTrackBytes: 0 };
+        try {
+          const validMoovChildren = new Set(['mvhd', 'trak', 'udta', 'iods', 'meta', 'mvex']);
+          for (let b = 0; b < buffers.length; b++) {
+            const buf = buffers[b];
+            for (let i = 4; i <= buf.length - 12; i++) {
+              if (buf[i] !== 0x6d || buf[i + 1] !== 0x6f || buf[i + 2] !== 0x6f || buf[i + 3] !== 0x76) continue;
+              const moovStart = i - 4;
+              const moovSize = readU32BE(buf, moovStart);
+              if (moovSize < 24 || moovStart + moovSize > buf.length) continue;
+
+              const childType = readFourCC(buf, i + 8);
+              const childSize = readU32BE(buf, i + 4);
+              if (!validMoovChildren.has(childType) || childSize < 8 || i + 4 + childSize > moovStart + moovSize) continue;
+
+              const moovChildren = iterIsoBoxes(buf, i + 4, moovStart + moovSize);
+              let foundVideoTrack = false;
+              let foundAudioTrack = false;
+
+              for (const child of moovChildren) {
+                if (child.type !== 'trak') continue;
+                const mdiaBox = iterIsoBoxes(buf, child.payloadStart, child.boxEnd).find((x) => x.type === 'mdia');
+                if (!mdiaBox) continue;
+
+                const mdiaChildren = iterIsoBoxes(buf, mdiaBox.payloadStart, mdiaBox.boxEnd);
+                let handlerType = '';
+                let timescale = 0;
+                let minfBox = null;
+
+                for (const mc of mdiaChildren) {
+                  if (mc.type === 'hdlr' && mc.payloadStart + 12 <= mc.boxEnd) {
+                    handlerType = readFourCC(buf, mc.payloadStart + 8);
+                  } else if (mc.type === 'mdhd' && mc.payloadStart + 20 <= mc.boxEnd) {
+                    const ver = buf[mc.payloadStart];
+                    if (ver === 0) {
+                      timescale = readU32BE(buf, mc.payloadStart + 12);
+                    } else if (ver === 1 && mc.payloadStart + 24 <= mc.boxEnd) {
+                      timescale = readU32BE(buf, mc.payloadStart + 20);
+                    }
+                  } else if (mc.type === 'minf') {
+                    minfBox = mc;
+                  }
+                }
+
+                if (handlerType === 'soun') {
+                  foundAudioTrack = true;
+                  continue;
+                }
+                if (handlerType !== 'vide' || foundVideoTrack || !minfBox) continue;
+
+                const stblBox = iterIsoBoxes(buf, minfBox.payloadStart, minfBox.boxEnd).find((x) => x.type === 'stbl');
+                if (!stblBox) continue;
+                foundVideoTrack = true;
+
+                const stblChildren = iterIsoBoxes(buf, stblBox.payloadStart, stblBox.boxEnd);
+                for (const sc of stblChildren) {
+                  if (sc.type === 'stts' && timescale > 0 && sc.payloadStart + 8 <= sc.boxEnd) {
+                    const entryCount = readU32BE(buf, sc.payloadStart + 4);
+                    let off = sc.payloadStart + 8;
+                    let totalSamples = 0;
+                    let totalDelta = 0;
+                    for (let e = 0; e < entryCount && off + 8 <= sc.boxEnd; e++) {
+                      const sCount = readU32BE(buf, off);
+                      const sDelta = readU32BE(buf, off + 4);
+                      totalSamples += sCount;
+                      totalDelta += sCount * sDelta;
+                      off += 8;
+                    }
+                    if (totalSamples > 0 && totalDelta > 0) {
+                      const fps = normalizeDetectedFps((totalSamples * timescale) / totalDelta);
+                      if (fps > 0) result.fps = fps;
+                    }
+                  } else if (sc.type === 'stsz' && sc.payloadStart + 12 <= sc.boxEnd) {
+                    const uniformSize = readU32BE(buf, sc.payloadStart + 4);
+                    const sampleCount = readU32BE(buf, sc.payloadStart + 8);
+                    if (uniformSize > 0 && sampleCount > 0) {
+                      result.videoTrackBytes = uniformSize * sampleCount;
+                    } else if (sampleCount > 0 && sc.payloadStart + 12 + sampleCount * 4 <= sc.boxEnd) {
+                      let sum = 0;
+                      let off = sc.payloadStart + 12;
+                      for (let s = 0; s < sampleCount; s++) {
+                        sum += readU32BE(buf, off);
+                        off += 4;
+                      }
+                      if (sum > 0) result.videoTrackBytes = sum;
+                    }
+                  }
+                }
+              }
+
+              if (foundVideoTrack) {
+                result.hasAudio = foundAudioTrack;
+                return result;
+              }
+            }
+          }
+        } catch {}
+        return result;
+      }
+
       async function sniffInputCodec(file) {
         try {
-          const CHUNK = 512 * 1024;
+          const CHUNK = 1024 * 1024;
           const headBytes = new Uint8Array(await file.slice(0, Math.min(file.size, CHUNK)).arrayBuffer());
           const buffers = [headBytes];
           if (file.size > CHUNK) {
@@ -2533,36 +2777,118 @@
             buffers.push(tailBytes);
           }
 
+          const streamMeta = parseMp4StreamMeta(buffers);
           const hasAny = (tokens) =>
             buffers.some((buf) => tokens.some((tk) => bytesContainAscii(buf, tk)));
 
+          let inputCodec = 'UNKNOWN';
+          let inputCodecLabel = getFileExtension(file.name).toUpperCase();
           if (hasAny(['av01', 'V_AV1'])) {
-            return { inputCodec: 'AV1', inputCodecLabel: 'AV1 (av01)' };
+            inputCodec = 'AV1';
+            inputCodecLabel = 'AV1 (av01)';
+          } else if (hasAny(['hvc1', 'hev1', 'V_MPEGH/ISO/HEVC'])) {
+            inputCodec = 'HEVC';
+            inputCodecLabel = 'HEVC / H.265';
+          } else if (hasAny(['avc1', 'avc3', 'V_MPEG4/ISO/AVC'])) {
+            inputCodec = 'H264';
+            inputCodecLabel = 'H.264 (avc1)';
+          } else if (hasAny(['vp09', 'V_VP9'])) {
+            inputCodec = 'VP9';
+            inputCodecLabel = 'VP9';
+          } else if (hasAny(['vp08', 'V_VP8'])) {
+            inputCodec = 'VP8';
+            inputCodecLabel = 'VP8';
+          } else if (hasAny(['mp4v', 'V_MPEG4/ISO/ASP'])) {
+            inputCodec = 'MPEG4';
+            inputCodecLabel = 'MPEG-4';
           }
-          if (hasAny(['hvc1', 'hev1', 'V_MPEGH/ISO/HEVC'])) {
-            return { inputCodec: 'HEVC', inputCodecLabel: 'HEVC / H.265' };
-          }
-          if (hasAny(['avc1', 'avc3', 'V_MPEG4/ISO/AVC'])) {
-            return { inputCodec: 'H264', inputCodecLabel: 'H.264 (avc1)' };
-          }
-          if (hasAny(['vp09', 'V_VP9'])) {
-            return { inputCodec: 'VP9', inputCodecLabel: 'VP9' };
-          }
-          if (hasAny(['vp08', 'V_VP8'])) {
-            return { inputCodec: 'VP8', inputCodecLabel: 'VP8' };
-          }
-          if (hasAny(['mp4v', 'V_MPEG4/ISO/ASP'])) {
-            return { inputCodec: 'MPEG4', inputCodecLabel: 'MPEG-4' };
-          }
-          return { inputCodec: 'UNKNOWN', inputCodecLabel: getFileExtension(file.name).toUpperCase() };
+
+          return {
+            inputCodec,
+            inputCodecLabel,
+            fps: streamMeta.fps,
+            hasAudio: streamMeta.hasAudio,
+            videoTrackBytes: streamMeta.videoTrackBytes,
+          };
         } catch {
-          return { inputCodec: 'UNKNOWN', inputCodecLabel: 'Video' };
+          return {
+            inputCodec: 'UNKNOWN',
+            inputCodecLabel: 'Video',
+            fps: 0,
+            hasAudio: null,
+            videoTrackBytes: 0,
+          };
         }
       }
 
       /* =========================================================================
        * 7. CẤU HÌNH NÉN, ĐỊNH TUYẾN THÔNG MINH 3 TẦNG & ƯỚC TÍNH DUNG LƯỢNG
        * ========================================================================= */
+      function getSourceVideoBitrateKbps(item) {
+        if (!item || !item.meta) return 0;
+        if (item.meta.videoBitrateKbps > 0) return item.meta.videoBitrateKbps;
+        if (item.meta.bitrateKbps > 0) {
+          const totalK = item.meta.bitrateKbps;
+          const estAudioK = item.meta.hasAudio === false
+            ? 0
+            : Math.min(160, Math.max(48, Math.round(totalK * 0.08)));
+          const rawVideoK = Math.round(totalK * 0.985 - estAudioK);
+          return Math.max(Math.min(totalK, 100), rawVideoK);
+        }
+        return 0;
+      }
+
+      function computeSmartVideoBitrate(item, profileKey, maxShortSide, fpsSetting) {
+        const prof = SMART_BITRATE_PROFILES[profileKey] || SMART_BITRATE_PROFILES.balanced;
+        const srcVideoK = getSourceVideoBitrateKbps(item);
+        if (!srcVideoK || srcVideoK <= 0) {
+          return {
+            videoBitrateKbps: prof.nominalKbps,
+            srcVideoBitrateKbps: 0,
+            unprobed: true,
+            crf: prof.crf,
+            sweetKbps: prof.base1080p30,
+          };
+        }
+
+        let sweetK;
+        if (item && item.meta && item.meta.width > 0 && item.meta.height > 0) {
+          const dims = computeTargetDimensions(item.meta.width, item.meta.height, maxShortSide);
+          const resFactor = Math.pow((dims.width * dims.height) / (1920 * 1080), 0.82);
+          const rawFps = item.meta.fps > 0 ? item.meta.fps : 30;
+          const effFps = (!fpsSetting || fpsSetting === 'original')
+            ? rawFps
+            : Math.min(rawFps, Number(fpsSetting) || 30);
+          const fpsFactor = Math.pow(Math.max(15, Math.min(120, effFps)) / 30, 0.55);
+          const codec = item.codecInfo ? item.codecInfo.inputCodec : '';
+          const codecFactor = (codec === 'AV1' || codec === 'HEVC' || codec === 'VP9') ? 1.15 : 1.0;
+          sweetK = prof.base1080p30 * resFactor * fpsFactor * codecFactor;
+        } else {
+          sweetK = Math.max(900, Math.pow(srcVideoK, 0.75) * 14 * (prof.base1080p30 / 4200));
+        }
+
+        const x = srcVideoK * prof.lowKeep;
+        const knee = x / Math.sqrt(1 + Math.pow(x / sweetK, 2));
+        const headroom = 1 + prof.headroomW * Math.log(1 + srcVideoK / (2 * sweetK));
+        const rawTarget = knee * headroom;
+
+        const floorClamp = Math.min(srcVideoK, 100);
+        const maxAllowed = Math.max(floorClamp, Math.round(srcVideoK * prof.maxKeepRatio));
+        const sharpFloor = Math.min(maxAllowed, Math.max(prof.minKbps, Math.round(sweetK * prof.floorScale)));
+        const clamped = Math.max(floorClamp, Math.min(maxAllowed, Math.max(sharpFloor, rawTarget)));
+        const finalK = clamped >= 250
+          ? Math.max(sharpFloor, Math.min(maxAllowed, Math.round(clamped / 10) * 10))
+          : Math.round(clamped);
+
+        return {
+          videoBitrateKbps: finalK,
+          srcVideoBitrateKbps: srcVideoK,
+          unprobed: false,
+          crf: prof.crf,
+          sweetKbps: Math.round(sweetK),
+        };
+      }
+
       function getActiveConfig() {
         const engine = state.enginePref || 'auto';
         if (state.activePreset !== 'custom' && PRESETS[state.activePreset]) {
@@ -2570,10 +2896,14 @@
           return {
             presetId: p.id,
             presetName: p.name,
+            shortLabel: p.shortLabel,
             engine,
             maxShortSide: p.maxShortSide,
             fps: p.fps,
-            videoBitrateKbps: p.videoBitrateKbps,
+            autoBitrate: !!p.autoBitrate,
+            bitrateProfile: p.bitrateProfile,
+            videoBitrateKbps: p.nominalBitrateKbps,
+            crf: p.crf,
             audioBitrateKbps: p.audioBitrateKbps,
             muteAudio: p.muteAudio,
             x264Preset: p.x264Preset,
@@ -2582,17 +2912,66 @@
 
         const audioVal = dom.optAudio.value;
         const muteAudio = audioVal === 'mute';
+        const fpsVal = dom.optFps.value;
         return {
           presetId: 'custom',
           presetName: 'Tùy chỉnh nâng cao',
+          shortLabel: 'Tùy chỉnh',
           engine,
           maxShortSide: dom.optResolution.value === 'original' ? 'original' : Number(dom.optResolution.value),
-          fps: Number(dom.optFps.value) || 30,
-          videoBitrateKbps: Number(dom.optBitrate.value) || 1800,
+          fps: fpsVal === 'original' ? 'original' : (Number(fpsVal) || 60),
+          autoBitrate: false,
+          bitrateProfile: 'balanced',
+          videoBitrateKbps: Number(dom.optBitrate.value) || 2500,
+          crf: 18,
           audioBitrateKbps: muteAudio ? 0 : (Number(audioVal) || 128),
           muteAudio,
           x264Preset: dom.optX264Preset.value || 'veryfast',
         };
+      }
+
+      function resolveItemConfig(item, cfg) {
+        const out = {
+          ...cfg,
+          srcVideoBitrateKbps: getSourceVideoBitrateKbps(item),
+          unprobedAutoBitrate: false,
+          bitrateCapped: false,
+        };
+
+        let effAudioK = cfg.muteAudio ? 0 : (cfg.audioBitrateKbps || 0);
+        if (!cfg.muteAudio && item && item.meta) {
+          if (item.meta.hasAudio === false) {
+            effAudioK = 0;
+          } else if (item.meta.bitrateKbps > 0 && item.meta.bitrateKbps < 500) {
+            effAudioK = Math.min(effAudioK, 96);
+            out.audioBitrateKbps = effAudioK;
+          }
+        }
+        out.effectiveAudioBitrateKbps = effAudioK;
+
+        if (cfg.autoBitrate) {
+          const smart = computeSmartVideoBitrate(item, cfg.bitrateProfile, cfg.maxShortSide, cfg.fps);
+          out.videoBitrateKbps = smart.videoBitrateKbps;
+          out.srcVideoBitrateKbps = smart.srcVideoBitrateKbps;
+          out.unprobedAutoBitrate = !!smart.unprobed;
+          if (smart.crf) out.crf = smart.crf;
+        } else if (out.srcVideoBitrateKbps > 0) {
+          const minCap = Math.min(out.srcVideoBitrateKbps, 100);
+          const capK = Math.max(minCap, Math.round(out.srcVideoBitrateKbps * 0.88));
+          if (capK < cfg.videoBitrateKbps) {
+            out.videoBitrateKbps = Math.max(Math.min(out.srcVideoBitrateKbps, 250), capK);
+            out.bitrateCapped = true;
+          }
+        }
+
+        return out;
+      }
+
+      function engineDisplayName(eng) {
+        if (eng === 'ffmpeg') return 'FFmpeg.wasm';
+        if (eng === 'webcodecs') return 'WebCodecs + MP4-Muxer (GPU)';
+        if (eng === 'native') return 'Smart Native MediaRecorder';
+        return String(eng || '');
       }
 
       function buildEngineChainForItem(item, cfg) {
@@ -2620,7 +2999,7 @@
           return { chain: canNative ? ['native'] : [], av1Routed: isAv1, manualFfmpegOverridden: false };
         }
 
-        // Chế độ Tự động thông minh
+        // Chế độ Tự động thông minh: ưu tiên tăng tốc GPU WebCodecs trước
         const chain = [];
         if (isAv1) {
           // Bỏ qua FFmpeg.wasm cho video AV1 vì @ffmpeg/core@0.12.6 không kèm libdav1d
@@ -2629,8 +3008,8 @@
           return { chain, av1Routed: true, manualFfmpegOverridden: false };
         }
 
-        if (canFF) chain.push('ffmpeg');
         if (canWC) chain.push('webcodecs');
+        if (canFF) chain.push('ffmpeg');
         if (canNative) chain.push('native');
         return { chain, av1Routed: false, manualFfmpegOverridden: false };
       }
@@ -2646,12 +3025,47 @@
 
       function estimateItemOutputBytes(item, cfg) {
         if (!item || !item.meta || !item.meta.duration || item.meta.duration <= 0) return 0;
-        const totalKbps = cfg.videoBitrateKbps + (cfg.muteAudio ? 0 : cfg.audioBitrateKbps);
+        const itemCfg = resolveItemConfig(item, cfg);
+        const audioK = itemCfg.muteAudio
+          ? 0
+          : (typeof itemCfg.effectiveAudioBitrateKbps === 'number' ? itemCfg.effectiveAudioBitrateKbps : itemCfg.audioBitrateKbps);
+        const totalKbps = itemCfg.videoBitrateKbps + audioK;
         // Ước tính kèm 4% overhead container MP4
         return Math.round(((totalKbps * 1000) / 8) * item.meta.duration * 1.04);
       }
 
-      function updatePresetUI() {
+      function applySliderBitrate(kbps) {
+        const minB = Number(dom.optBitrate.min) || 300;
+        const maxB = Number(dom.optBitrate.max) || 25000;
+        const step = Number(dom.optBitrate.step) || 50;
+        const clamped = Math.max(minB, Math.min(maxB, Math.round(kbps / step) * step));
+        dom.optBitrate.value = String(clamped);
+        dom.optBitrateVal.textContent = `${clamped} kbps`;
+        return clamped;
+      }
+
+      function suggestCustomBitrateFromQueue(notify = false) {
+        const sampleItem = state.queue.find((it) => getSourceVideoBitrateKbps(it) > 0);
+        if (!sampleItem) {
+          if (notify) {
+            showToast('Chưa có video nào có thông tin bitrate trong hàng đợi để gợi ý.', 'info');
+          }
+          return false;
+        }
+        const maxShortSide = dom.optResolution.value === 'original' ? 'original' : Number(dom.optResolution.value);
+        const fpsVal = dom.optFps.value === 'original' ? 'original' : (Number(dom.optFps.value) || 60);
+        const smart = computeSmartVideoBitrate(sampleItem, 'balanced', maxShortSide, fpsVal);
+        const applied = applySliderBitrate(smart.videoBitrateKbps);
+        if (notify) {
+          showToast(
+            `Đã gợi ý ${applied.toLocaleString('en-US')} kbps từ "${sampleItem.file.name}" (video gốc ~${smart.srcVideoBitrateKbps.toLocaleString('en-US')} kbps).`,
+            'success'
+          );
+        }
+        return true;
+      }
+
+      function updatePresetUI(fromUserClick = false) {
         dom.presetCards.forEach((btn) => {
           btn.classList.toggle('active', btn.dataset.preset === state.activePreset);
         });
@@ -2661,26 +3075,52 @@
           const p = PRESETS[state.activePreset];
           dom.optResolution.value = String(p.maxShortSide);
           dom.optFps.value = String(p.fps);
-          dom.optBitrate.value = String(p.videoBitrateKbps);
-          dom.optBitrateVal.textContent = `${p.videoBitrateKbps} kbps`;
+          applySliderBitrate(p.nominalBitrateKbps);
           dom.optAudio.value = p.muteAudio ? 'mute' : String(p.audioBitrateKbps);
           dom.optX264Preset.value = p.x264Preset;
+        } else if (state.activePreset === 'custom' && fromUserClick) {
+          suggestCustomBitrateFromQueue(false);
         }
 
         updateEstimatePanel();
         if (state.queue.length > 0) {
-          renderQueueList();
+          scheduleQueueRender();
         }
       }
 
       function updateEstimatePanel() {
         const cfg = getActiveConfig();
-        const resLabel = cfg.maxShortSide === 'original' ? 'Gốc' : `${cfg.maxShortSide}p`;
-        const vMbps = cfg.videoBitrateKbps >= 1000
-          ? `${(cfg.videoBitrateKbps / 1000).toFixed(1)}M`
-          : `${cfg.videoBitrateKbps}k`;
+        const resLabel = cfg.maxShortSide === 'original' ? 'Giữ gốc' : `${cfg.maxShortSide}p`;
+        const fpsLabel = cfg.fps === 'original' ? 'FPS gốc' : `${cfg.fps} FPS`;
         const aLabel = cfg.muteAudio ? 'Tắt tiếng' : `${cfg.audioBitrateKbps}k AAC`;
-        dom.estSpecText.textContent = `${resLabel} • ${cfg.fps} FPS • ${vMbps} • ${aLabel}`;
+
+        if (cfg.autoBitrate) {
+          const resolvedKnown = state.queue
+            .map((it) => ({ item: it, resolved: resolveItemConfig(it, cfg) }))
+            .filter((x) => !x.resolved.unprobedAutoBitrate && x.resolved.srcVideoBitrateKbps > 0);
+
+          if (state.queue.length === 0 || resolvedKnown.length === 0) {
+            dom.estSpecText.textContent = (cfg.maxShortSide === 'original' && cfg.fps === 'original')
+              ? `Giữ gốc (Res & FPS) • Tự động (${cfg.shortLabel}) • ${aLabel}`
+              : `${resLabel} • ${fpsLabel} • Tự động (${cfg.shortLabel}) • ${aLabel}`;
+          } else if (state.queue.length === 1) {
+            const { item, resolved } = resolvedKnown[0];
+            const itemRes = item.meta.width > 0 ? `${item.meta.width}×${item.meta.height}` : resLabel;
+            const itemFps = item.meta.fps > 0 ? formatFpsLabel(item.meta.fps) : fpsLabel;
+            dom.estSpecText.textContent = `${itemRes} • ${itemFps} • ~${formatBitrateShort(resolved.videoBitrateKbps)} (từ ~${formatBitrateShort(resolved.srcVideoBitrateKbps)}) • ${aLabel}`;
+          } else {
+            const vals = resolvedKnown.map((x) => x.resolved.videoBitrateKbps);
+            const minK = Math.min(...vals);
+            const maxK = Math.max(...vals);
+            const rangeText = minK === maxK
+              ? `~${formatBitrateShort(minK)}`
+              : `${formatBitrateShort(minK)}–${formatBitrateShort(maxK)}`;
+            dom.estSpecText.textContent = `Giữ gốc (Res & FPS) • ${rangeText} (theo từng video) • ${aLabel}`;
+          }
+        } else {
+          const vShort = formatBitrateShort(cfg.videoBitrateKbps);
+          dom.estSpecText.textContent = `${resLabel} • ${fpsLabel} • ${vShort} • ${aLabel}`;
+        }
 
         const av1Items = state.queue.filter((it) => it.codecInfo && it.codecInfo.inputCodec === 'AV1');
         if (av1Items.length > 0) {
@@ -2700,17 +3140,19 @@
         if (cfg.engine === 'auto') {
           if (av1Items.length > 0 && av1Items.length === state.queue.length) {
             dom.estEngineText.textContent = isWebCodecsReady() ? 'WebCodecs GPU (Tối ưu AV1)' : 'Smart Native (AV1)';
-          } else if (isFfmpegReady()) {
-            dom.estEngineText.textContent = 'FFmpeg.wasm → WebCodecs → Native';
+          } else if (isWebCodecsReady() && isFfmpegReady()) {
+            dom.estEngineText.textContent = 'WebCodecs GPU → FFmpeg → Native';
           } else if (isWebCodecsReady()) {
             dom.estEngineText.textContent = 'WebCodecs GPU → Native';
+          } else if (isFfmpegReady()) {
+            dom.estEngineText.textContent = 'FFmpeg.wasm → Native';
           } else {
             dom.estEngineText.textContent = 'Smart Native (0 KB)';
           }
-          dom.engineRouteHint.textContent = 'Tự động chọn bộ máy tối ưu nhất cho từng codec';
+          dom.engineRouteHint.textContent = 'Ưu tiên tăng tốc phần cứng GPU WebCodecs, tự động dự phòng FFmpeg / Native';
         } else if (cfg.engine === 'ffmpeg') {
           dom.estEngineText.textContent = isFfmpegReady() ? 'FFmpeg.wasm (libx264)' : 'FFmpeg (Chưa tải thư viện)';
-          dom.engineRouteHint.textContent = 'Ưu tiên FFmpeg.wasm libx264 + AAC chuẩn Facebook';
+          dom.engineRouteHint.textContent = 'Ưu tiên FFmpeg.wasm libx264 + AAC tương thích cao';
         } else if (cfg.engine === 'webcodecs') {
           dom.estEngineText.textContent = isWebCodecsReady() ? 'WebCodecs + MP4-Muxer' : 'WebCodecs (Cần mp4-muxer.min.js)';
           dom.engineRouteHint.textContent = 'Mã hóa H.264/AAC FastStart trực tiếp qua GPU trình duyệt';
@@ -2770,7 +3212,7 @@
           .filter((s) => s.length > 0 && !noiseRegex.test(s));
 
         const joinedAll = lines.join('\n');
-        if (/Your platform doesn't supp?ort hardware accelerated AV1|Failed to get pixel format|av1/i.test(joinedAll)) {
+        if (/Your platform doesn't supp?ort hardware accelerated AV1|Failed to get pixel format|\blibdav1d\b|Decoder \(codec av1\) not found/i.test(joinedAll)) {
           return 'Video dùng codec AV1 không được hỗ trợ giải mã trong @ffmpeg/core@0.12.6 (thiếu libdav1d).';
         }
         if (/Cannot allocate memory|Out of memory/i.test(joinedAll)) {
@@ -2791,100 +3233,180 @@
         return 'FFmpeg dừng đột ngột với mã lỗi khác 0.';
       }
 
+      function ffmpegWorkerMain() {
+        self.onmessage = async function (ev) {
+          var msg = ev.data || {};
+          if (msg.cmd !== 'run') return;
+          var coreBlobUrl = '';
+          var wasmBlobUrl = '';
+          var core = null;
+          var mountedInput = false;
+          var stderrLines = [];
+          var stdoutLines = [];
+          try {
+            var coreBytes = new Uint8Array(msg.coreBytes);
+            coreBlobUrl = URL.createObjectURL(new Blob([coreBytes], { type: 'text/javascript' }));
+
+            var factory = null;
+            try {
+              importScripts(coreBlobUrl);
+              if (typeof createFFmpegCore === 'function') factory = createFFmpegCore;
+              else if (typeof self.createFFmpegCore === 'function') factory = self.createFFmpegCore;
+            } catch (impErr) {
+              var codeText = new TextDecoder('utf-8').decode(coreBytes);
+              var loader = new Function(codeText + '\nreturn (typeof createFFmpegCore === "function" ? createFFmpegCore : self.createFFmpegCore);');
+              factory = loader();
+            }
+            if (typeof factory !== 'function') {
+              throw new Error('Không tìm thấy hàm createFFmpegCore trong ffmpeg-core.js.');
+            }
+
+            var factoryOpts = {
+              print: function (t) {
+                var line = String(t || '');
+                stdoutLines.push(line);
+                self.postMessage({ type: 'log', stream: 'stdout', text: line });
+              },
+              printErr: function (t) {
+                var line = String(t || '');
+                stderrLines.push(line);
+                if (stderrLines.length > 400) stderrLines.shift();
+                self.postMessage({ type: 'log', stream: 'stderr', text: line });
+              },
+            };
+
+            if (msg.wasmModule) {
+              factoryOpts.mainScriptUrlOrBlob = 'ffmpeg-core.js#' + btoa(JSON.stringify({ wasmURL: '', workerURL: '' }));
+              factoryOpts.instantiateWasm = function (imports, receiveInstance) {
+                WebAssembly.instantiate(msg.wasmModule, imports)
+                  .then(function (inst) {
+                    receiveInstance(inst, msg.wasmModule);
+                  })
+                  .catch(function (e) {
+                    self.postMessage({
+                      type: 'error',
+                      exitCode: 1,
+                      message: 'INSTANTIATE_FAILED: ' + String(e && e.message ? e.message : e),
+                      stderrLines: stderrLines,
+                      stdoutLines: stdoutLines,
+                    });
+                  });
+                return {};
+              };
+            } else {
+              var wasmBytes = new Uint8Array(msg.wasmBytes);
+              wasmBlobUrl = URL.createObjectURL(new Blob([wasmBytes], { type: 'application/wasm' }));
+              factoryOpts.wasmBinary = new Uint8Array(wasmBytes);
+              factoryOpts.mainScriptUrlOrBlob = 'ffmpeg-core.js#' + btoa(JSON.stringify({ wasmURL: wasmBlobUrl, workerURL: '' }));
+            }
+
+            core = await factory(factoryOpts);
+
+            var inputPath = msg.inputName || '';
+            if (msg.inputFile) {
+              var fileObj = msg.inputFile;
+              var wfs = core.FS && core.FS.filesystems && core.FS.filesystems.WORKERFS;
+              if (wfs) {
+                try { core.FS.mkdir('/input'); } catch (eMk) {}
+                core.FS.mount(wfs, { files: [fileObj] }, '/input');
+                mountedInput = true;
+                inputPath = '/input/' + fileObj.name;
+                self.postMessage({ type: 'stage', text: 'Gắn tệp trực tiếp (WORKERFS) — không sao chép vào RAM' });
+              } else {
+                self.postMessage({ type: 'stage', text: 'Đang nạp video vào bộ nhớ ảo FFmpeg (MEMFS)...' });
+                var syncBuf = new FileReaderSync().readAsArrayBuffer(fileObj);
+                inputPath = msg.inputName || fileObj.name;
+                core.FS.writeFile(inputPath, new Uint8Array(syncBuf));
+              }
+            } else if (msg.inputName && msg.inputData) {
+              self.postMessage({ type: 'stage', text: 'Đang nạp video vào bộ nhớ ảo FFmpeg (MEMFS)...' });
+              core.FS.writeFile(msg.inputName, new Uint8Array(msg.inputData));
+            }
+
+            var finalArgs = (msg.args || []).map(function (a) {
+              return a === '__INPUT__' ? inputPath : a;
+            });
+
+            self.postMessage({ type: 'stage', text: 'Đang thực thi lệnh FFmpeg.wasm...' });
+            var ret = 0;
+            try {
+              var execRes = core.exec.apply(core, finalArgs);
+              if (typeof core.ret === 'number') ret = core.ret;
+              else if (typeof execRes === 'number') ret = execRes;
+            } catch (execErr) {
+              if (typeof core.ret === 'number') ret = core.ret;
+              else ret = 1;
+              stderrLines.push(String(execErr && execErr.message ? execErr.message : execErr));
+            }
+
+            if (ret !== 0) {
+              self.postMessage({ type: 'error', exitCode: ret, stderrLines: stderrLines, stdoutLines: stdoutLines });
+              return;
+            }
+
+            var outBuf = null;
+            if (msg.outputName) {
+              var outData = core.FS.readFile(msg.outputName);
+              if (!outData || !outData.byteLength) {
+                self.postMessage({
+                  type: 'error',
+                  exitCode: 1,
+                  stderrLines: stderrLines.concat(['Tệp đầu ra FFmpeg rỗng (0 byte).']),
+                  stdoutLines: stdoutLines,
+                });
+                return;
+              }
+              outBuf = outData.slice().buffer;
+            }
+
+            if (mountedInput) {
+              try { core.FS.unmount('/input'); } catch (eUnm) {}
+            } else {
+              try { if (inputPath) core.FS.unlink(inputPath); } catch (e1) {}
+            }
+            try { if (msg.outputName) core.FS.unlink(msg.outputName); } catch (e2) {}
+            try { if (typeof core.reset === 'function') core.reset(); } catch (e3) {}
+
+            if (outBuf) {
+              self.postMessage({ type: 'done', outputBuffer: outBuf, stdoutLines: stdoutLines, stderrLines: stderrLines }, [outBuf]);
+            } else {
+              self.postMessage({ type: 'done', outputBuffer: null, stdoutLines: stdoutLines, stderrLines: stderrLines });
+            }
+          } catch (err) {
+            if (core && mountedInput) {
+              try { core.FS.unmount('/input'); } catch (eUnm2) {}
+            }
+            self.postMessage({
+              type: 'error',
+              exitCode: 1,
+              message: String(err && err.message ? err.message : err),
+              stderrLines: stderrLines,
+              stdoutLines: stdoutLines,
+            });
+          } finally {
+            try { if (coreBlobUrl) URL.revokeObjectURL(coreBlobUrl); } catch (e4) {}
+            try { if (wasmBlobUrl) URL.revokeObjectURL(wasmBlobUrl); } catch (e5) {}
+          }
+        };
+      }
+
       function buildFFmpegWorkerCode() {
-        return [
-          'self.onmessage = async function (ev) {',
-          '  var msg = ev.data || {};',
-          '  if (msg.cmd !== "run") return;',
-          '  var coreBlobUrl = "";',
-          '  var wasmBlobUrl = "";',
-          '  var core = null;',
-          '  var stderrLines = [];',
-          '  var stdoutLines = [];',
-          '  try {',
-          '    var coreBytes = new Uint8Array(msg.coreBytes);',
-          '    var wasmBytes = new Uint8Array(msg.wasmBytes);',
-          '    coreBlobUrl = URL.createObjectURL(new Blob([coreBytes], { type: "text/javascript" }));',
-          '    wasmBlobUrl = URL.createObjectURL(new Blob([wasmBytes], { type: "application/wasm" }));',
-          '    var factory = null;',
-          '    try {',
-          '      importScripts(coreBlobUrl);',
-          '      if (typeof createFFmpegCore === "function") factory = createFFmpegCore;',
-          '      else if (typeof self.createFFmpegCore === "function") factory = self.createFFmpegCore;',
-          '    } catch (impErr) {',
-          '      var codeText = new TextDecoder("utf-8").decode(coreBytes);',
-          '      var loader = new Function(codeText + "\\nreturn (typeof createFFmpegCore === \\"function\\" ? createFFmpegCore : self.createFFmpegCore);");',
-          '      factory = loader();',
-          '    }',
-          '    if (typeof factory !== "function") {',
-          '      throw new Error("Không tìm thấy hàm createFFmpegCore trong ffmpeg-core.js.");',
-          '    }',
-          '    var cfgHash = btoa(JSON.stringify({ wasmURL: wasmBlobUrl, workerURL: "" }));',
-          '    core = await factory({',
-          '      wasmBinary: new Uint8Array(wasmBytes),',
-          '      mainScriptUrlOrBlob: "ffmpeg-core.js#" + cfgHash,',
-          '      print: function (t) {',
-          '        var line = String(t || "");',
-          '        stdoutLines.push(line);',
-          '        self.postMessage({ type: "log", stream: "stdout", text: line });',
-          '      },',
-          '      printErr: function (t) {',
-          '        var line = String(t || "");',
-          '        stderrLines.push(line);',
-          '        if (stderrLines.length > 400) stderrLines.shift();',
-          '        self.postMessage({ type: "log", stream: "stderr", text: line });',
-          '      }',
-          '    });',
-          '    if (msg.inputName && msg.inputData) {',
-          '      self.postMessage({ type: "stage", text: "Đang nạp video vào bộ nhớ ảo FFmpeg (MEMFS)..." });',
-          '      core.FS.writeFile(msg.inputName, new Uint8Array(msg.inputData));',
-          '    }',
-          '    self.postMessage({ type: "stage", text: "Đang thực thi lệnh FFmpeg.wasm..." });',
-          '    var ret = 0;',
-          '    try {',
-          '      var execRes = core.exec.apply(core, msg.args || []);',
-          '      if (typeof core.ret === "number") ret = core.ret;',
-          '      else if (typeof execRes === "number") ret = execRes;',
-          '    } catch (execErr) {',
-          '      if (typeof core.ret === "number") ret = core.ret;',
-          '      else ret = 1;',
-          '      stderrLines.push(String(execErr && execErr.message ? execErr.message : execErr));',
-          '    }',
-          '    if (ret !== 0) {',
-          '      self.postMessage({ type: "error", exitCode: ret, stderrLines: stderrLines, stdoutLines: stdoutLines });',
-          '      return;',
-          '    }',
-          '    var outBuf = null;',
-          '    if (msg.outputName) {',
-          '      var outData = core.FS.readFile(msg.outputName);',
-          '      if (!outData || !outData.byteLength) {',
-          '        self.postMessage({ type: "error", exitCode: 1, stderrLines: stderrLines.concat(["Tệp đầu ra FFmpeg rỗng (0 byte)."]), stdoutLines: stdoutLines });',
-          '        return;',
-          '      }',
-          '      outBuf = outData.slice().buffer;',
-          '    }',
-          '    try { if (msg.inputName) core.FS.unlink(msg.inputName); } catch (e1) {}',
-          '    try { if (msg.outputName) core.FS.unlink(msg.outputName); } catch (e2) {}',
-          '    try { if (typeof core.reset === "function") core.reset(); } catch (e3) {}',
-          '    if (outBuf) {',
-          '      self.postMessage({ type: "done", outputBuffer: outBuf, stdoutLines: stdoutLines, stderrLines: stderrLines }, [outBuf]);',
-          '    } else {',
-          '      self.postMessage({ type: "done", outputBuffer: null, stdoutLines: stdoutLines, stderrLines: stderrLines });',
-          '    }',
-          '  } catch (err) {',
-          '    self.postMessage({',
-          '      type: "error",',
-          '      exitCode: 1,',
-          '      message: String(err && err.message ? err.message : err),',
-          '      stderrLines: stderrLines,',
-          '      stdoutLines: stdoutLines',
-          '    });',
-          '  } finally {',
-          '    try { if (coreBlobUrl) URL.revokeObjectURL(coreBlobUrl); } catch (e4) {}',
-          '    try { if (wasmBlobUrl) URL.revokeObjectURL(wasmBlobUrl); } catch (e5) {}',
-          '  }',
-          '};',
-        ].join('\n');
+        return '(' + ffmpegWorkerMain.toString() + ')();';
+      }
+
+      async function getFfmpegWasmModule() {
+        if (state.ffmpegModuleBroken || !state.libs.ffmpegWasm.bytes || typeof WebAssembly.compile !== 'function') {
+          return null;
+        }
+        if (!ffmpegModulePromise) {
+          ffmpegModulePromise = WebAssembly.compile(state.libs.ffmpegWasm.bytes).catch((err) => {
+            appendTechLog(`[FFmpeg] Không thể biên dịch sẵn WebAssembly.Module (${err.message}) — dùng wasmBytes.`);
+            state.ffmpegModuleBroken = true;
+            ffmpegModulePromise = null;
+            return null;
+          });
+        }
+        return await ffmpegModulePromise;
       }
 
       function parseFFmpegTimeSeconds(line) {
@@ -2893,8 +3415,19 @@
         return Number(m[1]) * 3600 + Number(m[2]) * 60 + Number(m[3]);
       }
 
-      function runFFmpegTaskInWorker(taskOpts) {
-        return new Promise((resolve, reject) => {
+      function parseFFmpegDurationSeconds(line) {
+        const m = String(line || '').match(/Duration:\s*(\d+):(\d+):(\d+(?:\.\d+)?)/);
+        if (!m) return null;
+        return Number(m[1]) * 3600 + Number(m[2]) * 60 + Number(m[3]);
+      }
+
+      async function runFFmpegTaskInWorker(taskOpts) {
+        const compiledModule = await getFfmpegWasmModule();
+        if (state.cancelRequested) {
+          throw new Error('CANCELLED_BY_USER');
+        }
+
+        return await new Promise((resolve, reject) => {
           let worker = null;
           let workerUrl = '';
           let settled = false;
@@ -2962,26 +3495,76 @@
 
           // Luôn truyền bản sao .slice() để không bao giờ detach buffer gốc trong state.libs
           const coreCopy = state.libs.ffmpegJs.bytes.slice().buffer;
-          const wasmCopy = state.libs.ffmpegWasm.bytes.slice().buffer;
-          const transfer = [coreCopy, wasmCopy];
+          const transfer = [coreCopy];
+          let wasmCopy = null;
+          if (!compiledModule) {
+            wasmCopy = state.libs.ffmpegWasm.bytes.slice().buffer;
+            transfer.push(wasmCopy);
+          }
           let inputCopy = null;
-          if (taskOpts.inputBytes) {
+          if (taskOpts.inputBytes && !taskOpts.inputFile) {
             inputCopy = taskOpts.inputBytes.slice().buffer;
             transfer.push(inputCopy);
           }
 
-          worker.postMessage(
-            {
-              cmd: 'run',
-              coreBytes: coreCopy,
-              wasmBytes: wasmCopy,
-              inputName: taskOpts.inputName || '',
-              inputData: inputCopy,
-              outputName: taskOpts.outputName || '',
-              args: taskOpts.args || [],
-            },
-            transfer
-          );
+          const payload = {
+            cmd: 'run',
+            coreBytes: coreCopy,
+            wasmModule: compiledModule || null,
+            wasmBytes: wasmCopy,
+            inputFile: taskOpts.inputFile || null,
+            inputName: taskOpts.inputName || '',
+            inputData: inputCopy,
+            outputName: taskOpts.outputName || '',
+            args: taskOpts.args || [],
+          };
+
+          try {
+            worker.postMessage(payload, transfer);
+          } catch (postErr) {
+            if (compiledModule) {
+              state.ffmpegModuleBroken = true;
+              ffmpegModulePromise = null;
+              appendTechLog(`[FFmpeg] Không clone được WebAssembly.Module (${postErr.message}) — chuyển sang wasmBytes.`);
+              const coreRetry = state.libs.ffmpegJs.bytes.slice().buffer;
+              const wasmRetry = state.libs.ffmpegWasm.bytes.slice().buffer;
+              const retryTransfer = [coreRetry, wasmRetry];
+              let inputRetry = null;
+              if (taskOpts.inputBytes && !taskOpts.inputFile) {
+                inputRetry = taskOpts.inputBytes.slice().buffer;
+                retryTransfer.push(inputRetry);
+              }
+              try {
+                worker.postMessage(
+                  {
+                    cmd: 'run',
+                    coreBytes: coreRetry,
+                    wasmModule: null,
+                    wasmBytes: wasmRetry,
+                    inputFile: taskOpts.inputFile || null,
+                    inputName: taskOpts.inputName || '',
+                    inputData: inputRetry,
+                    outputName: taskOpts.outputName || '',
+                    args: taskOpts.args || [],
+                  },
+                  retryTransfer
+                );
+                return;
+              } catch (retryErr) {
+                if (!settled) {
+                  settled = true;
+                  cleanup();
+                  reject(retryErr);
+                }
+                return;
+              }
+            }
+            if (!settled) {
+              settled = true;
+              cleanup();
+              reject(postErr);
+            }
+          }
         });
       }
 
@@ -3022,13 +3605,19 @@
             },
           });
 
-          if (taskOpts.inputName && taskOpts.inputBytes) {
-            core.FS.writeFile(taskOpts.inputName, taskOpts.inputBytes.slice());
+          const inputName = taskOpts.inputName || (taskOpts.inputFile ? taskOpts.inputFile.name : '');
+          if (taskOpts.inputFile) {
+            const buf = new Uint8Array(await taskOpts.inputFile.arrayBuffer());
+            core.FS.writeFile(inputName, buf);
+          } else if (inputName && taskOpts.inputBytes) {
+            core.FS.writeFile(inputName, taskOpts.inputBytes.slice());
           }
+
+          const finalArgs = (taskOpts.args || []).map((a) => (a === '__INPUT__' ? inputName : a));
 
           let ret = 0;
           try {
-            const r = core.exec.apply(core, taskOpts.args || []);
+            const r = core.exec.apply(core, finalArgs);
             if (typeof core.ret === 'number') ret = core.ret;
             else if (typeof r === 'number') ret = r;
           } catch (e) {
@@ -3049,7 +3638,7 @@
             outputBytes = rawOut.slice();
           }
 
-          try { if (taskOpts.inputName) core.FS.unlink(taskOpts.inputName); } catch {}
+          try { if (inputName) core.FS.unlink(inputName); } catch {}
           try { if (taskOpts.outputName) core.FS.unlink(taskOpts.outputName); } catch {}
           try { if (typeof core.reset === 'function') core.reset(); } catch {}
 
@@ -3068,6 +3657,12 @@
         } catch (err) {
           if (err && err.isWorkerBlocked) {
             return await runFFmpegTaskMainThread(taskOpts);
+          }
+          if (err && typeof err.message === 'string' && err.message.includes('INSTANTIATE_FAILED') && !state.ffmpegModuleBroken) {
+            state.ffmpegModuleBroken = true;
+            ffmpegModulePromise = null;
+            appendTechLog('[FFmpeg] instantiateWasm với WebAssembly.Module thất bại — thử lại bằng wasmBytes...');
+            return await runFFmpegTaskInWorker(taskOpts);
           }
           throw err;
         }
@@ -3098,12 +3693,14 @@
       }
 
       async function compressWithFFmpeg(item, cfg, onProgress) {
-        onProgress(3, 'Đang đọc tệp vào bộ nhớ FFmpeg.wasm...');
-        const inputBytes = new Uint8Array(await item.file.arrayBuffer());
+        onProgress(3, 'Đang chuẩn bị FFmpeg.wasm...');
         if (state.cancelRequested) throw new Error('CANCELLED_BY_USER');
 
         const ext = getFileExtension(item.file.name);
         const inputName = `in_video.${ext}`;
+        const inputFile = new File([item.file], inputName, {
+          type: item.file.type || 'application/octet-stream',
+        });
         const outputName = 'out_video.mp4';
 
         let vfFilter = 'scale=trunc(iw/2)*2:trunc(ih/2)*2:flags=lanczos,setsar=1';
@@ -3114,51 +3711,81 @@
           const dims = computeTargetDimensions(item.meta.width, item.meta.height, cfg.maxShortSide);
           outW = dims.width;
           outH = dims.height;
-          vfFilter = `scale=${outW}:${outH}:flags=lanczos,setsar=1`;
+          if (outW === item.meta.width && outH === item.meta.height && outW % 2 === 0 && outH % 2 === 0) {
+            vfFilter = 'setsar=1';
+          } else {
+            vfFilter = `scale=${outW}:${outH}:flags=lanczos,setsar=1`;
+          }
         } else if (cfg.maxShortSide !== 'original') {
           const lim = Number(cfg.maxShortSide) || 720;
           vfFilter = `scale='if(gt(iw,ih),-2,min(${lim},iw))':'if(gt(iw,ih),min(${lim},ih),-2)':flags=lanczos,scale=trunc(iw/2)*2:trunc(ih/2)*2,setsar=1`;
         }
 
+        const keepOrigFps = !cfg.fps || cfg.fps === 'original';
+        const numericFps = keepOrigFps ? 0 : Math.max(10, Math.min(120, Math.round(Number(cfg.fps) || 30)));
+        const gopFps = keepOrigFps
+          ? Math.max(24, Math.min(120, Math.round(item.meta.fps || 30)))
+          : numericFps;
         const vb = cfg.videoBitrateKbps;
-        const maxrate = Math.round(vb * 1.4);
-        const bufsize = Math.round(vb * 2.5);
 
         const args = [
           '-y',
-          '-i', inputName,
+          '-hide_banner',
+          '-i', '__INPUT__',
+          '-map', '0:v:0',
+        ];
+        if (!cfg.muteAudio) {
+          args.push('-map', '0:a:0?');
+        }
+        args.push(
           '-sn', '-dn',
-          '-max_muxing_queue_size', '2048',
-          '-vf', vfFilter,
-          '-r', String(cfg.fps),
+          '-max_muxing_queue_size', '4096',
+          '-vf', vfFilter
+        );
+        if (!keepOrigFps) {
+          args.push('-fpsmax', String(numericFps));
+        }
+        args.push(
           '-c:v', 'libx264',
           '-preset', cfg.x264Preset || 'veryfast',
-          '-b:v', `${vb}k`,
-          '-maxrate', `${maxrate}k`,
-          '-bufsize', `${bufsize}k`,
+          '-profile:v', 'high',
+          '-crf', String(cfg.crf || 20)
+        );
+        if (!cfg.unprobedAutoBitrate && vb > 0) {
+          args.push('-maxrate', `${vb}k`, '-bufsize', `${vb * 2}k`);
+        }
+        args.push(
+          '-g', String(gopFps * 2),
+          '-keyint_min', String(gopFps),
+          '-x264-params', 'aq-mode=3:rc-lookahead=20',
           '-pix_fmt', 'yuv420p',
-          '-movflags', '+faststart',
-        ];
+          '-movflags', '+faststart'
+        );
 
         if (cfg.muteAudio) {
           args.push('-an');
         } else {
-          args.push('-c:a', 'aac', '-b:a', `${cfg.audioBitrateKbps}k`, '-ac', '2', '-ar', '44100');
+          args.push('-c:a', 'aac', '-b:a', `${cfg.audioBitrateKbps}k`, '-ac', '2', '-ar', '48000');
         }
         args.push(outputName);
 
-        appendTechLog(`[FFmpeg] Lệnh: ffmpeg ${args.join(' ')}`);
+        const logArgs = args.map((a) => (a === '__INPUT__' ? inputName : a));
+        appendTechLog(`[FFmpeg] Lệnh: ffmpeg ${logArgs.join(' ')}`);
 
-        const duration = item.meta.duration || 0;
+        let duration = item.meta.duration || 0;
         let logThrottle = 0;
 
         const res = await runFFmpegTask({
+          inputFile,
           inputName,
-          inputBytes,
           outputName,
           args,
           onStage: (txt) => onProgress(8, txt),
           onLog: (line) => {
+            if (duration <= 0) {
+              const dSec = parseFFmpegDurationSeconds(line);
+              if (dSec && dSec > 0) duration = dSec;
+            }
             const tSec = parseFFmpegTimeSeconds(line);
             if (tSec !== null && duration > 0) {
               const pct = Math.min(96, Math.max(10, Math.round(10 + (tSec / duration) * 86)));
@@ -3206,34 +3833,48 @@
         return best;
       }
 
-      async function probeWebCodecsVideoConfig(width, height, fps, bitrateBps) {
+      async function probeWebCodecsVideoConfig(width, height, fps, bitrateBps, opts = {}) {
         const codecs = [
-          'avc1.640033', // High @ L5.1
-          'avc1.64002a', // High @ L4.2
-          'avc1.640028', // High @ L4.0
+          'avc1.640034', // High @ L5.2 (4K@120fps)
+          'avc1.640033', // High @ L5.1 (4K@60fps)
+          'avc1.64002a', // High @ L4.2 (1080p@60fps)
+          'avc1.640028', // High @ L4.0 (1080p@30fps)
+          'avc1.4d0034', // Main @ L5.2
+          'avc1.4d0033', // Main @ L5.1
           'avc1.4d4028', // Main @ L4.0
           'avc1.420028', // Baseline @ L4.0
           'avc1.42001f', // Baseline @ L3.1
         ];
-        const hwModes = ['no-preference', 'prefer-software'];
+        const hwModes = opts && opts.excludeHardware
+          ? ['prefer-software']
+          : ['prefer-hardware', 'no-preference', 'prefer-software'];
+        const extraVariants = [
+          { bitrateMode: 'variable', latencyMode: 'quality' },
+          {},
+        ];
 
-        for (const hw of hwModes) {
-          for (const codec of codecs) {
-            const candidate = {
-              codec,
-              width,
-              height,
-              bitrate: bitrateBps,
-              framerate: fps,
-              hardwareAcceleration: hw,
-              avc: { format: 'avc' },
-            };
-            try {
-              const res = await window.VideoEncoder.isConfigSupported(candidate);
-              if (res && res.supported) {
-                return res.config || candidate;
-              }
-            } catch {}
+        for (const extra of extraVariants) {
+          for (const hw of hwModes) {
+            for (const codec of codecs) {
+              const candidate = {
+                codec,
+                width,
+                height,
+                bitrate: bitrateBps,
+                framerate: fps,
+                hardwareAcceleration: hw,
+                avc: { format: 'avc' },
+                ...extra,
+              };
+              try {
+                const res = await window.VideoEncoder.isConfigSupported(candidate);
+                if (res && res.supported) {
+                  const chosen = res.config ? { ...res.config } : { ...candidate };
+                  if (!chosen.hardwareAcceleration) chosen.hardwareAcceleration = hw;
+                  return chosen;
+                }
+              } catch {}
+            }
           }
         }
         return null;
@@ -3403,7 +4044,7 @@
           audioCtx = new AudioCtxClass();
           const rawBuf = await item.file.arrayBuffer();
           if (state.cancelRequested) throw new Error('CANCELLED_BY_USER');
-          decoded = await audioCtx.decodeAudioData(rawBuf.slice(0));
+          decoded = await audioCtx.decodeAudioData(rawBuf);
         } catch (decodeErr) {
           if (decodeErr && decodeErr.message === 'CANCELLED_BY_USER') throw decodeErr;
           appendTechLog(`[WebCodecs Audio] Không có luồng âm thanh hoặc không giải mã được (${decodeErr.message}) — tiếp tục xuất không tiếng.`);
@@ -3472,7 +4113,205 @@
         });
       }
 
-      async function compressWithWebCodecs(item, cfg, onProgress) {
+      function captureFramesRealtime(video, o) {
+        return new Promise((resolve, reject) => {
+          const minGapUs = o.keepOrigFps
+            ? 1500
+            : Math.floor((1000000 / o.maxFps) * 0.92);
+          let lastAcceptedMediaUs = o.getLastTsUs();
+          let prevRawMediaUs = -1;
+          const deltaSamples = [];
+          let pausedByBackpressure = false;
+          let lastCallbackWall = performance.now();
+          let lastProgressWall = 0;
+          let rvfcId = 0;
+          let watchdog = 0;
+          let settled = false;
+
+          const computeEstFps = () => {
+            if (o.knownSrcFps > 0) {
+              return o.keepOrigFps ? o.knownSrcFps : Math.min(o.maxFps, o.knownSrcFps);
+            }
+            if (!deltaSamples.length) return Math.min(30, o.maxFps);
+            const sorted = deltaSamples.slice().sort((a, b) => a - b);
+            const medianUs = sorted[Math.floor(sorted.length / 2)];
+            const cap = o.keepOrigFps ? 120 : o.maxFps;
+            return medianUs > 0 ? Math.max(10, Math.min(cap, 1000000 / medianUs)) : Math.min(30, cap);
+          };
+
+          const cleanup = () => {
+            if (watchdog) {
+              clearInterval(watchdog);
+              watchdog = 0;
+            }
+            if (rvfcId && typeof video.cancelVideoFrameCallback === 'function') {
+              try { video.cancelVideoFrameCallback(rvfcId); } catch {}
+              rvfcId = 0;
+            }
+            video.removeEventListener('ended', onEnded);
+          };
+
+          const finish = (res) => {
+            if (settled) return;
+            settled = true;
+            cleanup();
+            resolve(res);
+          };
+
+          const fail = (err) => {
+            if (settled) return;
+            settled = true;
+            cleanup();
+            reject(err);
+          };
+
+          const onEnded = () => {
+            finish({
+              stalled: false,
+              lastTsUs: Math.max(0, lastAcceptedMediaUs),
+              estFps: computeEstFps(),
+            });
+          };
+
+          const onVideoFrame = (_now, metadata) => {
+            if (settled) return;
+            if (state.cancelRequested) {
+              fail(new Error('CANCELLED_BY_USER'));
+              return;
+            }
+            const vErr = o.getVideoErr();
+            if (vErr) {
+              fail(vErr);
+              return;
+            }
+
+            lastCallbackWall = performance.now();
+            const mediaSec = metadata && typeof metadata.mediaTime === 'number'
+              ? metadata.mediaTime
+              : video.currentTime;
+            const mediaUs = Math.max(0, Math.round(mediaSec * 1000000));
+
+            if (prevRawMediaUs >= 0) {
+              const dUs = mediaUs - prevRawMediaUs;
+              if (dUs >= 4000 && dUs <= 250000 && deltaSamples.length < 60) {
+                deltaSamples.push(dUs);
+              }
+            }
+            prevRawMediaUs = mediaUs;
+
+            if (lastAcceptedMediaUs < 0 || mediaUs - lastAcceptedMediaUs >= minGapUs) {
+              const tsUs = lastAcceptedMediaUs < 0 ? 0 : Math.max(mediaUs, lastAcceptedMediaUs + 1);
+              try {
+                o.encodeFrame(video, tsUs);
+                lastAcceptedMediaUs = tsUs;
+              } catch (encErr) {
+                fail(encErr);
+                return;
+              }
+
+              const nowWall = performance.now();
+              if (nowWall - lastProgressWall >= 150 && o.duration > 0) {
+                lastProgressWall = nowWall;
+                const pct = Math.min(95, Math.max(6, Math.round(6 + (mediaSec / o.duration) * 89)));
+                o.onProgress(pct, `WebCodecs GPU: ${formatDuration(mediaSec)} / ${formatDuration(o.duration)}`);
+              }
+            }
+
+            if (o.videoEncoder.encodeQueueSize > 6 && !video.paused && !video.ended) {
+              pausedByBackpressure = true;
+              try { video.pause(); } catch {}
+            }
+
+            if (!video.ended && !settled) {
+              rvfcId = video.requestVideoFrameCallback(onVideoFrame);
+            }
+          };
+
+          video.addEventListener('ended', onEnded, { once: true });
+
+          watchdog = setInterval(() => {
+            if (settled) return;
+            if (state.cancelRequested) {
+              fail(new Error('CANCELLED_BY_USER'));
+              return;
+            }
+            const vErr = o.getVideoErr();
+            if (vErr) {
+              fail(vErr);
+              return;
+            }
+            if (pausedByBackpressure && o.videoEncoder.encodeQueueSize <= 2 && !video.ended) {
+              pausedByBackpressure = false;
+              lastCallbackWall = performance.now();
+              video.play().catch(() => {});
+              return;
+            }
+            if (!pausedByBackpressure && !video.ended && performance.now() - lastCallbackWall > 2500) {
+              try { video.pause(); } catch {}
+              finish({
+                stalled: true,
+                lastTsUs: Math.max(0, lastAcceptedMediaUs),
+                estFps: computeEstFps(),
+              });
+            }
+          }, 50);
+
+          try {
+            video.currentTime = 0;
+          } catch {}
+          rvfcId = video.requestVideoFrameCallback(onVideoFrame);
+          const playP = video.play();
+          if (playP && typeof playP.catch === 'function') {
+            playP.catch(() => {
+              if (!settled) {
+                try { video.pause(); } catch {}
+                finish({
+                  stalled: true,
+                  lastTsUs: Math.max(0, lastAcceptedMediaUs),
+                  estFps: computeEstFps(),
+                });
+              }
+            });
+          }
+        });
+      }
+
+      async function captureFramesBySeeking(video, o, startSec, fps, duration) {
+        if (startSec >= duration - 0.005) return;
+        const frameDurationUs = Math.round(1000000 / fps);
+        const startIdx = Math.max(0, Math.round(startSec * fps));
+        const totalFrames = Math.max(startIdx + 1, Math.round(duration * fps));
+
+        for (let i = startIdx; i < totalFrames; i++) {
+          if (state.cancelRequested) throw new Error('CANCELLED_BY_USER');
+          const vErr = o.getVideoErr();
+          if (vErr) throw vErr;
+
+          const tSec = Math.min(Math.max(0, duration - 0.001), i / fps);
+          await waitVideoSeek(video, tSec, 1500);
+          if (state.cancelRequested) throw new Error('CANCELLED_BY_USER');
+
+          while (o.videoEncoder.encodeQueueSize > 8) {
+            if (state.cancelRequested) throw new Error('CANCELLED_BY_USER');
+            const qErr = o.getVideoErr();
+            if (qErr) throw qErr;
+            if (o.videoEncoder.state !== 'configured') {
+              throw new Error(`VideoEncoder đã đóng tại khung ${i + 1}/${totalFrames}.`);
+            }
+            await new Promise((r) => setTimeout(r, 4));
+          }
+
+          const tsUs = Math.max(o.getLastTsUs() + 1, i * frameDurationUs);
+          o.encodeFrame(video, tsUs);
+
+          if (i % 4 === 0 || i === totalFrames - 1) {
+            const videoPct = Math.round(6 + ((i + 1) / totalFrames) * 89);
+            o.onProgress(Math.min(95, videoPct), `WebCodecs GPU (tua khung): ${i + 1}/${totalFrames}`);
+          }
+        }
+      }
+
+      async function compressWithWebCodecs(item, cfg, onProgress, opts = {}) {
         if (!state.capabilities.hasWebCodecs) {
           throw new Error('Trình duyệt không hỗ trợ WebCodecs API.');
         }
@@ -3490,15 +4329,16 @@
 
         if (state.cancelRequested) throw new Error('CANCELLED_BY_USER');
 
-        // BƯỚC 2: Nạp <video> ẩn gắn DOM để trích khung hình chính xác
+        // BƯỚC 2: Nạp <video> ẩn gắn DOM trong viewport để rVFC & GPU decode chạy tối đa
         const video = document.createElement('video');
         video.muted = true;
         video.playsInline = true;
         video.preload = 'auto';
-        video.style.cssText = 'position:fixed;left:-9999px;top:0;width:2px;height:2px;opacity:0.001;pointer-events:none;';
+        video.style.cssText = 'position:fixed;left:0;top:0;width:2px;height:2px;opacity:0.01;pointer-events:none;z-index:-1;';
         document.body.appendChild(video);
 
         let videoEncoder = null;
+        let chosenHw = 'default';
 
         try {
           video.src = item.origUrl;
@@ -3520,15 +4360,20 @@
           }
 
           const dims = computeTargetDimensions(srcW, srcH, cfg.maxShortSide);
-          const targetFps = cfg.fps;
+          const keepOrigFps = !cfg.fps || cfg.fps === 'original';
+          const maxFps = keepOrigFps ? 0 : Math.max(10, Math.min(120, Number(cfg.fps) || 60));
+          const encoderFpsHint = keepOrigFps
+            ? Math.max(24, Math.min(120, Math.round(item.meta.fps || 60)))
+            : maxFps;
           const vBitrate = cfg.videoBitrateKbps * 1000;
 
-          appendTechLog(`[WebCodecs] Dò VideoEncoder (${dims.width}×${dims.height}, ${targetFps} FPS, ${cfg.videoBitrateKbps} kbps)...`);
-          const vConfig = await probeWebCodecsVideoConfig(dims.width, dims.height, targetFps, vBitrate);
+          appendTechLog(`[WebCodecs] Dò VideoEncoder (${dims.width}×${dims.height}, ${keepOrigFps ? 'giữ FPS gốc' : 'tối đa ' + maxFps + ' FPS'}, ${cfg.videoBitrateKbps} kbps)...`);
+          const vConfig = await probeWebCodecsVideoConfig(dims.width, dims.height, encoderFpsHint, vBitrate, opts);
           if (!vConfig) {
             throw new Error(`VideoEncoder không hỗ trợ cấu hình H.264 cho ${dims.width}×${dims.height}.`);
           }
-          appendTechLog(`[WebCodecs] Đã chọn Video: ${vConfig.codec} (${vConfig.hardwareAcceleration || 'default'})`);
+          chosenHw = vConfig.hardwareAcceleration || 'default';
+          appendTechLog(`[WebCodecs] Đã chọn Video: ${vConfig.codec} (${chosenHw})`);
 
           if (state.cancelRequested) throw new Error('CANCELLED_BY_USER');
 
@@ -3568,52 +4413,80 @@
           const canvas = document.createElement('canvas');
           canvas.width = dims.width;
           canvas.height = dims.height;
-          const ctx = canvas.getContext('2d', { alpha: false });
+          const ctx = canvas.getContext('2d', { alpha: false, desynchronized: true });
           ctx.imageSmoothingEnabled = true;
           ctx.imageSmoothingQuality = 'high';
 
-          const totalFrames = Math.max(1, Math.round(duration * targetFps));
-          const frameDurationUs = Math.round(1000000 / targetFps);
-          const gopInterval = Math.max(1, targetFps * 2);
+          let lastKeyTs = -1;
+          let lastEncodedTs = -1;
+          let encodedCount = 0;
+          let directZeroCopy = srcW === dims.width && srcH === dims.height;
 
-          for (let i = 0; i < totalFrames; i++) {
-            if (state.cancelRequested) throw new Error('CANCELLED_BY_USER');
-            if (videoErr) throw videoErr;
-
-            const tSec = Math.min(Math.max(0, duration - 0.001), i / targetFps);
-            await waitVideoSeek(video, tSec, 1500);
-            if (state.cancelRequested) throw new Error('CANCELLED_BY_USER');
-
-            ctx.drawImage(video, 0, 0, dims.width, dims.height);
-
-            while (videoEncoder.encodeQueueSize > 8) {
-              if (state.cancelRequested) throw new Error('CANCELLED_BY_USER');
-              if (videoErr) throw videoErr;
-              if (videoEncoder.state !== 'configured') {
-                throw new Error(`VideoEncoder đã đóng tại khung ${i + 1}/${totalFrames}.`);
-              }
-              await new Promise((r) => setTimeout(r, 12));
-            }
-
+          const encodeFrame = (source, tsUs) => {
             if (videoErr) throw videoErr;
             if (videoEncoder.state !== 'configured') {
-              throw new Error(`VideoEncoder đã đóng (${videoEncoder.state}) trước khung ${i + 1}.`);
+              throw new Error(`VideoEncoder đã đóng (${videoEncoder.state}) tại khung #${encodedCount + 1}.`);
             }
 
-            const frame = new window.VideoFrame(canvas, {
-              timestamp: i * frameDurationUs,
-              duration: frameDurationUs,
-            });
+            let frame = null;
+            if (directZeroCopy) {
+              try {
+                const directFrame = new window.VideoFrame(source, { timestamp: tsUs });
+                if (directFrame.displayWidth === dims.width && directFrame.displayHeight === dims.height) {
+                  frame = directFrame;
+                } else {
+                  directFrame.close();
+                  directZeroCopy = false;
+                }
+              } catch {
+                directZeroCopy = false;
+              }
+            }
+
+            if (!frame) {
+              ctx.drawImage(source, 0, 0, dims.width, dims.height);
+              frame = new window.VideoFrame(canvas, { timestamp: tsUs });
+            }
+
+            const isKey = encodedCount === 0 || tsUs - lastKeyTs >= 2000000;
             try {
-              videoEncoder.encode(frame, { keyFrame: i % gopInterval === 0 });
+              videoEncoder.encode(frame, { keyFrame: isKey });
+              encodedCount++;
+              lastEncodedTs = tsUs;
+              if (isKey) lastKeyTs = tsUs;
             } finally {
               frame.close();
             }
+          };
 
-            if (i % 4 === 0 || i === totalFrames - 1) {
-              const videoPct = Math.round(6 + ((i + 1) / totalFrames) * 89);
-              onProgress(Math.min(95, videoPct), `WebCodecs GPU: khung ${i + 1}/${totalFrames}`);
+          const captureCtx = {
+            dims,
+            duration,
+            keepOrigFps,
+            maxFps: keepOrigFps ? 120 : maxFps,
+            knownSrcFps: item.meta.fps || 0,
+            videoEncoder,
+            encodeFrame,
+            getVideoErr: () => videoErr,
+            getLastTsUs: () => lastEncodedTs,
+            onProgress,
+          };
+
+          if (typeof video.requestVideoFrameCallback === 'function') {
+            const rtRes = await captureFramesRealtime(video, captureCtx);
+            if (rtRes && rtRes.stalled) {
+              const upperFps = keepOrigFps ? 120 : maxFps;
+              const fallbackFps = item.meta.fps > 0 ? Math.min(upperFps, Math.round(item.meta.fps)) : Math.min(30, upperFps);
+              const seekFps = Math.max(10, Math.min(upperFps, Math.round(rtRes.estFps) || fallbackFps));
+              const resumeSec = rtRes.lastTsUs > 0 ? rtRes.lastTsUs / 1000000 + 1 / seekFps : 0;
+              appendTechLog(`[WebCodecs] Chuyển sang chế độ tua khung hình tại ${resumeSec.toFixed(2)}s (${seekFps} FPS) — thường do tab bị ẩn hoặc trình duyệt tạm ngưng phát.`);
+              await captureFramesBySeeking(video, captureCtx, resumeSec, seekFps, duration);
             }
+          } else {
+            const seekInitFps = keepOrigFps
+              ? Math.max(15, Math.min(120, Math.round(item.meta.fps || 30)))
+              : maxFps;
+            await captureFramesBySeeking(video, captureCtx, 0, seekInitFps, duration);
           }
 
           onProgress(96, 'Đang hoàn thiện tệp MP4 FastStart...');
@@ -3630,14 +4503,20 @@
           const outBlob = new Blob([target.buffer], { type: 'video/mp4' });
           if (!outBlob.size) throw new Error('MP4-Muxer tạo tệp đầu ra rỗng.');
 
+          const modeTag = chosenHw === 'prefer-software' ? 'Software' : 'GPU';
           return {
             blob: outBlob,
             ext: 'mp4',
-            engineLabel: 'WebCodecs + MP4-Muxer (GPU)',
+            engineLabel: `WebCodecs + MP4-Muxer (${modeTag})`,
             outCodec: `${vConfig.codec}${encodedAudioPackets.length > 0 ? ' / AAC' : ' (Không tiếng)'} (MP4 FastStart)`,
             width: dims.width,
             height: dims.height,
           };
+        } catch (err) {
+          if (err && err.message !== 'CANCELLED_BY_USER') {
+            err.hwAccelUsed = chosenHw;
+          }
+          throw err;
         } finally {
           try { if (videoEncoder && videoEncoder.state !== 'closed') videoEncoder.close(); } catch {}
           try {
@@ -3662,6 +4541,8 @@
         };
 
         const raw = [
+          { opts: withBps('video/mp4;codecs=avc1.640033,mp4a.40.2'), ext: 'mp4', label: 'MP4 H.264 High L5.1/AAC' },
+          { opts: withBps('video/mp4;codecs=avc1.64002a,mp4a.40.2'), ext: 'mp4', label: 'MP4 H.264 High L4.2/AAC' },
           { opts: withBps('video/mp4;codecs=avc1.640028,mp4a.40.2'), ext: 'mp4', label: 'MP4 H.264 High L4.0/AAC' },
           { opts: withBps('video/mp4;codecs=avc1.4d4028,mp4a.40.2'), ext: 'mp4', label: 'MP4 H.264 Main L4.0/AAC' },
           { opts: withBps('video/mp4;codecs=avc1.420028,mp4a.40.2'), ext: 'mp4', label: 'MP4 H.264 Base L4.0/AAC' },
@@ -3688,8 +4569,10 @@
         return new Promise((resolve, reject) => {
           let recorder = null;
           let rafId = 0;
+          let rvfcId = 0;
           let settled = false;
           const chunks = [];
+          const hasRvfc = typeof video.requestVideoFrameCallback === 'function';
 
           const canvasStream = canvas.captureStream(fps);
           const tracks = [...canvasStream.getVideoTracks()];
@@ -3697,7 +4580,15 @@
           const combinedStream = new MediaStream(tracks);
 
           const stopAll = () => {
-            if (rafId) cancelAnimationFrame(rafId);
+            if (rafId) {
+              cancelAnimationFrame(rafId);
+              rafId = 0;
+            }
+            if (rvfcId && typeof video.cancelVideoFrameCallback === 'function') {
+              try { video.cancelVideoFrameCallback(rvfcId); } catch {}
+              rvfcId = 0;
+            }
+            video.onended = null;
             try { video.pause(); } catch {}
             try { canvasStream.getTracks().forEach((t) => t.stop()); } catch {}
             if (state.activeCancelFn === cancelRec) state.activeCancelFn = null;
@@ -3755,7 +4646,7 @@
             }
           };
 
-          const drawLoop = () => {
+          const drawFrameStep = () => {
             if (settled) return;
             if (state.cancelRequested) {
               cancelRec();
@@ -3768,18 +4659,21 @@
               const pct = Math.min(98, Math.max(2, Math.round((video.currentTime / duration) * 100)));
               onProgress(pct, `Smart Native (${candidate.label}): ${formatDuration(video.currentTime)} / ${formatDuration(duration)}`);
             }
-            if (!video.ended && !video.paused) {
-              rafId = requestAnimationFrame(drawLoop);
+            if (!settled && !video.ended && !video.paused) {
+              if (hasRvfc) {
+                rvfcId = video.requestVideoFrameCallback(drawFrameStep);
+              } else {
+                rafId = requestAnimationFrame(drawFrameStep);
+              }
             }
           };
 
           try {
-            video.currentTime = 0;
             recorder.start(400);
             const playP = video.play();
             if (playP && typeof playP.then === 'function') {
               playP.then(() => {
-                if (!settled) drawLoop();
+                if (!settled) drawFrameStep();
               }).catch((playErr) => {
                 if (!settled) {
                   settled = true;
@@ -3789,7 +4683,7 @@
                 }
               });
             } else {
-              drawLoop();
+              drawFrameStep();
             }
           } catch (startErr) {
             settled = true;
@@ -3811,7 +4705,7 @@
         video.playsInline = true;
         video.preload = 'auto';
         video.muted = cfg.muteAudio;
-        video.style.cssText = 'position:fixed;left:-9999px;top:0;width:2px;height:2px;opacity:0.001;pointer-events:none;';
+        video.style.cssText = 'position:fixed;left:0;top:0;width:2px;height:2px;opacity:0.01;pointer-events:none;z-index:-1;';
         document.body.appendChild(video);
 
         let audioCtx = null;
@@ -3839,7 +4733,7 @@
           const canvas = document.createElement('canvas');
           canvas.width = dims.width;
           canvas.height = dims.height;
-          const ctx = canvas.getContext('2d', { alpha: false });
+          const ctx = canvas.getContext('2d', { alpha: false, desynchronized: true });
 
           let audioTrack = null;
           if (!cfg.muteAudio) {
@@ -3860,14 +4754,19 @@
             }
           }
 
+          const keepOrigFps = !cfg.fps || cfg.fps === 'original';
+          const streamFps = keepOrigFps
+            ? Math.max(24, Math.min(120, Math.round(item.meta.fps || 60)))
+            : (Number(cfg.fps) || 60);
           const candidates = buildNativeMimeCandidates(cfg);
           let lastErr = null;
           for (const cand of candidates) {
             if (state.cancelRequested) throw new Error('CANCELLED_BY_USER');
             appendTechLog(`[Smart Native] Thử cấu hình: ${cand.label} (${cand.opts.mimeType || 'default'})`);
             try {
+              await waitVideoSeek(video, 0, 2000);
               const res = await attemptNativeRecordSingle(
-                video, canvas, ctx, dims, duration, cfg.fps, audioTrack, cand, onProgress
+                video, canvas, ctx, dims, duration, streamFps, audioTrack, cand, onProgress
               );
               return {
                 blob: res.blob,
@@ -3911,10 +4810,17 @@
         return tbl;
       })();
 
-      function calcCrc32(uint8) {
+      async function calcCrc32(uint8) {
         let crc = 0xFFFFFFFF;
-        for (let i = 0; i < uint8.length; i++) {
-          crc = CRC32_TABLE[(crc ^ uint8[i]) & 0xFF] ^ (crc >>> 8);
+        const CHUNK = 4 * 1024 * 1024;
+        for (let start = 0; start < uint8.length; start += CHUNK) {
+          const end = Math.min(uint8.length, start + CHUNK);
+          for (let i = start; i < end; i++) {
+            crc = CRC32_TABLE[(crc ^ uint8[i]) & 0xFF] ^ (crc >>> 8);
+          }
+          if (end < uint8.length) {
+            await new Promise((r) => setTimeout(r, 0));
+          }
         }
         return (crc ^ 0xFFFFFFFF) >>> 0;
       }
@@ -3934,6 +4840,7 @@
         const localParts = [];
         const centralParts = [];
         let offset = 0;
+        let centralEst = 0;
         const usedNames = new Set();
 
         for (const entry of entries) {
@@ -3949,8 +4856,15 @@
 
           const nameBytes = encoder.encode(safeName);
           const dataBytes = new Uint8Array(await entry.blob.arrayBuffer());
-          const crc = calcCrc32(dataBytes);
           const size = dataBytes.byteLength;
+          const entryTotal = 30 + nameBytes.length + size;
+          centralEst += 46 + nameBytes.length;
+
+          if (offset + entryTotal + centralEst + 22 >= 0xFFFFFFFF) {
+            throw new Error('Tổng dung lượng vượt giới hạn 4 GB của tệp ZIP chuẩn — vui lòng dùng nút "Tải lần lượt".');
+          }
+
+          const crc = await calcCrc32(dataBytes);
 
           // Local File Header (30 bytes + filename)
           const lfh = new Uint8Array(30 + nameBytes.length);
@@ -4115,6 +5029,7 @@
             progress: 0,
             stageText: 'Chờ nén',
             errorMsg: '',
+            warnMsg: '',
             engineUsed: '',
             outCodec: '',
             outWidth: 0,
@@ -4129,6 +5044,9 @@
               duration: 0,
               aspectLabel: '—',
               bitrateKbps: 0,
+              videoBitrateKbps: 0,
+              fps: 0,
+              hasAudio: null,
               browserDecodable: true,
             },
           };
@@ -4140,13 +5058,35 @@
         updateBatchSummaryUI();
         updateEstimatePanel();
 
+        let nextIdx = 0;
+        const workerCount = Math.min(3, addedItems.length);
         await Promise.all(
-          addedItems.map(async (item) => {
-            const codecInfo = await sniffInputCodec(item.file);
-            item.codecInfo = codecInfo;
-            await extractMetadataAndThumb(item);
-            if (codecInfo.inputCodec === 'AV1') {
-              appendTechLog(`[Codec Sniffer] "${item.file.name}": phát hiện ${codecInfo.inputCodecLabel} — tự động định tuyến qua WebCodecs.`);
+          Array.from({ length: workerCount }, async () => {
+            while (nextIdx < addedItems.length) {
+              const item = addedItems[nextIdx++];
+              const codecInfo = await sniffInputCodec(item.file);
+              item.codecInfo = codecInfo;
+              await extractMetadataAndThumb(item);
+              item.meta.fps = codecInfo.fps || 0;
+              item.meta.hasAudio = typeof codecInfo.hasAudio === 'boolean' ? codecInfo.hasAudio : null;
+              if (codecInfo.videoTrackBytes > 0 && item.meta.duration > 0) {
+                const exactVideoK = Math.round((codecInfo.videoTrackBytes * 8) / item.meta.duration / 1000);
+                item.meta.videoBitrateKbps = item.meta.bitrateKbps > 0
+                  ? Math.min(item.meta.bitrateKbps, Math.max(100, exactVideoK))
+                  : Math.max(100, exactVideoK);
+              } else if (item.meta.bitrateKbps > 0) {
+                const totalK = item.meta.bitrateKbps;
+                const estAudioK = item.meta.hasAudio === false
+                  ? 0
+                  : Math.min(160, Math.max(48, Math.round(totalK * 0.08)));
+                const rawVideoK = Math.round(totalK * 0.985 - estAudioK);
+                item.meta.videoBitrateKbps = Math.max(Math.min(totalK, 100), rawVideoK);
+              }
+              if (codecInfo.inputCodec === 'AV1') {
+                appendTechLog(`[Codec Sniffer] "${item.file.name}": phát hiện ${codecInfo.inputCodecLabel} — tự động định tuyến qua WebCodecs.`);
+              }
+              scheduleQueueRender();
+              updateEstimatePanel();
             }
           })
         );
@@ -4194,7 +5134,11 @@
         item.progress = 0;
         item.stageText = 'Chờ nén lại';
         item.errorMsg = '';
+        item.warnMsg = '';
         item.engineUsed = '';
+        item.outCodec = '';
+        item.outWidth = 0;
+        item.outHeight = 0;
         item.outputBlob = null;
         item.outputUrl = null;
         item.outputName = '';
@@ -4273,6 +5217,14 @@
         dom.btnDownloadSequential.disabled = state.isBatchRunning || doneItems.length === 0;
       }
 
+      function scheduleQueueRender() {
+        if (queueRenderRaf) return;
+        queueRenderRaf = requestAnimationFrame(() => {
+          queueRenderRaf = 0;
+          renderQueueList();
+        });
+      }
+
       function renderQueueList() {
         const cfg = getActiveConfig();
         if (state.queue.length === 0) {
@@ -4289,9 +5241,37 @@
             : 'badge badge-slate';
           const codecTooltip = isAv1 ? 'title="Tự động tối ưu qua WebCodecs + MP4-Muxer"' : '';
 
-          const resStr = item.meta.width > 0 ? `${item.meta.width}×${item.meta.height}` : 'Chưa rõ kích thước';
+          const itemCfg = resolveItemConfig(item, cfg);
+          let resStr = 'Chưa rõ kích thước';
+          if (item.status === 'done' && item.outWidth > 0) {
+            resStr = (item.meta.width > 0 && (item.outWidth !== item.meta.width || item.outHeight !== item.meta.height))
+              ? `${item.meta.width}×${item.meta.height} → ${item.outWidth}×${item.outHeight}`
+              : `${item.outWidth}×${item.outHeight}`;
+          } else if (item.meta.width > 0) {
+            const targetDims = computeTargetDimensions(item.meta.width, item.meta.height, cfg.maxShortSide);
+            resStr = (targetDims.width !== item.meta.width || targetDims.height !== item.meta.height)
+              ? `${item.meta.width}×${item.meta.height} → ${targetDims.width}×${targetDims.height}`
+              : `${item.meta.width}×${item.meta.height}`;
+          }
+
+          let fpsStr = '';
+          if (item.meta.fps > 0) {
+            fpsStr = (cfg.fps !== 'original' && Number(cfg.fps) < item.meta.fps)
+              ? `${formatFpsLabel(item.meta.fps)} → ${cfg.fps} FPS`
+              : formatFpsLabel(item.meta.fps);
+          } else {
+            fpsStr = cfg.fps === 'original' ? 'Giữ FPS gốc' : `≤ ${cfg.fps} FPS`;
+          }
+
           const durStr = item.meta.duration > 0 ? formatDuration(item.meta.duration) : '—';
-          const brStr = item.meta.bitrateKbps > 0 ? `${item.meta.bitrateKbps} kbps` : '';
+          let brStr = '';
+          if (itemCfg.srcVideoBitrateKbps > 0) {
+            brStr = `Bitrate: ~${itemCfg.srcVideoBitrateKbps.toLocaleString('en-US')} → ${itemCfg.videoBitrateKbps.toLocaleString('en-US')} kbps`;
+          } else if (itemCfg.unprobedAutoBitrate) {
+            brStr = `Bitrate: Tự động (CRF ${itemCfg.crf || 20})`;
+          } else {
+            brStr = `Mục tiêu: ${itemCfg.videoBitrateKbps.toLocaleString('en-US')} kbps`;
+          }
 
           let sizeHtml = `<span>${formatBytes(item.file.size)}</span>`;
           if (item.status === 'done' && item.outputBlob) {
@@ -4305,7 +5285,12 @@
           } else {
             const estBytes = estimateItemOutputBytes(item, cfg);
             if (estBytes > 0) {
-              sizeHtml = `<span>${formatBytes(item.file.size)} → <span style="color:var(--fb-dark);font-weight:600">~${formatBytes(estBytes)}</span></span>`;
+              const estDiff = item.file.size - estBytes;
+              const estPct = item.file.size > 0 ? Math.round((estDiff / item.file.size) * 100) : 0;
+              const estPctHtml = estPct >= 0
+                ? `<span class="badge badge-emerald" style="font-size:11px;padding:2px 7px">-${estPct}%</span>`
+                : `<span class="badge badge-amber" style="font-size:11px;padding:2px 7px">+${Math.abs(estPct)}%</span>`;
+              sizeHtml = `<span>${formatBytes(item.file.size)} → <span style="color:var(--fb-dark);font-weight:600">~${formatBytes(estBytes)}</span></span> ${estPctHtml}`;
             }
           }
 
@@ -4345,6 +5330,10 @@
             item.status === 'error' && item.errorMsg
               ? `<div class="item-error-text">${escapeHtml(item.errorMsg)}</div>`
               : '';
+          const warnHtml =
+            item.status === 'done' && item.warnMsg
+              ? `<div class="item-warn-text">${escapeHtml(item.warnMsg)}</div>`
+              : '';
 
           const disabledAttr = state.isBatchRunning ? 'disabled' : '';
           let actionsHtml = '';
@@ -4375,11 +5364,14 @@
                   <span>•</span>
                   <span>${resStr}</span>
                   <span>•</span>
+                  <span>${fpsStr}</span>
+                  <span>•</span>
                   <span>${durStr}</span>
                   ${brStr ? `<span>•</span><span>${brStr}</span>` : ''}
                 </div>
                 ${progressRowHtml}
                 ${errorHtml}
+                ${warnHtml}
               </div>
               <div class="queue-actions">${actionsHtml}</div>
             </div>
@@ -4393,12 +5385,29 @@
        * 13. CHẠY NÉN HÀNG LOẠT TUẦN TỰ (AN TOÀN RAM + FALLBACK 3 TẦNG)
        * ========================================================================= */
       async function compressSingleItemWithRouting(item, cfg) {
-        const routing = buildEngineChainForItem(item, cfg);
+        const itemCfg = resolveItemConfig(item, cfg);
+        if (cfg.autoBitrate) {
+          if (itemCfg.srcVideoBitrateKbps > 0) {
+            appendTechLog(
+              `[Bitrate thông minh - ${cfg.presetName}] "${item.file.name}": Video gốc ~${itemCfg.srcVideoBitrateKbps.toLocaleString('en-US')} kbps → Chọn mức nén ${itemCfg.videoBitrateKbps.toLocaleString('en-US')} kbps (giữ nguyên độ phân giải & FPS gốc).`
+            );
+          } else {
+            appendTechLog(
+              `[Bitrate thông minh - ${cfg.presetName}] "${item.file.name}": Chưa đọc được bitrate trước khi giải mã → Dùng CRF ${itemCfg.crf || 20} (giữ nguyên độ phân giải & FPS gốc).`
+            );
+          }
+        } else if (itemCfg.bitrateCapped) {
+          appendTechLog(
+            `[Tối ưu dung lượng] "${item.file.name}" có bitrate video gốc ~${itemCfg.srcVideoBitrateKbps.toLocaleString('en-US')} kbps — tự hạ trần video xuống ${itemCfg.videoBitrateKbps.toLocaleString('en-US')} kbps (từ ${cfg.videoBitrateKbps.toLocaleString('en-US')} kbps) để giữ dung lượng nhỏ hơn gốc.`
+          );
+        }
+
+        const routing = buildEngineChainForItem(item, itemCfg);
         if (!routing.chain.length) {
-          if (cfg.engine === 'ffmpeg' && !isFfmpegReady()) {
+          if (itemCfg.engine === 'ffmpeg' && !isFfmpegReady()) {
             throw new Error('Bạn đang chọn FFmpeg.wasm nhưng chưa tải thư viện ở Trung tâm Codec.');
           }
-          if (cfg.engine === 'webcodecs' && !isWebCodecsReady()) {
+          if (itemCfg.engine === 'webcodecs' && !isWebCodecsReady()) {
             throw new Error('Bạn đang chọn WebCodecs nhưng chưa tải mp4-muxer.min.js (hoặc trình duyệt không hỗ trợ).');
           }
           if (item.meta.browserDecodable === false && !isFfmpegReady()) {
@@ -4408,7 +5417,7 @@
         }
 
         if (routing.av1Routed) {
-          const targetName = routing.chain[0] === 'webcodecs' ? 'WebCodecs + MP4-Muxer' : 'Smart Native';
+          const targetName = engineDisplayName(routing.chain[0]);
           appendTechLog(`[Định tuyến AV1] Video "${item.file.name}" là AV1 (av01) — đi thẳng qua ${targetName}.`);
         }
 
@@ -4424,7 +5433,11 @@
             const stEl = card.querySelector('[data-role="stage-text"]');
             if (stEl && stage) stEl.textContent = stage;
           }
-          updateBatchSummaryUI();
+          const now = performance.now();
+          if (item.progress >= 100 || now - lastSummaryUpdateTs >= 200) {
+            lastSummaryUpdateTs = now;
+            updateBatchSummaryUI();
+          }
         };
 
         let lastErr = null;
@@ -4435,22 +5448,30 @@
 
           try {
             if (eng === 'ffmpeg') {
-              return await compressWithFFmpeg(item, cfg, updateItemProgress);
+              return await compressWithFFmpeg(item, itemCfg, updateItemProgress);
             }
             if (eng === 'webcodecs') {
-              return await compressWithWebCodecs(item, cfg, updateItemProgress);
+              try {
+                return await compressWithWebCodecs(item, itemCfg, updateItemProgress);
+              } catch (wcErr) {
+                if (wcErr && wcErr.message !== 'CANCELLED_BY_USER' && wcErr.hwAccelUsed === 'prefer-hardware' && !state.cancelRequested) {
+                  appendTechLog(`[WEBCODECS] Bộ mã hóa phần cứng gặp lỗi với "${item.file.name}" (${wcErr.message}) — thử lại WebCodecs (Software)...`);
+                  return await compressWithWebCodecs(item, itemCfg, updateItemProgress, { excludeHardware: true });
+                }
+                throw wcErr;
+              }
             }
-            return await compressWithMediaRecorder(item, cfg, updateItemProgress);
+            return await compressWithMediaRecorder(item, itemCfg, updateItemProgress);
           } catch (err) {
             if (err && err.message === 'CANCELLED_BY_USER') throw err;
             lastErr = err;
             const reason = err && err.message ? err.message : String(err);
-            appendTechLog(`[${eng.toUpperCase()}] Thất bại với "${item.file.name}": ${reason}`);
+            appendTechLog(`[${engineDisplayName(eng)}] Thất bại với "${item.file.name}": ${reason}`);
 
             if (i < routing.chain.length - 1 && !state.cancelRequested) {
-              const nextName = routing.chain[i + 1] === 'webcodecs' ? 'WebCodecs + MP4-Muxer' : 'Smart Native MediaRecorder';
+              const nextName = engineDisplayName(routing.chain[i + 1]);
               appendTechLog(`→ Tự động fallback sang ${nextName}...`);
-              showToast(`"${item.file.name}": ${eng.toUpperCase()} gặp trở ngại — tự chuyển sang ${nextName}...`, 'warning');
+              showToast(`"${item.file.name}": ${engineDisplayName(eng)} gặp trở ngại — tự chuyển sang ${nextName}...`, 'warning');
             }
           }
         }
@@ -4469,82 +5490,116 @@
         const cfg = getActiveConfig();
         state.isBatchRunning = true;
         state.cancelRequested = false;
+        lastSummaryUpdateTs = 0;
         updateBatchSummaryUI();
         renderQueueList();
+
+        let wakeLock = null;
+        let warnedHiddenTab = false;
+        const onVisibilityChange = () => {
+          if (document.hidden && state.isBatchRunning && !warnedHiddenTab) {
+            warnedHiddenTab = true;
+            appendTechLog('[Hệ thống] Tab đang ở chế độ nền — trình duyệt có thể giảm tốc GPU. Giữ tab hiển thị để GPU nén nhanh nhất.');
+            showToast('Giữ tab hiển thị để GPU nén nhanh nhất', 'warning');
+          }
+        };
+        document.addEventListener('visibilitychange', onVisibilityChange);
+        try {
+          if (navigator.wakeLock && typeof navigator.wakeLock.request === 'function') {
+            wakeLock = await navigator.wakeLock.request('screen');
+          }
+        } catch {}
 
         let okCount = 0;
         let errCount = 0;
         let lastSuccessItem = null;
 
-        appendTechLog(`=== Bắt đầu nén hàng loạt ${targets.length} video (${cfg.presetName}, ${cfg.videoBitrateKbps} kbps, ${cfg.fps} FPS) ===`);
+        const resLog = cfg.maxShortSide === 'original' ? 'Giữ độ phân giải gốc' : `≤ ${cfg.maxShortSide}p`;
+        const fpsLog = cfg.fps === 'original' ? 'Giữ FPS gốc' : `tối đa ${cfg.fps} FPS`;
+        const brLog = cfg.autoBitrate ? 'Bitrate thông minh theo từng video' : `${cfg.videoBitrateKbps} kbps`;
+        appendTechLog(`=== Bắt đầu nén hàng loạt ${targets.length} video (${cfg.presetName} • ${resLog} • ${fpsLog} • ${brLog}) ===`);
 
-        for (let i = 0; i < targets.length; i++) {
-          if (state.cancelRequested) break;
-          const item = targets[i];
+        try {
+          for (let i = 0; i < targets.length; i++) {
+            if (state.cancelRequested) break;
+            const item = targets[i];
 
-          item.status = 'processing';
-          item.progress = 1;
-          item.errorMsg = '';
-          item.stageText = `Đang khởi động (${i + 1}/${targets.length})...`;
-          dom.batchProgressLabel.textContent = `Đang nén video ${i + 1} / ${targets.length}: ${item.file.name}`;
-          renderQueueList();
-          updateBatchSummaryUI();
+            item.status = 'processing';
+            item.progress = 1;
+            item.errorMsg = '';
+            item.warnMsg = '';
+            item.stageText = `Đang khởi động (${i + 1}/${targets.length})...`;
+            dom.batchProgressLabel.textContent = `Đang nén video ${i + 1} / ${targets.length}: ${item.file.name}`;
+            renderQueueList();
+            updateBatchSummaryUI();
 
-          try {
-            const res = await compressSingleItemWithRouting(item, cfg);
-            if (state.cancelRequested) {
-              item.status = 'cancelled';
-              item.stageText = 'Đã hủy';
-              break;
+            try {
+              const res = await compressSingleItemWithRouting(item, cfg);
+              if (state.cancelRequested) {
+                item.status = 'cancelled';
+                item.stageText = 'Đã hủy';
+                break;
+              }
+
+              try { if (item.outputUrl) URL.revokeObjectURL(item.outputUrl); } catch {}
+              item.outputBlob = res.blob;
+              item.outputUrl = URL.createObjectURL(res.blob);
+              item.outputName = `${stripExtension(item.file.name)}_video-compressed.${res.ext}`;
+              item.engineUsed = res.engineLabel;
+              item.outCodec = res.outCodec;
+              item.outWidth = res.width;
+              item.outHeight = res.height;
+              item.progress = 100;
+              item.status = 'done';
+              item.stageText = 'Hoàn tất';
+
+              if (res.blob.size >= item.file.size) {
+                item.warnMsg = 'Tệp nén không nhỏ hơn bản gốc — nên giữ bản gốc.';
+                appendTechLog(`[Cảnh báo dung lượng] "${item.file.name}": tệp nén (${formatBytes(res.blob.size)}) không nhỏ hơn bản gốc (${formatBytes(item.file.size)}) — nên giữ bản gốc.`);
+              } else {
+                item.warnMsg = '';
+              }
+
+              okCount++;
+              lastSuccessItem = item;
+              const delta = item.file.size - res.blob.size;
+              const pctAbs = item.file.size > 0 ? Math.round((Math.abs(delta) / item.file.size) * 100) : 0;
+              const pctStr = delta >= 0 ? `-${pctAbs}%` : `+${pctAbs}%`;
+              appendTechLog(`✓ Hoàn tất "${item.file.name}": ${formatBytes(item.file.size)} → ${formatBytes(res.blob.size)} (${pctStr}) bằng ${res.engineLabel}`);
+            } catch (err) {
+              if (state.cancelRequested || (err && err.message === 'CANCELLED_BY_USER')) {
+                item.status = 'cancelled';
+                item.stageText = 'Đã hủy';
+                appendTechLog(`Đã hủy nén "${item.file.name}" theo yêu cầu.`);
+                break;
+              }
+              item.status = 'error';
+              item.errorMsg = err && err.message ? err.message : String(err);
+              item.stageText = 'Thất bại';
+              errCount++;
+              appendTechLog(`✗ Lỗi "${item.file.name}": ${item.errorMsg}`);
             }
 
-            try { if (item.outputUrl) URL.revokeObjectURL(item.outputUrl); } catch {}
-            item.outputBlob = res.blob;
-            item.outputUrl = URL.createObjectURL(res.blob);
-            item.outputName = `${stripExtension(item.file.name)}_video-compressed.${res.ext}`;
-            item.engineUsed = res.engineLabel;
-            item.outCodec = res.outCodec;
-            item.outWidth = res.width;
-            item.outHeight = res.height;
-            item.progress = 100;
-            item.status = 'done';
-            item.stageText = 'Hoàn tất';
+            renderQueueList();
+            updateBatchSummaryUI();
+            updateEstimatePanel();
 
-            okCount++;
-            lastSuccessItem = item;
-            const savedPct = item.file.size > 0 ? Math.round(((item.file.size - res.blob.size) / item.file.size) * 100) : 0;
-            appendTechLog(`✓ Hoàn tất "${item.file.name}": ${formatBytes(item.file.size)} → ${formatBytes(res.blob.size)} (-${savedPct}%) bằng ${res.engineLabel}`);
-          } catch (err) {
-            if (state.cancelRequested || (err && err.message === 'CANCELLED_BY_USER')) {
-              item.status = 'cancelled';
-              item.stageText = 'Đã hủy';
-              appendTechLog(`Đã hủy nén "${item.file.name}" theo yêu cầu.`);
-              break;
-            }
-            item.status = 'error';
-            item.errorMsg = err && err.message ? err.message : String(err);
-            item.stageText = 'Thất bại';
-            errCount++;
-            appendTechLog(`✗ Lỗi "${item.file.name}": ${item.errorMsg}`);
+            // Nghỉ 120ms giữa các video để trình duyệt giải phóng GC RAM
+            await new Promise((r) => setTimeout(r, 120));
           }
-
-          renderQueueList();
-          updateBatchSummaryUI();
-          updateEstimatePanel();
-
-          // Nghỉ 120ms giữa các video để trình duyệt giải phóng GC RAM
-          await new Promise((r) => setTimeout(r, 120));
+        } finally {
+          document.removeEventListener('visibilitychange', onVisibilityChange);
+          try { if (wakeLock) await wakeLock.release(); } catch {}
+          state.isBatchRunning = false;
+          state.activeCancelFn = null;
         }
-
-        state.isBatchRunning = false;
-        state.activeCancelFn = null;
 
         if (state.cancelRequested) {
           dom.batchProgressLabel.textContent = `Đã dừng hàng loạt (${okCount} hoàn tất)`;
           showToast(`Đã dừng quá trình nén (${okCount} video hoàn tất).`, 'warning');
         } else if (errCount === 0 && okCount > 0) {
           dom.batchProgressLabel.textContent = `Hoàn tất toàn bộ ${okCount} video ✓`;
-          showToast(`Nén thành công ${okCount}/${targets.length} video chuẩn Facebook!`, 'success');
+          showToast(`Nén thành công ${okCount}/${targets.length} video!`, 'success');
         } else if (okCount > 0) {
           dom.batchProgressLabel.textContent = `Hoàn tất ${okCount} video • ${errCount} video lỗi`;
           showToast(`Hoàn tất ${okCount} video, có ${errCount} video gặp lỗi (xem chi tiết trong hàng đợi).`, 'warning');
@@ -4575,12 +5630,12 @@
 
         try {
           const entries = doneItems.map((it) => ({
-            name: it.outputName || `${stripExtension(it.file.name)}_fb-compressed.mp4`,
+            name: it.outputName || `${stripExtension(it.file.name)}_video-compressed.mp4`,
             blob: it.outputBlob,
           }));
           const zipBlob = await createStoreZipBlob(entries);
           const stamp = new Date().toISOString().slice(0, 10);
-          triggerBlobDownload(zipBlob, `fb-compressed-videos-${stamp}.zip`);
+          triggerBlobDownload(zipBlob, `compressed-videos-${stamp}.zip`);
           showToast(`Đã tạo và tải gói ZIP chứa ${doneItems.length} video (${formatBytes(zipBlob.size)}) ✓`, 'success');
         } catch (err) {
           showToast(`Không thể tạo tệp ZIP: ${err.message}`, 'error');
@@ -4597,7 +5652,7 @@
         showToast(`Đang tải lần lượt ${doneItems.length} video...`, 'info');
         for (let i = 0; i < doneItems.length; i++) {
           const it = doneItems[i];
-          triggerBlobDownload(it.outputBlob, it.outputName || `${stripExtension(it.file.name)}_fb-compressed.mp4`);
+          triggerBlobDownload(it.outputBlob, it.outputName || `${stripExtension(it.file.name)}_video-compressed.mp4`);
           if (i < doneItems.length - 1) {
             await new Promise((r) => setTimeout(r, 350));
           }
@@ -4624,9 +5679,13 @@
         dom.cmpRowSaved.textContent = saved >= 0 ? `Giảm ${formatBytes(saved)} (-${pct}%)` : `Tăng ${formatBytes(Math.abs(saved))}`;
         dom.cmpRowSaved.style.color = saved >= 0 ? 'var(--emerald)' : 'var(--amber)';
 
-        dom.cmpRowOrigRes.textContent = item.meta.width > 0 ? `${item.meta.width}×${item.meta.height}` : '—';
-        dom.cmpRowOutRes.textContent = item.outWidth > 0 ? `${item.outWidth}×${item.outHeight}` : 'Tối ưu chẵn';
-        dom.cmpRowAspect.textContent = `Tỉ lệ ${item.meta.aspectLabel || '—'}`;
+        const fpsInfo = item.meta.fps > 0 ? ` (${formatFpsLabel(item.meta.fps)})` : '';
+        dom.cmpRowOrigRes.textContent = item.meta.width > 0 ? `${item.meta.width}×${item.meta.height}${fpsInfo}` : '—';
+        dom.cmpRowOutRes.textContent = item.outWidth > 0 ? `${item.outWidth}×${item.outHeight}${fpsInfo}` : 'Giữ nguyên gốc';
+        const sameRes = item.meta.width > 0 && item.outWidth > 0 && makeEven(item.meta.width) === item.outWidth && makeEven(item.meta.height) === item.outHeight;
+        dom.cmpRowAspect.textContent = sameRes
+          ? `Giữ nguyên độ phân giải & FPS gốc (${item.meta.aspectLabel || '—'})`
+          : `Tỉ lệ ${item.meta.aspectLabel || '—'}`;
 
         const durLabel = item.meta.duration > 0 ? formatDuration(item.meta.duration) : '—';
         dom.cmpRowOrigDur.textContent = durLabel;
@@ -4688,6 +5747,8 @@
           state.libs.ffmpegJs = { bytes: null, source: '' };
           state.libs.ffmpegWasm = { bytes: null, source: '' };
           state.libs.mp4muxer = { bytes: null, source: '' };
+          ffmpegModulePromise = null;
+          state.ffmpegModuleBroken = false;
           updateCodecCenterUI();
           showToast('Đã xóa cache cũ — đang tải lại trọn bộ thư viện sạch...', 'info');
           downloadAllLibraries();
@@ -4723,8 +5784,14 @@
         dom.presetCards.forEach((btn) => {
           btn.addEventListener('click', () => {
             state.activePreset = btn.dataset.preset;
-            updatePresetUI();
+            updatePresetUI(true);
           });
+        });
+
+        dom.btnSuggestBitrate.addEventListener('click', () => {
+          suggestCustomBitrateFromQueue(true);
+          updateEstimatePanel();
+          if (state.queue.length > 0) scheduleQueueRender();
         });
 
         const onEngineChanged = (val) => {
@@ -4732,7 +5799,7 @@
           dom.optEngineQuick.value = val;
           dom.optEngineAdv.value = val;
           updateEstimatePanel();
-          if (state.queue.length > 0) renderQueueList();
+          if (state.queue.length > 0) scheduleQueueRender();
         };
         dom.optEngineQuick.addEventListener('change', (e) => onEngineChanged(e.target.value));
         dom.optEngineAdv.addEventListener('change', (e) => onEngineChanged(e.target.value));
@@ -4740,12 +5807,12 @@
         dom.optBitrate.addEventListener('input', () => {
           dom.optBitrateVal.textContent = `${dom.optBitrate.value} kbps`;
           updateEstimatePanel();
-          if (state.queue.length > 0) renderQueueList();
+          if (state.queue.length > 0) scheduleQueueRender();
         });
         [dom.optResolution, dom.optFps, dom.optAudio, dom.optX264Preset].forEach((el) => {
           el.addEventListener('change', () => {
             updateEstimatePanel();
-            if (state.queue.length > 0) renderQueueList();
+            if (state.queue.length > 0) scheduleQueueRender();
           });
         });
 
@@ -4773,7 +5840,7 @@
           else if (act === 'download') {
             const it = state.queue.find((x) => x.id === id);
             if (it && it.outputBlob) {
-              triggerBlobDownload(it.outputBlob, it.outputName || `${stripExtension(it.file.name)}_fb-compressed.mp4`);
+              triggerBlobDownload(it.outputBlob, it.outputName || `${stripExtension(it.file.name)}_video-compressed.mp4`);
             }
           }
         });
@@ -4800,7 +5867,7 @@
         dom.btnCompareDownload.addEventListener('click', () => {
           const it = state.queue.find((x) => x.id === state.compareItemId);
           if (it && it.outputBlob) {
-            triggerBlobDownload(it.outputBlob, it.outputName || `${stripExtension(it.file.name)}_fb-compressed.mp4`);
+            triggerBlobDownload(it.outputBlob, it.outputName || `${stripExtension(it.file.name)}_video-compressed.mp4`);
           }
         });
 
@@ -4809,6 +5876,10 @@
         dom.btnToggleLog.addEventListener('click', () => {
           const hidden = dom.techLogBody.classList.toggle('hidden');
           dom.btnToggleLogText.textContent = hidden ? 'Mở Nhật ký kỹ thuật' : 'Thu gọn Nhật ký kỹ thuật';
+          if (!hidden && dom.techLogPre) {
+            dom.techLogPre.textContent = state.logs.length ? state.logs.join('\n') : 'Sẵn sàng khởi chạy...';
+            dom.techLogPre.scrollTop = dom.techLogPre.scrollHeight;
+          }
         });
 
         dom.btnCopyLog.addEventListener('click', () => {
@@ -4828,7 +5899,7 @@
        * ========================================================================= */
       async function init() {
         try {
-          PRISTINE_BODY_HTML = document.body.innerHTML;
+          PRISTINE_BODY_HTML = injectEmbeddedPayload(document.body.innerHTML, '');
           bindEvents();
           updatePresetUI();
           appendTechLog(
