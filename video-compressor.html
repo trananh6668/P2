@@ -608,7 +608,7 @@
       border-radius: var(--radius-lg);
       padding: 16px;
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(4, 1fr);
       gap: 14px;
     }
 
@@ -616,6 +616,10 @@
       display: flex;
       flex-direction: column;
       gap: 6px;
+    }
+
+    .field-wide {
+      grid-column: span 2;
     }
 
     .field label {
@@ -648,6 +652,11 @@
       width: 100%;
       accent-color: var(--fb);
       cursor: pointer;
+      transition: opacity 0.16s ease;
+    }
+
+    input[type="range"].is-keep-orig {
+      opacity: 0.52;
     }
 
     .estimate-strip {
@@ -984,6 +993,7 @@
       .card-header, .card-body, .codec-panel { padding: 14px; }
       .preset-grid { grid-template-columns: 1fr; }
       .advanced-panel { grid-template-columns: 1fr; }
+      .field-wide { grid-column: span 1; }
       .queue-item {
         grid-template-columns: 60px minmax(0, 1fr);
         align-items: start;
@@ -1286,12 +1296,27 @@
               <span class="badge badge-slate">Chuyên sâu</span>
             </div>
             <h3 class="preset-name">Tùy chỉnh nâng cao</h3>
-            <p class="preset-spec">Tự chọn Bộ máy, Độ phân giải, FPS, Bitrate (Gợi ý / Thủ công), Audio &amp; tốc độ x264</p>
+            <p class="preset-spec">Tự chọn Định dạng xuất, Bộ máy, Độ phân giải, FPS, Giữ nguyên / Tùy chỉnh Bitrate &amp; Audio</p>
           </button>
         </div>
 
         <!-- Bảng Tùy chỉnh nâng cao -->
         <div id="advancedPanel" class="advanced-panel hidden">
+          <div class="field">
+            <label for="optFormat">Định dạng video xuất</label>
+            <select id="optFormat" class="select-input">
+              <option value="mp4" selected="">MP4 (.mp4 — H.264 / AAC, Phổ biến nhất)</option>
+              <option value="mov">MOV (.mov — QuickTime H.264 / AAC)</option>
+              <option value="mkv">MKV (.mkv — Matroska H.264 / AAC)</option>
+              <option value="webm">WebM (.webm — VP8-VP9 / Vorbis-Opus, Web)</option>
+              <option value="avi">AVI (.avi — MPEG-4 / MP3, Đầu phát cũ)</option>
+              <option value="flv">FLV (.flv — H.264 / AAC)</option>
+              <option value="ts">TS (.ts — MPEG-TS H.264 / AAC)</option>
+              <option value="wmv">WMV (.wmv — Windows Media Video)</option>
+              <option value="original">Giữ theo định dạng gốc của video</option>
+            </select>
+          </div>
+
           <div class="field">
             <label for="optEngineAdv">Bộ máy nén</label>
             <select id="optEngineAdv" class="select-input">
@@ -1322,15 +1347,16 @@
             </select>
           </div>
 
-          <div class="field">
+          <div class="field field-wide">
             <label for="optBitrate">
               <span>Video Bitrate</span>
-              <span style="display:inline-flex;align-items:center;gap:6px">
-                <button type="button" id="btnSuggestBitrate" class="btn btn-ghost btn-sm" style="padding:1px 7px;min-height:22px;font-size:11.5px;color:var(--fb)">Gợi ý từ video gốc</button>
-                <span id="optBitrateVal" style="color:var(--fb)">2500 kbps</span>
+              <span style="display:inline-flex;align-items:center;gap:6px;flex-wrap:wrap">
+                <button type="button" id="btnKeepOrigBitrate" class="btn btn-secondary btn-sm" aria-pressed="false" style="padding:2px 9px;min-height:24px;font-size:11.5px">Giữ nguyên Bitrate gốc</button>
+                <button type="button" id="btnSuggestBitrate" class="btn btn-ghost btn-sm" style="padding:2px 8px;min-height:24px;font-size:11.5px;color:var(--fb)">Gợi ý từ video gốc</button>
+                <span id="optBitrateVal" style="color:var(--fb);font-weight:800">2500 kbps</span>
               </span>
             </label>
-            <input type="range" id="optBitrate" min="300" max="25000" step="50" value="2500">
+            <input type="range" id="optBitrate" min="300" max="50000" step="50" value="2500">
           </div>
 
           <div class="field">
@@ -1507,6 +1533,7 @@
               <span id="cmpOutBadge" class="badge badge-emerald">—</span>
             </div>
             <video id="cmpOutVideo" controls="" playsinline="" preload="metadata"></video>
+            <div id="cmpOutPreviewNote" class="hidden" style="padding:14px;font-size:12.5px;color:#E2E8F0;background:#0F172A;border-top:1px solid #1E293B;line-height:1.5"></div>
           </div>
         </div>
 
@@ -1706,6 +1733,73 @@
         },
       };
 
+      const OUTPUT_FORMATS = {
+        mp4: {
+          key: 'mp4',
+          ext: 'mp4',
+          mime: 'video/mp4',
+          shortName: 'MP4',
+          codecDesc: 'H.264 / AAC',
+          engines: ['webcodecs', 'ffmpeg', 'native'],
+        },
+        mov: {
+          key: 'mov',
+          ext: 'mov',
+          mime: 'video/quicktime',
+          shortName: 'MOV',
+          codecDesc: 'H.264 / AAC',
+          engines: ['ffmpeg'],
+        },
+        mkv: {
+          key: 'mkv',
+          ext: 'mkv',
+          mime: 'video/x-matroska',
+          shortName: 'MKV',
+          codecDesc: 'H.264 / AAC',
+          engines: ['ffmpeg'],
+        },
+        webm: {
+          key: 'webm',
+          ext: 'webm',
+          mime: 'video/webm',
+          shortName: 'WebM',
+          codecDesc: 'VP8 / Vorbis',
+          engines: ['ffmpeg', 'native'],
+        },
+        avi: {
+          key: 'avi',
+          ext: 'avi',
+          mime: 'video/x-msvideo',
+          shortName: 'AVI',
+          codecDesc: 'MPEG-4 Xvid / MP3',
+          engines: ['ffmpeg'],
+        },
+        flv: {
+          key: 'flv',
+          ext: 'flv',
+          mime: 'video/x-flv',
+          shortName: 'FLV',
+          codecDesc: 'H.264 / AAC',
+          engines: ['ffmpeg'],
+        },
+        ts: {
+          key: 'ts',
+          ext: 'ts',
+          mime: 'video/mp2t',
+          shortName: 'TS',
+          codecDesc: 'MPEG-TS H.264 / AAC',
+          engines: ['ffmpeg'],
+        },
+        wmv: {
+          key: 'wmv',
+          ext: 'wmv',
+          mime: 'video/x-ms-wmv',
+          shortName: 'WMV',
+          codecDesc: 'WMV2 / WMAv2',
+          engines: ['ffmpeg'],
+        },
+      };
+
       const IDB_NAME = 'fb_video_compressor_offline_libs_v3';
       const IDB_STORE = 'libs';
 
@@ -1723,6 +1817,7 @@
       const state = {
         activePreset: 'balanced',
         enginePref: 'auto',
+        keepOrigBitrate: false,
         isBatchRunning: false,
         cancelRequested: false,
         activeCancelFn: null,
@@ -1781,11 +1876,13 @@
         presetCards: document.querySelectorAll('.preset-card'),
         advancedPanel: $('advancedPanel'),
 
+        optFormat: $('optFormat'),
         optEngineAdv: $('optEngineAdv'),
         optResolution: $('optResolution'),
         optFps: $('optFps'),
         optBitrate: $('optBitrate'),
         optBitrateVal: $('optBitrateVal'),
+        btnKeepOrigBitrate: $('btnKeepOrigBitrate'),
         btnSuggestBitrate: $('btnSuggestBitrate'),
         optAudio: $('optAudio'),
         optX264Preset: $('optX264Preset'),
@@ -1822,6 +1919,7 @@
         btnCloseCompare: $('btnCloseCompare'),
         cmpOrigVideo: $('cmpOrigVideo'),
         cmpOutVideo: $('cmpOutVideo'),
+        cmpOutPreviewNote: $('cmpOutPreviewNote'),
         cmpOrigBadge: $('cmpOrigBadge'),
         cmpOutBadge: $('cmpOutBadge'),
         cmpRowOrigSize: $('cmpRowOrigSize'),
@@ -2889,6 +2987,38 @@
         };
       }
 
+      function resolveTargetFormatKey(item, formatSetting) {
+        if (!formatSetting || formatSetting === 'mp4') return 'mp4';
+        if (formatSetting === 'original') {
+          const ext = item ? getFileExtension(item.file.name) : 'mp4';
+          if (ext === 'm4v') return 'mp4';
+          return OUTPUT_FORMATS[ext] ? ext : 'mp4';
+        }
+        return OUTPUT_FORMATS[formatSetting] ? formatSetting : 'mp4';
+      }
+
+      function getOutputFilename(item) {
+        if (!item) return 'video_video-compressed.mp4';
+        if (item.outputName) return item.outputName;
+        const mime = item.outputBlob && item.outputBlob.type ? item.outputBlob.type.toLowerCase() : '';
+        const matched = Object.values(OUTPUT_FORMATS).find((f) => mime.includes(f.mime) || mime.includes('/' + f.ext));
+        const ext = matched ? matched.ext : resolveTargetFormatKey(item, dom.optFormat ? dom.optFormat.value : 'mp4');
+        return `${stripExtension(item.file.name)}_video-compressed.${ext}`;
+      }
+
+      function isNativeWebmSupported() {
+        if (!state.capabilities.hasMediaRecorder) return false;
+        try {
+          return (
+            window.MediaRecorder.isTypeSupported('video/webm;codecs=vp9,opus') ||
+            window.MediaRecorder.isTypeSupported('video/webm;codecs=vp8,opus') ||
+            window.MediaRecorder.isTypeSupported('video/webm')
+          );
+        } catch {
+          return false;
+        }
+      }
+
       function getActiveConfig() {
         const engine = state.enginePref || 'auto';
         if (state.activePreset !== 'custom' && PRESETS[state.activePreset]) {
@@ -2898,9 +3028,11 @@
             presetName: p.name,
             shortLabel: p.shortLabel,
             engine,
+            outputFormat: 'mp4',
             maxShortSide: p.maxShortSide,
             fps: p.fps,
             autoBitrate: !!p.autoBitrate,
+            keepOrigBitrate: false,
             bitrateProfile: p.bitrateProfile,
             videoBitrateKbps: p.nominalBitrateKbps,
             crf: p.crf,
@@ -2918,9 +3050,11 @@
           presetName: 'Tùy chỉnh nâng cao',
           shortLabel: 'Tùy chỉnh',
           engine,
+          outputFormat: dom.optFormat ? dom.optFormat.value : 'mp4',
           maxShortSide: dom.optResolution.value === 'original' ? 'original' : Number(dom.optResolution.value),
           fps: fpsVal === 'original' ? 'original' : (Number(fpsVal) || 60),
           autoBitrate: false,
+          keepOrigBitrate: !!state.keepOrigBitrate,
           bitrateProfile: 'balanced',
           videoBitrateKbps: Number(dom.optBitrate.value) || 2500,
           crf: 18,
@@ -2931,10 +3065,14 @@
       }
 
       function resolveItemConfig(item, cfg) {
+        const targetFormat = resolveTargetFormatKey(item, cfg.outputFormat);
         const out = {
           ...cfg,
+          targetFormat,
+          formatDef: OUTPUT_FORMATS[targetFormat] || OUTPUT_FORMATS.mp4,
           srcVideoBitrateKbps: getSourceVideoBitrateKbps(item),
           unprobedAutoBitrate: false,
+          unprobedKeepOrigBitrate: false,
           bitrateCapped: false,
         };
 
@@ -2955,6 +3093,13 @@
           out.srcVideoBitrateKbps = smart.srcVideoBitrateKbps;
           out.unprobedAutoBitrate = !!smart.unprobed;
           if (smart.crf) out.crf = smart.crf;
+        } else if (cfg.keepOrigBitrate) {
+          if (out.srcVideoBitrateKbps > 0) {
+            out.videoBitrateKbps = out.srcVideoBitrateKbps;
+          } else {
+            out.unprobedKeepOrigBitrate = true;
+            out.crf = 16;
+          }
         } else if (out.srcVideoBitrateKbps > 0) {
           const minCap = Math.min(out.srcVideoBitrateKbps, 100);
           const capK = Math.max(minCap, Math.round(out.srcVideoBitrateKbps * 0.88));
@@ -2979,48 +3124,85 @@
         const canFF = isFfmpegReady();
         const canWC = isWebCodecsReady() && (!item || item.meta.browserDecodable !== false);
         const canNative = state.capabilities.hasMediaRecorder && (!item || item.meta.browserDecodable !== false);
+        const fmt = cfg.targetFormat || resolveTargetFormatKey(item, cfg.outputFormat);
+
+        if (fmt === 'webm') {
+          const canNativeWebm = canNative && isNativeWebmSupported();
+          const canAv1Bridge = !isAv1 || canWC || canNative;
+          const canFFWebm = canFF && canAv1Bridge;
+          if (isAv1) {
+            if (cfg.engine === 'native') {
+              return { chain: canNativeWebm ? ['native'] : [], av1Routed: true, manualFfmpegOverridden: false, formatForcedFfmpeg: false };
+            }
+            if (cfg.engine === 'ffmpeg') {
+              return { chain: canFFWebm ? ['ffmpeg'] : [], av1Routed: true, manualFfmpegOverridden: false, formatForcedFfmpeg: false };
+            }
+            const chain = [];
+            if (canNativeWebm) chain.push('native');
+            if (canFFWebm) chain.push('ffmpeg');
+            return { chain, av1Routed: true, manualFfmpegOverridden: false, formatForcedFfmpeg: false };
+          }
+          if (cfg.engine === 'native') {
+            return { chain: canNativeWebm ? ['native'] : [], av1Routed: false, manualFfmpegOverridden: false, formatForcedFfmpeg: false };
+          }
+          if (cfg.engine === 'ffmpeg') {
+            return { chain: canFF ? ['ffmpeg'] : [], av1Routed: false, manualFfmpegOverridden: false, formatForcedFfmpeg: false };
+          }
+          const chain = [];
+          if (canFF) chain.push('ffmpeg');
+          if (canNativeWebm) chain.push('native');
+          return { chain, av1Routed: false, manualFfmpegOverridden: false, formatForcedFfmpeg: false };
+        }
+
+        if (fmt !== 'mp4') {
+          const canAv1Bridge = !isAv1 || canWC || canNative;
+          return {
+            chain: (canFF && canAv1Bridge) ? ['ffmpeg'] : [],
+            av1Routed: isAv1 && canAv1Bridge,
+            manualFfmpegOverridden: false,
+            formatForcedFfmpeg: cfg.engine !== 'ffmpeg' && cfg.engine !== 'auto',
+          };
+        }
 
         if (cfg.engine === 'ffmpeg') {
-          // Nếu người dùng chọn thủ công FFmpeg nhưng video là AV1 -> tự chuyển sang WebCodecs/Native kèm ghi chú
           if (isAv1) {
             const chain = [];
             if (canWC) chain.push('webcodecs');
             if (canNative) chain.push('native');
-            return { chain, av1Routed: true, manualFfmpegOverridden: true };
+            return { chain, av1Routed: true, manualFfmpegOverridden: true, formatForcedFfmpeg: false };
           }
-          return { chain: canFF ? ['ffmpeg'] : [], av1Routed: false, manualFfmpegOverridden: false };
+          return { chain: canFF ? ['ffmpeg'] : [], av1Routed: false, manualFfmpegOverridden: false, formatForcedFfmpeg: false };
         }
 
         if (cfg.engine === 'webcodecs') {
-          return { chain: canWC ? ['webcodecs'] : [], av1Routed: isAv1, manualFfmpegOverridden: false };
+          return { chain: canWC ? ['webcodecs'] : [], av1Routed: isAv1, manualFfmpegOverridden: false, formatForcedFfmpeg: false };
         }
 
         if (cfg.engine === 'native') {
-          return { chain: canNative ? ['native'] : [], av1Routed: isAv1, manualFfmpegOverridden: false };
+          return { chain: canNative ? ['native'] : [], av1Routed: isAv1, manualFfmpegOverridden: false, formatForcedFfmpeg: false };
         }
 
-        // Chế độ Tự động thông minh: ưu tiên tăng tốc GPU WebCodecs trước
         const chain = [];
         if (isAv1) {
-          // Bỏ qua FFmpeg.wasm cho video AV1 vì @ffmpeg/core@0.12.6 không kèm libdav1d
           if (canWC) chain.push('webcodecs');
           if (canNative) chain.push('native');
-          return { chain, av1Routed: true, manualFfmpegOverridden: false };
+          return { chain, av1Routed: true, manualFfmpegOverridden: false, formatForcedFfmpeg: false };
         }
 
         if (canWC) chain.push('webcodecs');
         if (canFF) chain.push('ffmpeg');
         if (canNative) chain.push('native');
-        return { chain, av1Routed: false, manualFfmpegOverridden: false };
+        return { chain, av1Routed: false, manualFfmpegOverridden: false, formatForcedFfmpeg: false };
       }
 
       function getPlannedEngineLabel(item, cfg) {
+        const fmt = cfg.targetFormat || resolveTargetFormatKey(item, cfg.outputFormat);
         const routing = buildEngineChainForItem(item, cfg);
-        if (!routing.chain.length) return 'Chưa đủ bộ máy';
+        if (!routing.chain.length) return fmt !== 'mp4' ? `Cần thư viện (.${fmt.toUpperCase()})` : 'Chưa đủ bộ máy';
         const first = routing.chain[0];
-        if (first === 'ffmpeg') return 'FFmpeg.wasm';
+        if (first === 'ffmpeg') return fmt !== 'mp4' ? `FFmpeg.wasm (.${fmt.toUpperCase()})` : 'FFmpeg.wasm';
         if (first === 'webcodecs') return 'WebCodecs GPU';
-        return 'Smart Native';
+        return fmt === 'webm' ? 'Smart Native (WebM)' : 'Smart Native';
       }
 
       function estimateItemOutputBytes(item, cfg) {
@@ -3036,12 +3218,42 @@
 
       function applySliderBitrate(kbps) {
         const minB = Number(dom.optBitrate.min) || 300;
-        const maxB = Number(dom.optBitrate.max) || 25000;
+        const maxB = Number(dom.optBitrate.max) || 50000;
         const step = Number(dom.optBitrate.step) || 50;
         const clamped = Math.max(minB, Math.min(maxB, Math.round(kbps / step) * step));
         dom.optBitrate.value = String(clamped);
-        dom.optBitrateVal.textContent = `${clamped} kbps`;
+        if (!state.keepOrigBitrate) {
+          dom.optBitrateVal.textContent = `${clamped} kbps`;
+        }
         return clamped;
+      }
+
+      function syncKeepOrigBitrateUI() {
+        const active = !!state.keepOrigBitrate;
+        if (dom.btnKeepOrigBitrate) {
+          dom.btnKeepOrigBitrate.className = active ? 'btn btn-primary btn-sm' : 'btn btn-secondary btn-sm';
+          dom.btnKeepOrigBitrate.setAttribute('aria-pressed', String(active));
+          dom.btnKeepOrigBitrate.textContent = active ? '✓ Giữ nguyên Bitrate gốc' : 'Giữ nguyên Bitrate gốc';
+        }
+        if (dom.optBitrate) {
+          dom.optBitrate.classList.toggle('is-keep-orig', active);
+        }
+        if (dom.optBitrateVal) {
+          if (active) {
+            const knownSrc = state.queue
+              .map((it) => getSourceVideoBitrateKbps(it))
+              .filter((k) => k > 0);
+            if (knownSrc.length === 0) {
+              dom.optBitrateVal.textContent = 'Giữ nguyên gốc';
+            } else if (knownSrc.length === 1) {
+              dom.optBitrateVal.textContent = `Giữ gốc (~${knownSrc[0].toLocaleString('en-US')} kbps)`;
+            } else {
+              dom.optBitrateVal.textContent = 'Giữ gốc (theo từng video)';
+            }
+          } else if (dom.optBitrate) {
+            dom.optBitrateVal.textContent = `${dom.optBitrate.value} kbps`;
+          }
+        }
       }
 
       function suggestCustomBitrateFromQueue(notify = false) {
@@ -3078,10 +3290,11 @@
           applySliderBitrate(p.nominalBitrateKbps);
           dom.optAudio.value = p.muteAudio ? 'mute' : String(p.audioBitrateKbps);
           dom.optX264Preset.value = p.x264Preset;
-        } else if (state.activePreset === 'custom' && fromUserClick) {
+        } else if (state.activePreset === 'custom' && fromUserClick && !state.keepOrigBitrate) {
           suggestCustomBitrateFromQueue(false);
         }
 
+        syncKeepOrigBitrateUI();
         updateEstimatePanel();
         if (state.queue.length > 0) {
           scheduleQueueRender();
@@ -3089,6 +3302,7 @@
       }
 
       function updateEstimatePanel() {
+        syncKeepOrigBitrateUI();
         const cfg = getActiveConfig();
         const resLabel = cfg.maxShortSide === 'original' ? 'Giữ gốc' : `${cfg.maxShortSide}p`;
         const fpsLabel = cfg.fps === 'original' ? 'FPS gốc' : `${cfg.fps} FPS`;
@@ -3118,16 +3332,49 @@
             dom.estSpecText.textContent = `Giữ gốc (Res & FPS) • ${rangeText} (theo từng video) • ${aLabel}`;
           }
         } else {
-          const vShort = formatBitrateShort(cfg.videoBitrateKbps);
-          dom.estSpecText.textContent = `${resLabel} • ${fpsLabel} • ${vShort} • ${aLabel}`;
+          const fmtSetting = cfg.outputFormat || 'mp4';
+          const singleFmt = (fmtSetting === 'original' && state.queue.length === 1)
+            ? resolveTargetFormatKey(state.queue[0], 'original')
+            : fmtSetting;
+          const fmtTag = fmtSetting === 'original'
+            ? (state.queue.length === 1 ? `Giữ gốc (.${OUTPUT_FORMATS[singleFmt].shortName})` : 'Giữ định dạng gốc')
+            : (OUTPUT_FORMATS[fmtSetting] ? OUTPUT_FORMATS[fmtSetting].shortName : 'MP4');
+          let brTag = formatBitrateShort(cfg.videoBitrateKbps);
+          if (cfg.keepOrigBitrate) {
+            const singleSrc = state.queue.length === 1 ? getSourceVideoBitrateKbps(state.queue[0]) : 0;
+            brTag = singleSrc > 0
+              ? `Giữ Bitrate gốc (~${formatBitrateShort(singleSrc)})`
+              : 'Giữ Bitrate gốc';
+          }
+          const audioCodecTag = singleFmt === 'webm'
+            ? 'Vorbis'
+            : singleFmt === 'avi'
+            ? 'MP3'
+            : singleFmt === 'wmv'
+            ? 'WMA'
+            : (singleFmt === 'original' ? 'Audio' : 'AAC');
+          const aFmtLabel = cfg.muteAudio ? 'Tắt tiếng' : `${cfg.audioBitrateKbps}k ${audioCodecTag}`;
+          dom.estSpecText.textContent = `${fmtTag} • ${resLabel} • ${fpsLabel} • ${brTag} • ${aFmtLabel}`;
         }
 
         const av1Items = state.queue.filter((it) => it.codecInfo && it.codecInfo.inputCodec === 'AV1');
+        const fmtSetting = cfg.outputFormat || 'mp4';
+        const hasFfmpegOnlyTarget = !cfg.autoBitrate && (
+          ['mov', 'mkv', 'avi', 'flv', 'ts', 'wmv'].includes(fmtSetting) ||
+          (fmtSetting === 'original' && state.queue.some((it) => {
+            const fk = resolveTargetFormatKey(it, 'original');
+            return fk !== 'mp4' && fk !== 'webm';
+          }))
+        );
+
         if (av1Items.length > 0) {
           dom.av1RoutingNotice.classList.remove('hidden');
-          if (cfg.engine === 'ffmpeg') {
+          if (hasFfmpegOnlyTarget) {
+            dom.av1RoutingNotice.className = 'notice-box notice-fb';
+            dom.av1RoutingNoticeText.textContent = `Phát hiện ${av1Items.length} video AV1 (av01) khi xuất định dạng ngoài MP4/WebM — hệ thống sẽ giải mã trước qua GPU trình duyệt rồi đóng gói bằng FFmpeg.wasm.`;
+          } else if (cfg.engine === 'ffmpeg') {
             dom.av1RoutingNotice.className = 'notice-box notice-amber';
-            dom.av1RoutingNoticeText.textContent = `Phát hiện ${av1Items.length} video dùng codec AV1 (av01). Do @ffmpeg/core@0.12.6 không tích hợp bộ giải mã phần mềm libdav1d, hệ thống sẽ tự chuyển các video AV1 này sang ${isWebCodecsReady() ? 'WebCodecs + MP4-Muxer' : 'Smart Native'} để nén H.264/AAC mượt mà.`;
+            dom.av1RoutingNoticeText.textContent = `Phát hiện ${av1Items.length} video dùng codec AV1 (av01). Do @ffmpeg/core@0.12.6 không tích hợp bộ giải mã phần mềm libdav1d, hệ thống sẽ tự chuyển các video AV1 này sang ${isWebCodecsReady() ? 'WebCodecs + MP4-Muxer' : 'Smart Native'} để nén mượt mà.`;
           } else {
             dom.av1RoutingNotice.className = 'notice-box notice-fb';
             dom.av1RoutingNoticeText.textContent = `Phát hiện ${av1Items.length} video dùng codec AV1 (av01) — đã kích hoạt định tuyến thông minh bỏ qua FFmpeg và nén thẳng qua ${isWebCodecsReady() ? 'WebCodecs + MP4-Muxer (GPU)' : 'Smart Native'}.`;
@@ -3136,8 +3383,27 @@
           dom.av1RoutingNotice.classList.add('hidden');
         }
 
-        // Tên bộ máy hiệu lực
-        if (cfg.engine === 'auto') {
+        // Tên bộ máy hiệu lực theo định dạng & lựa chọn
+        if (hasFfmpegOnlyTarget) {
+          const fmtTagUpper = fmtSetting === 'original' ? 'Đa định dạng' : `.${OUTPUT_FORMATS[fmtSetting].shortName}`;
+          dom.estEngineText.textContent = isFfmpegReady()
+            ? `FFmpeg.wasm (Xuất ${fmtTagUpper})`
+            : `Cần FFmpeg.wasm (Xuất ${fmtTagUpper})`;
+          dom.engineRouteHint.textContent = fmtSetting === 'original'
+            ? 'Định dạng không phải MP4/WebM sẽ được đóng gói qua FFmpeg.wasm'
+            : `Định dạng ${fmtTagUpper} (${OUTPUT_FORMATS[fmtSetting].codecDesc}) được đóng gói qua FFmpeg.wasm`;
+        } else if (!cfg.autoBitrate && fmtSetting === 'webm') {
+          if (cfg.engine === 'native') {
+            dom.estEngineText.textContent = isNativeWebmSupported() ? 'Smart Native (WebM)' : 'Trình duyệt không hỗ trợ ghi WebM';
+          } else if (cfg.engine === 'ffmpeg') {
+            dom.estEngineText.textContent = isFfmpegReady() ? 'FFmpeg.wasm (VP8 / Vorbis)' : 'FFmpeg (Chưa tải thư viện)';
+          } else {
+            dom.estEngineText.textContent = isFfmpegReady()
+              ? 'FFmpeg.wasm → Smart Native (WebM)'
+              : (isNativeWebmSupported() ? 'Smart Native (WebM)' : 'Cần FFmpeg.wasm (WebM)');
+          }
+          dom.engineRouteHint.textContent = 'Xuất tệp .WebM (VP8 + Vorbis qua FFmpeg, hoặc VP9/VP8 + Opus qua Native)';
+        } else if (cfg.engine === 'auto') {
           if (av1Items.length > 0 && av1Items.length === state.queue.length) {
             dom.estEngineText.textContent = isWebCodecsReady() ? 'WebCodecs GPU (Tối ưu AV1)' : 'Smart Native (AV1)';
           } else if (isWebCodecsReady() && isFfmpegReady()) {
@@ -3188,7 +3454,10 @@
         dom.estTotalSizeText.textContent = `${formatBytes(totalOrig)} → ~${formatBytes(totalEst)}`;
         const diff = totalOrig - totalEst;
         const pct = totalOrig > 0 ? Math.round((diff / totalOrig) * 100) : 0;
-        if (diff >= 0) {
+        if (cfg.keepOrigBitrate && Math.abs(pct) <= 8) {
+          dom.estSavingsText.textContent = 'Giữ nguyên Bitrate gốc (~tương đương gốc)';
+          dom.estSavingsText.style.color = 'var(--fb-dark)';
+        } else if (diff >= 0) {
           dom.estSavingsText.textContent = `Giảm ~${pct}% (~${formatBytes(diff)})`;
           dom.estSavingsText.style.color = 'var(--emerald)';
         } else {
@@ -3301,6 +3570,19 @@
             }
 
             core = await factory(factoryOpts);
+            if (core && typeof core.setLogger === 'function') {
+              core.setLogger(function (entry) {
+                var stream = entry && entry.type === 'stdout' ? 'stdout' : 'stderr';
+                var line = String((entry && entry.message) || '');
+                if (stream === 'stdout') {
+                  stdoutLines.push(line);
+                } else {
+                  stderrLines.push(line);
+                  if (stderrLines.length > 400) stderrLines.shift();
+                }
+                self.postMessage({ type: 'log', stream: stream, text: line });
+              });
+            }
 
             var inputPath = msg.inputName || '';
             if (msg.inputFile) {
@@ -3604,6 +3886,19 @@
               if (taskOpts.onLog) taskOpts.onLog(line, 'stderr');
             },
           });
+          if (core && typeof core.setLogger === 'function') {
+            core.setLogger((entry) => {
+              const stream = entry && entry.type === 'stdout' ? 'stdout' : 'stderr';
+              const line = String((entry && entry.message) || '');
+              if (stream === 'stdout') {
+                stdoutLines.push(line);
+              } else {
+                stderrLines.push(line);
+                if (stderrLines.length > 400) stderrLines.shift();
+              }
+              if (taskOpts.onLog) taskOpts.onLog(line, stream);
+            });
+          }
 
           const inputName = taskOpts.inputName || (taskOpts.inputFile ? taskOpts.inputFile.name : '');
           if (taskOpts.inputFile) {
@@ -3696,12 +3991,54 @@
         onProgress(3, 'Đang chuẩn bị FFmpeg.wasm...');
         if (state.cancelRequested) throw new Error('CANCELLED_BY_USER');
 
-        const ext = getFileExtension(item.file.name);
-        const inputName = `in_video.${ext}`;
-        const inputFile = new File([item.file], inputName, {
-          type: item.file.type || 'application/octet-stream',
+        const fmt = cfg.targetFormat || resolveTargetFormatKey(item, cfg.outputFormat);
+        const fmtDef = OUTPUT_FORMATS[fmt] || OUTPUT_FORMATS.mp4;
+
+        let srcBlob = item.file;
+        let srcExt = getFileExtension(item.file.name);
+        let isAv1Bridged = false;
+        let canFastCopyAv1 = false;
+
+        if (item.codecInfo && item.codecInfo.inputCodec === 'AV1') {
+          if (item.meta.browserDecodable === false) {
+            throw new Error(`Video AV1 không thể giải mã trực tiếp trên trình duyệt để xuất sang .${fmtDef.shortName}.`);
+          }
+          const bridgeBitrate = (['mov', 'mkv'].includes(fmt) && !cfg.unprobedAutoBitrate && !cfg.unprobedKeepOrigBitrate && cfg.videoBitrateKbps > 0)
+            ? cfg.videoBitrateKbps
+            : Math.max(cfg.videoBitrateKbps || 0, item.meta.videoBitrateKbps || 0, 6000);
+          const bridgeCfg = {
+            ...cfg,
+            targetFormat: 'mp4',
+            outputFormat: 'mp4',
+            videoBitrateKbps: bridgeBitrate,
+          };
+          const bridgeProgress = (pct, txt) => {
+            onProgress(Math.min(46, Math.max(3, Math.round((pct || 0) * 0.45))), `[Cầu nối AV1] ${txt}`);
+          };
+
+          let bridgeRes = null;
+          if (isWebCodecsReady()) {
+            appendTechLog(`[Cầu nối AV1] Giải mã AV1 qua WebCodecs GPU (${bridgeBitrate} kbps) trước khi đóng gói .${fmtDef.shortName}...`);
+            bridgeRes = await compressWithWebCodecs(item, bridgeCfg, bridgeProgress);
+            canFastCopyAv1 = bridgeRes && bridgeRes.ext === 'mp4' && (fmt === 'mov' || fmt === 'mkv');
+          } else if (state.capabilities.hasMediaRecorder) {
+            appendTechLog(`[Cầu nối AV1] Giải mã AV1 qua Smart Native trước khi đóng gói .${fmtDef.shortName}...`);
+            bridgeRes = await compressWithMediaRecorder(item, bridgeCfg, bridgeProgress);
+          } else {
+            throw new Error(`Video AV1 cần WebCodecs hoặc MediaRecorder trình duyệt để giải mã trước khi xuất sang .${fmtDef.shortName}.`);
+          }
+
+          if (state.cancelRequested) throw new Error('CANCELLED_BY_USER');
+          srcBlob = bridgeRes.blob;
+          srcExt = bridgeRes.ext || 'mp4';
+          isAv1Bridged = true;
+        }
+
+        const inputName = `in_video.${srcExt}`;
+        const inputFile = new File([srcBlob], inputName, {
+          type: srcBlob.type || 'application/octet-stream',
         });
-        const outputName = 'out_video.mp4';
+        const outputName = `out_video.${fmtDef.ext}`;
 
         let vfFilter = 'scale=trunc(iw/2)*2:trunc(ih/2)*2:flags=lanczos,setsar=1';
         let outW = item.meta.width || 0;
@@ -3711,11 +4048,13 @@
           const dims = computeTargetDimensions(item.meta.width, item.meta.height, cfg.maxShortSide);
           outW = dims.width;
           outH = dims.height;
-          if (outW === item.meta.width && outH === item.meta.height && outW % 2 === 0 && outH % 2 === 0) {
+          if (isAv1Bridged || (outW === item.meta.width && outH === item.meta.height && outW % 2 === 0 && outH % 2 === 0)) {
             vfFilter = 'setsar=1';
           } else {
             vfFilter = `scale=${outW}:${outH}:flags=lanczos,setsar=1`;
           }
+        } else if (isAv1Bridged) {
+          vfFilter = 'setsar=1';
         } else if (cfg.maxShortSide !== 'original') {
           const lim = Number(cfg.maxShortSide) || 720;
           vfFilter = `scale='if(gt(iw,ih),-2,min(${lim},iw))':'if(gt(iw,ih),min(${lim},ih),-2)':flags=lanczos,scale=trunc(iw/2)*2:trunc(ih/2)*2,setsar=1`;
@@ -3737,36 +4076,118 @@
         if (!cfg.muteAudio) {
           args.push('-map', '0:a:0?');
         }
-        args.push(
-          '-sn', '-dn',
-          '-max_muxing_queue_size', '4096',
-          '-vf', vfFilter
-        );
-        if (!keepOrigFps) {
-          args.push('-fpsmax', String(numericFps));
-        }
-        args.push(
-          '-c:v', 'libx264',
-          '-preset', cfg.x264Preset || 'veryfast',
-          '-profile:v', 'high',
-          '-crf', String(cfg.crf || 20)
-        );
-        if (!cfg.unprobedAutoBitrate && vb > 0) {
-          args.push('-maxrate', `${vb}k`, '-bufsize', `${vb * 2}k`);
-        }
-        args.push(
-          '-g', String(gopFps * 2),
-          '-keyint_min', String(gopFps),
-          '-x264-params', 'aq-mode=3:rc-lookahead=20',
-          '-pix_fmt', 'yuv420p',
-          '-movflags', '+faststart'
-        );
+        args.push('-sn', '-dn', '-max_muxing_queue_size', '4096');
 
-        if (cfg.muteAudio) {
-          args.push('-an');
+        if (canFastCopyAv1) {
+          const muxCopyFmt = fmt === 'mkv' ? 'matroska' : 'mov';
+          args.push('-f', muxCopyFmt, '-c:v', 'copy');
+          if (cfg.muteAudio) args.push('-an');
+          else args.push('-c:a', 'copy');
+          if (fmt === 'mov') args.push('-movflags', '+faststart');
+        } else if (fmt === 'webm') {
+          args.push('-vf', vfFilter);
+          if (!keepOrigFps) args.push('-fpsmax', String(numericFps));
+          args.push(
+            '-f', 'webm',
+            '-c:v', 'libvpx',
+            '-deadline', 'realtime',
+            '-cpu-used', '5',
+            '-pix_fmt', 'yuv420p',
+            '-g', String(gopFps * 2)
+          );
+          if (cfg.keepOrigBitrate) {
+            if (!cfg.unprobedKeepOrigBitrate && vb > 0) {
+              args.push('-b:v', `${vb}k`, '-maxrate', `${Math.round(vb * 1.15)}k`, '-bufsize', `${vb * 2}k`);
+            } else {
+              args.push('-crf', '12', '-b:v', '15000k');
+            }
+          } else if (!cfg.unprobedAutoBitrate && vb > 0) {
+            args.push('-crf', String(cfg.crf || 20), '-b:v', `${vb}k`, '-maxrate', `${vb}k`, '-bufsize', `${vb * 2}k`);
+          } else {
+            args.push('-crf', String(cfg.crf || 20), '-b:v', '8000k');
+          }
+          if (cfg.muteAudio) {
+            args.push('-an');
+          } else {
+            args.push('-c:a', 'libvorbis', '-b:a', `${cfg.audioBitrateKbps}k`, '-ac', '2', '-ar', '48000');
+          }
+        } else if (fmt === 'avi') {
+          args.push('-vf', vfFilter);
+          if (!keepOrigFps) args.push('-fpsmax', String(numericFps));
+          args.push('-f', 'avi', '-c:v', 'mpeg4', '-vtag', 'xvid', '-pix_fmt', 'yuv420p', '-g', String(gopFps * 2));
+          if (cfg.keepOrigBitrate) {
+            if (!cfg.unprobedKeepOrigBitrate && vb > 0) {
+              args.push('-b:v', `${vb}k`, '-maxrate', `${Math.round(vb * 1.25)}k`, '-bufsize', `${vb * 2}k`);
+            } else {
+              args.push('-q:v', '2');
+            }
+          } else if (!cfg.unprobedAutoBitrate && vb > 0) {
+            args.push('-b:v', `${vb}k`, '-maxrate', `${Math.round(vb * 1.25)}k`, '-bufsize', `${vb * 2}k`);
+          } else {
+            args.push('-q:v', '5');
+          }
+          if (cfg.muteAudio) {
+            args.push('-an');
+          } else {
+            args.push('-c:a', 'libmp3lame', '-b:a', `${cfg.audioBitrateKbps}k`, '-ac', '2', '-ar', '44100');
+          }
+        } else if (fmt === 'wmv') {
+          args.push('-vf', vfFilter);
+          if (!keepOrigFps) args.push('-fpsmax', String(numericFps));
+          args.push('-f', 'asf', '-c:v', 'wmv2', '-pix_fmt', 'yuv420p', '-g', String(gopFps * 2));
+          if (cfg.keepOrigBitrate) {
+            if (!cfg.unprobedKeepOrigBitrate && vb > 0) args.push('-b:v', `${vb}k`);
+            else args.push('-q:v', '2');
+          } else if (!cfg.unprobedAutoBitrate && vb > 0) {
+            args.push('-b:v', `${vb}k`);
+          } else {
+            args.push('-q:v', '5');
+          }
+          if (cfg.muteAudio) {
+            args.push('-an');
+          } else {
+            args.push('-c:a', 'wmav2', '-b:a', `${Math.max(64, cfg.audioBitrateKbps)}k`, '-ac', '2', '-ar', '44100');
+          }
         } else {
-          args.push('-c:a', 'aac', '-b:a', `${cfg.audioBitrateKbps}k`, '-ac', '2', '-ar', '48000');
+          // MP4, MOV, MKV, FLV, TS -> libx264 + AAC
+          const muxFmt = fmt === 'mkv' ? 'matroska' : fmt === 'ts' ? 'mpegts' : fmt;
+          args.push('-vf', vfFilter);
+          if (!keepOrigFps) args.push('-fpsmax', String(numericFps));
+          args.push(
+            '-f', muxFmt,
+            '-c:v', 'libx264',
+            '-preset', cfg.x264Preset || 'veryfast',
+            '-profile:v', 'high'
+          );
+          if (cfg.keepOrigBitrate) {
+            if (!cfg.unprobedKeepOrigBitrate && vb > 0) {
+              args.push('-b:v', `${vb}k`, '-maxrate', `${Math.round(vb * 1.15)}k`, '-bufsize', `${vb * 2}k`);
+            } else {
+              args.push('-crf', '16');
+            }
+          } else {
+            args.push('-crf', String(cfg.crf || 20));
+            if (!cfg.unprobedAutoBitrate && vb > 0) {
+              args.push('-maxrate', `${vb}k`, '-bufsize', `${vb * 2}k`);
+            }
+          }
+          args.push(
+            '-g', String(gopFps * 2),
+            '-keyint_min', String(gopFps),
+            '-x264-params', 'aq-mode=3:rc-lookahead=20',
+            '-pix_fmt', 'yuv420p'
+          );
+          if (fmt === 'mp4' || fmt === 'mov') {
+            args.push('-movflags', '+faststart');
+          }
+          if (cfg.muteAudio) {
+            args.push('-an');
+          } else {
+            const aacSr = fmt === 'flv' ? '44100' : '48000';
+            args.push('-c:a', 'aac', '-b:a', `${cfg.audioBitrateKbps}k`, '-ac', '2', '-ar', aacSr);
+          }
         }
+
         args.push(outputName);
 
         const logArgs = args.map((a) => (a === '__INPUT__' ? inputName : a));
@@ -3774,13 +4195,15 @@
 
         let duration = item.meta.duration || 0;
         let logThrottle = 0;
+        const pctStart = isAv1Bridged ? 48 : 10;
+        const pctSpan = isAv1Bridged ? 48 : 86;
 
         const res = await runFFmpegTask({
           inputFile,
           inputName,
           outputName,
           args,
-          onStage: (txt) => onProgress(8, txt),
+          onStage: (txt) => onProgress(isAv1Bridged ? 48 : 8, txt),
           onLog: (line) => {
             if (duration <= 0) {
               const dSec = parseFFmpegDurationSeconds(line);
@@ -3788,8 +4211,8 @@
             }
             const tSec = parseFFmpegTimeSeconds(line);
             if (tSec !== null && duration > 0) {
-              const pct = Math.min(96, Math.max(10, Math.round(10 + (tSec / duration) * 86)));
-              onProgress(pct, `FFmpeg libx264: ${formatDuration(tSec)} / ${formatDuration(duration)}`);
+              const pct = Math.min(96, Math.max(pctStart, Math.round(pctStart + (tSec / duration) * pctSpan)));
+              onProgress(pct, `FFmpeg (.${fmtDef.shortName}): ${formatDuration(tSec)} / ${formatDuration(duration)}`);
             } else if (/Duration:|Stream #|Error|Invalid|failed|Cannot/i.test(line)) {
               if (logThrottle < 40) {
                 appendTechLog(`[FFmpeg] ${line}`);
@@ -3799,12 +4222,15 @@
           },
         });
 
-        const outBlob = new Blob([res.outputBytes], { type: 'video/mp4' });
+        const outBlob = new Blob([res.outputBytes], { type: fmtDef.mime });
+        const vLabel = fmt === 'webm' ? 'VP8' : fmt === 'avi' ? 'MPEG-4 (Xvid)' : fmt === 'wmv' ? 'WMV2' : 'H.264';
+        const aLabelOut = cfg.muteAudio ? 'Không tiếng' : (fmt === 'webm' ? 'Vorbis' : fmt === 'avi' ? 'MP3' : fmt === 'wmv' ? 'WMAv2' : 'AAC');
+        const containerTag = (fmt === 'mp4' || fmt === 'mov') ? `${fmtDef.shortName} FastStart` : fmtDef.shortName;
         return {
           blob: outBlob,
-          ext: 'mp4',
-          engineLabel: 'FFmpeg.wasm (libx264)',
-          outCodec: `H.264 / ${cfg.muteAudio ? 'Không tiếng' : 'AAC'} (MP4 FastStart)`,
+          ext: fmtDef.ext,
+          engineLabel: isAv1Bridged ? `AV1 Bridge + FFmpeg (.${fmtDef.shortName})` : `FFmpeg.wasm (.${fmtDef.shortName})`,
+          outCodec: `${vLabel} / ${aLabelOut} (${containerTag})`,
           width: outW,
           height: outH,
         };
@@ -4555,7 +4981,11 @@
           { opts: {}, ext: 'webm', label: 'Trình duyệt mặc định' },
         ];
 
-        return raw.filter((c) => {
+        const filtered = (cfg && cfg.targetFormat === 'webm')
+          ? raw.filter((c) => c.ext === 'webm')
+          : raw;
+
+        return filtered.filter((c) => {
           if (!c.opts.mimeType) return true;
           try {
             return window.MediaRecorder.isTypeSupported(c.opts.mimeType);
@@ -5265,7 +5695,11 @@
 
           const durStr = item.meta.duration > 0 ? formatDuration(item.meta.duration) : '—';
           let brStr = '';
-          if (itemCfg.srcVideoBitrateKbps > 0) {
+          if (itemCfg.keepOrigBitrate) {
+            brStr = itemCfg.srcVideoBitrateKbps > 0
+              ? `Bitrate: Giữ gốc (~${itemCfg.srcVideoBitrateKbps.toLocaleString('en-US')} kbps)`
+              : 'Bitrate: Giữ nguyên gốc';
+          } else if (itemCfg.srcVideoBitrateKbps > 0) {
             brStr = `Bitrate: ~${itemCfg.srcVideoBitrateKbps.toLocaleString('en-US')} → ${itemCfg.videoBitrateKbps.toLocaleString('en-US')} kbps`;
           } else if (itemCfg.unprobedAutoBitrate) {
             brStr = `Bitrate: Tự động (CRF ${itemCfg.crf || 20})`;
@@ -5321,10 +5755,14 @@
                  </div>`
               : '';
 
+          const fmtBadgeHtml = (cfg.presetId === 'custom' && (itemCfg.targetFormat !== 'mp4' || cfg.outputFormat === 'original'))
+            ? `<span class="badge badge-indigo" style="font-size:11px">Xuất .${escapeHtml(itemCfg.formatDef.shortName)}</span>`
+            : '';
+
           const engineTagHtml =
             item.status === 'done' && item.engineUsed
               ? `<span class="badge badge-slate" style="font-size:11px">${escapeHtml(item.engineUsed)}</span>`
-              : `<span class="badge badge-slate" style="font-size:11px">Bộ máy: ${escapeHtml(getPlannedEngineLabel(item, cfg))}</span>`;
+              : `<span class="badge badge-slate" style="font-size:11px">Bộ máy: ${escapeHtml(getPlannedEngineLabel(item, itemCfg))}</span>`;
 
           const errorHtml =
             item.status === 'error' && item.errorMsg
@@ -5356,7 +5794,8 @@
                 <div class="queue-title-row">
                   <span class="queue-filename" title="${escapeHtml(item.file.name)}">${escapeHtml(item.file.name)}</span>
                   ${statusBadge}
-                  <span class="${codecBadgeClass}" ${codecTooltip}>${escapeHtml(item.codecInfo.inputCodecLabel)}${isAv1 ? ' • WebCodecs' : ''}</span>
+                  <span class="${codecBadgeClass}" ${codecTooltip}>${escapeHtml(item.codecInfo.inputCodecLabel)}${isAv1 ? ' • AV1' : ''}</span>
+                  ${fmtBadgeHtml}
                   ${engineTagHtml}
                 </div>
                 <div class="queue-meta-row">
@@ -5386,6 +5825,7 @@
        * ========================================================================= */
       async function compressSingleItemWithRouting(item, cfg) {
         const itemCfg = resolveItemConfig(item, cfg);
+        const fmtTag = itemCfg.formatDef ? itemCfg.formatDef.shortName : 'MP4';
         if (cfg.autoBitrate) {
           if (itemCfg.srcVideoBitrateKbps > 0) {
             appendTechLog(
@@ -5396,6 +5836,12 @@
               `[Bitrate thông minh - ${cfg.presetName}] "${item.file.name}": Chưa đọc được bitrate trước khi giải mã → Dùng CRF ${itemCfg.crf || 20} (giữ nguyên độ phân giải & FPS gốc).`
             );
           }
+        } else if (cfg.keepOrigBitrate) {
+          appendTechLog(
+            itemCfg.srcVideoBitrateKbps > 0
+              ? `[Giữ nguyên Bitrate gốc] "${item.file.name}" → Xuất .${fmtTag} giữ nguyên ~${itemCfg.srcVideoBitrateKbps.toLocaleString('en-US')} kbps.`
+              : `[Giữ nguyên Bitrate gốc] "${item.file.name}" → Xuất .${fmtTag} chất lượng cao (CRF ${itemCfg.crf || 16}).`
+          );
         } else if (itemCfg.bitrateCapped) {
           appendTechLog(
             `[Tối ưu dung lượng] "${item.file.name}" có bitrate video gốc ~${itemCfg.srcVideoBitrateKbps.toLocaleString('en-US')} kbps — tự hạ trần video xuống ${itemCfg.videoBitrateKbps.toLocaleString('en-US')} kbps (từ ${cfg.videoBitrateKbps.toLocaleString('en-US')} kbps) để giữ dung lượng nhỏ hơn gốc.`
@@ -5404,6 +5850,12 @@
 
         const routing = buildEngineChainForItem(item, itemCfg);
         if (!routing.chain.length) {
+          if (itemCfg.targetFormat && itemCfg.targetFormat !== 'mp4' && itemCfg.targetFormat !== 'webm' && !isFfmpegReady()) {
+            throw new Error(`Định dạng .${itemCfg.targetFormat.toUpperCase()} cần thư viện FFmpeg.wasm — vui lòng bấm "Tải Full Thư viện & Codec" ở Trung tâm Codec phía trên.`);
+          }
+          if (itemCfg.targetFormat === 'webm' && !isFfmpegReady() && !isNativeWebmSupported()) {
+            throw new Error('Trình duyệt không hỗ trợ ghi WebM trực tiếp — vui lòng tải FFmpeg.wasm ở Trung tâm Codec để xuất .WebM.');
+          }
           if (itemCfg.engine === 'ffmpeg' && !isFfmpegReady()) {
             throw new Error('Bạn đang chọn FFmpeg.wasm nhưng chưa tải thư viện ở Trung tâm Codec.');
           }
@@ -5514,10 +5966,17 @@
         let errCount = 0;
         let lastSuccessItem = null;
 
+        const fmtLog = cfg.outputFormat === 'original'
+          ? 'Giữ định dạng gốc'
+          : (OUTPUT_FORMATS[cfg.outputFormat] ? OUTPUT_FORMATS[cfg.outputFormat].shortName : 'MP4');
         const resLog = cfg.maxShortSide === 'original' ? 'Giữ độ phân giải gốc' : `≤ ${cfg.maxShortSide}p`;
         const fpsLog = cfg.fps === 'original' ? 'Giữ FPS gốc' : `tối đa ${cfg.fps} FPS`;
-        const brLog = cfg.autoBitrate ? 'Bitrate thông minh theo từng video' : `${cfg.videoBitrateKbps} kbps`;
-        appendTechLog(`=== Bắt đầu nén hàng loạt ${targets.length} video (${cfg.presetName} • ${resLog} • ${fpsLog} • ${brLog}) ===`);
+        const brLog = cfg.autoBitrate
+          ? 'Bitrate thông minh theo từng video'
+          : cfg.keepOrigBitrate
+          ? 'Giữ nguyên Bitrate gốc'
+          : `${cfg.videoBitrateKbps} kbps`;
+        appendTechLog(`=== Bắt đầu nén hàng loạt ${targets.length} video (${cfg.presetName} • ${fmtLog} • ${resLog} • ${fpsLog} • ${brLog}) ===`);
 
         try {
           for (let i = 0; i < targets.length; i++) {
@@ -5553,7 +6012,8 @@
               item.status = 'done';
               item.stageText = 'Hoàn tất';
 
-              if (res.blob.size >= item.file.size) {
+              const changedContainer = res.ext !== getFileExtension(item.file.name);
+              if (res.blob.size >= item.file.size && !cfg.keepOrigBitrate && !changedContainer) {
                 item.warnMsg = 'Tệp nén không nhỏ hơn bản gốc — nên giữ bản gốc.';
                 appendTechLog(`[Cảnh báo dung lượng] "${item.file.name}": tệp nén (${formatBytes(res.blob.size)}) không nhỏ hơn bản gốc (${formatBytes(item.file.size)}) — nên giữ bản gốc.`);
               } else {
@@ -5630,7 +6090,7 @@
 
         try {
           const entries = doneItems.map((it) => ({
-            name: it.outputName || `${stripExtension(it.file.name)}_video-compressed.mp4`,
+            name: getOutputFilename(it),
             blob: it.outputBlob,
           }));
           const zipBlob = await createStoreZipBlob(entries);
@@ -5652,7 +6112,7 @@
         showToast(`Đang tải lần lượt ${doneItems.length} video...`, 'info');
         for (let i = 0; i < doneItems.length; i++) {
           const it = doneItems[i];
-          triggerBlobDownload(it.outputBlob, it.outputName || `${stripExtension(it.file.name)}_video-compressed.mp4`);
+          triggerBlobDownload(it.outputBlob, getOutputFilename(it));
           if (i < doneItems.length - 1) {
             await new Promise((r) => setTimeout(r, 350));
           }
@@ -5665,6 +6125,18 @@
 
         state.compareItemId = item.id;
         dom.compareFileName.textContent = item.file.name;
+        if (dom.cmpOutPreviewNote) {
+          dom.cmpOutPreviewNote.classList.add('hidden');
+          dom.cmpOutPreviewNote.textContent = '';
+        }
+        dom.cmpOutVideo.classList.remove('hidden');
+        const outExt = getFileExtension(item.outputName || 'video.mp4').toUpperCase();
+        dom.cmpOutVideo.onerror = () => {
+          if (!dom.cmpOutPreviewNote) return;
+          dom.cmpOutVideo.classList.add('hidden');
+          dom.cmpOutPreviewNote.textContent = `Trình duyệt không hỗ trợ phát trực tiếp định dạng .${outExt} trong khung xem trước. Tệp đã được nén & đóng gói thành công (${formatBytes(item.outputBlob.size)}) — hãy bấm "Tải video đã nén" để mở bằng VLC hoặc trình phát đa phương tiện.`;
+          dom.cmpOutPreviewNote.classList.remove('hidden');
+        };
         dom.cmpOrigVideo.src = item.origUrl;
         dom.cmpOutVideo.src = item.outputUrl;
 
@@ -5714,12 +6186,18 @@
       function closeComparePanel() {
         state.compareItemId = null;
         try {
+          dom.cmpOutVideo.onerror = null;
           dom.cmpOrigVideo.pause();
           dom.cmpOutVideo.pause();
           dom.cmpOrigVideo.removeAttribute('src');
           dom.cmpOutVideo.removeAttribute('src');
           dom.cmpOrigVideo.load();
           dom.cmpOutVideo.load();
+          dom.cmpOutVideo.classList.remove('hidden');
+          if (dom.cmpOutPreviewNote) {
+            dom.cmpOutPreviewNote.classList.add('hidden');
+            dom.cmpOutPreviewNote.textContent = '';
+          }
         } catch {}
         dom.compareSection.classList.add('hidden');
       }
@@ -5788,8 +6266,27 @@
           });
         });
 
+        dom.btnKeepOrigBitrate.addEventListener('click', () => {
+          state.keepOrigBitrate = !state.keepOrigBitrate;
+          if (state.keepOrigBitrate) {
+            const sample = state.queue.find((it) => getSourceVideoBitrateKbps(it) > 0);
+            if (sample) {
+              const srcK = getSourceVideoBitrateKbps(sample);
+              const minB = Number(dom.optBitrate.min) || 300;
+              const maxB = Number(dom.optBitrate.max) || 50000;
+              const step = Number(dom.optBitrate.step) || 50;
+              dom.optBitrate.value = String(Math.max(minB, Math.min(maxB, Math.round(srcK / step) * step)));
+            }
+          }
+          syncKeepOrigBitrateUI();
+          updateEstimatePanel();
+          if (state.queue.length > 0) scheduleQueueRender();
+        });
+
         dom.btnSuggestBitrate.addEventListener('click', () => {
+          state.keepOrigBitrate = false;
           suggestCustomBitrateFromQueue(true);
+          syncKeepOrigBitrateUI();
           updateEstimatePanel();
           if (state.queue.length > 0) scheduleQueueRender();
         });
@@ -5805,11 +6302,12 @@
         dom.optEngineAdv.addEventListener('change', (e) => onEngineChanged(e.target.value));
 
         dom.optBitrate.addEventListener('input', () => {
-          dom.optBitrateVal.textContent = `${dom.optBitrate.value} kbps`;
+          state.keepOrigBitrate = false;
+          syncKeepOrigBitrateUI();
           updateEstimatePanel();
           if (state.queue.length > 0) scheduleQueueRender();
         });
-        [dom.optResolution, dom.optFps, dom.optAudio, dom.optX264Preset].forEach((el) => {
+        [dom.optFormat, dom.optResolution, dom.optFps, dom.optAudio, dom.optX264Preset].forEach((el) => {
           el.addEventListener('change', () => {
             updateEstimatePanel();
             if (state.queue.length > 0) scheduleQueueRender();
@@ -5840,7 +6338,7 @@
           else if (act === 'download') {
             const it = state.queue.find((x) => x.id === id);
             if (it && it.outputBlob) {
-              triggerBlobDownload(it.outputBlob, it.outputName || `${stripExtension(it.file.name)}_video-compressed.mp4`);
+              triggerBlobDownload(it.outputBlob, getOutputFilename(it));
             }
           }
         });
@@ -5867,7 +6365,7 @@
         dom.btnCompareDownload.addEventListener('click', () => {
           const it = state.queue.find((x) => x.id === state.compareItemId);
           if (it && it.outputBlob) {
-            triggerBlobDownload(it.outputBlob, it.outputName || `${stripExtension(it.file.name)}_video-compressed.mp4`);
+            triggerBlobDownload(it.outputBlob, getOutputFilename(it));
           }
         });
 
