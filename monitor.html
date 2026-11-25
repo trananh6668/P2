@@ -2,7 +2,7 @@
 <html lang="vi" class="dark">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Display & Hardware Checker Pro</title>
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -63,6 +63,29 @@
     }
     ::-webkit-scrollbar-thumb:hover {
       background: #334155;
+    }
+
+    /* Hide root scrollbar completely during Fullscreen Inspection */
+    html.fs-scroll-lock,
+    html.fs-scroll-lock body,
+    html:fullscreen,
+    html:fullscreen body,
+    html:-webkit-full-screen,
+    html:-webkit-full-screen body {
+      overflow: hidden !important;
+      scrollbar-width: none !important;
+      -ms-overflow-style: none !important;
+      overscroll-behavior: none !important;
+    }
+    html.fs-scroll-lock::-webkit-scrollbar,
+    html.fs-scroll-lock body::-webkit-scrollbar,
+    html:fullscreen::-webkit-scrollbar,
+    html:fullscreen body::-webkit-scrollbar,
+    html:-webkit-full-screen::-webkit-scrollbar,
+    html:-webkit-full-screen body::-webkit-scrollbar {
+      display: none !important;
+      width: 0 !important;
+      height: 0 !important;
     }
 
     /* Ambient Lab Background */
@@ -271,13 +294,14 @@
         <span id="fs-color-hex" class="font-mono text-xs bg-white/10 px-2 py-0.5 rounded">#000000</span>
       </div>
       <p id="fs-desc-text" class="text-xs text-slate-300 leading-relaxed mb-3">
-        Click chuột hoặc <span class="text-cyan-400 font-semibold">← / →</span> để chuyển mẫu • Phím <span class="text-amber-400 font-semibold">P</span> để ghim tọa độ điểm chết • <span class="text-emerald-400 font-semibold">H</span> ẩn HUD • <span class="text-rose-400 font-semibold">ESC</span> thoát.
+        Chạm / Click hoặc <span class="text-cyan-400 font-semibold">← / →</span> chuyển mẫu • Phím <span class="text-emerald-400 font-semibold">H</span> ẩn/hiện HUD (Chuột phải / nhấn giữ để hiện lại) • <span class="text-amber-400 font-semibold">P</span> ghim lỗi • <span class="text-rose-400 font-semibold">ESC</span> thoát.
       </p>
       <div class="flex flex-wrap items-center justify-center gap-2">
         <button id="fs-prev-btn" type="button" class="px-3 py-1.5 bg-white/10 hover:bg-white/20 rounded-lg text-xs font-medium transition">← Trước</button>
         <button id="fs-next-btn" type="button" class="px-3 py-1.5 bg-white/10 hover:bg-white/20 rounded-lg text-xs font-medium transition">Tiếp →</button>
         <button id="fs-auto-btn" type="button" class="px-3 py-1.5 bg-white/10 hover:bg-white/20 rounded-lg text-xs font-medium transition">⏱ Tự chạy: Tắt</button>
         <button id="fs-pin-mode-btn" type="button" class="px-3 py-1.5 bg-white/10 hover:bg-amber-500/30 border border-white/10 rounded-lg text-xs font-medium transition">📍 Ghim lỗi (P): Tắt</button>
+        <button id="fs-hide-hud-btn" type="button" class="px-3 py-1.5 bg-white/10 hover:bg-white/20 rounded-lg text-xs font-medium transition">👁 Ẩn HUD (H)</button>
         <button id="fs-healer-btn" type="button" class="px-3 py-1.5 bg-cyan-500/20 hover:bg-cyan-500/35 text-cyan-200 border border-cyan-400/30 rounded-lg text-xs font-semibold transition">⚡ Khử kẹt Pixel</button>
         <button id="fs-exit-btn" type="button" class="px-3 py-1.5 bg-rose-600/85 hover:bg-rose-600 rounded-lg text-xs font-semibold transition">Thoát (ESC)</button>
       </div>
@@ -436,14 +460,15 @@
             </div>
           </div>
 
-          <div class="mt-3.5 pt-3 border-t border-slate-800/80">
-            <div class="flex justify-between text-[11px] text-slate-400 mb-1.5">
-              <span>Đồ thị dao động khung hình (120 mẫu)</span>
+          <div class="mt-3.5 pt-3 border-t border-slate-800/80 space-y-2">
+            <div class="flex justify-between text-[11px] text-slate-400">
+              <span>Đồ thị VSync & Frame Pacing (120 mẫu)</span>
               <span id="jitter-value" class="font-mono text-emerald-300">σ: -- ms</span>
             </div>
             <div class="w-full h-14 bg-obsidian-950 rounded-xl border border-slate-800/80 overflow-hidden">
               <canvas id="hz-sparkline" class="w-full h-full block"></canvas>
             </div>
+            <div id="hz-platform-note" class="hidden px-2.5 py-2 rounded-xl bg-amber-500/10 border border-amber-500/30 text-[11px] text-amber-200 leading-snug"></div>
           </div>
         </div>
 
@@ -451,21 +476,27 @@
         <div class="lab-card rounded-2xl p-5 flex flex-col justify-between relative overflow-hidden">
           <div class="absolute top-0 right-0 w-32 h-32 bg-cyan-500/10 rounded-full blur-2xl -mr-10 -mt-10 pointer-events-none"></div>
           <div>
-            <div class="flex items-center justify-between mb-2.5">
+            <div class="flex items-center justify-between gap-1.5 mb-2.5">
               <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Độ Phân Giải & OS Scaling</span>
-              <span id="res-tier-badge" class="text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full bg-cyan-500/15 text-cyan-300 border border-cyan-500/30">--</span>
+              <div class="flex items-center gap-1.5">
+                <button id="detect-edid-btn" type="button" class="hidden text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-indigo-500/20 hover:bg-indigo-500/35 text-indigo-200 border border-indigo-400/40 transition" title="Đọc tên màn hình phần cứng & độ phân giải đa màn hình">
+                  ⚡ EDID
+                </button>
+                <span id="res-tier-badge" class="text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full bg-cyan-500/15 text-cyan-300 border border-cyan-500/30">--</span>
+              </div>
             </div>
             <div>
-              <span class="text-[11px] text-slate-400 block">Độ phân giải vật lý (Physical Pixels):</span>
+              <span id="physical-res-label" class="text-[11px] text-slate-400 block">Độ phân giải tấm nền (Native Pixels):</span>
               <div id="physical-res" class="text-2xl sm:text-3xl font-extrabold font-mono text-white tracking-tight mt-0.5">-- × --</div>
             </div>
+            <div id="macos-hidpi-switcher" class="hidden mt-2 flex flex-wrap items-center gap-1 text-[10px] font-mono"></div>
             <div class="mt-3 grid grid-cols-2 gap-2 text-xs">
               <div class="lab-subcard p-2 rounded-lg">
-                <span class="text-slate-500 block text-[10px]">CSS Viewport / Screen</span>
+                <span class="text-slate-500 block text-[10px]">Giao diện Logic (CSS)</span>
                 <span id="logical-res" class="font-mono font-semibold text-slate-200">-- × --</span>
               </div>
               <div class="lab-subcard p-2 rounded-lg">
-                <span class="text-slate-500 block text-[10px]">Tỷ lệ & Scale (DPR)</span>
+                <span class="text-slate-500 block text-[10px]">Tỷ lệ & Scale thực</span>
                 <span class="font-mono font-semibold text-slate-200"><span id="aspect-ratio">--</span> • <span id="dpr-value" class="text-cyan-400">--x</span></span>
               </div>
             </div>
@@ -554,14 +585,17 @@
           <!-- Quick Diagonal Presets -->
           <div class="flex flex-wrap items-center gap-1.5 shrink-0">
             <span class="text-xs text-slate-400 mr-1">Inch phổ biến:</span>
-            <button type="button" data-inch="13.3" class="inch-preset-btn px-2.5 py-1.5 rounded-lg text-xs font-mono bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700/80 transition">13.3"</button>
-            <button type="button" data-inch="14" class="inch-preset-btn px-2.5 py-1.5 rounded-lg text-xs font-mono bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700/80 transition">14"</button>
-            <button type="button" data-inch="15.6" class="inch-preset-btn px-2.5 py-1.5 rounded-lg text-xs font-mono bg-cyan-500/20 text-cyan-300 border border-cyan-500/50 transition">15.6"</button>
-            <button type="button" data-inch="16" class="inch-preset-btn px-2.5 py-1.5 rounded-lg text-xs font-mono bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700/80 transition">16"</button>
-            <button type="button" data-inch="24" class="inch-preset-btn px-2.5 py-1.5 rounded-lg text-xs font-mono bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700/80 transition">24"</button>
-            <button type="button" data-inch="27" class="inch-preset-btn px-2.5 py-1.5 rounded-lg text-xs font-mono bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700/80 transition">27"</button>
-            <button type="button" data-inch="32" class="inch-preset-btn px-2.5 py-1.5 rounded-lg text-xs font-mono bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700/80 transition">32"</button>
-            <button type="button" data-inch="34" class="inch-preset-btn px-2.5 py-1.5 rounded-lg text-xs font-mono bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700/80 transition">34"</button>
+            <button type="button" data-inch="6.1" class="inch-preset-btn px-2 py-1.5 rounded-lg text-xs font-mono bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700/80 transition">6.1"</button>
+            <button type="button" data-inch="6.7" class="inch-preset-btn px-2 py-1.5 rounded-lg text-xs font-mono bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700/80 transition">6.7"</button>
+            <button type="button" data-inch="11" class="inch-preset-btn px-2 py-1.5 rounded-lg text-xs font-mono bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700/80 transition">11"</button>
+            <button type="button" data-inch="13.6" class="inch-preset-btn px-2 py-1.5 rounded-lg text-xs font-mono bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700/80 transition">13.6"</button>
+            <button type="button" data-inch="14.2" class="inch-preset-btn px-2 py-1.5 rounded-lg text-xs font-mono bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700/80 transition">14.2"</button>
+            <button type="button" data-inch="15.6" class="inch-preset-btn px-2 py-1.5 rounded-lg text-xs font-mono bg-cyan-500/20 text-cyan-300 border border-cyan-500/50 transition">15.6"</button>
+            <button type="button" data-inch="16.2" class="inch-preset-btn px-2 py-1.5 rounded-lg text-xs font-mono bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700/80 transition">16.2"</button>
+            <button type="button" data-inch="24" class="inch-preset-btn px-2 py-1.5 rounded-lg text-xs font-mono bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700/80 transition">24"</button>
+            <button type="button" data-inch="27" class="inch-preset-btn px-2 py-1.5 rounded-lg text-xs font-mono bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700/80 transition">27"</button>
+            <button type="button" data-inch="32" class="inch-preset-btn px-2 py-1.5 rounded-lg text-xs font-mono bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700/80 transition">32"</button>
+            <button type="button" data-inch="34" class="inch-preset-btn px-2 py-1.5 rounded-lg text-xs font-mono bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700/80 transition">34"</button>
           </div>
         </div>
 
@@ -658,12 +692,12 @@
                 <span id="dot-pitch-value" class="font-mono font-semibold text-cyan-300">-- mm</span>
               </div>
               <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-800/80">
-                <span class="text-slate-400 block text-[10px] mb-0.5">Khoảng cách Retina 20/20</span>
+                <span class="text-slate-400 block text-[10px] mb-0.5">Cự ly Retina (20/20)</span>
                 <span id="retina-distance" class="font-mono font-semibold text-emerald-400">≥ -- cm</span>
               </div>
               <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-800/80">
-                <span class="text-slate-400 block text-[10px] mb-0.5">Giới hạn Nyquist</span>
-                <span id="nyquist-freq" class="font-mono font-semibold text-purple-300">-- lp/mm</span>
+                <span class="text-slate-400 block text-[10px] mb-0.5">Thị giác PPD & Nyquist</span>
+                <span id="nyquist-freq" class="font-mono font-semibold text-purple-300">-- PPD • -- lp/mm</span>
               </div>
             </div>
 
@@ -1553,7 +1587,7 @@
                     ▶ Phát sóng
                   </button>
                   <button id="audio-sweep-btn" type="button" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-semibold transition">
-                    Quét 20Hz→16kHz
+                    Quét 20Hz→20kHz
                   </button>
                 </div>
               </div>
@@ -1779,7 +1813,7 @@
       document.getElementById('open-qc-tab-btn').addEventListener('click', () => switchTab('audio'));
 
       // =======================================================================
-      // 2. REFRESH RATE, 1% LOW, DROPPED FRAMES & SPARKLINE ENGINE
+      // 2. REFRESH RATE, LTPO PROMOTION, 1% LOW & REAL-TIME SPARKLINE ENGINE
       // =======================================================================
       const hzValueEl = document.getElementById('hz-value');
       const headerHzPillEl = document.getElementById('header-hz-pill');
@@ -1792,6 +1826,7 @@
       const hzDroppedEl = document.getElementById('hz-dropped-frames');
       const jitterEl = document.getElementById('jitter-value');
       const vsyncBadgeEl = document.getElementById('vsync-stability-badge');
+      const hzPlatformNoteEl = document.getElementById('hz-platform-note');
       const ufoFpsDisplayEl = document.getElementById('ufo-fps-display');
       const ufoMprtEstEl = document.getElementById('ufo-mprt-est');
       const reactionLagNoteEl = document.getElementById('reaction-display-lag-note');
@@ -1800,14 +1835,51 @@
 
       const MAX_DELTAS = 120;
       const frameDeltas = [];
+      const frameTimestamps = [];
       let droppedFramesCount = 0;
       let lastFrameTime = performance.now();
       let lastUiUpdate = 0;
       let currentMeasuredHz = 60;
+      let peakVerifiedHz = 0;
+      let fastFrameStreak = 0;
       let currentStabilityPct = 99.5;
       let frameTickCounter = 0;
+      let sparkSweepX = 0;
 
-      const standardRates = [24, 30, 48, 50, 60, 75, 90, 100, 120, 144, 165, 170, 180, 200, 240, 280, 300, 360, 480, 540];
+      // Platform & Apple ProMotion Hardware Classifier
+      const uaString = navigator.userAgent || '';
+      const isIPhone = /iPhone|iPod/i.test(uaString);
+      const isIPad = /iPad/i.test(uaString) || (/Macintosh/i.test(uaString) && navigator.maxTouchPoints > 1);
+      const isIOS = isIPhone || isIPad;
+      const isMacOS = /Macintosh|Mac OS X/i.test(uaString) && !isIOS;
+      const isFirefox = /Firefox\//i.test(uaString);
+
+      function getIosPromotionCapability() {
+        if (!isIOS) return { tier: 'none', modelHint: '' };
+        const sw = Math.min(window.screen.width, window.screen.height);
+        const sh = Math.max(window.screen.width, window.screen.height);
+        const dpr = Math.round(window.devicePixelRatio || 1);
+
+        if (isIPhone) {
+          if (sw === 402 && sh === 874 && dpr === 3) return { tier: 'confirmed_120', modelHint: 'iPhone 16 Pro / 17 / 17 Pro (120Hz ProMotion)' };
+          if (sw === 440 && sh === 956 && dpr === 3) return { tier: 'confirmed_120', modelHint: 'iPhone 16 Pro Max / 17 Pro Max (120Hz ProMotion)' };
+          if (sw === 420 && sh === 912 && dpr === 3) return { tier: 'confirmed_120', modelHint: 'iPhone Air (120Hz ProMotion)' };
+          if (sw === 393 && sh === 852 && dpr === 3) return { tier: 'possible_120', modelHint: 'iPhone 14 Pro / 15 Pro (120Hz) hoặc iPhone 15 / 16 (60Hz)' };
+          if (sw === 430 && sh === 932 && dpr === 3) return { tier: 'possible_120', modelHint: 'iPhone 14 Pro Max / 15 Pro Max (120Hz) hoặc 15/16 Plus (60Hz)' };
+          if (sw === 390 && sh === 844 && dpr === 3) return { tier: 'possible_120', modelHint: 'iPhone 13 Pro (120Hz) hoặc iPhone 12 / 13 / 14 / 16e (60Hz)' };
+          if (sw === 428 && sh === 926 && dpr === 3) return { tier: 'possible_120', modelHint: 'iPhone 13 Pro Max (120Hz) hoặc 12 Pro Max / 14 Plus (60Hz)' };
+          if (sw === 320 && sh === 693 && dpr === 3) return { tier: 'possible_120', modelHint: 'iPhone (Chế độ Thu phóng màn hình)' };
+          return { tier: '60_only', modelHint: 'iPhone 60Hz tiêu chuẩn' };
+        }
+
+        // iPad Pro 11" & 12.9"/13" all have 120Hz ProMotion
+        if ((sw === 834 && (sh === 1194 || sh === 1210)) || (sw === 1024 && sh === 1366) || (sw === 1032 && sh === 1376)) {
+          return { tier: 'confirmed_120', modelHint: 'iPad Pro (120Hz ProMotion)' };
+        }
+        return { tier: '60_only', modelHint: 'iPad 60Hz tiêu chuẩn' };
+      }
+
+      const standardRates = [24, 30, 48, 50, 60, 75, 80, 90, 96, 100, 120, 144, 165, 170, 180, 200, 240, 280, 300, 360, 480, 540];
 
       function matchStandardHz(hz) {
         let closest = standardRates[0];
@@ -1822,14 +1894,21 @@
         return closest;
       }
 
-      document.getElementById('reset-hz-btn').addEventListener('click', () => {
+      function resetHzTelemetry() {
         frameDeltas.length = 0;
+        frameTimestamps.length = 0;
         droppedFramesCount = 0;
+        peakVerifiedHz = 0;
+        fastFrameStreak = 0;
         hzDroppedEl.textContent = '0';
+      }
+
+      document.getElementById('reset-hz-btn').addEventListener('click', () => {
+        resetHzTelemetry();
         showToast('Đã làm mới bộ đếm tần số quét và khung hình rớt.', 'info');
       });
 
-      function drawSparkline() {
+      function drawSparkline(dtSeconds = 0.016) {
         const parent = sparklineCanvas.parentElement;
         if (!parent) return;
         const rect = parent.getBoundingClientRect();
@@ -1844,6 +1923,15 @@
         }
 
         sparkCtx.clearRect(0, 0, w, h);
+
+        // Continuous high-velocity VSync scan bar (prevents iOS/macOS ProMotion & Windows DRR from idling at 60Hz)
+        sparkSweepX = (sparkSweepX + 680 * dpr * Math.max(0.002, dtSeconds)) % w;
+        const sweepGrad = sparkCtx.createLinearGradient(sparkSweepX - 28 * dpr, 0, sparkSweepX + 4 * dpr, 0);
+        sweepGrad.addColorStop(0, 'rgba(34, 211, 238, 0)');
+        sweepGrad.addColorStop(1, 'rgba(34, 211, 238, 0.22)');
+        sparkCtx.fillStyle = sweepGrad;
+        sparkCtx.fillRect(Math.max(0, sparkSweepX - 28 * dpr), 0, 32 * dpr, h);
+
         if (frameDeltas.length < 2) return;
 
         const avg = frameDeltas.reduce((a, b) => a + b, 0) / frameDeltas.length;
@@ -1888,7 +1976,7 @@
       }
 
       // =======================================================================
-      // 3. DISPLAY TELEMETRY, PPI / RETINA, 1:1 RULER & CARD CALIBRATOR
+      // 3. DISPLAY TELEMETRY, MACBOOK MULTI-MONITOR, RETINA PPD & 1:1 RULER
       // =======================================================================
       const screenInchInput = document.getElementById('screen-inch-input');
       const ppiWidthInput = document.getElementById('ppi-width-input');
@@ -1896,7 +1984,30 @@
       const cardSlider = document.getElementById('card-calib-slider');
       const cardBox = document.getElementById('credit-card-box');
       const rulerCanvas = document.getElementById('ruler-canvas');
+      const detectEdidBtn = document.getElementById('detect-edid-btn');
+      const macosHidpiSwitcher = document.getElementById('macos-hidpi-switcher');
+
       let currentCalculatedPpi = 141.2;
+      let detectedGpuRenderer = '';
+      let edidScreenDetails = null;
+      let edidCurrentScreen = null;
+      let lastScreenSignature = '';
+      let lastPhysicalMonitorKey = '';
+      const macPanelOverrides = {}; // keyed by monitor signature e.g. "2560x1440@2"
+      let activeDisplayMetrics = {
+        physW: 1920,
+        physH: 1080,
+        fbW: 1920,
+        fbH: 1080,
+        cssScreenW: 1920,
+        cssScreenH: 1080,
+        pageCssScreenW: 1920,
+        pageCssScreenH: 1080,
+        osDpr: 1,
+        browserZoom: 1,
+        effectiveScale: 1,
+        isScaledFramebuffer: false,
+      };
 
       function gcd(a, b) {
         return b === 0 ? a : gcd(b, a % b);
@@ -1916,36 +2027,369 @@
           if (debugInfo) {
             const renderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) || gl.getParameter(gl.RENDERER);
             const vendor = gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL) || 'WebGL2';
+            detectedGpuRenderer = String(renderer || '');
             gpuEl.textContent = renderer;
             gpuEl.title = renderer;
             vendorEl.textContent = vendor.replace(/Inc\.|Corporation/gi, '').trim();
           } else {
-            gpuEl.textContent = gl.getParameter(gl.RENDERER) || 'GPU (Ẩn bởi chính sách trình duyệt)';
+            const fallbackRenderer = gl.getParameter(gl.RENDERER) || 'GPU (Ẩn bởi chính sách trình duyệt)';
+            detectedGpuRenderer = String(fallbackRenderer);
+            gpuEl.textContent = fallbackRenderer;
           }
         } catch (e) {
           gpuEl.textContent = 'Không thể truy xuất WebGL';
         }
       }
 
+      // Separate OS Display Scale from Browser Page Zoom (Crucial on macOS Chrome/Safari)
+      function getZoomCorrectedScreenMetrics() {
+        const rawDpr = window.devicePixelRatio || 1;
+        const rawW = window.screen.width || window.innerWidth;
+        const rawH = window.screen.height || window.innerHeight;
+        let osDpr = rawDpr;
+        let browserZoom = 1;
+
+        // On macOS, NSScreen.backingScaleFactor is strictly 1.0 or 2.0, and Safari/Chromium
+        // keep window.screen.width in unzoomed OS logical points while multiplying devicePixelRatio by browser zoom.
+        if (isMacOS && !isFirefox) {
+          const hasValidOuter = window.outerWidth > 120 && window.innerWidth > 120 && !document.fullscreenElement;
+          const outerInnerRatio = hasValidOuter ? (window.outerWidth / window.innerWidth) : 1;
+
+          if (!Number.isInteger(rawDpr)) {
+            const z2 = rawDpr / 2;
+            const z1 = rawDpr / 1;
+            if (hasValidOuter && Math.abs(outerInnerRatio - z2) + 0.03 < Math.abs(outerInnerRatio - z1)) {
+              osDpr = 2;
+              browserZoom = z2;
+            } else if (hasValidOuter && Math.abs(outerInnerRatio - z1) + 0.03 < Math.abs(outerInnerRatio - z2)) {
+              osDpr = 1;
+              browserZoom = z1;
+            } else if (rawDpr > 1.55) {
+              osDpr = 2;
+              browserZoom = z2;
+            } else {
+              osDpr = 1;
+              browserZoom = z1;
+            }
+          } else if (rawDpr >= 3) {
+            osDpr = 2;
+            browserZoom = rawDpr / 2;
+          } else if (hasValidOuter) {
+            if (rawDpr === 2 && Math.abs(outerInnerRatio - 2.0) < 0.06) {
+              osDpr = 1;
+              browserZoom = 2.0;
+            } else if (rawDpr === 1 && Math.abs(outerInnerRatio - 0.5) < 0.05) {
+              osDpr = 2;
+              browserZoom = 0.5;
+            }
+          }
+        }
+
+        const cssScreenW = rawW;
+        const cssScreenH = rawH;
+        const pageCssScreenW = (isMacOS && !isFirefox && Math.abs(browserZoom - 1) > 0.02)
+          ? rawW / browserZoom
+          : rawW;
+        const pageCssScreenH = (isMacOS && !isFirefox && Math.abs(browserZoom - 1) > 0.02)
+          ? rawH / browserZoom
+          : rawH;
+
+        return { rawDpr, osDpr, browserZoom, cssScreenW, cssScreenH, pageCssScreenW, pageCssScreenH };
+      }
+
+      // Resolve True Physical Hardware Panel Resolution vs OS Virtual HiDPI Framebuffer
+      function resolveHardwarePanel(cssW, cssH, osDpr, isP3) {
+        const isPortrait = cssH > cssW;
+        const lw = Math.max(cssW, cssH);
+        const lh = Math.min(cssW, cssH);
+        const fbLW = Math.round(lw * osDpr);
+        const fbLH = Math.round(lh * osDpr);
+        const orient = (w, h) => (isPortrait ? { w: h, h: w } : { w, h });
+        const monitorKey = `${lw}x${lh}@${osDpr}`;
+
+        // 1. iOS Downsampled Plus/Mini Models
+        if (isIPhone) {
+          if (lh === 414 && lw === 736 && Math.round(osDpr) === 3) {
+            return { ...orient(1920, 1080), inch: 5.5, kind: 'ios_downsampled', note: 'iPhone Plus (3x buffer 1242×2208 → tấm nền FHD 1080×1920)', candidates: null, key: monitorKey };
+          }
+          const inchMap = {
+            '320x568': 4.0, '375x667': 4.7, '360x780': 5.4, '375x812': 5.8,
+            '414x896': osDpr >= 3 ? 6.5 : 6.1, '390x844': 6.1, '393x852': 6.1,
+            '402x874': 6.3, '420x912': 6.5, '428x926': 6.7, '430x932': 6.7, '440x956': 6.9,
+          };
+          return { ...orient(fbLW, fbLH), inch: inchMap[`${lh}x${lw}`] || 6.1, kind: 'native', note: '', candidates: null, key: monitorKey };
+        }
+
+        if (isIPad) {
+          const ipadInches = {
+            '744x1133': 8.3, '768x1024': 9.7, '810x1080': 10.2, '820x1180': 10.9,
+            '834x1194': 11.0, '834x1210': 11.0, '1024x1366': 12.9, '1032x1376': 13.0,
+          };
+          return { ...orient(fbLW, fbLH), inch: ipadInches[`${lh}x${lw}`] || 11.0, kind: 'native', note: '', candidates: null, key: monitorKey };
+        }
+
+        // 2. macOS Built-in Retina & External Monitor HiDPI Scaling Resolver
+        if (isMacOS && osDpr === 2) {
+          const edidLabel = edidCurrentScreen?.label || '';
+          const edidInternal = edidCurrentScreen ? Boolean(edidCurrentScreen.isInternal) : null;
+          const isAppleSilicon = /Apple M\d|Apple GPU/i.test(detectedGpuRenderer);
+
+          // 2A. Built-in MacBook Notch & 16:10 Retina Panels (only if not explicitly an external EDID screen)
+          if (edidInternal !== false) {
+            // MacBook Air 13.6" (M2/M3/M4) — Native 2560×1664
+            if ((lw === 1470 && lh === 956) || (lw === 1710 && lh === 1112) || (lw === 1280 && lh === 832) || (lw === 1024 && lh === 666)) {
+              return { ...orient(2560, 1664), inch: 13.6, kind: 'mac_internal', note: 'MacBook Air 13.6" Liquid Retina', candidates: null, key: monitorKey };
+            }
+            // MacBook Air 15.3" (M2/M3/M4) — Native 2880×1864
+            if ((lw === 1710 && lh === 1107) || (lw === 1920 && lh === 1243) || (lw === 1440 && lh === 932) || (lw === 1152 && lh === 746)) {
+              return { ...orient(2880, 1864), inch: 15.3, kind: 'mac_internal', note: 'MacBook Air 15.3" Liquid Retina', candidates: null, key: monitorKey };
+            }
+            // MacBook Pro 14.2" (M1–M4) — Native 3024×1964
+            if ((lw === 1512 && lh === 982) || (lw === 1800 && lh === 1169) || (lw === 1352 && lh === 878) || (lw === 1147 && lh === 745) || (lw === 1024 && lh === 665)) {
+              return { ...orient(3024, 1964), inch: 14.2, kind: 'mac_internal', note: 'MacBook Pro 14.2" Liquid Retina XDR', candidates: null, key: monitorKey };
+            }
+            // MacBook Pro 16.2" (M1–M4) — Native 3456×2234
+            if ((lw === 1728 && lh === 1117) || (lw === 2056 && lh === 1329) || (lw === 1496 && lh === 967) || (lw === 1312 && lh === 848) || (lw === 1168 && lh === 755)) {
+              return { ...orient(3456, 2234), inch: 16.2, kind: 'mac_internal', note: 'MacBook Pro 16.2" Liquid Retina XDR', candidates: null, key: monitorKey };
+            }
+            // MacBook Air/Pro 13.3" (16:10) — Native 2560×1600
+            if (((lw === 1440 && lh === 900) || (lw === 1680 && lh === 1050) || (lw === 1280 && lh === 800) || (lw === 1024 && lh === 640)) && (isAppleSilicon || edidInternal === true)) {
+              return { ...orient(2560, 1600), inch: 13.3, kind: 'mac_internal', note: 'MacBook 13.3" Retina (2560×1600)', candidates: null, key: monitorKey };
+            }
+            // iMac 24" 4.5K — Native 4480×2520
+            if (lw === 2240 && lh === 1260) {
+              return { ...orient(4480, 2520), inch: 23.5, kind: 'mac_internal', note: 'iMac 24" 4.5K Retina', candidates: null, key: monitorKey };
+            }
+          }
+
+          // 2B. External 16:9 Monitors on macOS HiDPI (Virtual 2x Framebuffer vs Physical Panel)
+          const aspect = lw / lh;
+          if (Math.abs(aspect - 16 / 9) < 0.03) {
+            // Unambiguous 4K UHD Scaled HiDPI modes (no native 6720x3780, 6400x3600, 4608x2592, or 3008x1692 panels exist)
+            if ((lw === 3360 && lh === 1890) || (lw === 3200 && lh === 1800) || (lw === 2304 && lh === 1296) || (lw === 1504 && lh === 846)) {
+              const candidates = [
+                { id: '4k', label: '4K 3840×2160', w: 3840, h: 2160, inch: 27 },
+                { id: '2k', label: '2K 2560×1440', w: 2560, h: 1440, inch: 27 },
+              ];
+              const chosenId = macPanelOverrides[monitorKey] || '4k';
+              const picked = candidates.find((c) => c.id === chosenId) || candidates[0];
+              return { ...orient(picked.w, picked.h), inch: picked.inch, kind: 'mac_external_scaled', note: `Màn hình ngoài macOS HiDPI (Đệm 2x: ${fbLW}×${fbLH})`, candidates, activeId: picked.id, key: monitorKey };
+            }
+
+            // "Looks like 2560×1440" @ 2x -> Framebuffer 5120×2880 (Most common 4K External Monitor setting on MacBook, or 5K Studio Display)
+            if (lw === 2560 && lh === 1440) {
+              const candidates = [
+                { id: '4k', label: '4K 3840×2160 (Scaled)', w: 3840, h: 2160, inch: 27 },
+                { id: '5k', label: '5K 5120×2880 (Studio)', w: 5120, h: 2880, inch: 27 },
+                { id: '2k', label: '2K 2560×1440 (HiDPI)', w: 2560, h: 1440, inch: 27 },
+              ];
+              let autoId = '4k';
+              if (/Studio Display|UltraFine 5K|ViewFinity S9|\b5K\b|27MD5K/i.test(edidLabel)) {
+                autoId = '5k';
+              } else if (/QHD|2560|1440/i.test(edidLabel) && !/4K|3840|UHD/i.test(edidLabel)) {
+                autoId = '2k';
+              } else if (currentMeasuredHz > 63 || !isP3) {
+                autoId = '4k'; // Apple 5K Studio Display is strictly 60Hz & Display P3
+              } else if (!isAppleSilicon && edidInternal === true) {
+                autoId = '5k'; // Intel iMac 27" 5K
+              }
+              const chosenId = macPanelOverrides[monitorKey] || autoId;
+              const picked = candidates.find((c) => c.id === chosenId) || candidates[0];
+              return { ...orient(picked.w, picked.h), inch: picked.inch, kind: 'mac_external_scaled', note: `macOS HiDPI ${lw}×${lh} (Đệm GPU: ${fbLW}×${fbLH})`, candidates, activeId: picked.id, key: monitorKey };
+            }
+
+            // "Looks like 3008×1692" @ 2x -> Framebuffer 6016×3384 (4K External Monitor Scaled or Pro Display XDR 6K)
+            if (lw === 3008 && lh === 1692) {
+              const candidates = [
+                { id: '4k', label: '4K 3840×2160 (Scaled)', w: 3840, h: 2160, inch: 27 },
+                { id: '6k', label: '6K 6016×3384 (XDR)', w: 6016, h: 3384, inch: 32 },
+              ];
+              const autoId = /Pro Display XDR|\b6K\b/i.test(edidLabel) ? '6k' : '4k';
+              const chosenId = macPanelOverrides[monitorKey] || autoId;
+              const picked = candidates.find((c) => c.id === chosenId) || candidates[0];
+              return { ...orient(picked.w, picked.h), inch: picked.inch, kind: 'mac_external_scaled', note: `macOS HiDPI ${lw}×${lh} (Đệm GPU: ${fbLW}×${fbLH})`, candidates, activeId: picked.id, key: monitorKey };
+            }
+
+            // "Looks like 2048×1152" @ 2x -> Framebuffer 4096×2304 (4K Scaled or 2K BetterDisplay HiDPI)
+            if (lw === 2048 && lh === 1152) {
+              const candidates = [
+                { id: '4k', label: '4K 3840×2160', w: 3840, h: 2160, inch: 27 },
+                { id: '2k', label: '2K 2560×1440 (HiDPI)', w: 2560, h: 1440, inch: 27 },
+                { id: 'imac4k', label: '4096×2304 (iMac 21.5")', w: 4096, h: 2304, inch: 21.5 },
+              ];
+              const autoId = (!isAppleSilicon && edidInternal === true) ? 'imac4k' : '4k';
+              const chosenId = macPanelOverrides[monitorKey] || autoId;
+              const picked = candidates.find((c) => c.id === chosenId) || candidates[0];
+              return { ...orient(picked.w, picked.h), inch: picked.inch, kind: 'mac_external_scaled', note: `macOS HiDPI ${lw}×${lh} (Đệm GPU: ${fbLW}×${fbLH})`, candidates, activeId: picked.id, key: monitorKey };
+            }
+
+            // "Looks like 1920×1080" @ 2x -> Framebuffer 3840×2160 (4K Native 2x or 2K BetterDisplay HiDPI)
+            if (lw === 1920 && lh === 1080) {
+              const candidates = [
+                { id: '4k', label: '4K 3840×2160 (2x)', w: 3840, h: 2160, inch: 27 },
+                { id: '2k', label: '2K 2560×1440 (HiDPI)', w: 2560, h: 1440, inch: 27 },
+              ];
+              const autoId = (/QHD|2560|1440/i.test(edidLabel) && !/4K|3840|UHD/i.test(edidLabel)) ? '2k' : '4k';
+              const chosenId = macPanelOverrides[monitorKey] || autoId;
+              const picked = candidates.find((c) => c.id === chosenId) || candidates[0];
+              return { ...orient(picked.w, picked.h), inch: picked.inch, kind: 'mac_external_2x', note: picked.id === '2k' ? 'Màn hình ngoài 2K bật BetterDisplay HiDPI' : 'Màn hình ngoài 4K HiDPI chuẩn 2x', candidates, activeId: picked.id, key: monitorKey };
+            }
+          }
+
+          // 2C. External 21:9 Ultrawide HiDPI on macOS
+          if (aspect >= 2.30 && aspect <= 2.44) {
+            const candidates = [
+              { id: 'uwqhd', label: 'UWQHD 3440×1440', w: 3440, h: 1440, inch: 34 },
+              { id: 'uw38', label: 'WQHD+ 3840×1600', w: 3840, h: 1600, inch: 38 },
+              { id: '5k2k', label: '5K2K 5120×2160', w: 5120, h: 2160, inch: 40 },
+            ];
+            const autoId = (lw === 2560 && lh === 1080 && /5K2K|5120|WUHD/i.test(edidLabel)) ? '5k2k' : 'uwqhd';
+            const chosenId = macPanelOverrides[monitorKey] || autoId;
+            const picked = candidates.find((c) => c.id === chosenId) || candidates[0];
+            return { ...orient(picked.w, picked.h), inch: picked.inch, kind: 'mac_external_scaled', note: `Ultrawide macOS HiDPI (Đệm 2x: ${fbLW}×${fbLH})`, candidates, activeId: picked.id, key: monitorKey };
+          }
+        }
+
+        // 3. Default / Standard Native Resolution & Smart Diagonal Estimation
+        const maxD = Math.max(fbLW, fbLH);
+        const minD = Math.min(fbLW, fbLH);
+        const aspect = maxD / Math.max(1, minD);
+        let estInch = 15.6;
+        if (navigator.maxTouchPoints > 1 && maxD <= 3200 && osDpr >= 2 && !isMacOS) {
+          estInch = minD < 1500 ? 6.5 : 11.0;
+        } else if (aspect >= 3.4) {
+          estInch = 49.0;
+        } else if (aspect >= 2.25) {
+          estInch = maxD >= 5120 ? 40.0 : maxD >= 3840 ? 38.0 : 34.0;
+        } else if (osDpr === 1) {
+          estInch = maxD >= 3840 ? 27.0 : maxD >= 2560 ? 27.0 : 24.0;
+        } else if (maxD >= 3840) {
+          estInch = 27.0;
+        } else if (Math.abs(aspect - 16 / 10) < 0.03) {
+          estInch = 16.0;
+        }
+
+        return { ...orient(fbLW, fbLH), inch: estInch, kind: 'native', note: '', candidates: null, key: monitorKey };
+      }
+
+      function syncInchPresetHighlight(inchVal) {
+        document.querySelectorAll('.inch-preset-btn').forEach((b) => {
+          const match = Math.abs(parseFloat(b.dataset.inch) - inchVal) < 0.15;
+          b.classList.toggle('bg-cyan-500/20', match);
+          b.classList.toggle('text-cyan-300', match);
+          b.classList.toggle('border-cyan-500/50', match);
+          b.classList.toggle('bg-slate-900', !match);
+          b.classList.toggle('text-slate-300', !match);
+          b.classList.toggle('border-slate-700/80', !match);
+        });
+      }
+
       function detectDisplaySpecs() {
-        const dpr = window.devicePixelRatio || 1;
-        const cssW = window.screen.width;
-        const cssH = window.screen.height;
-        const physW = Math.round(cssW * dpr);
-        const physH = Math.round(cssH * dpr);
+        const { rawDpr, osDpr, browserZoom, cssScreenW, cssScreenH, pageCssScreenW, pageCssScreenH } = getZoomCorrectedScreenMetrics();
+        const isP3 = window.matchMedia('(color-gamut: p3)').matches;
+        const fbW = Math.round(cssScreenW * osDpr);
+        const fbH = Math.round(cssScreenH * osDpr);
+
+        const resolved = resolveHardwarePanel(cssScreenW, cssScreenH, osDpr, isP3);
+        const physW = resolved.w;
+        const physH = resolved.h;
+        const effectiveScale = Math.hypot(physW, physH) / Math.max(1, Math.hypot(cssScreenW, cssScreenH));
+        const isScaledFramebuffer = (physW !== fbW || physH !== fbH);
+
+        // Reset unedited inputs automatically when user drags window to a different monitor
+        if (resolved.key !== lastPhysicalMonitorKey) {
+          lastPhysicalMonitorKey = resolved.key;
+          delete ppiWidthInput.dataset.edited;
+          delete ppiHeightInput.dataset.edited;
+          delete screenInchInput.dataset.edited;
+        }
+
+        activeDisplayMetrics = {
+          physW,
+          physH,
+          fbW,
+          fbH,
+          cssScreenW,
+          cssScreenH,
+          pageCssScreenW,
+          pageCssScreenH,
+          osDpr,
+          browserZoom,
+          effectiveScale,
+          isScaledFramebuffer,
+        };
 
         document.getElementById('physical-res').textContent = `${physW} × ${physH}`;
         if (headerResPillEl) headerResPillEl.textContent = `${physW}×${physH}`;
-        document.getElementById('logical-res').textContent = `${cssW} × ${cssH}`;
+        document.getElementById('logical-res').textContent = `${cssScreenW} × ${cssScreenH}`;
         document.getElementById('avail-res').textContent = `${window.screen.availWidth} × ${window.screen.availHeight} CSS px`;
-        document.getElementById('dpr-value').textContent = `${Number.isInteger(dpr) ? dpr : dpr.toFixed(2)}x`;
+
+        const scaleFmt = (v) => (Math.abs(v - Math.round(v)) < 0.02 ? `${Math.round(v)}x` : `${v.toFixed(2)}x`);
+        document.getElementById('dpr-value').textContent = isScaledFramebuffer
+          ? `${scaleFmt(effectiveScale)} (${scaleFmt(osDpr)} HiDPI)`
+          : scaleFmt(osDpr);
+
+        const resLabelEl = document.getElementById('physical-res-label');
+        if (resLabelEl) {
+          resLabelEl.textContent = isScaledFramebuffer
+            ? `Độ phân giải tấm nền (Đệm GPU: ${fbW}×${fbH}):`
+            : 'Độ phân giải tấm nền (Native Pixels):';
+        }
+
+        // Render macOS HiDPI External Monitor Quick Switcher if applicable
+        if (macosHidpiSwitcher) {
+          if (resolved.candidates && resolved.candidates.length > 1) {
+            macosHidpiSwitcher.classList.remove('hidden');
+            macosHidpiSwitcher.innerHTML = `<span class="text-slate-400 mr-0.5">Tấm nền:</span>` + resolved.candidates.map((c) => {
+              const active = c.id === resolved.activeId;
+              const cls = active
+                ? 'bg-cyan-500/25 text-cyan-200 border-cyan-400/60 font-bold'
+                : 'bg-slate-900/90 text-slate-400 hover:text-slate-200 border-slate-700/80';
+              return `<button type="button" data-mac-panel="${c.id}" class="px-2 py-0.5 rounded-md border transition ${cls}">${c.label}</button>`;
+            }).join('');
+            macosHidpiSwitcher.querySelectorAll('button[data-mac-panel]').forEach((btn) => {
+              btn.addEventListener('click', () => {
+                macPanelOverrides[resolved.key] = btn.dataset.macPanel;
+                delete ppiWidthInput.dataset.edited;
+                delete ppiHeightInput.dataset.edited;
+                detectDisplaySpecs();
+              });
+            });
+          } else {
+            macosHidpiSwitcher.classList.add('hidden');
+            macosHidpiSwitcher.innerHTML = '';
+          }
+        }
+
+        // Show EDID Multi-Screen button if browser supports Window Management API & multi-screen / macOS
+        if (detectEdidBtn) {
+          const canQueryScreens = 'getScreenDetails' in window;
+          const showEdid = canQueryScreens && (isMacOS || window.screen.isExtended || edidScreenDetails);
+          detectEdidBtn.classList.toggle('hidden', !showEdid);
+          if (edidCurrentScreen?.label) {
+            detectEdidBtn.textContent = `✓ ${edidCurrentScreen.isInternal ? 'Màn trong' : 'Màn ngoài'}`;
+            detectEdidBtn.title = `EDID: ${edidCurrentScreen.label}`;
+          }
+        }
 
         const zoomWarn = document.getElementById('zoom-warning');
-        if (!Number.isInteger(dpr)) {
-          zoomWarn.innerHTML = `<span class="text-amber-300 font-semibold">Lưu ý Fractional Scaling (${Math.round(dpr * 100)}%):</span> Công cụ Gamma đã tự động bù trừ 1:1 Pixel vật lý.`;
-        } else {
-          zoomWarn.innerHTML = `Vùng làm việc khả dụng: <strong class="font-mono text-slate-200">${window.screen.availWidth} × ${window.screen.availHeight}</strong> (Tỷ lệ nguyên chuẩn 1:${dpr})`;
+        const infoParts = [];
+        if (edidCurrentScreen?.label) {
+          const totalScreens = edidScreenDetails?.screens?.length || 1;
+          infoParts.push(`<span class="text-cyan-300 font-semibold">${edidCurrentScreen.isInternal ? '🖥 Màn tích hợp' : '🔌 Màn hình ngoài'}: ${edidCurrentScreen.label}</span> (${totalScreens} màn)`);
+        } else if (window.screen.isExtended) {
+          infoParts.push(`<span class="text-cyan-300 font-semibold">🔌 Đa màn hình đang bật:</span> Kéo cửa sổ sang màn cần đo để tự động cập nhật`);
         }
+        if (Math.abs(browserZoom - 1) > 0.03) {
+          infoParts.push(`<span class="text-amber-300 font-semibold">Zoom trình duyệt ${Math.round(browserZoom * 100)}%:</span> Đã tự tách khỏi OS Scale (${scaleFmt(osDpr)})`);
+        } else if (resolved.note) {
+          infoParts.push(`<span class="text-emerald-300">${resolved.note}</span>`);
+        } else if (!Number.isInteger(rawDpr)) {
+          infoParts.push(`<span class="text-amber-300 font-semibold">Fractional Scaling (${Math.round(rawDpr * 100)}%):</span> Gamma đã khóa 1:1 Pixel vật lý`);
+        } else {
+          infoParts.push(`Vùng khả dụng: <strong class="font-mono text-slate-200">${window.screen.availWidth} × ${window.screen.availHeight}</strong> (Scale 1:${scaleFmt(effectiveScale).replace('x', '')})`);
+        }
+        zoomWarn.innerHTML = infoParts.join(' • ');
 
         const divisor = gcd(physW, physH);
         let ratioW = Math.round(physW / divisor);
@@ -1953,19 +2397,29 @@
         const dec = physW / physH;
         if (Math.abs(dec - 16 / 9) < 0.02) { ratioW = 16; ratioH = 9; }
         else if (Math.abs(dec - 16 / 10) < 0.02) { ratioW = 16; ratioH = 10; }
-        else if (Math.abs(dec - 21 / 9) < 0.045) { ratioW = 21; ratioH = 9; }
-        else if (Math.abs(dec - 32 / 9) < 0.045) { ratioW = 32; ratioH = 9; }
+        else if (Math.abs(dec - 21 / 9) < 0.05) { ratioW = 21; ratioH = 9; }
+        else if (Math.abs(dec - 32 / 9) < 0.05) { ratioW = 32; ratioH = 9; }
         else if (Math.abs(dec - 4 / 3) < 0.02) { ratioW = 4; ratioH = 3; }
         else if (Math.abs(dec - 3 / 2) < 0.02) { ratioW = 3; ratioH = 2; }
+        else if (ratioW > 32 && ratioH > 20) {
+          ratioW = Number((physW / physH * 10).toFixed(1));
+          ratioH = 10;
+        }
         document.getElementById('aspect-ratio').textContent = `${ratioW}:${ratioH}`;
 
         const maxDim = Math.max(physW, physH);
+        const minDim = Math.min(physW, physH);
         let tier = 'HD / WXGA';
         if (maxDim >= 7680) tier = '8K UHD';
-        else if (maxDim >= 5120) tier = '5K / Dual QHD';
-        else if (maxDim >= 3840) tier = '4K UHD';
-        else if (maxDim >= 3440) tier = 'UWQHD 3440p';
-        else if (maxDim >= 2560) tier = '2K QHD';
+        else if (maxDim >= 6016) tier = '6K Retina XDR';
+        else if (maxDim >= 5120 && minDim >= 2800) tier = '5K Studio';
+        else if (maxDim >= 5120 && minDim >= 2100) tier = '5K2K WUHD';
+        else if (maxDim >= 5120) tier = 'Dual QHD 32:9';
+        else if (maxDim >= 4480) tier = '4.5K Retina';
+        else if (maxDim >= 3840 && minDim >= 2100) tier = '4K UHD';
+        else if (maxDim >= 3440 && (maxDim / minDim) > 2.1) tier = 'UWQHD 21:9';
+        else if (maxDim >= 2880 && minDim >= 1800) tier = 'Retina 2.8K–3.5K';
+        else if (maxDim >= 2560) tier = minDim >= 1600 ? 'WQXGA 16:10' : '2K QHD';
         else if (maxDim >= 1920) tier = 'FHD 1080p';
         document.getElementById('res-tier-badge').textContent = tier;
 
@@ -1982,7 +2436,7 @@
         if (isHdrHigh) {
           hdrBadge.textContent = 'HDR Active';
           hdrBadge.className = 'text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40';
-          hdrStatus.textContent = 'High Dynamic Range (HDR10/PQ)';
+          hdrStatus.textContent = 'High Dynamic Range (HDR10/EDR)';
           hdrStatus.className = 'text-xs font-mono font-bold text-emerald-400';
         } else {
           hdrBadge.textContent = 'SDR Mode';
@@ -1993,7 +2447,7 @@
 
         let gamut = 'sRGB Standard';
         if (window.matchMedia('(color-gamut: rec2020)').matches) gamut = 'Rec.2020 (Ultra-Wide)';
-        else if (window.matchMedia('(color-gamut: p3)').matches) gamut = 'Display P3 (Wide Gamut)';
+        else if (isP3) gamut = 'Display P3 (Wide Gamut)';
         else if (window.matchMedia('(color-gamut: srgb)').matches) gamut = 'sRGB (IEC 61966-2-1)';
         document.getElementById('gamut-status').textContent = gamut;
 
@@ -2006,8 +2460,70 @@
 
         if (!ppiWidthInput.dataset.edited) ppiWidthInput.value = physW;
         if (!ppiHeightInput.dataset.edited) ppiHeightInput.value = physH;
+        if (!screenInchInput.dataset.edited && resolved.inch) {
+          screenInchInput.value = resolved.inch;
+          syncInchPresetHighlight(resolved.inch);
+        }
 
-        calculatePPI();
+        calculatePPI(true);
+      }
+
+      // Optional Multi-Screen Window Management API (EDID & Internal/External Screen Detection)
+      async function initScreenDetails(userTriggered = false) {
+        if (!('getScreenDetails' in window)) return;
+        try {
+          if (!userTriggered && navigator.permissions?.query) {
+            const perm = await navigator.permissions.query({ name: 'window-management' });
+            if (perm.state !== 'granted') return;
+          }
+          edidScreenDetails = await window.getScreenDetails();
+          edidCurrentScreen = edidScreenDetails.currentScreen;
+          edidScreenDetails.addEventListener('currentscreenchange', () => {
+            edidCurrentScreen = edidScreenDetails.currentScreen;
+            resetHzTelemetry();
+            detectDisplaySpecs();
+            if (edidCurrentScreen?.label) {
+              showToast(`Đã chuyển sang màn hình: ${edidCurrentScreen.label}`, 'info');
+            }
+          });
+          edidScreenDetails.addEventListener('screenschange', () => {
+            edidCurrentScreen = edidScreenDetails.currentScreen;
+            detectDisplaySpecs();
+          });
+          detectDisplaySpecs();
+          if (userTriggered && edidCurrentScreen?.label) {
+            showToast(`Đã nhận diện EDID: ${edidCurrentScreen.label}`, 'success');
+          }
+        } catch (err) {
+          if (userTriggered) {
+            showToast('Trình duyệt từ chối quyền đọc thông tin đa màn hình.', 'warning');
+          }
+        }
+      }
+
+      if (detectEdidBtn) {
+        detectEdidBtn.addEventListener('click', () => initScreenDetails(true));
+      }
+
+      function getLiveScreenSignature() {
+        return [
+          window.screen.width,
+          window.screen.height,
+          window.screen.availWidth,
+          window.screen.availHeight,
+          (window.devicePixelRatio || 1).toFixed(4),
+          window.screen.colorDepth,
+          Boolean(window.screen.isExtended),
+        ].join('|');
+      }
+
+      // Compute exact CSS pixels per physical inch on the active screen (immune to macOS HiDPI framebuffer scaling)
+      function getActiveScreenCssPxPerInch(inches) {
+        const pageDiagCss = Math.hypot(activeDisplayMetrics.pageCssScreenW, activeDisplayMetrics.pageCssScreenH);
+        if (pageDiagCss > 0 && inches > 0) {
+          return pageDiagCss / inches;
+        }
+        return currentCalculatedPpi / (window.devicePixelRatio || 1);
       }
 
       function drawPhysicalRuler() {
@@ -2025,9 +2541,10 @@
         const ctx = rulerCanvas.getContext('2d');
         ctx.clearRect(0, 0, w, h);
 
-        // Physical pixels per mm = PPI / 25.4
-        const physPxPerMm = currentCalculatedPpi / 25.4;
-        const physPxPerInch = currentCalculatedPpi;
+        const inches = parseFloat(screenInchInput.value) || 15.6;
+        const cssPxPerInch = getActiveScreenCssPxPerInch(inches);
+        const canvasPxPerInch = cssPxPerInch * dpr;
+        const canvasPxPerMm = canvasPxPerInch / 25.4;
 
         // Top half: Centimeters & Millimeters
         ctx.strokeStyle = '#38bdf8';
@@ -2035,9 +2552,9 @@
         ctx.font = `${10 * dpr}px "JetBrains Mono", monospace`;
         ctx.lineWidth = 1 * dpr;
 
-        const maxMm = Math.ceil(w / physPxPerMm);
+        const maxMm = Math.ceil(w / Math.max(0.5, canvasPxPerMm));
         for (let mm = 0; mm <= maxMm; mm++) {
-          const x = Math.round(mm * physPxPerMm) + 0.5;
+          const x = Math.round(mm * canvasPxPerMm) + 0.5;
           let tickH = 6 * dpr;
           if (mm % 10 === 0) tickH = 16 * dpr;
           else if (mm % 5 === 0) tickH = 11 * dpr;
@@ -2055,9 +2572,9 @@
         // Bottom half: Inches (1/8 inch subdivisions)
         ctx.strokeStyle = '#94a3b8';
         ctx.fillStyle = '#cbd5e1';
-        const maxEighths = Math.ceil((w / physPxPerInch) * 8);
+        const maxEighths = Math.ceil((w / Math.max(4, canvasPxPerInch)) * 8);
         for (let e = 0; e <= maxEighths; e++) {
-          const x = Math.round((e / 8) * physPxPerInch) + 0.5;
+          const x = Math.round((e / 8) * canvasPxPerInch) + 0.5;
           let tickH = 5 * dpr;
           if (e % 8 === 0) tickH = 15 * dpr;
           else if (e % 4 === 0) tickH = 10 * dpr;
@@ -2077,14 +2594,22 @@
         const inches = parseFloat(screenInchInput.value);
         const w = parseFloat(ppiWidthInput.value);
         const h = parseFloat(ppiHeightInput.value);
-        const dpr = window.devicePixelRatio || 1;
 
         if (!inches || inches <= 0 || !w || !h) return;
 
         const diagonalPx = Math.hypot(w, h);
         const ppi = diagonalPx / inches;
         currentCalculatedPpi = ppi;
-        const logicalPpi = ppi / dpr;
+
+        // Logical CSS PPI: exact CSS screen diagonal / inches for current monitor, or recommended HiDPI scale for custom simulation
+        const isSimulatingCustomRes = Boolean(ppiWidthInput.dataset.edited || ppiHeightInput.dataset.edited);
+        let logicalPpi = ppi / (activeDisplayMetrics.effectiveScale || 1);
+        if (!isSimulatingCustomRes && activeDisplayMetrics.cssScreenW > 0) {
+          logicalPpi = Math.hypot(activeDisplayMetrics.cssScreenW, activeDisplayMetrics.cssScreenH) / inches;
+        } else if (isSimulatingCustomRes) {
+          const simScale = inches <= 7.8 ? 3 : inches <= 13 ? 2 : ppi >= 200 ? 2 : ppi >= 145 ? 1.5 : 1;
+          logicalPpi = ppi / simScale;
+        }
 
         document.getElementById('ppi-physical-result').textContent = ppi.toFixed(1);
         document.getElementById('ppi-logical-result').textContent = logicalPpi.toFixed(1);
@@ -2098,16 +2623,20 @@
         document.getElementById('dot-pitch-value').textContent = `${dotPitchMm.toFixed(4)} mm`;
 
         const nyquist = (1 / (2 * dotPitchMm)).toFixed(2);
-        document.getElementById('nyquist-freq').textContent = `${nyquist} lp/mm`;
 
-        const retinaDistCm = Math.round((3438 / ppi) * 2.54);
-        document.getElementById('retina-distance').textContent = `≥ ${retinaDistCm} cm`;
+        // Exact 20/20 Visual Acuity Retina Distance (1 arcminute MAR = 60 PPD => d_in = 1 / (2 * PPI * tan(1/120 deg)) = 3437.7468 / PPI)
+        const RETINA_INCH_CONST = 1 / (2 * Math.tan(Math.PI / 21600)); // 3437.74677
+        const retinaDistCmExact = (RETINA_INCH_CONST / ppi) * 2.54; // 8731.8768 / ppi
+        const retinaDistText = retinaDistCmExact < 35 ? retinaDistCmExact.toFixed(1) : String(Math.round(retinaDistCmExact));
+        document.getElementById('retina-distance').textContent = `≥ ${retinaDistText} cm`;
 
-        // Sync Credit Card Box width (85.60mm = 3.370079 inches)
+        // Sync Credit Card Box width (85.60mm = 3.370079 inches) using exact screen CSS geometry
         if (syncSlider) {
-          const cardCssW = Math.round((3.370079 * ppi) / dpr);
-          const cardCssH = Math.round(cardCssW * (53.98 / 85.60));
+          const cssPxPerIn = getActiveScreenCssPxPerInch(inches);
+          const cardCssW = Math.round(3.370079 * cssPxPerIn);
           const clampedW = Math.max(150, Math.min(640, cardCssW));
+          cardSlider.max = String(Math.max(600, clampedW + 60));
+          cardSlider.min = String(Math.min(180, Math.max(90, clampedW - 80)));
           cardSlider.value = clampedW;
           cardBox.style.width = `${clampedW}px`;
           cardBox.style.height = `${Math.round(clampedW * (53.98 / 85.60))}px`;
@@ -2115,65 +2644,106 @@
 
         drawPhysicalRuler();
 
+        // Device Form-Factor & Ergonomic Viewing Distance (Aspect-Ratio & Diagonal Aware)
+        const aspect = Math.max(w, h) / Math.max(1, Math.min(w, h));
         let typicalDistCm = 50;
         let deviceCategory = 'Laptop';
-        if (inches <= 7.5) { typicalDistCm = 26; deviceCategory = 'Smartphone'; }
-        else if (inches <= 13) { typicalDistCm = 38; deviceCategory = 'Tablet / Ultrabook'; }
-        else if (inches <= 18.5) { typicalDistCm = 50; deviceCategory = 'Laptop'; }
-        else if (inches <= 28) { typicalDistCm = 65; deviceCategory = 'Desktop Monitor'; }
-        else { typicalDistCm = 80; deviceCategory = 'Large Format Display'; }
+        let true2xPpiFloor = 215;
 
-        const isSweetSpotDesktop = inches >= 23 && ppi >= 108 && ppi < 160;
-        const isRetina = retinaDistCm <= typicalDistCm || ppi >= 215 || (inches >= 24 && ppi >= 160);
+        if (inches <= 7.8) {
+          typicalDistCm = 28; // ~11 in (Apple iPhone reference viewing distance: 10–12 in)
+          deviceCategory = 'Smartphone';
+          true2xPpiFloor = 315; // iPhone Liquid Retina 326 PPI / Super Retina 460 PPI
+        } else if (inches <= 13.1 && (isIPad || aspect <= 1.52)) {
+          typicalDistCm = 38; // ~15 in (Apple iPad reference viewing distance)
+          deviceCategory = 'Tablet';
+          true2xPpiFloor = 255; // iPad Retina 264 PPI
+        } else if (inches <= 18.5) {
+          typicalDistCm = 46; // ~18 in (MacBook / Laptop ergonomic distance)
+          deviceCategory = 'Laptop / MacBook';
+          true2xPpiFloor = 215; // MacBook Air 224–227 PPI / Pro 254 PPI
+        } else if (aspect >= 2.2 && inches <= 50) {
+          typicalDistCm = 65; // 21:9 & 32:9 Ultrawide Desk Monitors (34", 38", 49" share 27"–32" desk distance!)
+          deviceCategory = 'Ultrawide Monitor';
+          true2xPpiFloor = 210;
+        } else if (inches <= 32.5) {
+          typicalDistCm = 65; // ~25.6 in Standard Desktop Monitor (24", 27", 32")
+          deviceCategory = 'Desktop Monitor';
+          true2xPpiFloor = 210; // Apple Studio 5K / Pro XDR 6K = 218 PPI
+        } else if (inches <= 43) {
+          typicalDistCm = 78;
+          deviceCategory = 'Large Desk Monitor';
+          true2xPpiFloor = 180;
+        } else {
+          typicalDistCm = Math.min(260, Math.round(inches * 2.54 * 1.35)); // TV / Large Display
+          deviceCategory = 'TV / Large Format';
+          true2xPpiFloor = 80;
+        }
+
+        // Pixels Per Degree (PPD) at typical ergonomic viewing distance — Human 20/20 Retina threshold = 60.0 PPD
+        const ppd = 2 * (typicalDistCm / 2.54) * ppi * Math.tan(Math.PI / 360);
+        document.getElementById('nyquist-freq').textContent = `${ppd.toFixed(0)} PPD • ${nyquist} lp/mm`;
+
         const pill = document.getElementById('retina-status-pill');
         const explanation = document.getElementById('retina-explanation');
 
-        if (isRetina) {
-          pill.innerHTML = '✨ Chuẩn Retina / Studio HiDPI';
+        const isTrueStudioRetina = ppd >= 60 && ppi >= true2xPpiFloor;
+        const isEffectiveRetina = ppd >= 60;
+        const isDesktop1xSweetSpot = (deviceCategory.includes('Monitor') && ppi >= 96 && ppi < 135) || (deviceCategory.includes('Laptop') && ppi >= 138 && ppd >= 46);
+
+        if (isTrueStudioRetina) {
+          pill.innerHTML = '✨ Chuẩn Retina 2x+ / Studio HiDPI';
           pill.className = 'px-3.5 py-1.5 rounded-full text-xs font-bold tracking-wide bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 flex items-center gap-1.5';
           explanation.className = 'text-xs leading-relaxed p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/25 text-emerald-200';
-          explanation.innerHTML = `<strong>Độ sắc nét xuất sắc (${ppi.toFixed(1)} PPI):</strong> Trên thiết bị ${inches}" (${deviceCategory}), khoảng cách điểm ảnh chỉ <strong>${dotPitchMm.toFixed(3)} mm</strong>. Mắt người thị lực 20/20 hoàn toàn không thể thấy rỗ hạt ở cự ly sử dụng thông thường (~${typicalDistCm} cm).`;
-        } else if (isSweetSpotDesktop) {
-          pill.innerHTML = '✓ Chuẩn Đồ Họa / Gaming Sweet-Spot';
+          explanation.innerHTML = `<strong>Đạt chuẩn Apple Retina / Studio HiDPI (${ppi.toFixed(1)} PPI • ${ppd.toFixed(1)} PPD ≥ 60):</strong> Trên ${deviceCategory} ${inches}", tâm điểm ảnh chỉ <strong>${dotPitchMm.toFixed(3)} mm</strong>. Mắt thị lực 20/20 hoàn toàn không thể phân biệt từng pixel từ cự ly <strong>≥ ${retinaDistText} cm</strong> (cự ly ngồi chuẩn ~${typicalDistCm} cm), đồng thời đạt mật độ nhân đôi điểm ảnh nguyên bản sắc nét tuyệt đối.`;
+        } else if (isEffectiveRetina) {
+          pill.innerHTML = '✦ Đạt Ngưỡng Retina HiDPI (PPD ≥ 60)';
+          pill.className = 'px-3.5 py-1.5 rounded-full text-xs font-bold tracking-wide bg-teal-500/20 text-teal-200 border border-teal-400/40 flex items-center gap-1.5';
+          explanation.className = 'text-xs leading-relaxed p-3.5 rounded-xl bg-teal-500/10 border border-teal-500/25 text-teal-100';
+          const macScalingTip = (deviceCategory.includes('Monitor') && ppi >= 135 && ppi < 205)
+            ? ` <em>(Lưu ý macOS: Mật độ 4K ${ppi.toFixed(0)} PPI hoạt động tốt nhất ở chế độ HiDPI Scaled 150% "Looks like 2560×1440"; chuẩn Studio 5K nguyên bản của Apple là ~218 PPI).</em>`
+            : '';
+          explanation.innerHTML = `<strong>Đạt ngưỡng thị giác Retina (${ppi.toFixed(1)} PPI • ${ppd.toFixed(1)} PPD ≥ 60):</strong> Ở khoảng cách sử dụng tiêu chuẩn (~${typicalDistCm} cm ≥ ngưỡng Retina ${retinaDistText} cm), mắt thường không còn thấy rỗ hạt trên ${deviceCategory} ${inches}".${macScalingTip}`;
+        } else if (isDesktop1xSweetSpot) {
+          pill.innerHTML = '✓ Chuẩn Sweet-Spot 1x (Non-Retina)';
           pill.className = 'px-3.5 py-1.5 rounded-full text-xs font-bold tracking-wide bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 flex items-center gap-1.5';
           explanation.className = 'text-xs leading-relaxed p-3.5 rounded-xl bg-cyan-500/10 border border-cyan-500/25 text-cyan-200';
-          explanation.innerHTML = `<strong>Cân bằng tối ưu (${ppi.toFixed(1)} PPI):</strong> Mật độ tiêu chuẩn vàng cho màn hình PC (như 27" 2K ~109 PPI), chữ sắc nét ở tỷ lệ 100% Windows không bị lỗi phóng đại ứng dụng, đạt ngưỡng Retina từ cự ly <strong>${retinaDistCm} cm</strong>.`;
+          explanation.innerHTML = `<strong>Mật độ tiêu chuẩn 1:1 (${ppi.toFixed(1)} PPI • ${ppd.toFixed(1)} PPD):</strong> Sweet-spot cho ${deviceCategory} ${inches}" (như 27" 2K hay 34" UWQHD ~109 PPI) — hiển thị đúng tỷ lệ 100% (1x) sắc nét không cần OS Scaling, đạt ngưỡng Retina 60 PPD khi nhìn cách <strong>≥ ${retinaDistText} cm</strong>.`;
         } else {
-          pill.innerHTML = '• Mật Độ Điểm Ảnh Tiêu Chuẩn';
+          pill.innerHTML = '⚠ Dưới Ngưỡng Retina (Dễ Thấy Pixel)';
           pill.className = 'px-3.5 py-1.5 rounded-full text-xs font-bold tracking-wide bg-amber-500/20 text-amber-300 border border-amber-500/40 flex items-center gap-1.5';
           explanation.className = 'text-xs leading-relaxed p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/25 text-amber-200';
-          explanation.innerHTML = `Với <strong>${ppi.toFixed(1)} PPI</strong> (Dot pitch ${dotPitchMm.toFixed(3)} mm) trên màn hình ${inches}", bạn nên ngồi cách tối thiểu <strong>${retinaDistCm} cm</strong> để không nhìn thấy lưới điểm ảnh đơn lẻ.`;
+          explanation.innerHTML = `<strong>Mật độ điểm ảnh thấp cho ${deviceCategory} (${ppi.toFixed(1)} PPI • ${ppd.toFixed(1)} PPD &lt; 60):</strong> Ở khoảng cách thông thường (~${typicalDistCm} cm) trên màn ${inches}", mắt có thể nhận ra lưới điểm ảnh (Dot pitch ${dotPitchMm.toFixed(3)} mm). Cần ngồi cách tối thiểu <strong>${retinaDistText} cm</strong> để đạt ngưỡng mịn Retina.`;
         }
       }
 
-      // Credit Card Slider -> Reverse-calculates Real Physical Inches & PPI!
+      // Credit Card Slider -> Reverse-calculates Real Physical Inches & PPI directly in CSS Screen Space!
       cardSlider.addEventListener('input', () => {
-        const dpr = window.devicePixelRatio || 1;
         const cssW = parseFloat(cardSlider.value);
         const cssH = Math.round(cssW * (53.98 / 85.60));
         cardBox.style.width = `${cssW}px`;
         cardBox.style.height = `${cssH}px`;
 
-        const cardPhysPx = cssW * dpr;
-        const measuredPpi = cardPhysPx / 3.370079; // 85.6mm = 3.370079 in
-        const w = parseFloat(ppiWidthInput.value) || Math.round(window.screen.width * dpr);
-        const h = parseFloat(ppiHeightInput.value) || Math.round(window.screen.height * dpr);
-        const calcInches = Math.hypot(w, h) / measuredPpi;
+        const cssPxPerInch = cssW / 3.370079; // 85.60mm = 3.370079 inches
+        const pageDiagCss = Math.hypot(activeDisplayMetrics.pageCssScreenW, activeDisplayMetrics.pageCssScreenH);
+        const calcInches = pageDiagCss / Math.max(10, cssPxPerInch);
+        const w = parseFloat(ppiWidthInput.value) || activeDisplayMetrics.physW;
+        const h = parseFloat(ppiHeightInput.value) || activeDisplayMetrics.physH;
+        const measuredNativePpi = Math.hypot(w, h) / Math.max(1, calcInches);
 
         screenInchInput.value = calcInches.toFixed(1);
-        document.getElementById('card-calib-label').textContent = `Đo được: ~${calcInches.toFixed(1)}" (${measuredPpi.toFixed(0)} PPI)`;
+        screenInchInput.dataset.edited = 'true';
+        syncInchPresetHighlight(calcInches);
+        document.getElementById('card-calib-label').textContent = `Đo thực tế: ~${calcInches.toFixed(1)}" (${measuredNativePpi.toFixed(0)} PPI)`;
         calculatePPI(false);
       });
 
       document.querySelectorAll('.inch-preset-btn').forEach((btn) => {
         btn.addEventListener('click', () => {
-          document.querySelectorAll('.inch-preset-btn').forEach((b) => {
-            b.classList.remove('bg-cyan-500/20', 'text-cyan-300', 'border-cyan-500/50');
-            b.classList.add('bg-slate-900', 'text-slate-300', 'border-slate-700/80');
-          });
-          btn.classList.remove('bg-slate-900', 'text-slate-300', 'border-slate-700/80');
-          btn.classList.add('bg-cyan-500/20', 'text-cyan-300', 'border-cyan-500/50');
+          const val = parseFloat(btn.dataset.inch);
+          syncInchPresetHighlight(val);
           screenInchInput.value = btn.dataset.inch;
+          screenInchInput.dataset.edited = 'true';
           calculatePPI(true);
         });
       });
@@ -2191,11 +2761,16 @@
       document.getElementById('reset-native-res-btn').addEventListener('click', () => {
         delete ppiWidthInput.dataset.edited;
         delete ppiHeightInput.dataset.edited;
+        delete screenInchInput.dataset.edited;
         detectDisplaySpecs();
-        showToast('Đã đồng bộ lại độ phân giải gốc của màn hình hiện tại.', 'info');
+        showToast('Đã đồng bộ lại độ phân giải và kích thước ước tính của màn hình hiện tại.', 'info');
       });
 
-      screenInchInput.addEventListener('input', () => calculatePPI(true));
+      screenInchInput.addEventListener('input', () => {
+        screenInchInput.dataset.edited = 'true';
+        syncInchPresetHighlight(parseFloat(screenInchInput.value));
+        calculatePPI(true);
+      });
       ppiWidthInput.addEventListener('input', () => { ppiWidthInput.dataset.edited = 'true'; calculatePPI(true); });
       ppiHeightInput.addEventListener('input', () => { ppiHeightInput.dataset.edited = 'true'; calculatePPI(true); });
 
@@ -2706,17 +3281,20 @@
         });
       });
 
-      // True 1:1 Physical Pixel Gamma Canvas
+      // True 1:1 Physical Pixel Gamma Canvas (Exact Device-Pixel Locked to prevent Moiré)
       const gammaCanvas = document.getElementById('gamma-canvas');
       function renderGammaCanvas() {
         const parent = gammaCanvas.parentElement;
         if (!parent) return;
-        const cssW = Math.max(300, parent.clientWidth - 24);
-        const cssH = 224;
+        const availCssW = Math.max(280, parent.clientWidth - 24);
+        const targetCssH = 224;
         const dpr = window.devicePixelRatio || 1;
-        const physW = Math.round(cssW * dpr);
-        const physH = Math.round(cssH * dpr);
+        const physW = Math.max(280, Math.floor(availCssW * dpr));
+        const physH = Math.max(180, Math.round(targetCssH * dpr));
 
+        // Lock CSS dimensions to exact physical pixel multiples so browser never resamples 1px stripes
+        gammaCanvas.style.width = `${physW / dpr}px`;
+        gammaCanvas.style.height = `${physH / dpr}px`;
         gammaCanvas.width = physW;
         gammaCanvas.height = physH;
         document.getElementById('gamma-dpr-status').textContent = `1:1 Pixel (${physW}×${physH} @ ${dpr.toFixed(2)}x)`;
@@ -2943,18 +3521,23 @@
 
       document.getElementById('bloom-fs-btn').addEventListener('click', () => {
         const container = bloomCanvas.parentElement;
-        if (container && container.requestFullscreen) {
-          container.requestFullscreen().then(() => {
-            setTimeout(resizeBloomingCanvas, 60);
-            showToast('Di chuột để soi quầng sáng Local Dimming. Nhấn ESC hoặc Click để thoát.', 'info');
-          }).catch(() => enterFullscreenPattern(11));
+        const req = container && (container.requestFullscreen || container.webkitRequestFullscreen);
+        if (req) {
+          try {
+            Promise.resolve(req.call(container)).then(() => {
+              setTimeout(resizeBloomingCanvas, 60);
+              showToast('Di chuột để soi quầng sáng Local Dimming. Nhấn ESC hoặc Click để thoát.', 'info');
+            }).catch(() => enterFullscreenPattern(11));
+          } catch (e) {
+            enterFullscreenPattern(11);
+          }
         } else {
           enterFullscreenPattern(11);
         }
       });
       bloomCanvas.addEventListener('click', () => {
-        if (document.fullscreenElement === bloomCanvas.parentElement) {
-          document.exitFullscreen().catch(() => {});
+        if (getFullscreenEl() === bloomCanvas.parentElement) {
+          exitNativeFullscreen();
         }
       });
 
@@ -2984,8 +3567,61 @@
       let fsIndex = 0;
       let fsCustomMode = false;
       let fsPinMode = false;
+      let fsHudVisible = true;
       let fsAutoInterval = null;
+      let savedScrollYBeforeFs = 0;
+      let fsLongPressTimer = null;
+      let fsTouchStart = { x: 0, y: 0 };
+      let suppressNextFsClick = false;
       const loggedDefectPins = [];
+
+      function getFullscreenEl() {
+        return document.fullscreenElement || document.webkitFullscreenElement || null;
+      }
+
+      function requestNativeFullscreen(el) {
+        if (getFullscreenEl()) return;
+        const req = el.requestFullscreen || el.webkitRequestFullscreen;
+        if (req) {
+          try { Promise.resolve(req.call(el)).catch(() => {}); } catch (e) {}
+        }
+      }
+
+      function exitNativeFullscreen() {
+        if (!getFullscreenEl()) return;
+        const ex = document.exitFullscreen || document.webkitExitFullscreen;
+        if (ex) {
+          try { Promise.resolve(ex.call(document)).catch(() => {}); } catch (e) {}
+        }
+      }
+
+      function setFsScrollLock(locked) {
+        if (locked) {
+          if (!document.documentElement.classList.contains('fs-scroll-lock')) {
+            savedScrollYBeforeFs = window.scrollY || window.pageYOffset || 0;
+          }
+          document.documentElement.classList.add('fs-scroll-lock');
+          document.body.classList.add('fs-scroll-lock');
+        } else {
+          document.documentElement.classList.remove('fs-scroll-lock');
+          document.body.classList.remove('fs-scroll-lock');
+          window.scrollTo(0, savedScrollYBeforeFs);
+        }
+      }
+
+      fsOverlay.addEventListener('wheel', (e) => e.preventDefault(), { passive: false });
+
+      function setFsHudVisible(visible) {
+        fsHudVisible = Boolean(visible);
+        fsHud.classList.toggle('opacity-0', !fsHudVisible);
+        fsHud.classList.toggle('invisible', !fsHudVisible);
+        fsHud.classList.toggle('pointer-events-none', !fsHudVisible);
+        fsPinsLayer.classList.toggle('hidden', !fsHudVisible && !fsPinMode);
+        if (!fsHudVisible) {
+          const tc = document.getElementById('toast-container');
+          if (tc) tc.innerHTML = '';
+        }
+      }
 
       function drawSpecialFsCanvas(type) {
         const dpr = window.devicePixelRatio || 1;
@@ -3049,27 +3685,25 @@
         fsCustomMode = false;
         fsIndex = (idx + fsPatterns.length) % fsPatterns.length;
         const item = fsPatterns[fsIndex];
-        fsHud.classList.remove('opacity-0', 'pointer-events-none');
+        setFsScrollLock(true);
+        setFsHudVisible(true);
         applyFsItem(item.name, item.hex, item.type, `${fsIndex + 1} / ${fsPatterns.length}`);
 
         fsOverlay.classList.remove('hidden');
         fsOverlay.classList.add('flex');
-        if (document.documentElement.requestFullscreen && !document.fullscreenElement) {
-          document.documentElement.requestFullscreen().catch(() => {});
-        }
+        requestNativeFullscreen(document.documentElement);
       }
 
       function enterFullscreenCustom(name, hex) {
         markModuleTested('fullscreen');
         fsActive = true;
         fsCustomMode = true;
-        fsHud.classList.remove('opacity-0', 'pointer-events-none');
+        setFsScrollLock(true);
+        setFsHudVisible(true);
         applyFsItem(name, hex, 'solid', 'Custom');
         fsOverlay.classList.remove('hidden');
         fsOverlay.classList.add('flex');
-        if (document.documentElement.requestFullscreen && !document.fullscreenElement) {
-          document.documentElement.requestFullscreen().catch(() => {});
-        }
+        requestNativeFullscreen(document.documentElement);
       }
 
       function stopFsAutoCycle() {
@@ -3085,11 +3719,13 @@
         fsActive = false;
         stopFsAutoCycle();
         stopPixelHealer();
+        clearTimeout(fsLongPressTimer);
+        fsLongPressTimer = null;
+        suppressNextFsClick = false;
         fsOverlay.classList.add('hidden');
         fsOverlay.classList.remove('flex');
-        if (document.fullscreenElement && document.exitFullscreen) {
-          document.exitFullscreen().catch(() => {});
-        }
+        setFsScrollLock(false);
+        exitNativeFullscreen();
       }
 
       function cycleFullscreen(step) {
@@ -3132,6 +3768,7 @@
         btn.classList.toggle('bg-amber-500/40', fsPinMode);
         btn.classList.toggle('text-amber-100', fsPinMode);
         fsOverlay.style.cursor = fsPinMode ? 'crosshair' : 'pointer';
+        fsPinsLayer.classList.toggle('hidden', !fsHudVisible && !fsPinMode);
       }
 
       // Stuck Pixel Healer (JScreenFix High-Speed RGB Subpixel Noise)
@@ -3262,6 +3899,10 @@
       });
 
       fsOverlay.addEventListener('click', (e) => {
+        if (suppressNextFsClick) {
+          suppressNextFsClick = false;
+          return;
+        }
         if (e.target.closest('#fs-hud') || e.target.closest('#pixel-healer-box')) return;
         if (fsPinMode) {
           const dpr = window.devicePixelRatio || 1;
@@ -3279,9 +3920,61 @@
         cycleFullscreen(1);
       });
 
+      fsOverlay.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        if (fsActive && !fsHudVisible) {
+          setFsHudVisible(true);
+        }
+      });
+
+      fsOverlay.addEventListener('touchstart', (e) => {
+        if (!fsActive || fsHudVisible) return;
+        if (e.target.closest('#fs-hud') || e.target.closest('#pixel-healer-box')) return;
+        if (e.touches.length >= 2) {
+          e.preventDefault();
+          clearTimeout(fsLongPressTimer);
+          fsLongPressTimer = null;
+          suppressNextFsClick = true;
+          setFsHudVisible(true);
+          setTimeout(() => { suppressNextFsClick = false; }, 450);
+          return;
+        }
+        if (e.touches.length === 1) {
+          fsTouchStart = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+          clearTimeout(fsLongPressTimer);
+          fsLongPressTimer = setTimeout(() => {
+            fsLongPressTimer = null;
+            if (fsActive && !fsHudVisible) {
+              suppressNextFsClick = true;
+              setFsHudVisible(true);
+              setTimeout(() => { suppressNextFsClick = false; }, 600);
+            }
+          }, 550);
+        }
+      }, { passive: false });
+
+      fsOverlay.addEventListener('touchmove', (e) => {
+        if (fsLongPressTimer && e.touches.length === 1) {
+          if (Math.hypot(e.touches[0].clientX - fsTouchStart.x, e.touches[0].clientY - fsTouchStart.y) > 12) {
+            clearTimeout(fsLongPressTimer);
+            fsLongPressTimer = null;
+          }
+        }
+      }, { passive: true });
+
+      ['touchend', 'touchcancel'].forEach((evtName) => {
+        fsOverlay.addEventListener(evtName, () => {
+          if (fsLongPressTimer) {
+            clearTimeout(fsLongPressTimer);
+            fsLongPressTimer = null;
+          }
+        }, { passive: true });
+      });
+
       document.getElementById('fs-prev-btn').addEventListener('click', (e) => { e.stopPropagation(); cycleFullscreen(-1); });
       document.getElementById('fs-next-btn').addEventListener('click', (e) => { e.stopPropagation(); cycleFullscreen(1); });
       document.getElementById('fs-pin-mode-btn').addEventListener('click', (e) => { e.stopPropagation(); togglePinMode(); });
+      document.getElementById('fs-hide-hud-btn').addEventListener('click', (e) => { e.stopPropagation(); setFsHudVisible(false); });
       document.getElementById('fs-healer-btn').addEventListener('click', (e) => {
         e.stopPropagation();
         if (healerActive) stopPixelHealer(); else startPixelHealer();
@@ -3297,13 +3990,19 @@
       });
       document.getElementById('fs-exit-btn').addEventListener('click', (e) => { e.stopPropagation(); exitFullscreenColor(); });
 
-      document.addEventListener('fullscreenchange', () => {
-        if (!document.fullscreenElement && fsActive) {
+      function handleFullscreenChange() {
+        const curFs = getFullscreenEl();
+        if (!curFs && fsActive) {
           exitFullscreenColor();
         } else if (fsActive && !fsPatternCanvas.classList.contains('hidden')) {
           drawSpecialFsCanvas(fsPatterns[fsIndex].type);
         }
-      });
+        if (activeTab === 'calibration') {
+          setTimeout(resizeBloomingCanvas, 50);
+        }
+      }
+      document.addEventListener('fullscreenchange', handleFullscreenChange);
+      document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
 
       // =======================================================================
       // 7. MOUSE LAB: SWITCH BOUNCE, DRAG DROPOUT, 8KHZ POLLING, DPI & SCROLL
@@ -3315,6 +4014,7 @@
       let systemDoubleClicks = 0;
       let dragDropouts = 0;
       let lastClickTimeByButton = {};
+      let lastMouseUpTimeByButton = {};
       let activeDownByButton = {};
       let recentClickTimestamps = [];
       let clickHistory = [];
@@ -3402,14 +4102,24 @@
         recentClickTimestamps.push(now);
 
         let delta = null;
+        let releaseGap = null;
         let isFault = false;
         if (lastClickTimeByButton[btn] !== undefined) {
           delta = now - lastClickTimeByButton[btn];
           if (delta < threshold) {
-            faultClicks++;
             isFault = true;
-            showToast(`Lỗi Switch Bounce trên ${buttonNames[btn] || 'Chuột'} (${delta.toFixed(1)} ms)!`, 'danger');
           }
+        }
+        if (lastMouseUpTimeByButton[btn] !== undefined) {
+          releaseGap = now - lastMouseUpTimeByButton[btn];
+          if (releaseGap < Math.min(22, threshold * 0.35)) {
+            isFault = true;
+          }
+        }
+        if (isFault) {
+          faultClicks++;
+          const reason = (releaseGap !== null && (delta === null || releaseGap < delta)) ? `dội nhả ${releaseGap.toFixed(1)} ms` : `${delta.toFixed(1)} ms`;
+          showToast(`Lỗi Switch Bounce trên ${buttonNames[btn] || 'Chuột'} (${reason})!`, 'danger');
         }
         lastClickTimeByButton[btn] = now;
         highlightSvgMouseButton(btn, true, isFault);
@@ -3417,7 +4127,9 @@
         const rect = clickPad.getBoundingClientRect();
         spawnRipple(e.clientX - rect.left, e.clientY - rect.top, isFault);
 
-        const deltaText = delta !== null ? `${delta.toFixed(1)} ms` : 'Mẫu đầu';
+        const deltaText = delta !== null
+          ? (releaseGap !== null && releaseGap < 25 ? `${delta.toFixed(1)}ms (Nhả: ${releaseGap.toFixed(1)}ms)` : `${delta.toFixed(1)} ms`)
+          : 'Mẫu đầu';
         document.getElementById('last-interval-pill').innerHTML = isFault
           ? `Khoảng cách Δt: <strong class="text-rose-400">${deltaText} (LỖI!)</strong>`
           : `Khoảng cách Δt: <strong class="text-cyan-400">${deltaText}</strong>`;
@@ -3437,10 +4149,12 @@
       });
 
       window.addEventListener('mouseup', (e) => {
+        const now = performance.now();
+        lastMouseUpTimeByButton[e.button] = now;
         highlightSvgMouseButton(e.button, false);
         const entry = activeDownByButton[e.button];
         if (entry) {
-          const holdMs = performance.now() - entry.downTime;
+          const holdMs = now - entry.downTime;
           entry.holdText = `${holdMs.toFixed(1)} ms`;
           document.getElementById('last-hold-pill').innerHTML = `Thời gian giữ: <strong class="text-amber-400">${holdMs.toFixed(1)} ms</strong>`;
           delete activeDownByButton[e.button];
@@ -3465,22 +4179,29 @@
       dragZone.addEventListener('pointerdown', (e) => {
         e.preventDefault();
         const now = performance.now();
+        const badge = document.getElementById('drag-status-badge');
+        let hadDropout = false;
         if (lastDragReleaseTs > 0 && now - lastDragReleaseTs < 140) {
           dragDropouts++;
+          hadDropout = true;
           showToast('Phát hiện đứt quãng tín hiệu khi đang giữ kéo chuột (Drag Dropout)!', 'danger');
           updateMouseUI();
         }
         dragActive = true;
         dragStartTs = now;
-        const badge = document.getElementById('drag-status-badge');
-        badge.textContent = 'Đang giữ tốt — hãy di chuột qua lại...';
-        badge.className = 'text-[11px] font-mono px-2.5 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/40';
+        if (hadDropout) {
+          badge.textContent = `⚠ Phát hiện tự nhả đứt quãng (#${dragDropouts})!`;
+          badge.className = 'text-[11px] font-mono px-2.5 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/45';
+        } else {
+          badge.textContent = 'Đang giữ tốt — hãy di chuột qua lại...';
+          badge.className = 'text-[11px] font-mono px-2.5 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/40';
+        }
         clearInterval(dragTimerRef);
         dragTimerRef = setInterval(() => {
           if (!dragActive) return;
           const sec = (performance.now() - dragStartTs) / 1000;
           document.getElementById('drag-hold-timer').textContent = `${sec.toFixed(2)} s`;
-          if (sec >= 3.0) {
+          if (sec >= 3.0 && !hadDropout) {
             badge.textContent = '✓ Đạt chuẩn giữ kéo ≥ 3.0 giây ổn định!';
             badge.className = 'text-[11px] font-mono px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40';
           }
@@ -3498,6 +4219,10 @@
         const now = performance.now();
         recentClickTimestamps = recentClickTimestamps.filter((t) => now - t <= 1000);
         document.getElementById('mouse-cps').textContent = recentClickTimestamps.length.toFixed(1);
+        if (lastPointerMoveTs > 0 && now - lastPointerMoveTs > 260) {
+          document.getElementById('polling-current-hz').textContent = '0 Hz';
+          document.getElementById('mouse-velocity').textContent = '0 px/s';
+        }
       }, 100);
 
       // Raw 8000Hz Polling Rate + Pointer Lock + Waveform Graph
@@ -3582,12 +4307,24 @@
         pollingGraphCtx.stroke();
       }
 
+      function lockRawPointer(targetEl) {
+        if (!targetEl.requestPointerLock) return;
+        try {
+          const maybePromise = targetEl.requestPointerLock({ unadjustedMovement: true });
+          if (maybePromise && typeof maybePromise.catch === 'function') {
+            maybePromise.catch(() => targetEl.requestPointerLock());
+          }
+        } catch (err) {
+          targetEl.requestPointerLock();
+        }
+      }
+
       document.getElementById('pointer-lock-btn').addEventListener('click', () => {
         if (document.pointerLockElement === sensorCanvas) {
           document.exitPointerLock();
         } else if (sensorCanvas.requestPointerLock) {
-          sensorCanvas.requestPointerLock();
-          showToast('Đã khóa con trỏ! Xoay chuột tròn nhanh để đo 1000Hz–8000Hz (Nhấn ESC để thoát).', 'info');
+          lockRawPointer(sensorCanvas);
+          showToast('Đã khóa con trỏ Raw Input! Xoay chuột tròn nhanh để đo 1000Hz–8000Hz (Nhấn ESC để thoát).', 'info');
         }
       });
 
@@ -3597,22 +4334,27 @@
         btn.textContent = locked ? '🔓 Đang khóa (ESC để nhả)' : '🎯 Khóa Con Trỏ Đo 1K–8KHz';
       });
 
-      // DPI Measurement State
+      // DPI Measurement State (Net Vector Displacement to prevent diagonal micro-jitter inflation)
       let dpiMeasuring = false;
-      let dpiAccumulatedCounts = 0;
+      let dpiSumDx = 0;
+      let dpiSumDy = 0;
 
       function finishDpiMeasure() {
         dpiMeasuring = false;
+        if (document.pointerLockElement === sensorCanvas) {
+          document.exitPointerLock();
+        }
         const btn = document.getElementById('dpi-measure-btn');
         btn.textContent = 'Bắt đầu đo';
         btn.classList.remove('bg-rose-600');
         btn.classList.add('bg-cyan-600');
 
+        const netCounts = Math.hypot(dpiSumDx, dpiSumDy);
         const cm = parseFloat(document.getElementById('dpi-target-cm').value) || 5;
         const nominal = parseFloat(document.getElementById('dpi-nominal-input').value) || 800;
         const inches = cm / 2.54;
-        if (dpiAccumulatedCounts > 20 && inches > 0) {
-          const measuredDpi = Math.round(dpiAccumulatedCounts / inches);
+        if (netCounts > 20 && inches > 0) {
+          const measuredDpi = Math.round(netCounts / inches);
           const errPct = ((measuredDpi - nominal) / nominal) * 100;
           document.getElementById('dpi-measured-result').textContent = `${measuredDpi} DPI`;
           const errEl = document.getElementById('dpi-error-pct');
@@ -3625,12 +4367,14 @@
       document.getElementById('dpi-measure-btn').addEventListener('click', () => {
         if (!dpiMeasuring) {
           dpiMeasuring = true;
-          dpiAccumulatedCounts = 0;
+          dpiSumDx = 0;
+          dpiSumDy = 0;
           document.getElementById('dpi-px-moved').textContent = '0 counts';
           const btn = document.getElementById('dpi-measure-btn');
           btn.textContent = 'Chốt kết quả (Space)';
           btn.classList.remove('bg-cyan-600');
           btn.classList.add('bg-rose-600');
+          lockRawPointer(sensorCanvas);
           showToast('Hãy di chuột thẳng ngang đúng số cm trên thước, rồi bấm Space để chốt!', 'info');
         } else {
           finishDpiMeasure();
@@ -3641,9 +4385,10 @@
         if (dpiMeasuring) {
           const coalesced = typeof e.getCoalescedEvents === 'function' ? e.getCoalescedEvents() : [e];
           coalesced.forEach((ev) => {
-            dpiAccumulatedCounts += Math.hypot(ev.movementX || 0, ev.movementY || 0);
+            dpiSumDx += (ev.movementX || 0);
+            dpiSumDy += (ev.movementY || 0);
           });
-          document.getElementById('dpi-px-moved').textContent = `${Math.round(dpiAccumulatedCounts)} counts`;
+          document.getElementById('dpi-px-moved').textContent = `${Math.round(Math.hypot(dpiSumDx, dpiSumDy))} counts`;
         }
       });
 
@@ -3682,12 +4427,19 @@
 
         const windowMs = 500;
         moveTimestamps = moveTimestamps.filter((t) => now - t <= windowMs);
-        const currentHz = Math.round(moveTimestamps.length * (1000 / windowMs));
-        if (currentHz > peakPollingHz) peakPollingHz = currentHz;
+        const spanMs = moveTimestamps.length > 1 ? (moveTimestamps[moveTimestamps.length - 1] - moveTimestamps[0]) : 0;
+        const currentHz = spanMs >= 80
+          ? Math.round(((moveTimestamps.length - 1) / spanMs) * 1000)
+          : Math.round(moveTimestamps.length * (1000 / windowMs));
 
-        pollingHistory.push(currentHz);
-        if (pollingHistory.length > 80) pollingHistory.shift();
-        const avgHz = Math.round(pollingHistory.reduce((a, b) => a + b, 0) / pollingHistory.length);
+        if (spanMs >= 180 && currentHz > peakPollingHz) peakPollingHz = currentHz;
+        if (spanMs >= 150) {
+          pollingHistory.push(currentHz);
+          if (pollingHistory.length > 80) pollingHistory.shift();
+        }
+        const avgHz = pollingHistory.length > 0
+          ? Math.round(pollingHistory.reduce((a, b) => a + b, 0) / pollingHistory.length)
+          : currentHz;
 
         // Consistency metric from inter-packet intervals
         let consistencyText = '--%';
@@ -3767,7 +4519,7 @@
 
       document.getElementById('reset-mouse-btn').addEventListener('click', () => {
         totalClicks = 0; faultClicks = 0; systemDoubleClicks = 0; dragDropouts = 0;
-        lastClickTimeByButton = {}; activeDownByButton = {}; recentClickTimestamps = []; clickHistory = [];
+        lastClickTimeByButton = {}; lastMouseUpTimeByButton = {}; activeDownByButton = {}; recentClickTimestamps = []; clickHistory = [];
         moveTimestamps = []; pollingHistory = []; peakPollingHz = 0; sensorTrail = [];
         scrollUpCount = 0; scrollDownCount = 0; scrollBounceCount = 0; lastScrollDir = 0; sameDirStreak = 0;
 
@@ -3886,6 +4638,7 @@
       let kbChatterCount = 0;
       let shortestDwellMs = Infinity;
       let lastKeyPressTimeByCode = {};
+      let lastKeyUpTimeByCode = {};
       let lastAnyKeyDownTime = null;
       let kbHistory = [];
       let kbPressTimestamps = [];
@@ -3981,17 +4734,33 @@
           board.style.minWidth = '640px';
           board.appendChild(createKeyBlock(rows61));
         } else if (layout === '84') {
-          board.style.minWidth = '740px';
-          board.appendChild(createKeyBlock(kbMainRows));
-          const compactCol = createKeyBlock([
-            [{ code: 'Delete', label: 'Del', w: 'w-10' }],
-            [{ code: 'Home', label: 'Home', w: 'w-10' }],
-            [{ code: 'PageUp', label: 'PgUp', w: 'w-10' }],
-            [{ code: 'PageDown', label: 'PgDn', w: 'w-10' }],
-            [{ code: 'ArrowUp', label: '↑', w: 'w-10' }],
-            [{ code: 'ArrowRight', label: '→', w: 'w-10' }],
-          ]);
-          board.appendChild(compactCol);
+          // Authentic 75% Compact 84-key Layout (16 + 15 + 15 + 14 + 14 + 10 = 84 keys with full Arrow cluster)
+          const rows84 = [
+            [
+              { code: 'Escape', label: 'ESC', w: 'w-10' },
+              { code: 'F1', label: 'F1', w: 'w-10' }, { code: 'F2', label: 'F2', w: 'w-10' }, { code: 'F3', label: 'F3', w: 'w-10' }, { code: 'F4', label: 'F4', w: 'w-10' },
+              { code: 'F5', label: 'F5', w: 'w-10' }, { code: 'F6', label: 'F6', w: 'w-10' }, { code: 'F7', label: 'F7', w: 'w-10' }, { code: 'F8', label: 'F8', w: 'w-10' },
+              { code: 'F9', label: 'F9', w: 'w-10' }, { code: 'F10', label: 'F10', w: 'w-10' }, { code: 'F11', label: 'F11', w: 'w-10' }, { code: 'F12', label: 'F12', w: 'w-10' },
+              { code: 'PrintScreen', label: 'PrtSc', w: 'w-10' }, { code: 'Pause', label: 'Pause', w: 'w-10' }, { code: 'Delete', label: 'Del', w: 'w-10' },
+            ],
+            [...kbMainRows[1], { code: 'Home', label: 'Home', w: 'w-10' }],
+            [...kbMainRows[2], { code: 'PageUp', label: 'PgUp', w: 'w-10' }],
+            [...kbMainRows[3], { code: 'PageDown', label: 'PgDn', w: 'w-10' }],
+            [
+              ...kbMainRows[4].slice(0, -1),
+              { code: 'ShiftRight', label: 'Shift', w: 'w-[74px]' },
+              { code: 'ArrowUp', label: '↑', w: 'w-10' },
+              { code: 'End', label: 'End', w: 'w-10' },
+            ],
+            [
+              { code: 'ControlLeft', label: 'Ctrl', w: 'w-12' }, { code: 'MetaLeft', label: 'Win', w: 'w-12' }, { code: 'AltLeft', label: 'Alt', w: 'w-12' },
+              { code: 'Space', label: 'Space', w: 'w-[248px]' },
+              { code: 'AltRight', label: 'Alt', w: 'w-10' }, { code: 'ContextMenu', label: 'Fn', w: 'w-10' }, { code: 'ControlRight', label: 'Ctrl', w: 'w-10' },
+              { code: 'ArrowLeft', label: '←', w: 'w-10' }, { code: 'ArrowDown', label: '↓', w: 'w-10' }, { code: 'ArrowRight', label: '→', w: 'w-10' },
+            ],
+          ];
+          board.style.minWidth = '720px';
+          board.appendChild(createKeyBlock(rows84));
         } else if (layout === '87') {
           board.style.minWidth = '810px';
           board.appendChild(createKeyBlock(kbMainRows));
@@ -4090,8 +4859,7 @@
           else if (e.key === 'ArrowRight' || e.key === ' ') cycleFullscreen(1);
           else if (e.key === 'ArrowLeft') cycleFullscreen(-1);
           else if (e.code === 'KeyH') {
-            fsHud.classList.toggle('opacity-0');
-            fsHud.classList.toggle('pointer-events-none');
+            setFsHudVisible(!fsHudVisible);
           } else if (e.code === 'KeyP') {
             togglePinMode();
           }
@@ -4130,13 +4898,24 @@
         lastAnyKeyDownTime = now;
 
         let isChatter = false;
+        let chatterGap = null;
         if (lastKeyPressTimeByCode[code] !== undefined) {
           const sameGap = now - lastKeyPressTimeByCode[code];
           if (sameGap < chatterLimit) {
             isChatter = true;
-            kbChatterCount++;
-            showToast(`Key Chatter trên phím ${code} (${sameGap.toFixed(1)} ms < ${chatterLimit}ms)!`, 'danger');
+            chatterGap = sameGap;
           }
+        }
+        if (lastKeyUpTimeByCode[code] !== undefined) {
+          const releaseGap = now - lastKeyUpTimeByCode[code];
+          if (releaseGap < Math.min(chatterLimit, 28)) {
+            isChatter = true;
+            chatterGap = chatterGap !== null ? Math.min(chatterGap, releaseGap) : releaseGap;
+          }
+        }
+        if (isChatter) {
+          kbChatterCount++;
+          showToast(`Key Chatter trên phím ${code} (${chatterGap.toFixed(1)} ms < ${chatterLimit}ms)!`, 'danger');
         }
         lastKeyPressTimeByCode[code] = now;
         keyPressCountMap[code] = (keyPressCountMap[code] || 0) + 1;
@@ -4179,10 +4958,12 @@
       });
 
       window.addEventListener('keyup', (e) => {
+        const now = performance.now();
         const code = e.code || e.key;
+        lastKeyUpTimeByCode[code] = now;
         const entry = activeHeldKeys.get(code);
         if (entry) {
-          const dwellMs = Math.max(0.5, performance.now() - entry.downTime);
+          const dwellMs = Math.max(0.5, now - entry.downTime);
           entry.dwellText = `${dwellMs.toFixed(1)} ms`;
           document.getElementById('kb-timing-last').textContent = `${dwellMs.toFixed(0)} ms`;
           if (dwellMs < shortestDwellMs) {
@@ -4213,6 +4994,7 @@
         kbChatterCount = 0;
         shortestDwellMs = Infinity;
         lastKeyPressTimeByCode = {};
+        lastKeyUpTimeByCode = {};
         lastAnyKeyDownTime = null;
         kbHistory = [];
         kbPressTimestamps = [];
@@ -4387,7 +5169,7 @@
         osc.type = 'sine';
         const now = ctx.currentTime;
         osc.frequency.setValueAtTime(20, now);
-        osc.frequency.exponentialRampToValueAtTime(16000, now + 8);
+        osc.frequency.exponentialRampToValueAtTime(20000, now + 8);
         osc.connect(activeMasterGain);
         osc.start(now);
         osc.stop(now + 8.1);
@@ -4401,7 +5183,7 @@
             stopCurrentAudio();
             return;
           }
-          const curFreq = Math.round(20 * Math.pow(800, t));
+          const curFreq = Math.round(20 * Math.pow(1000, t));
           document.getElementById('audio-freq-input').value = curFreq;
           document.getElementById('audio-freq-slider').value = curFreq;
           document.getElementById('audio-status-label').textContent = `Quét dải: ${curFreq} Hz`;
@@ -4565,65 +5347,193 @@
       });
 
       // =======================================================================
-      // 10. MASTER REAL-TIME LOOP & INITIALIZATION
+      // 10. MASTER REAL-TIME LOOP, MULTI-DISPLAY WATCHER & INITIALIZATION
       // =======================================================================
+      let dprMediaQuery = null;
+      function bindDprChangeWatcher() {
+        if (!window.matchMedia) return;
+        if (dprMediaQuery && dprMediaQuery.removeEventListener) {
+          try { dprMediaQuery.removeEventListener('change', onDprMediaChanged); } catch (e) {}
+        }
+        dprMediaQuery = window.matchMedia(`(resolution: ${window.devicePixelRatio || 1}dppx)`);
+        if (dprMediaQuery.addEventListener) {
+          dprMediaQuery.addEventListener('change', onDprMediaChanged);
+        }
+      }
+
+      function onDprMediaChanged() {
+        bindDprChangeWatcher();
+        resetHzTelemetry();
+        detectDisplaySpecs();
+        if (activeTab === 'calibration') {
+          renderGammaCanvas();
+          renderBandingCanvas();
+          resizeBloomingCanvas();
+        }
+      }
+
+      if (window.screen && typeof window.screen.addEventListener === 'function') {
+        window.screen.addEventListener('change', () => {
+          resetHzTelemetry();
+          detectDisplaySpecs();
+        });
+      }
+
+      function updateIosHzDiagnosticBanner(measuredHz) {
+        if (!hzPlatformNoteEl) return;
+        if (!isIOS) {
+          hzPlatformNoteEl.classList.add('hidden');
+          return;
+        }
+        const promo = getIosPromotionCapability();
+        const isCappedAt60 = measuredHz >= 54 && measuredHz <= 65;
+
+        if (promo.tier === 'confirmed_120' && isCappedAt60 && peakVerifiedHz < 100) {
+          hzPlatformNoteEl.classList.remove('hidden');
+          hzPlatformNoteEl.className = 'px-2.5 py-2 rounded-xl bg-amber-500/15 border border-amber-500/35 text-[11px] text-amber-100 leading-snug';
+          hzPlatformNoteEl.innerHTML = `<strong class="text-amber-300">⚡ Phát hiện ${promo.modelHint}:</strong> Tấm nền phần cứng là <strong>120Hz ProMotion</strong> nhưng trình duyệt iOS mặc định khóa Web ở 60fps. Để đo đúng 120Hz: tắt <em>Nguồn điện thấp</em> và vào <strong>Cài đặt ➔ Ứng dụng ➔ Safari ➔ Nâng cao ➔ Feature Flags</strong> ➔ tắt <em>"Prefer Page Rendering Updates near 60fps"</em>.`;
+        } else if (promo.tier === 'possible_120' && isCappedAt60 && peakVerifiedHz < 100) {
+          hzPlatformNoteEl.classList.remove('hidden');
+          hzPlatformNoteEl.className = 'px-2.5 py-2 rounded-xl bg-cyan-500/10 border border-cyan-500/25 text-[11px] text-slate-200 leading-snug';
+          hzPlatformNoteEl.innerHTML = `<strong class="text-cyan-300">ℹ Lưu ý iPhone Pro (120Hz):</strong> Nếu bạn đang dùng dòng Pro / Pro Max, Safari mặc định giới hạn trang web ở 60Hz. Hãy tắt <em>Nguồn điện thấp</em> và tắt mục <em>"Prefer Page Rendering Updates near 60fps"</em> trong <strong>Cài đặt ➔ Safari ➔ Nâng cao ➔ Feature Flags</strong> để mở khóa 120Hz.`;
+        } else if (peakVerifiedHz >= 105 && measuredHz < 95) {
+          hzPlatformNoteEl.classList.remove('hidden');
+          hzPlatformNoteEl.className = 'px-2.5 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-[11px] text-emerald-200 leading-snug';
+          hzPlatformNoteEl.innerHTML = `<strong class="text-emerald-300">✓ Đã xác nhận ProMotion ${Math.round(peakVerifiedHz)} Hz:</strong> Màn hình LTPO đang tự động hạ nhịp thông minh (${measuredHz.toFixed(0)} Hz) để tiết kiệm pin — chạm vuốt để kích lên 120Hz.`;
+        } else {
+          hzPlatformNoteEl.classList.add('hidden');
+        }
+      }
+
       function masterLoop(now) {
         const dt = now - lastFrameTime;
         lastFrameTime = now;
         frameTickCounter++;
 
-        if (dt > 0 && dt < 200) {
-          if (frameDeltas.length > 20) {
+        if (dt > 0.5 && dt < 250) {
+          if (frameDeltas.length > 24) {
             const expected = 1000 / Math.max(24, currentMeasuredHz);
-            if (dt > expected * 1.75) {
+            if (dt > expected * 1.8) {
               droppedFramesCount++;
             }
           }
+
+          // Verify sustained high-refresh streaks (e.g., iOS ProMotion 120Hz burst during touch interaction)
+          if (dt >= 3.5 && dt <= 10.2) {
+            fastFrameStreak++;
+            if (fastFrameStreak >= 14) {
+              const recentFast = frameDeltas.slice(-12);
+              if (recentFast.length >= 10) {
+                const fastMean = recentFast.reduce((a, b) => a + b, 0) / recentFast.length;
+                const burstHz = matchStandardHz(1000 / fastMean);
+                if (burstHz > peakVerifiedHz) peakVerifiedHz = burstHz;
+              }
+            }
+          } else {
+            fastFrameStreak = 0;
+          }
+
           frameDeltas.push(dt);
+          frameTimestamps.push(now);
           if (frameDeltas.length > MAX_DELTAS) frameDeltas.shift();
+          if (frameTimestamps.length > MAX_DELTAS + 1) frameTimestamps.shift();
         }
 
-        if (now - lastUiUpdate > 240 && frameDeltas.length > 8) {
+        // Render sparkline EVERY frame on Dashboard so LTPO / ProMotion / DRR stays at true peak hardware Hz
+        const dtClamped = Math.min(0.05, Math.max(0.001, dt / 1000));
+        if (activeTab === 'dashboard') {
+          drawSparkline(dtClamped);
+        }
+
+        if (now - lastUiUpdate > 240 && frameDeltas.length > 10) {
           lastUiUpdate = now;
-          // Trimmed mean to ignore single OS scheduling spikes for rock-solid Hz reading
+
+          // Live Multi-Monitor / Display Scaling Watcher (catches dragging window between MacBook & External Monitor!)
+          const liveSig = getLiveScreenSignature();
+          if (lastScreenSignature && liveSig !== lastScreenSignature) {
+            lastScreenSignature = liveSig;
+            resetHzTelemetry();
+            detectDisplaySpecs();
+            return requestAnimationFrame(masterLoop);
+          }
+          lastScreenSignature = liveSig;
+
+          // Median-anchored outlier filter + Coarse 1ms WebKit clock stride compensation
           const sorted = [...frameDeltas].sort((a, b) => a - b);
-          const trimCount = Math.floor(sorted.length * 0.08);
-          const trimmed = sorted.slice(trimCount, sorted.length - trimCount);
-          const avgDelta = trimmed.reduce((a, b) => a + b, 0) / Math.max(1, trimmed.length);
-          currentMeasuredHz = 1000 / avgDelta;
+          const median = sorted[Math.floor(sorted.length / 2)];
+          const clean = frameDeltas.filter((d) => d >= median * 0.62 && d <= median * 1.38);
 
-          // 1% Low FPS (99th percentile slowest frametime)
-          const worstDelta = sorted[Math.min(sorted.length - 1, Math.floor(sorted.length * 0.98))];
-          const low1PctFps = Math.round(1000 / worstDelta);
+          // Check if browser rounds performance.now()/rAF timestamps to 0.5ms or 1.0ms (Safari / WebKit)
+          const isCoarseClock = frameDeltas.length >= 20 && frameDeltas.every((d) => Math.abs(d * 2 - Math.round(d * 2)) < 0.01);
 
-          const variance = trimmed.reduce((acc, val) => acc + Math.pow(val - avgDelta, 2), 0) / Math.max(1, trimmed.length);
+          let avgDelta = median;
+          // If recent window is stall-free, total span / count cancels out 1ms endpoint quantization error completely!
+          if (clean.length === frameDeltas.length && frameTimestamps.length >= 25) {
+            const totalSpan = frameTimestamps[frameTimestamps.length - 1] - frameTimestamps[0];
+            avgDelta = totalSpan / (frameTimestamps.length - 1);
+          } else if (clean.length >= 6) {
+            avgDelta = clean.reduce((a, b) => a + b, 0) / clean.length;
+          }
+
+          currentMeasuredHz = 1000 / Math.max(1, avgDelta);
+
+          // Stride-smoothed samples for jitter & 1% Low when WebKit quantizes timestamps to 1ms (e.g. 8,8,9ms @ 120Hz)
+          let pacingSamples = clean.length >= 8 ? clean : sorted;
+          if (isCoarseClock && frameTimestamps.length >= 18) {
+            const stride = 6;
+            const strideDeltas = [];
+            for (let i = stride; i < frameTimestamps.length; i++) {
+              const sd = (frameTimestamps[i] - frameTimestamps[i - stride]) / stride;
+              if (sd >= median * 0.6 && sd <= median * 1.5) strideDeltas.push(sd);
+            }
+            if (strideDeltas.length >= 8) pacingSamples = strideDeltas;
+          }
+
+          const sortedPacing = [...pacingSamples].sort((a, b) => a - b);
+          const worstDelta = sortedPacing[Math.min(sortedPacing.length - 1, Math.floor(sortedPacing.length * 0.98))];
+          const low1PctFps = Math.round(1000 / Math.max(1, worstDelta));
+
+          const variance = pacingSamples.reduce((acc, val) => acc + Math.pow(val - avgDelta, 2), 0) / Math.max(1, pacingSamples.length);
           const jitter = Math.sqrt(variance);
           currentStabilityPct = Math.max(0, Math.min(100, 100 - (jitter / avgDelta) * 100));
 
           const displayHz = currentMeasuredHz.toFixed(1);
           const nearestStd = matchStandardHz(currentMeasuredHz);
+          const iosPromo = getIosPromotionCapability();
+          const hw120Locked60 = isIOS && iosPromo.tier === 'confirmed_120' && nearestStd === 60 && peakVerifiedHz < 100;
 
           hzValueEl.textContent = displayHz;
-          if (headerHzPillEl) headerHzPillEl.textContent = `${Math.round(currentMeasuredHz)} Hz`;
+          if (headerHzPillEl) {
+            headerHzPillEl.textContent = hw120Locked60 ? `60 Hz (120Hz Panel)` : `${Math.round(currentMeasuredHz)} Hz`;
+          }
           if (headerFramePillEl) headerFramePillEl.textContent = `${avgDelta.toFixed(2)} ms`;
           if (headerStabilityPillEl) headerStabilityPillEl.textContent = `${currentStabilityPct.toFixed(1)}%`;
 
           frametimeEl.textContent = `${avgDelta.toFixed(2)} ms`;
-          hzStandardEl.textContent = `${nearestStd} Hz`;
+          hzStandardEl.textContent = hw120Locked60
+            ? '120Hz ProMotion'
+            : (peakVerifiedHz > nearestStd + 15 ? `${nearestStd} / ${peakVerifiedHz} Hz` : `${nearestStd} Hz`);
           hz1PctLowEl.textContent = `${low1PctFps}`;
           hzDroppedEl.textContent = String(droppedFramesCount);
           jitterEl.textContent = `σ: ${jitter.toFixed(2)} ms`;
 
-          vsyncBadgeEl.textContent = currentStabilityPct >= 97 ? `VSync Ổn định ${currentStabilityPct.toFixed(1)}%` : `Dao động ${currentStabilityPct.toFixed(0)}%`;
+          vsyncBadgeEl.textContent = hw120Locked60
+            ? 'Safari giới hạn 60fps'
+            : (currentStabilityPct >= 97 ? `VSync Ổn định ${currentStabilityPct.toFixed(1)}%` : `Dao động ${currentStabilityPct.toFixed(0)}%`);
           ufoFpsDisplayEl.textContent = `${displayHz} FPS`;
           ufoMprtEstEl.textContent = `${avgDelta.toFixed(2)} ms`;
           if (reactionLagNoteEl) reactionLagNoteEl.textContent = `~ ${(avgDelta * 0.5).toFixed(1)} ms (1/2 chu kỳ quét)`;
 
-          if (activeTab === 'dashboard') drawSparkline();
+          updateIosHzDiagnosticBanner(currentMeasuredHz);
+
+          // Re-verify macOS 2560x1440@2x external monitor if high refresh (>63Hz) proves it's not a 60Hz Apple 5K Studio Display
+          if (isMacOS && currentMeasuredHz > 64 && activeDisplayMetrics.physW === 5120 && !macPanelOverrides[`${Math.max(activeDisplayMetrics.cssScreenW, activeDisplayMetrics.cssScreenH)}x${Math.min(activeDisplayMetrics.cssScreenW, activeDisplayMetrics.cssScreenH)}@${activeDisplayMetrics.osDpr}`]) {
+            detectDisplaySpecs();
+          }
         }
 
-        renderMotionCanvas(Math.min(0.05, dt / 1000));
-        renderBloomingArena(Math.min(0.05, dt / 1000));
+        renderMotionCanvas(dtClamped);
+        renderBloomingArena(dtClamped);
         renderHealerNoise();
         renderAudioScope();
 
@@ -4631,7 +5541,11 @@
       }
 
       window.addEventListener('resize', () => {
+        lastScreenSignature = getLiveScreenSignature();
         detectDisplaySpecs();
+        if (fsActive && !fsCustomMode && !fsPatternCanvas.classList.contains('hidden')) {
+          drawSpecialFsCanvas(fsPatterns[fsIndex].type);
+        }
         if (activeTab === 'motion') resizeUfoCanvas();
         else if (activeTab === 'calibration') {
           renderGammaCanvas();
@@ -4641,9 +5555,16 @@
         else if (activeTab === 'audio') resizeAudioScope();
       });
 
+      window.addEventListener('beforeprint', () => {
+        renderQcCertificate();
+      });
+
       // Boot sequence
       detectGpuRenderer();
       detectDisplaySpecs();
+      lastScreenSignature = getLiveScreenSignature();
+      bindDprChangeWatcher();
+      initScreenDetails(false);
       buildColorCheckerGrid();
       buildGrayscaleAndPluge();
       buildFullscreenGrid();
@@ -4652,6 +5573,7 @@
       resizeUfoCanvas();
       resizeSensorCanvas();
       resizeAudioScope();
+      renderQcCertificate();
       lastFrameTime = performance.now();
       requestAnimationFrame(masterLoop);
     });
