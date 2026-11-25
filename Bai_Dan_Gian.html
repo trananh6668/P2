@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="color-scheme" content="dark">
+    <meta name="darkreader-lock">
     <title>Hội Bài Dân Gian Việt</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -15,9 +16,9 @@
         :root,
         [data-theme="emerald"] {
             color-scheme: dark;
-            --font-ui: 'Be Vietnam Pro', 'Segoe UI', system-ui, -apple-system, sans-serif;
+            --font-ui: 'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Segoe UI Symbol', 'Apple Symbols', sans-serif;
             --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Consolas, monospace;
-            --font-han: 'Noto Serif TC', 'PMingLiU', 'SimSun', serif;
+            --font-han: 'Noto Serif TC', 'Songti TC', 'STSong', 'PMingLiU', 'SimSun', serif;
             --gold-bright: #fffbeb;
             --gold-light: #fde68a;
             --gold-main: #f59e0b;
@@ -27,6 +28,10 @@
             --accent-sky: #38bdf8;
             --card-w: 72px;
             --card-h: 104px;
+            --card-rank-fs: 15px;
+            --card-suit-mini-sz: 11px;
+            --card-suit-center-sz: 28px;
+            --card-court-sz: 34px;
             --totom-w: 60px;
             --totom-h: 122px;
 
@@ -122,6 +127,10 @@
             :root {
                 --card-w: 64px;
                 --card-h: 92px;
+                --card-rank-fs: 13.5px;
+                --card-suit-mini-sz: 10px;
+                --card-suit-center-sz: 24px;
+                --card-court-sz: 30px;
                 --totom-w: 55px;
                 --totom-h: 112px;
             }
@@ -131,6 +140,10 @@
             :root {
                 --card-w: 53px;
                 --card-h: 77px;
+                --card-rank-fs: 12px;
+                --card-suit-mini-sz: 9px;
+                --card-suit-center-sz: 21px;
+                --card-court-sz: 25px;
                 --totom-w: 48px;
                 --totom-h: 98px;
             }
@@ -140,6 +153,10 @@
             :root {
                 --card-w: 46px;
                 --card-h: 68px;
+                --card-rank-fs: 11px;
+                --card-suit-mini-sz: 8px;
+                --card-suit-center-sz: 18px;
+                --card-court-sz: 22px;
                 --totom-w: 43px;
                 --totom-h: 90px;
             }
@@ -1288,6 +1305,12 @@
             cursor: pointer;
             transition: transform 0.16s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.16s ease, border-color 0.16s ease, filter 0.16s ease;
             flex-shrink: 0;
+            font-family: 'Be Vietnam Pro', Arial, sans-serif;
+            font-synthesis: none;
+            font-variant-emoji: text;
+            forced-color-adjust: none;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
         }
 
         .playing-card::after {
@@ -1364,21 +1387,46 @@
             flex-direction: column;
             align-items: center;
             width: fit-content;
-            line-height: 0.92;
+            min-width: 14px;
+            line-height: 1;
+            gap: 1.5px;
             z-index: 2;
+        }
+        .playing-card.small-card .card-corner-top {
+            min-width: 11px;
+            gap: 1px;
         }
 
         .card-rank {
-            font-size: clamp(12.5px, 1.45vw, 15.5px);
+            font-size: var(--card-rank-fs);
             font-weight: 900;
+            line-height: 1;
             letter-spacing: -0.6px;
+            font-variant-numeric: lining-nums;
+            display: block;
         }
         .playing-card.small-card .card-rank { font-size: 10.5px; }
         .playing-card.tan-table-card .card-rank { font-size: 12px; }
 
-        .card-suit-mini { font-size: 11px; margin-top: 1px; }
-        .playing-card.small-card .card-suit-mini { font-size: 9px; }
-        .playing-card.tan-table-card .card-suit-mini { font-size: 10px; }
+        .card-suit-mini {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 0;
+        }
+
+        .suit-svg {
+            display: block;
+            flex-shrink: 0;
+            overflow: visible;
+        }
+
+        .suit-svg-mini {
+            width: var(--card-suit-mini-sz);
+            height: var(--card-suit-mini-sz);
+        }
+        .playing-card.small-card .suit-svg-mini { width: 8.5px; height: 8.5px; }
+        .playing-card.tan-table-card .suit-svg-mini { width: 9.5px; height: 9.5px; }
 
         .card-center-art {
             position: absolute;
@@ -1394,17 +1442,44 @@
         }
 
         .card-center-suit {
-            font-size: clamp(22px, 2.5vw, 30px);
-            line-height: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            line-height: 0;
             filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.08));
         }
+        .card-center-suit.ace-center-suit { transform: scale(1.18); }
+
+        .suit-svg-center {
+            width: var(--card-suit-center-sz);
+            height: var(--card-suit-center-sz);
+        }
         .playing-card.small-card .card-center-art { top: 58%; }
-        .playing-card.small-card .card-center-suit { font-size: 16px; }
-        .playing-card.tan-table-card .card-center-suit { font-size: 21px; }
+        .playing-card.small-card .suit-svg-center { width: 15px; height: 15px; }
+        .playing-card.tan-table-card .suit-svg-center { width: 20px; height: 20px; }
+
+        .card-heo-tag {
+            display: block;
+            font-size: 7.5px;
+            line-height: 1;
+            font-weight: 900;
+            color: #b45309;
+            text-align: center;
+            margin-top: 1.5px;
+            letter-spacing: 0.5px;
+        }
+        .playing-card.small-card .card-heo-tag { font-size: 6px; margin-top: 1px; }
+        .playing-card.tan-table-card .card-heo-tag { font-size: 6.8px; margin-top: 1px; }
+
+        .suit-svg-trump { width: 20px; height: 20px; }
+        .trump-suit-icon.red-suit { color: #ef4444; }
+        .trump-suit-icon.black-suit { color: #f8fafc; }
 
         .court-emblem-svg {
-            width: clamp(28px, 3vw, 36px);
-            height: clamp(28px, 3vw, 36px);
+            width: var(--card-court-sz);
+            height: var(--card-court-sz);
+            display: block;
         }
         .playing-card.small-card .court-emblem-svg { width: 18px; height: 18px; }
         .playing-card.tan-table-card .court-emblem-svg { width: 24px; height: 24px; }
@@ -1415,7 +1490,9 @@
             align-items: center;
             align-self: flex-end;
             width: fit-content;
-            line-height: 0.92;
+            min-width: 14px;
+            line-height: 1;
+            gap: 1.5px;
             transform: rotate(180deg);
             z-index: 2;
         }
@@ -1426,6 +1503,8 @@
             .playing-card .card-center-art { top: 58%; }
             .tan-pair-slot { min-width: 122px; padding: 6px; }
             .playing-card.tan-table-card, .tan-empty-defend { width: 46px; height: 68px; }
+            .playing-card.tan-table-card .suit-svg-center { width: 17px; height: 17px; }
+            .playing-card.tan-table-card .court-emblem-svg { width: 20px; height: 20px; }
             .tan-pair-arrow { padding-bottom: 22px; font-size: 11px; }
         }
 
@@ -1449,6 +1528,10 @@
             transition: transform 0.16s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.16s ease, border-color 0.16s ease;
             flex-shrink: 0;
             color: #1c1917;
+            font-synthesis: none;
+            forced-color-adjust: none;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
         }
 
         .totom-card::before {
@@ -1958,6 +2041,7 @@
             box-shadow: 0 8px 20px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.85);
             color: #1c1917;
             min-height: 196px;
+            forced-color-adjust: none;
         }
 
         .mascot-tile:hover {
@@ -2107,6 +2191,7 @@
             justify-content: center;
             font-size: 24px;
             transition: transform 0.25s ease;
+            forced-color-adjust: none;
         }
         .baucua-die span {
             font-size: 8.5px;
@@ -2672,10 +2757,10 @@ const AI_PROFILES = [
 ];
 
 const SUITS = [
-    { symbol: '♠', name: 'Bích', color: 'black-suit', hex: '#0f172a', tlOrder: 0 },
-    { symbol: '♣', name: 'Chuồn', color: 'black-suit', hex: '#0f172a', tlOrder: 1 },
-    { symbol: '♦', name: 'Rô', color: 'red-suit', hex: '#dc2626', tlOrder: 2 },
-    { symbol: '♥', name: 'Cơ', color: 'red-suit', hex: '#dc2626', tlOrder: 3 }
+    { symbol: '♠\uFE0E', name: 'Bích', color: 'black-suit', hex: '#0f172a', tlOrder: 0 },
+    { symbol: '♣\uFE0E', name: 'Chuồn', color: 'black-suit', hex: '#0f172a', tlOrder: 1 },
+    { symbol: '♦\uFE0E', name: 'Rô', color: 'red-suit', hex: '#dc2626', tlOrder: 2 },
+    { symbol: '♥\uFE0E', name: 'Cơ', color: 'red-suit', hex: '#dc2626', tlOrder: 3 }
 ];
 
 const RANKS_TL   = ['3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A', '2'];
@@ -2733,8 +2818,8 @@ const RULES_HTML_MAP = {
         <div class="rule-panel" style="border-left-color:#f59e0b;">
             <strong style="color:var(--text-heading-gold);">1. Tiến Lên (Hỗ trợ song song Luật Miền Bắc &amp; Luật Miền Nam)</strong>
             <ul>
-                <li><strong>Thứ tự quân:</strong> <strong>3 &lt; 4 &lt; ... &lt; A &lt; 2 (Heo)</strong>; Thứ tự chất: <strong>Bích ♠ &lt; Chuồn ♣ &lt; Rô ♦ &lt; Cơ ♥</strong>. Ván đầu người giữ quân nhỏ nhất (3♠ ở bàn 4 người) đi trước; từ ván sau người về Nhất đi trước tự do.</li>
-                <li><strong>Luật Miền Bắc (Đồng chất, Đồng màu):</strong> Lẻ chặn cùng chất; Đôi thường chặn cùng màu (Đỏ ♥♦ / Đen ♠♣); Sảnh 3+ lá bắt buộc đồng chất; Sám cô chặn cùng tổ hợp 3 chất. Quân 2 chặt lẻ tự do; Tứ Quý chặt 1 quân 2 hoặc Tứ Quý nhỏ hơn. <strong>Cấm về bằng quân 2</strong> (nếu chỉ còn toàn 2 trên tay bị xử thua Thối 2 ngay).</li>
+                <li><strong>Thứ tự quân:</strong> <strong>3 &lt; 4 &lt; ... &lt; A &lt; 2 (Heo)</strong>; Thứ tự chất: <strong>Bích ♠&#xFE0E; &lt; Chuồn ♣&#xFE0E; &lt; Rô ♦&#xFE0E; &lt; Cơ ♥&#xFE0E;</strong>. Ván đầu người giữ quân nhỏ nhất (3♠&#xFE0E; ở bàn 4 người) đi trước; từ ván sau người về Nhất đi trước tự do.</li>
+                <li><strong>Luật Miền Bắc (Đồng chất, Đồng màu):</strong> Lẻ chặn cùng chất; Đôi thường chặn cùng màu (Đỏ ♥&#xFE0E;♦&#xFE0E; / Đen ♠&#xFE0E;♣&#xFE0E;); Sảnh 3+ lá bắt buộc đồng chất; Sám cô chặn cùng tổ hợp 3 chất. Quân 2 chặt lẻ tự do; Tứ Quý chặt 1 quân 2 hoặc Tứ Quý nhỏ hơn. <strong>Cấm về bằng quân 2</strong> (nếu chỉ còn toàn 2 trên tay bị xử thua Thối 2 ngay).</li>
                 <li><strong>Luật Miền Nam (Phóng khoáng):</strong> Đôi, Sám cô, Sảnh 3+ lá không cần đồng chất/đồng màu. Được phép đánh quân 2 ở nước cuối để về Nhất. <strong>3 Đôi Thông</strong> chặt 1 Heo; <strong>Tứ Quý</strong> chặt 1 Heo, Đôi Heo hoặc 3 Đôi Thông; <strong>4 Đôi Thông</strong> chặt 1 Heo, Đôi Heo, 3 Đôi Thông, Tứ Quý <strong>không cần vòng</strong>!</li>
                 <li><strong>Tới Trắng:</strong> Tứ Quý 2, Sảnh Rồng (3→A), Đồng màu 13 lá (MB) hoặc 5 Đôi Thông / 6 Đôi (MN).</li>
             </ul>
@@ -2805,6 +2890,18 @@ const RULES_HTML_MAP = {
 /* ==========================================================================
    BESPOKE INLINE SVG CARD ARTWORK GENERATORS
    ========================================================================== */
+const SUIT_SVG_BODIES = [
+    '<path d="M12 2C12.8 3.6 20.5 9.2 20.5 14.2C20.5 17.1 18.1 18.6 15.8 18.2C14.5 18 13.5 17.1 13 16.1C13.3 18.3 14.3 20.2 16 21.6H8C9.7 20.2 10.7 18.3 11 16.1C10.5 17.1 9.5 18 8.2 18.2C5.9 18.6 3.5 17.1 3.5 14.2C3.5 9.2 11.2 3.6 12 2Z"/>',
+    '<circle cx="12" cy="6.6" r="4.5"/><circle cx="6.8" cy="13.2" r="4.4"/><circle cx="17.2" cy="13.2" r="4.4"/><circle cx="12" cy="11.8" r="2.8"/><path d="M11 13.5C10.8 17.2 9.7 19.8 7.8 21.6H16.2C14.3 19.8 13.2 17.2 13 13.5H11Z"/>',
+    '<path d="M12 2Q15.6 7.4 20.2 12Q15.6 16.6 12 22Q8.4 16.6 3.8 12Q8.4 7.4 12 2Z"/>',
+    '<path d="M12 21.6C10.6 20.3 2.8 14.5 2.8 8.6C2.8 4.9 5.6 2.5 8.7 2.5C10.5 2.5 11.5 3.5 12 4.8C12.5 3.5 13.5 2.5 15.3 2.5C18.4 2.5 21.2 4.9 21.2 8.6C21.2 14.5 13.4 20.3 12 21.6Z"/>'
+];
+
+function getSuitSVG(suitIdx, className = 'suit-svg') {
+    const body = SUIT_SVG_BODIES[suitIdx] || SUIT_SVG_BODIES[0];
+    return `<svg class="${className}" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false">${body}</svg>`;
+}
+
 function getWesternCenterArtHTML(card) {
     const hex = card.suitColor === 'red-suit' ? '#dc2626' : '#0f172a';
     const gold = '#d97706';
@@ -2834,15 +2931,12 @@ function getWesternCenterArtHTML(card) {
         </svg>`;
     }
     if (rk === '2') {
-        return `<div class="card-center-suit" style="position:relative;">
-            <span>${card.suitSymbol}</span>
-            <span style="display:block;font-size:7.5px;font-weight:900;color:#b45309;text-align:center;margin-top:-2px;letter-spacing:0.5px;">HEO</span>
-        </div>`;
+        return `<div class="card-center-suit">${getSuitSVG(card.suitIdx, 'suit-svg suit-svg-center')}<span class="card-heo-tag">HEO</span></div>`;
     }
     if (rk === 'A') {
-        return `<div class="card-center-suit" style="transform:scale(1.18);">${card.suitSymbol}</div>`;
+        return `<div class="card-center-suit ace-center-suit">${getSuitSVG(card.suitIdx, 'suit-svg suit-svg-center')}</div>`;
     }
-    return `<div class="card-center-suit">${card.suitSymbol}</div>`;
+    return `<div class="card-center-suit">${getSuitSVG(card.suitIdx, 'suit-svg suit-svg-center')}</div>`;
 }
 
 function getTraditionalCardSVG(card) {
@@ -2947,8 +3041,8 @@ function getTraditionalCardSVG(card) {
     return `<svg class="totom-svg-art" viewBox="0 0 48 64" fill="none">
         <rect x="7" y="8" width="34" height="48" rx="5" stroke="${ink}" stroke-width="1.6"/>
         <rect x="10" y="11" width="28" height="42" rx="3" stroke="${gold}" stroke-width="0.9"/>
-        <text x="24" y="31" text-anchor="middle" fill="${ink}" font-family="serif" font-weight="900" font-size="18">${card.hanTop}</text>
-        <text x="24" y="48" text-anchor="middle" fill="${sub}" font-family="serif" font-weight="900" font-size="14">萬</text>
+        <text x="24" y="24.5" text-anchor="middle" dominant-baseline="central" fill="${ink}" font-family="'Noto Serif TC', 'Songti TC', 'PMingLiU', serif" font-weight="900" font-size="18">${card.hanTop}</text>
+        <text x="24" y="42.5" text-anchor="middle" dominant-baseline="central" fill="${sub}" font-family="'Noto Serif TC', 'Songti TC', 'PMingLiU', serif" font-weight="900" font-size="14">萬</text>
     </svg>`;
 }
 
@@ -3575,12 +3669,12 @@ function renderCardHTML(card, options = {}) {
             ${badgeHTML}
             <div class="card-corner-top">
                 <span class="card-rank">${card.rankLabel}</span>
-                <span class="card-suit-mini">${card.suitSymbol}</span>
+                <span class="card-suit-mini">${getSuitSVG(card.suitIdx, 'suit-svg suit-svg-mini')}</span>
             </div>
             <div class="card-center-art">${getWesternCenterArtHTML(card)}</div>
             <div class="card-corner-bottom">
                 <span class="card-rank">${card.rankLabel}</span>
-                <span class="card-suit-mini">${card.suitSymbol}</span>
+                <span class="card-suit-mini">${getSuitSVG(card.suitIdx, 'suit-svg suit-svg-mini')}</span>
             </div>
         </div>
     `;
@@ -3968,7 +4062,7 @@ function isTienLenMoveLegal(hand, combo, currentCombo) {
     if (!AppState.tlOpeningMoveDone && AppState.tlRequiredOpeningCardId) {
         if (!combo.cards.some(c => c.id === AppState.tlRequiredOpeningCardId)) {
             const reqCard = hand.find(c => c.id === AppState.tlRequiredOpeningCardId);
-            const lbl = reqCard ? getCardLabel52(reqCard) : '3♠';
+            const lbl = reqCard ? getCardLabel52(reqCard) : '3♠\uFE0E';
             return { ok: false, reason: `Mở màn ván đầu bắt buộc phải có quân ${lbl}!` };
         }
     }
@@ -6323,7 +6417,7 @@ function startNewRound() {
                 }
                 starterIdx = lowestOwner;
                 AppState.tlRequiredOpeningCardId = lowestCard ? lowestCard.id : null;
-                const lbl = lowestCard ? getCardLabel52(lowestCard) : '3♠';
+                const lbl = lowestCard ? getCardLabel52(lowestCard) : '3♠\uFE0E';
                 const starter = AppState.players[starterIdx];
                 setBannerText(
                     starterIdx === 0
@@ -7595,7 +7689,7 @@ function renderCardTableUI() {
             } else {
                 trumpPrev.innerHTML = `
                     <div class="trump-wait-box" title="Hết Nọc — Chất Chủ là ${suitObj.name}" style="padding:8px 10px;">
-                        <span style="font-size:20px;" class="${suitObj.color}">${suitObj.symbol}</span>
+                        <span class="trump-suit-icon ${suitObj.color}" style="display:inline-flex;">${getSuitSVG(AppState.tanTrumpSuit, 'suit-svg suit-svg-trump')}</span>
                         <span style="font-size:10.5px; font-weight:800; color:#fde047;">CHỦ ${suitObj.name.toUpperCase()}</span>
                     </div>
                 `;
