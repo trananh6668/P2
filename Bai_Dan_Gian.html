@@ -959,10 +959,10 @@
         }
         .cua-chi-cascade::-webkit-scrollbar { display: none; }
 
-        .cua-chi-cascade > .playing-card.small-card:not(:first-child) {
+        .cua-chi-cascade > .hb-tay-la.small-card:not(:first-child) {
             margin-left: -16px;
         }
-        .cua-chi-cascade > .totom-card.small-totom:not(:first-child) {
+        .cua-chi-cascade > .hb-dan-la.small-totom:not(:first-child) {
             margin-left: -14px;
         }
         .cua-chi-cascade > *:last-child {
@@ -1290,18 +1290,15 @@
         /* ==========================================================================
            7. LUXURY WESTERN PLAYING CARDS (52 LÁ)
            ========================================================================== */
-        .playing-card {
+        .hb-tay-la {
             width: var(--card-w);
             height: var(--card-h);
             background: linear-gradient(170deg, #ffffff 0%, #fbfcfd 70%, #eef2f6 100%);
             border: 1.5px solid #cbd5e1;
             border-radius: 9.5px;
             box-shadow: var(--shadow-card), inset 0 1px 0 #ffffff;
-            position: relative;
-            display: inline-flex;
-            flex-direction: column;
-            justify-content: space-between;
-            padding: 4px 5px;
+            position: relative !important;
+            display: inline-block;
             cursor: pointer;
             transition: transform 0.16s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.16s ease, border-color 0.16s ease, filter 0.16s ease;
             flex-shrink: 0;
@@ -1313,44 +1310,47 @@
             print-color-adjust: exact;
         }
 
-        .playing-card::after {
+        .hb-tay-la::after {
             content: '';
             position: absolute;
-            inset: 3px;
+            top: 3px;
+            right: 3px;
+            bottom: 3px;
+            left: 3px;
             border: 1px solid rgba(15, 23, 42, 0.06);
             border-radius: 6px;
             pointer-events: none;
         }
 
-        .playing-card.red-suit { color: #dc2626; }
-        .playing-card.black-suit { color: #0f172a; }
+        .hb-tay-la.red-suit { color: #dc2626; }
+        .hb-tay-la.black-suit { color: #0f172a; }
 
-        .playing-card.is-court-card::after {
+        .hb-tay-la.is-court-card::after {
             border-color: rgba(217, 119, 6, 0.24);
         }
 
-        .playing-card.is-pig-card,
-        .playing-card.is-trump-card {
+        .hb-tay-la.is-pig-card,
+        .hb-tay-la.is-trump-card {
             background: linear-gradient(170deg, #fffef7 0%, #fef9c3 65%, #fde68a 100%);
             border-color: #f59e0b;
         }
-        .playing-card.is-pig-card::after,
-        .playing-card.is-trump-card::after {
+        .hb-tay-la.is-pig-card::after,
+        .hb-tay-la.is-trump-card::after {
             border-color: rgba(217, 119, 6, 0.42);
         }
 
-        .trick-cards-zone .playing-card,
-        .trick-cards-zone .totom-card {
+        .trick-cards-zone .hb-tay-la,
+        .trick-cards-zone .hb-dan-la {
             cursor: default;
         }
 
-        .hand-cards-row .playing-card:hover {
+        .hand-cards-row .hb-tay-la:hover {
             transform: translateY(-8px);
             z-index: 22;
             box-shadow: 0 14px 24px rgba(0, 0, 0, 0.58);
         }
 
-        .playing-card.selected {
+        .hb-tay-la.selected {
             transform: translateY(-16px) !important;
             border: 2.5px solid #f59e0b;
             box-shadow: 0 14px 28px rgba(245, 158, 11, 0.62), 0 0 0 2px rgba(254, 240, 138, 0.5);
@@ -1358,31 +1358,34 @@
             z-index: 28;
         }
 
-        .playing-card.eaten-card {
+        .hb-tay-la.eaten-card {
             border: 2px solid #10b981;
             background: linear-gradient(170deg, #f0fdf4 0%, #d1fae5 100%);
         }
 
-        .playing-card.hint-playable {
+        .hb-tay-la.hint-playable {
             box-shadow: 0 0 0 1.5px rgba(52, 211, 153, 0.65), var(--shadow-card);
         }
 
-        .playing-card.small-card {
+        .hb-tay-la.small-card {
             width: 42px;
             height: 60px;
-            padding: 3px 4px;
             border-radius: 6px;
             cursor: default;
         }
 
-        .playing-card.tan-table-card {
+        .hb-tay-la.tan-table-card {
             width: 56px;
             height: 82px;
-            padding: 3px 4px;
             cursor: default;
         }
 
         .card-corner-top {
+            position: absolute !important;
+            top: 4px !important;
+            left: 5px !important;
+            right: auto !important;
+            bottom: auto !important;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -1391,10 +1394,18 @@
             line-height: 1;
             gap: 1.5px;
             z-index: 2;
+            pointer-events: none;
         }
-        .playing-card.small-card .card-corner-top {
+        .hb-tay-la.small-card .card-corner-top {
+            top: 3px !important;
+            left: 4px !important;
             min-width: 11px;
             gap: 1px;
+        }
+        .hb-tay-la.tan-table-card .card-corner-top {
+            top: 3px !important;
+            left: 4px !important;
+            min-width: 12px;
         }
 
         .card-rank {
@@ -1405,8 +1416,8 @@
             font-variant-numeric: lining-nums;
             display: block;
         }
-        .playing-card.small-card .card-rank { font-size: 10.5px; }
-        .playing-card.tan-table-card .card-rank { font-size: 12px; }
+        .hb-tay-la.small-card .card-rank { font-size: 10.5px; }
+        .hb-tay-la.tan-table-card .card-rank { font-size: 12px; }
 
         .card-suit-mini {
             display: inline-flex;
@@ -1425,11 +1436,11 @@
             width: var(--card-suit-mini-sz);
             height: var(--card-suit-mini-sz);
         }
-        .playing-card.small-card .suit-svg-mini { width: 8.5px; height: 8.5px; }
-        .playing-card.tan-table-card .suit-svg-mini { width: 9.5px; height: 9.5px; }
+        .hb-tay-la.small-card .suit-svg-mini { width: 8.5px; height: 8.5px; }
+        .hb-tay-la.tan-table-card .suit-svg-mini { width: 9.5px; height: 9.5px; }
 
         .card-center-art {
-            position: absolute;
+            position: absolute !important;
             top: 52%;
             left: 50%;
             transform: translate(-50%, -50%);
@@ -1455,9 +1466,9 @@
             width: var(--card-suit-center-sz);
             height: var(--card-suit-center-sz);
         }
-        .playing-card.small-card .card-center-art { top: 58%; }
-        .playing-card.small-card .suit-svg-center { width: 15px; height: 15px; }
-        .playing-card.tan-table-card .suit-svg-center { width: 20px; height: 20px; }
+        .hb-tay-la.small-card .card-center-art { top: 58%; }
+        .hb-tay-la.small-card .suit-svg-center { width: 15px; height: 15px; }
+        .hb-tay-la.tan-table-card .suit-svg-center { width: 20px; height: 20px; }
 
         .card-heo-tag {
             display: block;
@@ -1469,8 +1480,8 @@
             margin-top: 1.5px;
             letter-spacing: 0.5px;
         }
-        .playing-card.small-card .card-heo-tag { font-size: 6px; margin-top: 1px; }
-        .playing-card.tan-table-card .card-heo-tag { font-size: 6.8px; margin-top: 1px; }
+        .hb-tay-la.small-card .card-heo-tag { font-size: 6px; margin-top: 1px; }
+        .hb-tay-la.tan-table-card .card-heo-tag { font-size: 6.8px; margin-top: 1px; }
 
         .suit-svg-trump { width: 20px; height: 20px; }
         .trump-suit-icon.red-suit { color: #ef4444; }
@@ -1481,48 +1492,58 @@
             height: var(--card-court-sz);
             display: block;
         }
-        .playing-card.small-card .court-emblem-svg { width: 18px; height: 18px; }
-        .playing-card.tan-table-card .court-emblem-svg { width: 24px; height: 24px; }
+        .hb-tay-la.small-card .court-emblem-svg { width: 18px; height: 18px; }
+        .hb-tay-la.tan-table-card .court-emblem-svg { width: 24px; height: 24px; }
 
         .card-corner-bottom {
+            position: absolute !important;
+            bottom: 4px !important;
+            right: 5px !important;
+            top: auto !important;
+            left: auto !important;
             display: flex;
             flex-direction: column;
             align-items: center;
-            align-self: flex-end;
             width: fit-content;
             min-width: 14px;
             line-height: 1;
             gap: 1.5px;
             transform: rotate(180deg);
             z-index: 2;
+            pointer-events: none;
         }
-        .playing-card.small-card .card-corner-bottom { display: none; }
+        .hb-tay-la.tan-table-card .card-corner-bottom {
+            bottom: 3px !important;
+            right: 4px !important;
+            min-width: 12px;
+        }
+        .hb-tay-la.small-card .card-corner-bottom { display: none !important; }
 
         @media (max-width: 680px) {
-            .playing-card .card-corner-bottom { display: none; }
-            .playing-card .card-center-art { top: 58%; }
+            .hb-tay-la .card-corner-bottom { display: none !important; }
+            .hb-tay-la .card-center-art { top: 58%; }
             .tan-pair-slot { min-width: 122px; padding: 6px; }
-            .playing-card.tan-table-card, .tan-empty-defend { width: 46px; height: 68px; }
-            .playing-card.tan-table-card .suit-svg-center { width: 17px; height: 17px; }
-            .playing-card.tan-table-card .court-emblem-svg { width: 20px; height: 20px; }
+            .hb-tay-la.tan-table-card, .tan-empty-defend { width: 46px; height: 68px; }
+            .hb-tay-la.tan-table-card .suit-svg-center { width: 17px; height: 17px; }
+            .hb-tay-la.tan-table-card .court-emblem-svg { width: 20px; height: 20px; }
             .tan-pair-arrow { padding-bottom: 22px; font-size: 11px; }
         }
 
         /* ==========================================================================
            8. BESPOKE WOODBLOCK CHẮN 100 & TỔ TÔM 120 CARDS
            ========================================================================== */
-        .totom-card {
+        .hb-dan-la {
             width: var(--totom-w);
             height: var(--totom-h);
             background: linear-gradient(180deg, #fffdf7 0%, #f5ebd4 65%, #ead8b3 100%);
             border: 2px solid #5c2d16;
             border-radius: 7px;
             box-shadow: 0 5px 14px rgba(0, 0, 0, 0.52), inset 0 1px 0 rgba(255, 255, 255, 0.85);
-            position: relative;
-            display: inline-flex;
-            flex-direction: column;
-            justify-content: space-between;
-            align-items: center;
+            position: relative !important;
+            display: inline-flex !important;
+            flex-direction: column !important;
+            justify-content: space-between !important;
+            align-items: center !important;
             padding: 4px 3px 3px;
             cursor: pointer;
             transition: transform 0.16s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.16s ease, border-color 0.16s ease;
@@ -1534,35 +1555,38 @@
             print-color-adjust: exact;
         }
 
-        .totom-card::before {
+        .hb-dan-la::before {
             content: '';
             position: absolute;
-            inset: 2px;
+            top: 2px;
+            right: 2px;
+            bottom: 2px;
+            left: 2px;
             border: 1px solid rgba(92, 45, 22, 0.35);
             border-radius: 4px;
             pointer-events: none;
         }
 
-        .totom-card.red-card {
+        .hb-dan-la.red-card {
             background: linear-gradient(180deg, #fff7f5 0%, #fee2e2 65%, #fecaca 100%);
             border-color: #b91c1c;
             color: #991b1b;
         }
-        .totom-card.red-card::before {
+        .hb-dan-la.red-card::before {
             border-color: rgba(185, 28, 28, 0.45);
         }
 
-        .totom-card.yeu-card {
+        .hb-dan-la.yeu-card {
             box-shadow: 0 0 0 1px rgba(253, 224, 71, 0.65), 0 5px 14px rgba(0, 0, 0, 0.52);
         }
 
-        .hand-cards-row .totom-card:hover {
+        .hand-cards-row .hb-dan-la:hover {
             transform: translateY(-8px);
             z-index: 22;
             box-shadow: 0 14px 24px rgba(0, 0, 0, 0.58);
         }
 
-        .totom-card.selected {
+        .hb-dan-la.selected {
             transform: translateY(-16px) !important;
             border: 2.5px solid #f59e0b;
             box-shadow: 0 14px 26px rgba(245, 158, 11, 0.68), 0 0 0 2px rgba(254, 240, 138, 0.55);
@@ -1570,7 +1594,7 @@
             z-index: 28;
         }
 
-        .totom-card.small-totom {
+        .hb-dan-la.small-totom {
             width: 40px;
             height: 80px;
             padding: 2.5px 2px 2px;
@@ -1589,7 +1613,7 @@
             line-height: 1;
             z-index: 2;
         }
-        .totom-card.small-totom .totom-top-han { font-size: 9px; padding: 0 1px; }
+        .hb-dan-la.small-totom .totom-top-han { font-size: 9px; padding: 0 1px; }
 
         .totom-art-box {
             width: 84%;
@@ -1606,7 +1630,7 @@
             z-index: 1;
             padding: 2px;
         }
-        .totom-card.red-card .totom-art-box {
+        .hb-dan-la.red-card .totom-art-box {
             background: rgba(255, 241, 242, 0.75);
             border-color: rgba(185, 28, 28, 0.3);
         }
@@ -1616,7 +1640,7 @@
             height: 100%;
             max-height: 62px;
         }
-        .totom-card.small-totom .totom-svg-art { max-height: 40px; }
+        .hb-dan-la.small-totom .totom-svg-art { max-height: 40px; }
 
         .totom-vn-name {
             font-size: 8.5px;
@@ -1632,11 +1656,11 @@
             z-index: 2;
             letter-spacing: -0.25px;
         }
-        .totom-card.red-card .totom-vn-name {
+        .hb-dan-la.red-card .totom-vn-name {
             background: #dc2626;
             color: #fff;
         }
-        .totom-card.small-totom .totom-vn-name {
+        .hb-dan-la.small-totom .totom-vn-name {
             font-size: 6.8px;
             padding: 1.5px 0.5px;
         }
@@ -3630,7 +3654,7 @@ function renderCardHTML(card, options = {}) {
 
     if (card.isTraditional) {
         const classes = [
-            'totom-card',
+            'hb-dan-la',
             card.isRed ? 'red-card' : '',
             card.isYeu ? 'yeu-card' : '',
             small ? 'small-totom' : '',
@@ -3654,7 +3678,7 @@ function renderCardHTML(card, options = {}) {
 
     const isCourt = ['J', 'Q', 'K'].includes(card.rankLabel);
     const classes = [
-        'playing-card',
+        'hb-tay-la',
         card.suitColor,
         isCourt ? 'is-court-card' : '',
         small ? 'small-card' : '',
@@ -3804,7 +3828,7 @@ function setPlayerCount(count) {
 function updateHandOverlapLayout() {
     const handRow = document.getElementById('humanHandRow');
     if (!handRow) return;
-    const cards = handRow.querySelectorAll('.playing-card, .totom-card');
+    const cards = handRow.querySelectorAll('.hb-tay-la, .hb-dan-la');
     const cardCount = cards.length;
     if (cardCount <= 1) {
         handRow.style.maxWidth = '';
