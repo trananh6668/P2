@@ -3,6 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light dark">
+    <meta name="supported-color-schemes" content="light dark">
+    <meta name="darkreader-lock">
     <title>Diagram as Code</title>
     
     <!-- Google Fonts: Inter & JetBrains Mono -->
@@ -48,6 +51,15 @@
         ::-webkit-scrollbar-thumb:hover { background: rgba(148, 163, 184, 0.45); }
 
         /* Native Dark Dropdown Synchronization */
+        :root {
+            color-scheme: light dark;
+        }
+        html.dark {
+            color-scheme: dark;
+        }
+        html:not(.dark) {
+            color-scheme: only light;
+        }
         html.dark select {
             color-scheme: dark;
             background-color: #0f172a;
@@ -58,7 +70,7 @@
             color: #f1f5f9;
         }
         html:not(.dark) select {
-            color-scheme: light;
+            color-scheme: only light;
             background-color: #f1f5f9;
             color: #0f172a;
         }
@@ -68,6 +80,14 @@
         }
 
         /* Canvas Backgrounds */
+        .bg-canvas-white-light {
+            background-color: #ffffff !important;
+            background-image: linear-gradient(#ffffff, #ffffff) !important;
+        }
+        .bg-canvas-dark {
+            background-color: #191919 !important;
+            background-image: linear-gradient(#191919, #191919) !important;
+        }
         .bg-grid-dark {
             background-color: #0b1120;
             background-image: 
@@ -78,13 +98,14 @@
             background-size: 20px 20px, 20px 20px, 100px 100px, 100px 100px;
         }
         .bg-grid-light {
-            background-color: #ffffff;
+            background-color: #ffffff !important;
             background-image: 
                 linear-gradient(to right, rgba(15, 23, 42, 0.045) 1px, transparent 1px),
                 linear-gradient(to bottom, rgba(15, 23, 42, 0.045) 1px, transparent 1px),
                 linear-gradient(to right, rgba(15, 23, 42, 0.09) 1px, transparent 1px),
-                linear-gradient(to bottom, rgba(15, 23, 42, 0.09) 1px, transparent 1px);
-            background-size: 20px 20px, 20px 20px, 100px 100px, 100px 100px;
+                linear-gradient(to bottom, rgba(15, 23, 42, 0.09) 1px, transparent 1px),
+                linear-gradient(#ffffff, #ffffff);
+            background-size: 20px 20px, 20px 20px, 100px 100px, 100px 100px, 100% 100%;
         }
         .bg-checker-dark {
             background-color: #0f172a;
@@ -97,14 +118,15 @@
             background-position: 0 0, 0 10px, 10px -10px, -10px 0;
         }
         .bg-checker-light {
-            background-color: #ffffff;
+            background-color: #ffffff !important;
             background-image: 
                 linear-gradient(45deg, #e2e8f0 25%, transparent 25%), 
                 linear-gradient(-45deg, #e2e8f0 25%, transparent 25%), 
                 linear-gradient(45deg, transparent 75%, #e2e8f0 75%), 
-                linear-gradient(-45deg, transparent 75%, #e2e8f0 75%);
-            background-size: 20px 20px;
-            background-position: 0 0, 0 10px, 10px -10px, -10px 0;
+                linear-gradient(-45deg, transparent 75%, #e2e8f0 75%),
+                linear-gradient(#ffffff, #ffffff);
+            background-size: 20px 20px, 20px 20px, 20px 20px, 20px 20px, 100% 100%;
+            background-position: 0 0, 0 10px, 10px -10px, -10px 0, 0 0;
         }
 
         /* Editor Synchronization & Syntax Highlighting Overlay */
@@ -196,7 +218,30 @@
             background-color: #3b82f6;
         }
 
-        /* SVG Output Target & Sharp Rendering */
+        /* SVG Output Target & Sharp Rendering + Force-Light Lock */
+        #canvas-viewport.diagram-force-light,
+        #canvas-viewport.diagram-force-light #pan-zoom-wrapper,
+        #canvas-viewport.diagram-force-light #diagram-output,
+        #canvas-viewport.diagram-force-light #diagram-output svg,
+        #canvas-viewport.diagram-force-light #diagram-output svg * {
+            color-scheme: only light !important;
+            forced-color-adjust: none !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+        #canvas-viewport.diagram-force-light,
+        #canvas-viewport.diagram-force-light #pan-zoom-wrapper,
+        #canvas-viewport.diagram-force-light #diagram-output,
+        #canvas-viewport.diagram-force-light #diagram-output > svg {
+            filter: none !important;
+        }
+        #canvas-viewport.diagram-force-dark,
+        #canvas-viewport.diagram-force-dark #pan-zoom-wrapper,
+        #canvas-viewport.diagram-force-dark #diagram-output,
+        #canvas-viewport.diagram-force-dark #diagram-output svg {
+            color-scheme: dark !important;
+            forced-color-adjust: none !important;
+        }
         #diagram-output {
             color: #37352f;
             -webkit-font-smoothing: antialiased;
@@ -216,7 +261,8 @@
             overflow: visible !important;
         }
         #diagram-output svg.diagram-paper-light {
-            background-color: #ffffff;
+            background-color: #ffffff !important;
+            background-image: linear-gradient(#ffffff, #ffffff) !important;
             border-radius: 10px;
             border: 1px solid rgba(55, 53, 47, 0.09);
             box-shadow: 0 2px 14px rgba(15, 23, 42, 0.06);
@@ -499,7 +545,7 @@
                     <div id="diagram-theme-bar" class="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-900 px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700" title="Đồng bộ giao diện màu sắc cho cả Mermaid & PlantUML">
                         <span class="text-[11px] text-slate-500 dark:text-slate-400 font-medium">Theme:</span>
                         <div class="relative flex items-center">
-                            <select id="diagram-style-select" onchange="handleDiagramThemeChange()" class="appearance-none bg-transparent dark:bg-slate-900 text-[11px] font-semibold text-slate-800 dark:text-slate-100 pr-4 focus:outline-none cursor-pointer">
+                            <select id="diagram-style-select" autocomplete="off" onchange="handleDiagramThemeChange()" class="appearance-none bg-transparent dark:bg-slate-900 text-[11px] font-semibold text-slate-800 dark:text-slate-100 pr-4 focus:outline-none cursor-pointer">
                                 <option value="notion" selected>Chuẩn Notion (Sáng)</option>
                                 <option value="bw">Chuẩn IT (Đen trắng)</option>
                                 <option value="classic">Màu tiêu chuẩn (Classic)</option>
@@ -522,7 +568,7 @@
             </div>
 
             <!-- INTERACTIVE PAN & ZOOM CANVAS VIEWPORT -->
-            <div id="canvas-viewport" class="flex-1 w-full h-full relative overflow-hidden bg-white cursor-grab active:cursor-grabbing flex items-center justify-center">
+            <div id="canvas-viewport" class="flex-1 w-full h-full relative overflow-hidden diagram-force-light bg-canvas-white-light cursor-grab active:cursor-grabbing flex items-center justify-center">
                 
                 <!-- Loading Indicator (PlantUML Network Render) -->
                 <div id="loading-overlay" class="hidden absolute top-3 left-1/2 -translate-x-1/2 z-30 bg-slate-900/90 text-white border border-slate-700 px-3.5 py-1.5 rounded-full text-xs font-medium flex items-center gap-2 shadow-xl">
@@ -1323,6 +1369,12 @@ Returned --> [*]
          * 4. INITIALIZATION
          */
         async function initApp() {
+            const diagramStyleEl = document.getElementById('diagram-style-select');
+            if (diagramStyleEl) {
+                diagramStyleEl.value = 'notion';
+            }
+            state.canvasBg = 'white';
+
             populateTemplates('mermaid');
             renderCheatsheet();
             setupEditorEvents();
@@ -1765,21 +1817,25 @@ Returned --> [*]
         function applyDiagramPaperClass(svgEl, selectedTheme) {
             if (!svgEl) return;
             svgEl.classList.remove('diagram-paper-light', 'diagram-paper-dark');
+            const isDarkDiagram = selectedTheme === 'dark';
             const surfaceBg = getDiagramSurfaceBg(selectedTheme);
             const hideCutouts = svgEl.querySelectorAll('.dac-crossing-bridge, .dac-puml-label-bg');
 
+            svgEl.style.setProperty('color-scheme', isDarkDiagram ? 'dark' : 'only light', 'important');
+            svgEl.style.setProperty('forced-color-adjust', 'none', 'important');
+
             if (state.canvasBg === 'white') {
-                svgEl.classList.add(selectedTheme === 'dark' ? 'diagram-paper-dark' : 'diagram-paper-light');
-                svgEl.style.background = surfaceBg;
+                svgEl.classList.add(isDarkDiagram ? 'diagram-paper-dark' : 'diagram-paper-light');
                 svgEl.style.backgroundColor = surfaceBg;
+                svgEl.style.backgroundImage = `linear-gradient(${surfaceBg}, ${surfaceBg})`;
                 hideCutouts.forEach(el => { el.style.display = ''; });
             } else if (state.canvasBg === 'grid') {
-                svgEl.style.background = 'transparent';
                 svgEl.style.backgroundColor = 'transparent';
+                svgEl.style.backgroundImage = 'none';
                 hideCutouts.forEach(el => { el.style.display = ''; });
             } else {
-                svgEl.style.background = 'transparent';
                 svgEl.style.backgroundColor = 'transparent';
+                svgEl.style.backgroundImage = 'none';
                 hideCutouts.forEach(el => { el.style.display = 'none'; });
             }
         }
@@ -4971,6 +5027,8 @@ Returned --> [*]
                 clonedSvg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
                 clonedSvg.style.maxWidth = 'none';
                 clonedSvg.style.boxShadow = 'none';
+                const exportColorScheme = selectedTheme === 'dark' ? 'dark' : 'only light';
+                clonedSvg.style.colorScheme = exportColorScheme;
 
                 const svgNs = 'http://www.w3.org/2000/svg';
                 const exportStyle = document.createElementNS(svgNs, 'style');
@@ -4979,13 +5037,13 @@ Returned --> [*]
                     : (selectedTheme === 'dark'
                         ? ' foreignObject, foreignObject * { color: #ededec !important; }'
                         : (selectedTheme === 'notion' ? ' foreignObject, foreignObject * { color: #37352f !important; }' : ''));
-                exportStyle.textContent = `* { font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; } foreignObject, foreignObject > div { overflow: visible !important; }${foColorRule}`;
+                exportStyle.textContent = `:root, svg { color-scheme: ${exportColorScheme}; forced-color-adjust: none; } * { font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; } foreignObject, foreignObject > div { overflow: visible !important; }${foColorRule}`;
                 clonedSvg.insertBefore(exportStyle, clonedSvg.firstChild);
 
                 if (isTransparent) {
                     clonedSvg.querySelectorAll('.dac-crossing-bridge, .dac-puml-label-bg').forEach(el => el.remove());
                     clonedSvg.style.backgroundColor = 'transparent';
-                    clonedSvg.style.background = 'transparent';
+                    clonedSvg.style.backgroundImage = 'none';
                 } else {
                     const bgRect = document.createElementNS(svgNs, 'rect');
                     bgRect.setAttribute('x', String(vbX));
@@ -4995,6 +5053,7 @@ Returned --> [*]
                     bgRect.setAttribute('fill', surfaceBg);
                     clonedSvg.insertBefore(bgRect, clonedSvg.firstChild);
                     clonedSvg.style.backgroundColor = surfaceBg;
+                    clonedSvg.style.backgroundImage = `linear-gradient(${surfaceBg}, ${surfaceBg})`;
                 }
 
                 let svgString = new XMLSerializer().serializeToString(clonedSvg);
@@ -5434,17 +5493,23 @@ Returned --> [*]
                 }
             });
 
-            canvasViewport.classList.remove('bg-grid-dark', 'bg-grid-light', 'bg-checker-dark', 'bg-checker-light', 'bg-white', 'bg-slate-950');
+            canvasViewport.classList.toggle('diagram-force-light', !useDarkCanvas);
+            canvasViewport.classList.toggle('diagram-force-dark', useDarkCanvas);
+            canvasViewport.style.setProperty('color-scheme', useDarkCanvas ? 'dark' : 'only light', 'important');
+
+            canvasViewport.classList.remove(
+                'bg-grid-dark', 'bg-grid-light',
+                'bg-checker-dark', 'bg-checker-light',
+                'bg-canvas-white-light', 'bg-canvas-dark',
+                'bg-white', 'bg-slate-950'
+            );
             canvasViewport.style.backgroundColor = '';
             if (bgType === 'grid') {
                 canvasViewport.classList.add(useDarkCanvas ? 'bg-grid-dark' : 'bg-grid-light');
             } else if (bgType === 'transparent') {
                 canvasViewport.classList.add(useDarkCanvas ? 'bg-checker-dark' : 'bg-checker-light');
             } else {
-                canvasViewport.classList.add(useDarkCanvas ? 'bg-slate-950' : 'bg-white');
-                if (useDarkCanvas) {
-                    canvasViewport.style.backgroundColor = '#191919';
-                }
+                canvasViewport.classList.add(useDarkCanvas ? 'bg-canvas-dark' : 'bg-canvas-white-light');
             }
 
             const svgEl = diagramOutput.querySelector('svg');
