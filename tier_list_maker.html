@@ -3,17 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="color-scheme" content="light dark" id="meta-color-scheme">
+    <meta name="supported-color-schemes" content="light dark">
+    <meta name="darkreader-lock">
     <meta name="theme-color" content="#f8fafc" id="meta-theme-color">
     <title>Tier List Maker</title>
     <script>
         (function () {
             try {
                 var savedTheme = localStorage.getItem('tier_list_ui_theme');
-                if (savedTheme === 'dark') {
+                var isDark = savedTheme === 'dark';
+                if (isDark) {
                     document.documentElement.classList.add('dark');
                     var meta = document.getElementById('meta-theme-color');
                     if (meta) meta.setAttribute('content', '#0f172a');
                 }
+                document.documentElement.style.setProperty('color-scheme', isDark ? 'dark' : 'only light', 'important');
+                document.documentElement.style.setProperty('forced-color-adjust', 'none', 'important');
             } catch (e) {}
         })();
     </script>
@@ -28,6 +34,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
+            color-scheme: light dark;
+            forced-color-adjust: none;
             --app-bg: #f1f5f9;
             --surface-bg: #ffffff;
             --surface-muted: #f8fafc;
@@ -38,7 +46,14 @@
             --tile-h: 68px;
         }
 
+        html:not(.dark) {
+            color-scheme: only light !important;
+            forced-color-adjust: none !important;
+        }
+
         html.dark {
+            color-scheme: dark !important;
+            forced-color-adjust: none !important;
             --app-bg: #0b1120;
             --surface-bg: #111827;
             --surface-muted: #1e293b;
@@ -47,14 +62,42 @@
             --text-secondary: #94a3b8;
         }
 
+        html, body {
+            background-color: var(--app-bg) !important;
+            background-image: linear-gradient(var(--app-bg), var(--app-bg)) !important;
+            forced-color-adjust: none !important;
+        }
+
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background-color: var(--app-bg);
             color: var(--text-primary);
             user-select: none;
             -webkit-tap-highlight-color: transparent;
             overflow-x: hidden;
             transition: background-color 0.2s ease, color 0.2s ease;
+        }
+
+        html.dark select, html.dark input, html.dark textarea {
+            color-scheme: dark;
+        }
+
+        html:not(.dark) select, html:not(.dark) input, html:not(.dark) textarea {
+            color-scheme: only light;
+        }
+
+        html.dark select option {
+            background-color: #1e293b;
+            color: #f8fafc;
+        }
+
+        html:not(.dark) select option {
+            background-color: #ffffff;
+            color: #0f172a;
+        }
+
+        #edit-row-color {
+            color-scheme: only light !important;
+            forced-color-adjust: none !important;
         }
 
         /* Kích thước thẻ responsive theo data-size và data-aspect */
@@ -72,7 +115,60 @@
         .board-scope[data-aspect="3:4"] { --tile-h: calc(var(--tile-w) * 1.3333); }
         .board-scope[data-aspect="4:3"] { --tile-h: calc(var(--tile-w) * 0.75); }
 
+        /* Khóa màu vùng giữa (#main-content) chống trình duyệt tự đảo màu (Cốc Cốc / Auto Dark Mode) */
+        #main-content {
+            forced-color-adjust: none !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+            filter: none !important;
+        }
+
+        html:not(.dark) #main-content {
+            color-scheme: only light !important;
+        }
+
+        html.dark #main-content {
+            color-scheme: dark !important;
+        }
+
         /* Chủ đề bảng xếp hạng: Cổ điển (Classic) & Tối (Dark) */
+        #export-wrapper[data-board-theme="classic"],
+        #export-wrapper[data-board-theme="classic"] * {
+            color-scheme: only light !important;
+            forced-color-adjust: none !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+
+        #export-wrapper[data-board-theme="dark"],
+        #export-wrapper[data-board-theme="dark"] * {
+            color-scheme: dark !important;
+            forced-color-adjust: none !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+
+        #export-wrapper[data-board-theme="dark"] .tier-label,
+        #export-wrapper[data-board-theme="dark"] .tier-label *,
+        #export-wrapper[data-board-theme="dark"] .tier-item.tier-item-text,
+        #export-wrapper[data-board-theme="dark"] .tier-item.tier-item-text *,
+        #export-wrapper[data-board-theme="dark"] .tier-item img {
+            color-scheme: only light !important;
+        }
+
+        #export-wrapper,
+        #board-header-meta,
+        #tier-board,
+        .tier-row,
+        .tier-label,
+        .tier-content,
+        .row-controls,
+        .tier-item,
+        .tier-item img,
+        #export-preview-img {
+            filter: none !important;
+        }
+
         #export-wrapper[data-board-theme="classic"] {
             --board-bg: #ffffff;
             --board-header-bg: #f8f9fa;
@@ -83,6 +179,74 @@
             --board-ctrl-bg: #9f9da0;
             --board-meta-pill-bg: #e5e7eb;
             --board-meta-pill-text: #374151;
+            background-color: #ffffff !important;
+            background-image: linear-gradient(#ffffff, #ffffff) !important;
+            border-color: #e2e8f0 !important;
+        }
+
+        html.dark #export-wrapper[data-board-theme="classic"] {
+            border-color: #334155 !important;
+        }
+
+        #export-wrapper[data-board-theme="classic"] #board-header-meta {
+            background-color: #f8f9fa !important;
+            background-image: linear-gradient(#f8f9fa, #f8f9fa) !important;
+            border-bottom: 1px solid #ffffff !important;
+        }
+
+        #export-wrapper[data-board-theme="classic"] #board-title-input {
+            color: #111827 !important;
+            -webkit-text-fill-color: #111827 !important;
+            caret-color: #111827 !important;
+            background-color: transparent !important;
+            background-image: none !important;
+            color-scheme: only light !important;
+        }
+
+        #export-wrapper[data-board-theme="classic"] #board-title-input::placeholder {
+            color: #64748b !important;
+            -webkit-text-fill-color: #64748b !important;
+        }
+
+        #export-wrapper[data-board-theme="classic"] #board-stats-pill,
+        #export-wrapper[data-board-theme="classic"] #btn-quick-display {
+            background-color: #e5e7eb !important;
+            background-image: linear-gradient(#e5e7eb, #e5e7eb) !important;
+            color: #374151 !important;
+            -webkit-text-fill-color: #374151 !important;
+        }
+
+        #export-wrapper[data-board-theme="classic"] #tier-board {
+            background-color: #ffffff !important;
+            background-image: linear-gradient(#ffffff, #ffffff) !important;
+            border-top: 2px solid #ffffff !important;
+        }
+
+        #export-wrapper[data-board-theme="classic"] .tier-row {
+            background-color: #b7b5b8 !important;
+            background-image: linear-gradient(#b7b5b8, #b7b5b8) !important;
+            border-bottom: 2px solid #ffffff !important;
+        }
+
+        #export-wrapper[data-board-theme="classic"] .tier-label {
+            border-right: 2px solid #ffffff !important;
+        }
+
+        #export-wrapper[data-board-theme="classic"] .tier-content {
+            background-color: #b7b5b8 !important;
+            background-image: linear-gradient(#b7b5b8, #b7b5b8) !important;
+        }
+
+        #export-wrapper[data-board-theme="classic"] .tier-content.drag-over {
+            background-color: #a5a3a7 !important;
+            background-image: linear-gradient(#a5a3a7, #a5a3a7) !important;
+            box-shadow: inset 0 0 0 2px #3b82f6 !important;
+        }
+
+        #export-wrapper[data-board-theme="classic"] .row-controls {
+            background-color: #9f9da0 !important;
+            background-image: linear-gradient(#9f9da0, #9f9da0) !important;
+            border-left: 2px solid #ffffff !important;
         }
 
         #export-wrapper[data-board-theme="dark"] {
@@ -95,6 +259,70 @@
             --board-ctrl-bg: #2d313d;
             --board-meta-pill-bg: #334155;
             --board-meta-pill-text: #e2e8f0;
+            background-color: #16181f !important;
+            background-image: linear-gradient(#16181f, #16181f) !important;
+            border-color: #1e293b !important;
+        }
+
+        #export-wrapper[data-board-theme="dark"] #board-header-meta {
+            background-color: #1b1e27 !important;
+            background-image: linear-gradient(#1b1e27, #1b1e27) !important;
+            border-bottom: 1px solid #111318 !important;
+        }
+
+        #export-wrapper[data-board-theme="dark"] #board-title-input {
+            color: #f8fafc !important;
+            -webkit-text-fill-color: #f8fafc !important;
+            caret-color: #f8fafc !important;
+            background-color: transparent !important;
+            background-image: none !important;
+            color-scheme: dark !important;
+        }
+
+        #export-wrapper[data-board-theme="dark"] #board-title-input::placeholder {
+            color: #94a3b8 !important;
+            -webkit-text-fill-color: #94a3b8 !important;
+        }
+
+        #export-wrapper[data-board-theme="dark"] #board-stats-pill,
+        #export-wrapper[data-board-theme="dark"] #btn-quick-display {
+            background-color: #334155 !important;
+            background-image: linear-gradient(#334155, #334155) !important;
+            color: #e2e8f0 !important;
+            -webkit-text-fill-color: #e2e8f0 !important;
+        }
+
+        #export-wrapper[data-board-theme="dark"] #tier-board {
+            background-color: #16181f !important;
+            background-image: linear-gradient(#16181f, #16181f) !important;
+            border-top: 2px solid #111318 !important;
+        }
+
+        #export-wrapper[data-board-theme="dark"] .tier-row {
+            background-color: #23242c !important;
+            background-image: linear-gradient(#23242c, #23242c) !important;
+            border-bottom: 2px solid #111318 !important;
+        }
+
+        #export-wrapper[data-board-theme="dark"] .tier-label {
+            border-right: 2px solid #111318 !important;
+        }
+
+        #export-wrapper[data-board-theme="dark"] .tier-content {
+            background-color: #23242c !important;
+            background-image: linear-gradient(#23242c, #23242c) !important;
+        }
+
+        #export-wrapper[data-board-theme="dark"] .tier-content.drag-over {
+            background-color: #2e303b !important;
+            background-image: linear-gradient(#2e303b, #2e303b) !important;
+            box-shadow: inset 0 0 0 2px #3b82f6 !important;
+        }
+
+        #export-wrapper[data-board-theme="dark"] .row-controls {
+            background-color: #2d313d !important;
+            background-image: linear-gradient(#2d313d, #2d313d) !important;
+            border-left: 2px solid #111318 !important;
         }
 
         #export-wrapper {
@@ -122,8 +350,9 @@
             position: relative;
         }
 
+        #export-wrapper .tier-row:last-child,
         .tier-row:last-child {
-            border-bottom: none;
+            border-bottom: none !important;
         }
 
         .tier-label {
@@ -141,11 +370,25 @@
             cursor: pointer;
             border-right: 2px solid var(--board-divider);
             position: relative;
-            transition: filter 0.15s ease;
+            transition: box-shadow 0.15s ease;
+            color-scheme: only light !important;
+            forced-color-adjust: none !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+            background-color: var(--tier-bg, #ff7f7f) !important;
+            background-image: linear-gradient(var(--tier-bg, #ff7f7f), var(--tier-bg, #ff7f7f)) !important;
+            color: var(--tier-fg, #111827) !important;
+            -webkit-text-fill-color: var(--tier-fg, #111827) !important;
+        }
+
+        .tier-label > span,
+        .tier-label svg {
+            color: var(--tier-fg, #111827) !important;
+            -webkit-text-fill-color: var(--tier-fg, #111827) !important;
         }
 
         .tier-label:hover {
-            filter: brightness(0.95);
+            box-shadow: inset 0 0 0 9999px rgba(0, 0, 0, 0.06);
         }
 
         @media (min-width: 640px) {
@@ -176,9 +419,211 @@
             box-shadow: inset 0 0 0 2px #3b82f6;
         }
 
-        #image-pool.drag-over {
-            background-color: rgba(59, 130, 246, 0.08);
-            border-color: #3b82f6;
+        /* Khóa màu kho thẻ chờ (#pool-section & #image-pool) */
+        html:not(.dark) #pool-section {
+            color-scheme: only light !important;
+            forced-color-adjust: none !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+            background-color: #ffffff !important;
+            background-image: linear-gradient(#ffffff, #ffffff) !important;
+            border-color: #e2e8f0 !important;
+            color: #0f172a !important;
+        }
+
+        html.dark #pool-section {
+            color-scheme: dark !important;
+            forced-color-adjust: none !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+            background-color: #0f172a !important;
+            background-image: linear-gradient(#0f172a, #0f172a) !important;
+            border-color: #1e293b !important;
+            color: #f8fafc !important;
+        }
+
+        html:not(.dark) #pool-section h2 {
+            color: #1e293b !important;
+            -webkit-text-fill-color: #1e293b !important;
+        }
+
+        html.dark #pool-section h2 {
+            color: #f1f5f9 !important;
+            -webkit-text-fill-color: #f1f5f9 !important;
+        }
+
+        html:not(.dark) #pool-count {
+            background-color: #f1f5f9 !important;
+            background-image: linear-gradient(#f1f5f9, #f1f5f9) !important;
+            color: #475569 !important;
+            -webkit-text-fill-color: #475569 !important;
+        }
+
+        html.dark #pool-count {
+            background-color: #1e293b !important;
+            background-image: linear-gradient(#1e293b, #1e293b) !important;
+            color: #cbd5e1 !important;
+            -webkit-text-fill-color: #cbd5e1 !important;
+        }
+
+        html:not(.dark) #btn-quick-rank {
+            background-color: #eff6ff !important;
+            background-image: linear-gradient(#eff6ff, #eff6ff) !important;
+            border-color: #bfdbfe !important;
+            color: #1d4ed8 !important;
+            -webkit-text-fill-color: #1d4ed8 !important;
+        }
+
+        html:not(.dark) #btn-quick-rank:hover {
+            background-color: #dbeafe !important;
+            background-image: linear-gradient(#dbeafe, #dbeafe) !important;
+        }
+
+        html.dark #btn-quick-rank {
+            background-color: rgba(23, 37, 84, 0.6) !important;
+            background-image: linear-gradient(rgba(23, 37, 84, 0.6), rgba(23, 37, 84, 0.6)) !important;
+            border-color: #1e40af !important;
+            color: #93c5fd !important;
+            -webkit-text-fill-color: #93c5fd !important;
+        }
+
+        html.dark #btn-quick-rank:hover {
+            background-color: rgba(30, 58, 138, 0.6) !important;
+            background-image: linear-gradient(rgba(30, 58, 138, 0.6), rgba(30, 58, 138, 0.6)) !important;
+        }
+
+        html:not(.dark) #btn-add-text-card {
+            background-color: #f1f5f9 !important;
+            background-image: linear-gradient(#f1f5f9, #f1f5f9) !important;
+            color: #334155 !important;
+            -webkit-text-fill-color: #334155 !important;
+        }
+
+        html:not(.dark) #btn-add-text-card:hover {
+            background-color: #e2e8f0 !important;
+            background-image: linear-gradient(#e2e8f0, #e2e8f0) !important;
+        }
+
+        html.dark #btn-add-text-card {
+            background-color: #1e293b !important;
+            background-image: linear-gradient(#1e293b, #1e293b) !important;
+            color: #e2e8f0 !important;
+            -webkit-text-fill-color: #e2e8f0 !important;
+        }
+
+        html.dark #btn-add-text-card:hover {
+            background-color: #334155 !important;
+            background-image: linear-gradient(#334155, #334155) !important;
+        }
+
+        html:not(.dark) #pool-section label[for="file-input"] {
+            background-color: #0f172a !important;
+            background-image: linear-gradient(#0f172a, #0f172a) !important;
+            color: #ffffff !important;
+            -webkit-text-fill-color: #ffffff !important;
+        }
+
+        html:not(.dark) #pool-section label[for="file-input"]:hover {
+            background-color: #1e293b !important;
+            background-image: linear-gradient(#1e293b, #1e293b) !important;
+        }
+
+        html.dark #pool-section label[for="file-input"] {
+            background-color: #2563eb !important;
+            background-image: linear-gradient(#2563eb, #2563eb) !important;
+            color: #ffffff !important;
+            -webkit-text-fill-color: #ffffff !important;
+        }
+
+        html.dark #pool-section label[for="file-input"]:hover {
+            background-color: #3b82f6 !important;
+            background-image: linear-gradient(#3b82f6, #3b82f6) !important;
+        }
+
+        html:not(.dark) #image-pool {
+            background-color: #f8fafc !important;
+            background-image: linear-gradient(#f8fafc, #f8fafc) !important;
+            border-color: #cbd5e1 !important;
+        }
+
+        html.dark #image-pool {
+            background-color: rgba(30, 41, 59, 0.5) !important;
+            background-image: linear-gradient(rgba(30, 41, 59, 0.5), rgba(30, 41, 59, 0.5)) !important;
+            border-color: #334155 !important;
+        }
+
+        html:not(.dark) #image-pool.drag-over {
+            background-color: rgba(59, 130, 246, 0.08) !important;
+            background-image: linear-gradient(rgba(59, 130, 246, 0.08), rgba(59, 130, 246, 0.08)) !important;
+            border-color: #3b82f6 !important;
+        }
+
+        html.dark #image-pool.drag-over {
+            background-color: rgba(59, 130, 246, 0.16) !important;
+            background-image: linear-gradient(rgba(59, 130, 246, 0.16), rgba(59, 130, 246, 0.16)) !important;
+            border-color: #3b82f6 !important;
+        }
+
+        html:not(.dark) #empty-pool-placeholder {
+            color: #94a3b8 !important;
+        }
+
+        html:not(.dark) #empty-pool-placeholder p:not(:last-child) {
+            color: #475569 !important;
+            -webkit-text-fill-color: #475569 !important;
+        }
+
+        html:not(.dark) #empty-pool-placeholder p:last-child {
+            color: #94a3b8 !important;
+            -webkit-text-fill-color: #94a3b8 !important;
+        }
+
+        html:not(.dark) #empty-pool-placeholder kbd {
+            background-color: #ffffff !important;
+            background-image: linear-gradient(#ffffff, #ffffff) !important;
+            border-color: #cbd5e1 !important;
+            color: #334155 !important;
+            -webkit-text-fill-color: #334155 !important;
+        }
+
+        html.dark #empty-pool-placeholder {
+            color: #64748b !important;
+        }
+
+        html.dark #empty-pool-placeholder p:not(:last-child) {
+            color: #cbd5e1 !important;
+            -webkit-text-fill-color: #cbd5e1 !important;
+        }
+
+        html.dark #empty-pool-placeholder p:last-child {
+            color: #64748b !important;
+            -webkit-text-fill-color: #64748b !important;
+        }
+
+        html.dark #empty-pool-placeholder kbd {
+            background-color: #334155 !important;
+            background-image: linear-gradient(#334155, #334155) !important;
+            border-color: #475569 !important;
+            color: #e2e8f0 !important;
+            -webkit-text-fill-color: #e2e8f0 !important;
+        }
+
+        html:not(.dark) #pool-section > div:last-child {
+            color: #64748b !important;
+        }
+
+        html.dark #pool-section > div:last-child {
+            color: #94a3b8 !important;
+        }
+
+        html:not(.dark) #btn-pick-media {
+            color: #2563eb !important;
+            -webkit-text-fill-color: #2563eb !important;
+        }
+
+        html.dark #btn-pick-media {
+            color: #60a5fa !important;
+            -webkit-text-fill-color: #60a5fa !important;
         }
 
         /* Bảng điều khiển hàng trên Desktop */
@@ -207,15 +652,18 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            color: #ffffff;
-            background-color: rgba(0, 0, 0, 0.22);
+            color: #ffffff !important;
+            -webkit-text-fill-color: #ffffff !important;
+            background-color: rgba(0, 0, 0, 0.22) !important;
+            background-image: linear-gradient(rgba(0, 0, 0, 0.22), rgba(0, 0, 0, 0.22)) !important;
             transition: background-color 0.15s ease;
             cursor: pointer;
             border: none;
         }
 
         .row-ctrl-btn:hover:not(:disabled) {
-            background-color: rgba(0, 0, 0, 0.42);
+            background-color: rgba(0, 0, 0, 0.42) !important;
+            background-image: linear-gradient(rgba(0, 0, 0, 0.42), rgba(0, 0, 0, 0.42)) !important;
         }
 
         .row-ctrl-btn:disabled {
@@ -230,7 +678,12 @@
             position: relative;
             border-radius: 7px;
             overflow: hidden;
-            background-color: #ffffff;
+            color-scheme: only light !important;
+            forced-color-adjust: none !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+            background-color: #ffffff !important;
+            background-image: linear-gradient(#ffffff, #ffffff) !important;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
             cursor: pointer;
             flex-shrink: 0;
@@ -240,8 +693,34 @@
             transition: transform 0.12s ease, box-shadow 0.12s ease, opacity 0.12s ease;
         }
 
-        html.dark .tier-item {
-            background-color: #1e293b;
+        html.dark .tier-item:not(.tier-item-text) {
+            color-scheme: dark !important;
+            background-color: #1e293b !important;
+            background-image: linear-gradient(#1e293b, #1e293b) !important;
+        }
+
+        #export-wrapper[data-board-theme="classic"] .tier-item:not(.tier-item-text) {
+            color-scheme: only light !important;
+            background-color: #ffffff !important;
+            background-image: linear-gradient(#ffffff, #ffffff) !important;
+        }
+
+        #export-wrapper[data-board-theme="dark"] .tier-item:not(.tier-item-text) {
+            color-scheme: dark !important;
+            background-color: #1e293b !important;
+            background-image: linear-gradient(#1e293b, #1e293b) !important;
+        }
+
+        .tier-item.tier-item-text {
+            color-scheme: only light !important;
+            forced-color-adjust: none !important;
+            background-color: var(--card-bg, #fef08a) !important;
+            background-image: linear-gradient(var(--card-bg, #fef08a), var(--card-bg, #fef08a)) !important;
+        }
+
+        .tier-item.tier-item-text .tier-item-text-body {
+            color: var(--card-fg, #111827) !important;
+            -webkit-text-fill-color: var(--card-fg, #111827) !important;
         }
 
         @media (hover: hover) and (pointer: fine) {
@@ -273,6 +752,8 @@
             height: 100%;
             display: block;
             pointer-events: none;
+            color-scheme: only light !important;
+            filter: none !important;
             -webkit-touch-callout: none;
             -webkit-user-select: none;
             user-select: none;
@@ -319,7 +800,8 @@
             right: 0;
             bottom: 0;
             background: linear-gradient(to top, rgba(0, 0, 0, 0.82), rgba(0, 0, 0, 0.48) 70%, transparent);
-            color: #ffffff;
+            color: #ffffff !important;
+            -webkit-text-fill-color: #ffffff !important;
             font-size: 10px;
             font-weight: 600;
             line-height: 1.2;
@@ -365,8 +847,10 @@
             width: 22px;
             height: 22px;
             border-radius: 9999px;
-            background-color: rgba(15, 23, 42, 0.8);
-            color: #ffffff;
+            background-color: rgba(15, 23, 42, 0.8) !important;
+            background-image: linear-gradient(rgba(15, 23, 42, 0.8), rgba(15, 23, 42, 0.8)) !important;
+            color: #ffffff !important;
+            -webkit-text-fill-color: #ffffff !important;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -378,11 +862,102 @@
         }
 
         .card-mini-btn.del:hover {
-            background-color: #ef4444;
+            background-color: #ef4444 !important;
+            background-image: linear-gradient(#ef4444, #ef4444) !important;
         }
 
         .card-mini-btn.cap:hover {
-            background-color: #2563eb;
+            background-color: #2563eb !important;
+            background-image: linear-gradient(#2563eb, #2563eb) !important;
+        }
+
+        /* Khóa màu Header, Menu, Quick-Rank Dock & Modals chống đảo màu trình duyệt */
+        html:not(.dark) header {
+            color-scheme: only light !important;
+            forced-color-adjust: none !important;
+            background-color: rgba(255, 255, 255, 0.95) !important;
+            background-image: linear-gradient(rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.95)) !important;
+            border-bottom-color: #e2e8f0 !important;
+        }
+
+        html.dark header {
+            color-scheme: dark !important;
+            forced-color-adjust: none !important;
+            background-color: rgba(15, 23, 42, 0.95) !important;
+            background-image: linear-gradient(rgba(15, 23, 42, 0.95), rgba(15, 23, 42, 0.95)) !important;
+            border-bottom-color: #1e293b !important;
+        }
+
+        #btn-export-open {
+            color-scheme: only light !important;
+            forced-color-adjust: none !important;
+            background-color: #2563eb !important;
+            background-image: linear-gradient(#2563eb, #2563eb) !important;
+            color: #ffffff !important;
+            -webkit-text-fill-color: #ffffff !important;
+        }
+
+        #btn-export-open:hover {
+            background-color: #1d4ed8 !important;
+            background-image: linear-gradient(#1d4ed8, #1d4ed8) !important;
+        }
+
+        html:not(.dark) #more-menu-dropdown {
+            color-scheme: only light !important;
+            forced-color-adjust: none !important;
+            background-color: #ffffff !important;
+            background-image: linear-gradient(#ffffff, #ffffff) !important;
+            border-color: #e2e8f0 !important;
+            color: #334155 !important;
+        }
+
+        html.dark #more-menu-dropdown {
+            color-scheme: dark !important;
+            forced-color-adjust: none !important;
+            background-color: #1e293b !important;
+            background-image: linear-gradient(#1e293b, #1e293b) !important;
+            border-color: #334155 !important;
+            color: #e2e8f0 !important;
+        }
+
+        html:not(.dark) #quick-rank-dock {
+            color-scheme: only light !important;
+            forced-color-adjust: none !important;
+            background-color: rgba(255, 255, 255, 0.95) !important;
+            background-image: linear-gradient(rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.95)) !important;
+            border-top-color: #e2e8f0 !important;
+        }
+
+        html.dark #quick-rank-dock {
+            color-scheme: dark !important;
+            forced-color-adjust: none !important;
+            background-color: rgba(15, 23, 42, 0.95) !important;
+            background-image: linear-gradient(rgba(15, 23, 42, 0.95), rgba(15, 23, 42, 0.95)) !important;
+            border-top-color: #334155 !important;
+        }
+
+        html:not(.dark) .modal-panel {
+            color-scheme: only light !important;
+            forced-color-adjust: none !important;
+            background-color: #ffffff !important;
+            background-image: linear-gradient(#ffffff, #ffffff) !important;
+            border-color: #e2e8f0 !important;
+            color: #0f172a !important;
+        }
+
+        html.dark .modal-panel {
+            color-scheme: dark !important;
+            forced-color-adjust: none !important;
+            background-color: #0f172a !important;
+            background-image: linear-gradient(#0f172a, #0f172a) !important;
+            border-color: #1e293b !important;
+            color: #f8fafc !important;
+        }
+
+        #export-preview-img {
+            color-scheme: only light !important;
+            forced-color-adjust: none !important;
+            filter: none !important;
         }
 
         /* Ghost kéo thả trên mobile */
@@ -582,8 +1157,8 @@
                 />
 
                 <div class="flex items-center gap-1.5 flex-shrink-0">
-                    <span id="board-stats-pill" style="background-color: var(--board-meta-pill-bg); color: var(--board-meta-pill-text);" class="text-[11px] font-bold px-2 py-1 rounded-lg">0/0 đã xếp</span>
-                    <button id="btn-quick-display" type="button" title="Cài đặt hiển thị thẻ" style="background-color: var(--board-meta-pill-bg); color: var(--board-meta-pill-text);" class="text-[11px] font-semibold px-2.5 py-1 rounded-lg hover:opacity-85 transition cursor-pointer">
+                    <span id="board-stats-pill" class="text-[11px] font-bold px-2 py-1 rounded-lg">0/0 đã xếp</span>
+                    <button id="btn-quick-display" type="button" title="Cài đặt hiển thị thẻ" class="text-[11px] font-semibold px-2.5 py-1 rounded-lg hover:opacity-85 transition cursor-pointer">
                         1:1 · Cover
                     </button>
                 </div>
@@ -1637,6 +2212,10 @@
                 if (metaTheme) metaTheme.setAttribute('content', '#f8fafc');
             }
 
+            const uiColorScheme = uiTheme === 'dark' ? 'dark' : 'only light';
+            html.style.setProperty('color-scheme', uiColorScheme, 'important');
+            html.style.setProperty('forced-color-adjust', 'none', 'important');
+
             try { localStorage.setItem(UI_THEME_KEY, uiTheme); } catch (e) {}
 
             document.body.dataset.size = size;
@@ -1644,8 +2223,22 @@
             document.body.dataset.fit = fit;
             document.body.dataset.captions = showCaptions ? 'true' : 'false';
 
+            const mainContent = document.getElementById('main-content');
+            if (mainContent) {
+                mainContent.style.setProperty('color-scheme', uiColorScheme, 'important');
+                mainContent.style.setProperty('forced-color-adjust', 'none', 'important');
+            }
+
+            const poolSection = document.getElementById('pool-section');
+            if (poolSection) {
+                poolSection.style.setProperty('color-scheme', uiColorScheme, 'important');
+                poolSection.style.setProperty('forced-color-adjust', 'none', 'important');
+            }
+
             const exportWrapper = document.getElementById('export-wrapper');
             exportWrapper.dataset.boardTheme = boardTheme;
+            exportWrapper.style.setProperty('color-scheme', boardTheme === 'dark' ? 'dark' : 'only light', 'important');
+            exportWrapper.style.setProperty('forced-color-adjust', 'none', 'important');
 
             const themeBadge = document.getElementById('menu-theme-badge');
             if (themeBadge) themeBadge.textContent = uiTheme === 'dark' ? 'Bật' : 'Tắt';
@@ -1692,10 +2285,18 @@
                 row.className = 'tier-row';
                 row.dataset.tierId = tier.id;
 
+                const tierColor = normalizeHex(tier.color);
+                const tierTextColor = getContrastTextColor(tierColor);
                 const labelBox = document.createElement('div');
                 labelBox.className = 'tier-label';
-                labelBox.style.backgroundColor = tier.color;
-                labelBox.style.color = getContrastTextColor(tier.color);
+                labelBox.style.setProperty('--tier-bg', tierColor);
+                labelBox.style.setProperty('--tier-fg', tierTextColor);
+                labelBox.style.setProperty('background-color', tierColor, 'important');
+                labelBox.style.setProperty('background-image', `linear-gradient(${tierColor}, ${tierColor})`, 'important');
+                labelBox.style.setProperty('color', tierTextColor, 'important');
+                labelBox.style.setProperty('-webkit-text-fill-color', tierTextColor, 'important');
+                labelBox.style.setProperty('color-scheme', 'only light', 'important');
+                labelBox.style.setProperty('forced-color-adjust', 'none', 'important');
                 labelBox.title = 'Bấm để chỉnh sửa hoặc di chuyển hàng';
 
                 const labelText = document.createElement('span');
@@ -1822,10 +2423,18 @@
 
             if (itemObj.type === 'text') {
                 const bg = normalizeHex(itemObj.bgColor || '#fef08a');
-                item.style.backgroundColor = bg;
+                const fg = getContrastTextColor(bg);
+                item.classList.add('tier-item-text');
+                item.style.setProperty('--card-bg', bg);
+                item.style.setProperty('--card-fg', fg);
+                item.style.setProperty('background-color', bg, 'important');
+                item.style.setProperty('background-image', `linear-gradient(${bg}, ${bg})`, 'important');
+                item.style.setProperty('color-scheme', 'only light', 'important');
+                item.style.setProperty('forced-color-adjust', 'none', 'important');
                 const textDiv = document.createElement('div');
                 textDiv.className = 'tier-item-text-body';
-                textDiv.style.color = getContrastTextColor(bg);
+                textDiv.style.setProperty('color', fg, 'important');
+                textDiv.style.setProperty('-webkit-text-fill-color', fg, 'important');
                 textDiv.textContent = itemObj.caption || 'Thẻ chữ';
                 item.appendChild(textDiv);
             } else {
@@ -1961,14 +2570,22 @@
             thumb.innerHTML = '';
             if (itemObj.type === 'text') {
                 const bg = normalizeHex(itemObj.bgColor || '#fef08a');
-                thumb.style.backgroundColor = bg;
+                const fg = getContrastTextColor(bg);
+                thumb.style.setProperty('background-color', bg, 'important');
+                thumb.style.setProperty('background-image', `linear-gradient(${bg}, ${bg})`, 'important');
+                thumb.style.setProperty('color-scheme', 'only light', 'important');
+                thumb.style.setProperty('forced-color-adjust', 'none', 'important');
                 const span = document.createElement('span');
                 span.className = 'text-[10px] font-bold px-1 text-center leading-tight line-clamp-2';
-                span.style.color = getContrastTextColor(bg);
+                span.style.setProperty('color', fg, 'important');
+                span.style.setProperty('-webkit-text-fill-color', fg, 'important');
                 span.textContent = itemObj.caption || 'Chữ';
                 thumb.appendChild(span);
             } else {
-                thumb.style.backgroundColor = '';
+                thumb.style.removeProperty('background-color');
+                thumb.style.removeProperty('background-image');
+                thumb.style.removeProperty('color-scheme');
+                thumb.style.removeProperty('forced-color-adjust');
                 const img = document.createElement('img');
                 img.src = itemObj.src;
                 img.alt = 'Preview';
@@ -2000,12 +2617,18 @@
             const buttonsContainer = document.getElementById('dock-tier-buttons');
             buttonsContainer.innerHTML = '';
             appState.tiers.forEach(tier => {
+                const tierColor = normalizeHex(tier.color);
+                const tierTextColor = getContrastTextColor(tierColor);
                 const btn = document.createElement('button');
                 btn.type = 'button';
                 const isCurrent = loc.zone === 'tier' && loc.tierId === tier.id;
                 btn.className = `h-11 min-w-[54px] px-3.5 rounded-xl font-extrabold text-sm flex-shrink-0 transition active:scale-95 cursor-pointer flex items-center justify-center shadow-sm ${isCurrent ? 'ring-2 ring-blue-600 ring-offset-2 dark:ring-offset-slate-900' : ''}`;
-                btn.style.backgroundColor = tier.color;
-                btn.style.color = getContrastTextColor(tier.color);
+                btn.style.setProperty('background-color', tierColor, 'important');
+                btn.style.setProperty('background-image', `linear-gradient(${tierColor}, ${tierColor})`, 'important');
+                btn.style.setProperty('color', tierTextColor, 'important');
+                btn.style.setProperty('-webkit-text-fill-color', tierTextColor, 'important');
+                btn.style.setProperty('color-scheme', 'only light', 'important');
+                btn.style.setProperty('forced-color-adjust', 'none', 'important');
                 btn.textContent = tier.label;
                 btn.addEventListener('click', () => moveSelectedToTier(tier.id));
                 buttonsContainer.appendChild(btn);
@@ -3070,13 +3693,17 @@
             container.innerHTML = '';
             const normActive = normalizeHex(activeColor);
             colors.forEach(hex => {
+                const swatchColor = normalizeHex(hex);
                 const btn = document.createElement('button');
                 btn.type = 'button';
-                const isSelected = normalizeHex(hex) === normActive;
+                const isSelected = swatchColor === normActive;
                 btn.className = `w-8 h-8 rounded-xl border border-black/15 shadow-sm hover:scale-110 transition cursor-pointer ${isSelected ? 'ring-2 ring-blue-600 ring-offset-2 dark:ring-offset-slate-900 scale-105' : ''}`;
-                btn.style.backgroundColor = hex;
-                btn.title = hex;
-                btn.addEventListener('click', () => onPick(hex));
+                btn.style.setProperty('background-color', swatchColor, 'important');
+                btn.style.setProperty('background-image', `linear-gradient(${swatchColor}, ${swatchColor})`, 'important');
+                btn.style.setProperty('color-scheme', 'only light', 'important');
+                btn.style.setProperty('forced-color-adjust', 'none', 'important');
+                btn.title = swatchColor;
+                btn.addEventListener('click', () => onPick(swatchColor));
                 container.appendChild(btn);
             });
         }
