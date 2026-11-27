@@ -529,10 +529,52 @@
       border-radius: var(--radius-lg);
       padding: 12px 14px;
       display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .engine-bar-top {
+      display: flex;
       flex-wrap: wrap;
       align-items: center;
       justify-content: space-between;
-      gap: 12px;
+      gap: 8px;
+    }
+
+    .engine-bar-controls {
+      display: grid;
+      grid-template-columns: minmax(260px, 1.45fr) minmax(220px, 1fr);
+      gap: 10px;
+      align-items: end;
+    }
+
+    .engine-control-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      min-width: 0;
+    }
+
+    .engine-control-label {
+      font-size: 11.5px;
+      font-weight: 700;
+      color: var(--text-sec);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .channel-pill {
+      background: var(--indigo-bg);
+      color: var(--indigo);
+      border: 1px solid var(--indigo-border);
+    }
+
+    .speed-badge {
+      background: var(--emerald-bg);
+      color: var(--emerald);
+      border: 1px solid var(--emerald-border);
+      font-variant-numeric: tabular-nums;
     }
 
     .preset-grid {
@@ -980,6 +1022,7 @@
     @media (max-width: 960px) {
       .lib-grid { grid-template-columns: 1fr; }
       .codec-actions-grid { grid-template-columns: 1fr; }
+      .engine-bar-controls { grid-template-columns: 1fr; }
       .preset-grid { grid-template-columns: repeat(2, 1fr); }
       .advanced-panel { grid-template-columns: repeat(2, 1fr); }
       .estimate-strip { grid-template-columns: repeat(2, 1fr); }
@@ -1227,19 +1270,39 @@
           <p class="section-sub">Các chế độ mẫu giữ nguyên độ phân giải &amp; FPS gốc, chỉ điều chỉnh Bitrate tự động dựa trên Video Bitrate đầu vào để giảm dung lượng hiệu quả mà vẫn giữ độ sắc nét</p>
         </div>
 
-        <!-- Thanh chọn bộ máy nén nhanh -->
+        <!-- Thanh chọn bộ máy nén nhanh & Đa kênh song song -->
         <div class="engine-bar">
-          <div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;min-width:0">
-            <span class="badge badge-fb">Bộ máy (Multi-Engine)</span>
-            <span id="engineRouteHint" style="font-size:12.5px;color:var(--text-sec);font-weight:600">Tự động chọn bộ máy tối ưu nhất cho từng codec</span>
+          <div class="engine-bar-top">
+            <div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;min-width:0">
+              <span class="badge badge-fb">Bộ máy (Multi-Engine)</span>
+              <span class="badge channel-pill">Đa kênh Turbo</span>
+              <span id="engineRouteHint" style="font-size:12.5px;color:var(--text-sec);font-weight:600">Tự động chọn bộ máy tối ưu nhất cho từng codec</span>
+            </div>
           </div>
-          <div style="min-width:250px;flex:1;max-width:460px">
-            <select id="optEngineQuick" class="select-input" aria-label="Chọn bộ máy nén">
-              <option value="auto" selected="">Tự động thông minh (GPU WebCodecs → FFmpeg → Native)</option>
-              <option value="ffmpeg">FFmpeg.wasm (libx264 + AAC — Chuẩn MP4 tương thích cao)</option>
-              <option value="webcodecs">WebCodecs + MP4-Muxer (Tăng tốc phần cứng GPU — nhanh nhất)</option>
-              <option value="native">Smart Native MediaRecorder (0 KB, luôn sẵn sàng)</option>
-            </select>
+          <div class="engine-bar-controls">
+            <div class="engine-control-group">
+              <label for="optEngineQuick" class="engine-control-label">Bộ máy nén</label>
+              <select id="optEngineQuick" class="select-input" aria-label="Chọn bộ máy nén">
+                <option value="auto" selected="">Tự động thông minh (WebCodecs Turbo GPU → FFmpeg → Native)</option>
+                <option value="ffmpeg">FFmpeg.wasm (libx264 + AAC — Chuẩn MP4 tương thích cao)</option>
+                <option value="webcodecs">WebCodecs Turbo + MP4-Muxer (GPU đa kênh — nhanh nhất)</option>
+                <option value="native">Smart Native MediaRecorder (0 KB, luôn sẵn sàng)</option>
+              </select>
+            </div>
+            <div class="engine-control-group">
+              <label for="optConcurrency" class="engine-control-label">
+                <span>Đa kênh song song</span>
+              </label>
+              <select id="optConcurrency" class="select-input" aria-label="Số kênh nén song song">
+                <option value="auto" selected="">Tự động tối ưu</option>
+                <option value="1">1 kênh (Tuần tự — tiết kiệm RAM)</option>
+                <option value="2">2 kênh song song</option>
+                <option value="3">3 kênh song song</option>
+                <option value="4">4 kênh song song (Khuyên dùng)</option>
+                <option value="6">6 kênh song song (Máy mạnh)</option>
+                <option value="8">8 kênh song song (Tối đa)</option>
+              </select>
+            </div>
           </div>
         </div>
 
@@ -1322,7 +1385,7 @@
             <select id="optEngineAdv" class="select-input">
               <option value="auto" selected="">Tự động thông minh</option>
               <option value="ffmpeg">FFmpeg.wasm (libx264)</option>
-              <option value="webcodecs">WebCodecs + MP4-Muxer</option>
+              <option value="webcodecs">WebCodecs Turbo + MP4-Muxer</option>
               <option value="native">Smart Native MediaRecorder</option>
             </select>
           </div>
@@ -1379,6 +1442,27 @@
               <option value="fast">fast (Nén chặt, chậm hơn)</option>
             </select>
           </div>
+
+          <div class="field field-wide">
+            <label for="optConcurrencyAdv">Số kênh nén song song</label>
+            <select id="optConcurrencyAdv" class="select-input">
+              <option value="auto" selected="">Tự động tối ưu</option>
+              <option value="1">1 kênh (Tuần tự — tiết kiệm RAM)</option>
+              <option value="2">2 kênh song song</option>
+              <option value="3">3 kênh song song</option>
+              <option value="4">4 kênh song song (Khuyên dùng)</option>
+              <option value="6">6 kênh song song (Máy mạnh)</option>
+              <option value="8">8 kênh song song (Tối đa)</option>
+            </select>
+          </div>
+
+          <div class="field field-wide">
+            <label for="optSegmentSplit">Chia đoạn đa kênh (cho từng video)</label>
+            <select id="optSegmentSplit" class="select-input">
+              <option value="auto" selected="">Tự động (Chia GOP song song — tối ưu tốc độ)</option>
+              <option value="off">Tắt (1 luồng giải mã cho mỗi video)</option>
+            </select>
+          </div>
         </div>
 
         <!-- Khung Ước tính trước khi nén -->
@@ -1413,8 +1497,9 @@
             <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="var(--fb)" stroke-width="2.2"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
             Hàng đợi nén video hàng loạt
             <span id="queueCountBadge" class="badge badge-fb">0 video</span>
+            <span id="batchChannelBadge" class="badge badge-indigo">Tự động đa kênh</span>
           </h2>
-          <p class="section-sub">Xử lý tuần tự từng video một để an toàn RAM — lỗi 1 video sẽ không làm gián đoạn các video còn lại</p>
+          <p class="section-sub">Hỗ trợ nén đa kênh song song (WebCodecs Turbo chia đoạn GOP + đa luồng Worker) — lỗi 1 video không làm gián đoạn các video còn lại</p>
         </div>
         <div class="btn-row">
           <button type="button" id="btnAddMoreVideos" class="btn btn-secondary btn-sm">
@@ -1450,9 +1535,12 @@
 
         <!-- Thanh tiến trình tổng thể -->
         <div style="display:flex;flex-direction:column;gap:6px">
-          <div style="display:flex;justify-content:space-between;align-items:center;font-size:12.5px;font-weight:700">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;font-size:12.5px;font-weight:700">
             <span id="batchProgressLabel" style="color:var(--text-sec)">Sẵn sàng nén hàng loạt</span>
-            <span id="batchProgressPct" style="color:var(--fb)">0%</span>
+            <span style="display:inline-flex;align-items:center;gap:10px;margin-left:auto">
+              <span id="batchSpeedMeta" style="color:var(--emerald);font-weight:700"></span>
+              <span id="batchProgressPct" style="color:var(--fb)">0%</span>
+            </span>
           </div>
           <div class="progress-track" style="height:10px">
             <div id="batchProgressFill" class="progress-fill"></div>
@@ -1817,10 +1905,16 @@
       const state = {
         activePreset: 'balanced',
         enginePref: 'auto',
+        concurrencyPref: 'auto',
+        segmentSplitPref: 'auto',
         keepOrigBitrate: false,
         isBatchRunning: false,
         cancelRequested: false,
-        activeCancelFn: null,
+        activeCancelFns: new Set(),
+        detectedGpuSessionCap: 0,
+        activeHwEncoders: 0,
+        batchStartWall: 0,
+        activeVideoItems: new Map(),
         isStandaloneOffline: false,
         ffmpegModuleBroken: false,
         compareItemId: null,
@@ -1828,6 +1922,11 @@
         queue: [],
         capabilities: {
           hasWebCodecs: typeof window.VideoEncoder === 'function' && typeof window.VideoFrame === 'function',
+          hasVideoDecoder: typeof window.VideoDecoder === 'function' && typeof window.EncodedVideoChunk === 'function',
+          hasAudioDecoder: typeof window.AudioDecoder === 'function' && typeof window.EncodedAudioChunk === 'function',
+          hasOffscreenCanvas: typeof window.OffscreenCanvas === 'function',
+          cpuCores: Math.max(2, Number(navigator.hardwareConcurrency) || 4),
+          deviceMemoryGb: Number(navigator.deviceMemory) || 0,
           hasMediaRecorder: typeof window.MediaRecorder === 'function',
           hasCompressionStream: typeof window.CompressionStream === 'function' && typeof window.DecompressionStream === 'function',
         },
@@ -1870,6 +1969,7 @@
         videoFileInput: $('videoFileInput'),
 
         optEngineQuick: $('optEngineQuick'),
+        optConcurrency: $('optConcurrency'),
         engineRouteHint: $('engineRouteHint'),
         av1RoutingNotice: $('av1RoutingNotice'),
         av1RoutingNoticeText: $('av1RoutingNoticeText'),
@@ -1886,6 +1986,8 @@
         btnSuggestBitrate: $('btnSuggestBitrate'),
         optAudio: $('optAudio'),
         optX264Preset: $('optX264Preset'),
+        optConcurrencyAdv: $('optConcurrencyAdv'),
+        optSegmentSplit: $('optSegmentSplit'),
 
         estSpecText: $('estSpecText'),
         estTotalSizeText: $('estTotalSizeText'),
@@ -1894,6 +1996,7 @@
 
         batchSection: $('batchSection'),
         queueCountBadge: $('queueCountBadge'),
+        batchChannelBadge: $('batchChannelBadge'),
         btnAddMoreVideos: $('btnAddMoreVideos'),
         btnClearQueue: $('btnClearQueue'),
         batchStatCount: $('batchStatCount'),
@@ -1901,6 +2004,7 @@
         batchStatOutSize: $('batchStatOutSize'),
         batchStatSaved: $('batchStatSaved'),
         batchProgressLabel: $('batchProgressLabel'),
+        batchSpeedMeta: $('batchSpeedMeta'),
         batchProgressPct: $('batchProgressPct'),
         batchProgressFill: $('batchProgressFill'),
         btnStartBatch: $('btnStartBatch'),
@@ -2141,6 +2245,51 @@
         if (dom.logCountBadge) {
           dom.logCountBadge.textContent = `${state.logs.length} dòng`;
         }
+      }
+
+      function registerCancelFn(fn) {
+        if (typeof fn === 'function') {
+          state.activeCancelFns.add(fn);
+        }
+      }
+
+      function unregisterCancelFn(fn) {
+        if (fn) {
+          state.activeCancelFns.delete(fn);
+        }
+      }
+
+      function cancelAllActiveTasks() {
+        const list = Array.from(state.activeCancelFns);
+        state.activeCancelFns.clear();
+        for (const fn of list) {
+          try { fn(); } catch {}
+        }
+      }
+
+      let audioDecodeLockChain = Promise.resolve();
+      function withAudioDecodeLock(fn) {
+        const run = audioDecodeLockChain.then(() => fn(), () => fn());
+        audioDecodeLockChain = run.catch(() => {});
+        return run;
+      }
+
+      function formatSpeedX(speed) {
+        if (!Number.isFinite(speed) || speed <= 0) return '';
+        if (speed >= 10) return `${speed.toFixed(1)}x`;
+        return `${speed.toFixed(2).replace(/\.00$/, '')}x`;
+      }
+
+      function formatEtaSeconds(sec) {
+        if (!Number.isFinite(sec) || sec <= 0) return '';
+        const s = Math.max(1, Math.round(sec));
+        if (s < 60) return `~${s}s`;
+        const m = Math.floor(s / 60);
+        const r = s % 60;
+        if (m < 60) return r > 0 ? `~${m}p ${r}s` : `~${m}p`;
+        const h = Math.floor(m / 60);
+        const rm = m % 60;
+        return `~${h}g ${rm}p`;
       }
 
       /* =========================================================================
@@ -3019,8 +3168,45 @@
         }
       }
 
+      function resolveAutoChannelCount(cfg) {
+        const cores = state.capabilities.cpuCores || 4;
+        const memGb = state.capabilities.deviceMemoryGb || 0;
+        const memCap = (memGb > 0 && memGb <= 4) ? 2 : 4;
+        const engine = (cfg && cfg.engine) || state.enginePref || 'auto';
+        const wcPrimary = (engine === 'webcodecs' || engine === 'auto') && isWebCodecsReady();
+        const isNativeOnly = engine === 'native' || (!wcPrimary && !isFfmpegReady());
+        if (isNativeOnly) {
+          return Math.min(2, memCap);
+        }
+        if (wcPrimary) {
+          return Math.max(2, Math.min(memCap, Math.ceil(cores / 2)));
+        }
+        return Math.max(2, Math.min(memCap, Math.floor(cores / 2)));
+      }
+
+      function resolveChannelBudget(cfg, pendingCount) {
+        const pref = (cfg && cfg.concurrency) || state.concurrencyPref || 'auto';
+        const isAuto = pref === 'auto';
+        const rawChannels = isAuto
+          ? resolveAutoChannelCount(cfg)
+          : Math.max(1, Math.min(8, Number(pref) || 2));
+        const cap = state.detectedGpuSessionCap > 0 ? Math.min(rawChannels, state.detectedGpuSessionCap) : rawChannels;
+        const totalChannels = Math.max(1, cap);
+        const batchWorkers = pendingCount > 0 ? Math.min(totalChannels, pendingCount) : totalChannels;
+        const splitSetting = (cfg && cfg.segmentSplit) || state.segmentSplitPref || 'auto';
+        const allowSegmentSplit = splitSetting !== 'off' && state.capabilities.hasVideoDecoder;
+        return {
+          totalChannels,
+          batchWorkers,
+          isAuto,
+          allowSegmentSplit,
+        };
+      }
+
       function getActiveConfig() {
         const engine = state.enginePref || 'auto';
+        const concurrency = state.concurrencyPref || 'auto';
+        const segmentSplit = state.segmentSplitPref || 'auto';
         if (state.activePreset !== 'custom' && PRESETS[state.activePreset]) {
           const p = PRESETS[state.activePreset];
           return {
@@ -3028,6 +3214,8 @@
             presetName: p.name,
             shortLabel: p.shortLabel,
             engine,
+            concurrency,
+            segmentSplit,
             outputFormat: 'mp4',
             maxShortSide: p.maxShortSide,
             fps: p.fps,
@@ -3050,6 +3238,8 @@
           presetName: 'Tùy chỉnh nâng cao',
           shortLabel: 'Tùy chỉnh',
           engine,
+          concurrency,
+          segmentSplit,
           outputFormat: dom.optFormat ? dom.optFormat.value : 'mp4',
           maxShortSide: dom.optResolution.value === 'original' ? 'original' : Number(dom.optResolution.value),
           fps: fpsVal === 'original' ? 'original' : (Number(fpsVal) || 60),
@@ -3201,7 +3391,7 @@
         if (!routing.chain.length) return fmt !== 'mp4' ? `Cần thư viện (.${fmt.toUpperCase()})` : 'Chưa đủ bộ máy';
         const first = routing.chain[0];
         if (first === 'ffmpeg') return fmt !== 'mp4' ? `FFmpeg.wasm (.${fmt.toUpperCase()})` : 'FFmpeg.wasm';
-        if (first === 'webcodecs') return 'WebCodecs GPU';
+        if (first === 'webcodecs') return state.capabilities.hasVideoDecoder ? 'WebCodecs Turbo GPU' : 'WebCodecs GPU';
         return fmt === 'webm' ? 'Smart Native (WebM)' : 'Smart Native';
       }
 
@@ -3383,48 +3573,70 @@
           dom.av1RoutingNotice.classList.add('hidden');
         }
 
+        const autoCount = resolveAutoChannelCount(cfg);
+        [dom.optConcurrency, dom.optConcurrencyAdv].forEach((sel) => {
+          if (!sel) return;
+          const autoOpt = sel.querySelector('option[value="auto"]');
+          if (autoOpt) {
+            autoOpt.textContent = `Tự động tối ưu (${autoCount} kênh)`;
+          }
+        });
+        const budget = resolveChannelBudget(cfg, state.queue.filter((x) => x.status !== 'done').length || state.queue.length);
+        const channelText = `${budget.totalChannels} kênh`;
+        if (dom.batchChannelBadge && !state.isBatchRunning) {
+          dom.batchChannelBadge.textContent = budget.isAuto
+            ? `Tự động ${budget.totalChannels} kênh`
+            : `${budget.totalChannels} kênh song song`;
+        }
+
         // Tên bộ máy hiệu lực theo định dạng & lựa chọn
         if (hasFfmpegOnlyTarget) {
           const fmtTagUpper = fmtSetting === 'original' ? 'Đa định dạng' : `.${OUTPUT_FORMATS[fmtSetting].shortName}`;
           dom.estEngineText.textContent = isFfmpegReady()
-            ? `FFmpeg.wasm (Xuất ${fmtTagUpper})`
+            ? `FFmpeg.wasm (Xuất ${fmtTagUpper}) • ${channelText}`
             : `Cần FFmpeg.wasm (Xuất ${fmtTagUpper})`;
           dom.engineRouteHint.textContent = fmtSetting === 'original'
-            ? 'Định dạng không phải MP4/WebM sẽ được đóng gói qua FFmpeg.wasm'
-            : `Định dạng ${fmtTagUpper} (${OUTPUT_FORMATS[fmtSetting].codecDesc}) được đóng gói qua FFmpeg.wasm`;
+            ? `Định dạng không phải MP4/WebM sẽ được đóng gói qua FFmpeg.wasm (${channelText})`
+            : `Định dạng ${fmtTagUpper} (${OUTPUT_FORMATS[fmtSetting].codecDesc}) được đóng gói qua FFmpeg.wasm (${channelText})`;
         } else if (!cfg.autoBitrate && fmtSetting === 'webm') {
           if (cfg.engine === 'native') {
-            dom.estEngineText.textContent = isNativeWebmSupported() ? 'Smart Native (WebM)' : 'Trình duyệt không hỗ trợ ghi WebM';
+            dom.estEngineText.textContent = isNativeWebmSupported() ? `Smart Native (WebM) • ${channelText}` : 'Trình duyệt không hỗ trợ ghi WebM';
           } else if (cfg.engine === 'ffmpeg') {
-            dom.estEngineText.textContent = isFfmpegReady() ? 'FFmpeg.wasm (VP8 / Vorbis)' : 'FFmpeg (Chưa tải thư viện)';
+            dom.estEngineText.textContent = isFfmpegReady() ? `FFmpeg.wasm (VP8 / Vorbis) • ${channelText}` : 'FFmpeg (Chưa tải thư viện)';
           } else {
             dom.estEngineText.textContent = isFfmpegReady()
-              ? 'FFmpeg.wasm → Smart Native (WebM)'
-              : (isNativeWebmSupported() ? 'Smart Native (WebM)' : 'Cần FFmpeg.wasm (WebM)');
+              ? `FFmpeg.wasm → Smart Native (WebM) • ${channelText}`
+              : (isNativeWebmSupported() ? `Smart Native (WebM) • ${channelText}` : 'Cần FFmpeg.wasm (WebM)');
           }
-          dom.engineRouteHint.textContent = 'Xuất tệp .WebM (VP8 + Vorbis qua FFmpeg, hoặc VP9/VP8 + Opus qua Native)';
+          dom.engineRouteHint.textContent = `Xuất tệp .WebM song song tối đa ${channelText}`;
         } else if (cfg.engine === 'auto') {
+          const turboTag = state.capabilities.hasVideoDecoder ? 'WebCodecs Turbo GPU' : 'WebCodecs GPU';
           if (av1Items.length > 0 && av1Items.length === state.queue.length) {
-            dom.estEngineText.textContent = isWebCodecsReady() ? 'WebCodecs GPU (Tối ưu AV1)' : 'Smart Native (AV1)';
+            dom.estEngineText.textContent = isWebCodecsReady() ? `${turboTag} (AV1) • ${channelText}` : `Smart Native (AV1) • ${channelText}`;
           } else if (isWebCodecsReady() && isFfmpegReady()) {
-            dom.estEngineText.textContent = 'WebCodecs GPU → FFmpeg → Native';
+            dom.estEngineText.textContent = `${turboTag} → FFmpeg → Native • ${channelText}`;
           } else if (isWebCodecsReady()) {
-            dom.estEngineText.textContent = 'WebCodecs GPU → Native';
+            dom.estEngineText.textContent = `${turboTag} → Native • ${channelText}`;
           } else if (isFfmpegReady()) {
-            dom.estEngineText.textContent = 'FFmpeg.wasm → Native';
+            dom.estEngineText.textContent = `FFmpeg.wasm → Native • ${channelText}`;
           } else {
-            dom.estEngineText.textContent = 'Smart Native (0 KB)';
+            dom.estEngineText.textContent = `Smart Native (0 KB) • ${channelText}`;
           }
-          dom.engineRouteHint.textContent = 'Ưu tiên tăng tốc phần cứng GPU WebCodecs, tự động dự phòng FFmpeg / Native';
+          dom.engineRouteHint.textContent = state.capabilities.hasVideoDecoder
+            ? `Bơm thẳng VideoDecoder → VideoEncoder (${channelText} song song, vượt 1x realtime)`
+            : `Ưu tiên tăng tốc phần cứng GPU WebCodecs (${channelText}), tự động dự phòng FFmpeg / Native`;
         } else if (cfg.engine === 'ffmpeg') {
-          dom.estEngineText.textContent = isFfmpegReady() ? 'FFmpeg.wasm (libx264)' : 'FFmpeg (Chưa tải thư viện)';
-          dom.engineRouteHint.textContent = 'Ưu tiên FFmpeg.wasm libx264 + AAC tương thích cao';
+          dom.estEngineText.textContent = isFfmpegReady() ? `FFmpeg.wasm (libx264) • ${channelText}` : 'FFmpeg (Chưa tải thư viện)';
+          dom.engineRouteHint.textContent = `Ưu tiên FFmpeg.wasm libx264 + AAC (${channelText} Worker song song)`;
         } else if (cfg.engine === 'webcodecs') {
-          dom.estEngineText.textContent = isWebCodecsReady() ? 'WebCodecs + MP4-Muxer' : 'WebCodecs (Cần mp4-muxer.min.js)';
-          dom.engineRouteHint.textContent = 'Mã hóa H.264/AAC FastStart trực tiếp qua GPU trình duyệt';
+          const turboTag = state.capabilities.hasVideoDecoder ? 'WebCodecs Turbo GPU' : 'WebCodecs + MP4-Muxer';
+          dom.estEngineText.textContent = isWebCodecsReady() ? `${turboTag} • ${channelText}` : 'WebCodecs (Cần mp4-muxer.min.js)';
+          dom.engineRouteHint.textContent = state.capabilities.hasVideoDecoder
+            ? `Mã hóa H.264/AAC đa kênh không giới hạn 1x (${channelText} song song)`
+            : 'Mã hóa H.264/AAC FastStart trực tiếp qua GPU trình duyệt';
         } else {
-          dom.estEngineText.textContent = 'Smart Native MediaRecorder';
-          dom.engineRouteHint.textContent = 'Chạy trực tiếp trên trình duyệt không cần tải thêm thư viện';
+          dom.estEngineText.textContent = `Smart Native MediaRecorder • ${channelText}`;
+          dom.engineRouteHint.textContent = `Chạy trực tiếp trên trình duyệt (${channelText} song song)`;
         }
 
         if (state.queue.length === 0) {
@@ -3715,7 +3927,7 @@
           let settled = false;
 
           const cleanup = () => {
-            if (state.activeCancelFn === cancelWorker) state.activeCancelFn = null;
+            unregisterCancelFn(cancelWorker);
             try { if (worker) worker.terminate(); } catch {}
             try { if (workerUrl) URL.revokeObjectURL(workerUrl); } catch {}
           };
@@ -3737,7 +3949,7 @@
             return;
           }
 
-          state.activeCancelFn = cancelWorker;
+          registerCancelFn(cancelWorker);
 
           worker.onerror = (ev) => {
             if (settled) return;
@@ -4518,6 +4730,1008 @@
         }
       }
 
+      /* =========================================================================
+       * 9A. BỘ TÁCH LUỒNG ISO-BMFF (MP4 / MOV / M4V) STREAMING — 0 DEPENDENCY
+       *     - Chỉ đọc hộp 'moov' qua File.slice() (không đọc mdat vào RAM)
+       *     - Hỗ trợ 64-bit box, co64, ctts v0/v1, tkhd rotation, elst, esds/avcC/hvcC/av1C/vpcC
+       * ========================================================================= */
+      function readU16BE(buf, off) {
+        if (off < 0 || off + 2 > buf.length) return 0;
+        return ((buf[off] << 8) | buf[off + 1]) >>> 0;
+      }
+
+      function readI16BE(buf, off) {
+        const v = readU16BE(buf, off);
+        return (v & 0x8000) ? (v - 0x10000) : v;
+      }
+
+      function readI32BE(buf, off) {
+        if (off < 0 || off + 4 > buf.length) return 0;
+        return (
+          (buf[off] << 24) |
+          (buf[off + 1] << 16) |
+          (buf[off + 2] << 8) |
+          buf[off + 3]
+        ) | 0;
+      }
+
+      function readU64BE(buf, off) {
+        if (off < 0 || off + 8 > buf.length) return 0;
+        return readU32BE(buf, off) * 4294967296 + readU32BE(buf, off + 4);
+      }
+
+      function readI64BE(buf, off) {
+        if (off < 0 || off + 8 > buf.length) return 0;
+        return readI32BE(buf, off) * 4294967296 + readU32BE(buf, off + 4);
+      }
+
+      function hex2(n) {
+        return (n & 0xff).toString(16).padStart(2, '0');
+      }
+
+      function createFileChunkReader(file, windowBytes) {
+        const winSize = Math.max(512 * 1024, windowBytes || (4 * 1024 * 1024));
+        let cachedStart = 0;
+        let cachedBuf = null;
+        return async function readBytes(offset, length) {
+          if (length <= 0) return new Uint8Array(0);
+          const end = offset + length;
+          if (cachedBuf && offset >= cachedStart && end <= cachedStart + cachedBuf.byteLength) {
+            const rel = offset - cachedStart;
+            return cachedBuf.slice(rel, rel + length);
+          }
+          const fetchEnd = Math.min(file.size, Math.max(end, offset + winSize));
+          const ab = await file.slice(offset, fetchEnd).arrayBuffer();
+          cachedStart = offset;
+          cachedBuf = new Uint8Array(ab);
+          if (cachedBuf.byteLength < length) {
+            throw new Error(`Không đủ dữ liệu tệp tại offset ${offset} (cần ${length}, đọc ${cachedBuf.byteLength}).`);
+          }
+          return cachedBuf.slice(0, length);
+        };
+      }
+
+      function parseEsdsDescriptor(buf, start, end) {
+        const info = { objectTypeIndication: 0, asc: null, audioObjectType: 0, sampleRate: 0, channelConfig: 0 };
+        function readVarLen(pos, limit) {
+          let len = 0;
+          let bytes = 0;
+          while (pos + bytes < limit && bytes < 4) {
+            const b = buf[pos + bytes++];
+            len = (len << 7) | (b & 0x7f);
+            if ((b & 0x80) === 0) break;
+          }
+          return { len, bytes };
+        }
+        function walk(pos, limit) {
+          while (pos + 2 <= limit) {
+            const tag = buf[pos++];
+            const sz = readVarLen(pos, limit);
+            pos += sz.bytes;
+            const descEnd = Math.min(limit, pos + sz.len);
+            if (tag === 0x03) {
+              if (pos + 3 <= descEnd) {
+                const flags = buf[pos + 2];
+                let p = pos + 3;
+                if (flags & 0x80) p += 2;
+                if (flags & 0x40) {
+                  if (p < descEnd) p += 1 + buf[p];
+                }
+                if (flags & 0x20) p += 2;
+                if (p < descEnd) walk(p, descEnd);
+              }
+            } else if (tag === 0x04) {
+              if (pos + 13 <= descEnd) {
+                info.objectTypeIndication = buf[pos];
+                walk(pos + 13, descEnd);
+              }
+            } else if (tag === 0x05) {
+              if (pos < descEnd) {
+                info.asc = buf.slice(pos, descEnd);
+              }
+            }
+            pos = descEnd;
+          }
+        }
+        walk(start + 4, end);
+
+        if (info.asc && info.asc.length >= 2) {
+          const SR_TABLE = [96000, 88200, 64000, 48000, 44100, 32000, 24000, 22050, 16000, 12000, 11025, 8000, 7350];
+          const b0 = info.asc[0];
+          const b1 = info.asc[1];
+          let aot = (b0 >> 3) & 0x1f;
+          let srIdx = ((b0 & 0x07) << 1) | ((b1 >> 7) & 0x01);
+          let ch = (b1 >> 3) & 0x0f;
+          if (aot === 31 && info.asc.length >= 3) {
+            const b2 = info.asc[2];
+            aot = 32 + (((b0 & 0x07) << 3) | ((b1 >> 5) & 0x07));
+            srIdx = (b1 >> 1) & 0x0f;
+            if (srIdx === 15 && info.asc.length >= 6) {
+              info.sampleRate = ((b1 & 1) << 23) | (b2 << 15) | (info.asc[3] << 7) | (info.asc[4] >> 1);
+              ch = ((info.asc[4] & 1) << 3) | ((info.asc[5] >> 5) & 0x07);
+            } else {
+              info.sampleRate = SR_TABLE[srIdx] || 0;
+              ch = ((b1 & 1) << 3) | ((b2 >> 5) & 0x07);
+            }
+          } else if (srIdx === 15 && info.asc.length >= 5) {
+            info.sampleRate = ((b1 & 0x7f) << 17) | (info.asc[2] << 9) | (info.asc[3] << 1) | ((info.asc[4] >> 7) & 1);
+            ch = (info.asc[4] >> 3) & 0x0f;
+          } else {
+            info.sampleRate = SR_TABLE[srIdx] || 0;
+          }
+          info.audioObjectType = aot;
+          info.channelConfig = ch;
+        }
+        return info;
+      }
+
+      function parseElstBox(buf, start, end, movieTimescale, trackTimescale) {
+        if (start + 8 > end || movieTimescale <= 0 || trackTimescale <= 0) {
+          return { complex: false, emptyDelaySec: 0, mediaTimeOffsetTicks: 0 };
+        }
+        const ver = buf[start];
+        const entryCount = readU32BE(buf, start + 4);
+        if (entryCount === 0) return { complex: false, emptyDelaySec: 0, mediaTimeOffsetTicks: 0 };
+        if (entryCount > 2) return { complex: true, emptyDelaySec: 0, mediaTimeOffsetTicks: 0 };
+
+        const entrySize = ver === 1 ? 20 : 12;
+        if (start + 8 + entryCount * entrySize > end) {
+          return { complex: true, emptyDelaySec: 0, mediaTimeOffsetTicks: 0 };
+        }
+
+        const entries = [];
+        let off = start + 8;
+        for (let i = 0; i < entryCount; i++) {
+          const segDur = ver === 1 ? readU64BE(buf, off) : readU32BE(buf, off);
+          const mediaTime = ver === 1 ? readI64BE(buf, off + 8) : readI32BE(buf, off + 4);
+          const rateInt = readI16BE(buf, off + (ver === 1 ? 16 : 8));
+          const rateFrac = readU16BE(buf, off + (ver === 1 ? 18 : 10));
+          if (rateInt !== 1 || rateFrac !== 0) {
+            return { complex: true, emptyDelaySec: 0, mediaTimeOffsetTicks: 0 };
+          }
+          entries.push({ segDur, mediaTime });
+          off += entrySize;
+        }
+
+        if (entries.length === 1) {
+          if (entries[0].mediaTime < 0) return { complex: true, emptyDelaySec: 0, mediaTimeOffsetTicks: 0 };
+          const mtSec = entries[0].mediaTime / trackTimescale;
+          if (mtSec > 1.0) return { complex: true, emptyDelaySec: 0, mediaTimeOffsetTicks: 0 };
+          return { complex: false, emptyDelaySec: 0, mediaTimeOffsetTicks: entries[0].mediaTime };
+        }
+
+        if (entries[0].mediaTime >= 0 || entries[1].mediaTime < 0) {
+          return { complex: true, emptyDelaySec: 0, mediaTimeOffsetTicks: 0 };
+        }
+        const emptyDelaySec = entries[0].segDur / movieTimescale;
+        const mtSec = entries[1].mediaTime / trackTimescale;
+        if (emptyDelaySec > 1.0 || mtSec > 1.0) {
+          return { complex: true, emptyDelaySec: 0, mediaTimeOffsetTicks: 0 };
+        }
+        return { complex: false, emptyDelaySec, mediaTimeOffsetTicks: entries[1].mediaTime };
+      }
+
+      function parseTkhdRotation(buf, start, end) {
+        if (start + 4 > end) return { supported: true, rotation: 0 };
+        const ver = buf[start];
+        const mOff = start + (ver === 1 ? 52 : 40);
+        if (mOff + 36 > end) return { supported: true, rotation: 0 };
+
+        const a = readI32BE(buf, mOff) / 65536;
+        const b = readI32BE(buf, mOff + 4) / 65536;
+        const c = readI32BE(buf, mOff + 12) / 65536;
+        const d = readI32BE(buf, mOff + 16) / 65536;
+
+        const det = a * d - b * c;
+        if (det <= 0.0001) return { supported: false, reason: 'mirrored-matrix' };
+        const magA = Math.hypot(a, b);
+        const magC = Math.hypot(c, d);
+        if (magA < 0.0001 || magC < 0.0001) return { supported: false, reason: 'degenerate-matrix' };
+        const dotNorm = Math.abs((a * c + b * d) / (magA * magC));
+        if (dotNorm > 0.05) return { supported: false, reason: 'skewed-matrix' };
+
+        const rawDeg = (Math.atan2(b, a) * 180) / Math.PI;
+        const posDeg = ((rawDeg % 360) + 360) % 360;
+        const snapped = Math.round(posDeg / 90) * 90;
+        if (Math.abs(posDeg - snapped) > 2 && Math.abs(posDeg - 360) > 2) {
+          return { supported: false, reason: 'arbitrary-rotation' };
+        }
+        return { supported: true, rotation: snapped % 360 };
+      }
+
+      function parseHevcCodecString(hvcC) {
+        if (!hvcC || hvcC.length < 23) return null;
+        const b1 = hvcC[1];
+        const profileSpace = (b1 >> 6) & 0x03;
+        const tierFlag = (b1 >> 5) & 0x01;
+        const profileIdc = b1 & 0x1f;
+        const spaceStr = ['', 'A', 'B', 'C'][profileSpace] || '';
+        const compat = readU32BE(hvcC, 2);
+        let rev = 0;
+        for (let i = 0; i < 32; i++) {
+          if ((compat >>> i) & 1) rev |= (1 << (31 - i));
+        }
+        const compatHex = (rev >>> 0).toString(16);
+        const tierChar = tierFlag ? 'H' : 'L';
+        const levelIdc = hvcC[12];
+        const constraints = [];
+        for (let i = 6; i < 12; i++) constraints.push(hvcC[i]);
+        while (constraints.length > 0 && constraints[constraints.length - 1] === 0) constraints.pop();
+        const cStr = constraints.map((v) => v.toString(16).toUpperCase()).join('.');
+        return `hvc1.${spaceStr}${profileIdc}.${compatHex}.${tierChar}${levelIdc}${cStr ? '.' + cStr : ''}`;
+      }
+
+      function buildSampleTables(buf, stblStart, stblEnd, requireSingleStsdIndex) {
+        const boxes = iterIsoBoxes(buf, stblStart, stblEnd);
+        const find = (t) => boxes.find((x) => x.type === t);
+        const stszBox = find('stsz');
+        const stcoBox = find('stco');
+        const co64Box = find('co64');
+        const stscBox = find('stsc');
+        const sttsBox = find('stts');
+        const cttsBox = find('ctts');
+        const stssBox = find('stss');
+
+        if (!stszBox || (!stcoBox && !co64Box) || !stscBox || !sttsBox) {
+          return { ok: false, reason: 'missing-sample-table' };
+        }
+        if (stszBox.payloadStart + 12 > stszBox.boxEnd) {
+          return { ok: false, reason: 'truncated-stsz' };
+        }
+
+        const uniformSize = readU32BE(buf, stszBox.payloadStart + 4);
+        const sampleCount = readU32BE(buf, stszBox.payloadStart + 8);
+        if (sampleCount === 0 || sampleCount > 2000000) {
+          return { ok: false, reason: 'invalid-sample-count' };
+        }
+
+        const sizes = new Uint32Array(sampleCount);
+        let totalBytes = 0;
+        if (uniformSize > 0) {
+          sizes.fill(uniformSize);
+          totalBytes = uniformSize * sampleCount;
+        } else {
+          if (stszBox.payloadStart + 12 + sampleCount * 4 > stszBox.boxEnd) {
+            return { ok: false, reason: 'truncated-stsz-entries' };
+          }
+          let off = stszBox.payloadStart + 12;
+          for (let i = 0; i < sampleCount; i++) {
+            const sz = readU32BE(buf, off);
+            sizes[i] = sz;
+            totalBytes += sz;
+            off += 4;
+          }
+        }
+
+        let chunkOffsets;
+        if (co64Box) {
+          const chunkCount = readU32BE(buf, co64Box.payloadStart + 4);
+          if (co64Box.payloadStart + 8 + chunkCount * 8 > co64Box.boxEnd) {
+            return { ok: false, reason: 'truncated-co64' };
+          }
+          chunkOffsets = new Float64Array(chunkCount);
+          let off = co64Box.payloadStart + 8;
+          for (let i = 0; i < chunkCount; i++) {
+            chunkOffsets[i] = readU64BE(buf, off);
+            off += 8;
+          }
+        } else {
+          const chunkCount = readU32BE(buf, stcoBox.payloadStart + 4);
+          if (stcoBox.payloadStart + 8 + chunkCount * 4 > stcoBox.boxEnd) {
+            return { ok: false, reason: 'truncated-stco' };
+          }
+          chunkOffsets = new Float64Array(chunkCount);
+          let off = stcoBox.payloadStart + 8;
+          for (let i = 0; i < chunkCount; i++) {
+            chunkOffsets[i] = readU32BE(buf, off);
+            off += 4;
+          }
+        }
+
+        const stscCount = readU32BE(buf, stscBox.payloadStart + 4);
+        if (stscCount === 0 || stscBox.payloadStart + 8 + stscCount * 12 > stscBox.boxEnd) {
+          return { ok: false, reason: 'invalid-stsc' };
+        }
+        const stscEntries = [];
+        let scOff = stscBox.payloadStart + 8;
+        for (let i = 0; i < stscCount; i++) {
+          const firstChunk = readU32BE(buf, scOff);
+          const samplesPerChunk = readU32BE(buf, scOff + 4);
+          const sdi = readU32BE(buf, scOff + 8);
+          if (requireSingleStsdIndex && sdi !== 1) {
+            return { ok: false, reason: 'multi-stsd-index' };
+          }
+          stscEntries.push({ firstChunk, samplesPerChunk });
+          scOff += 12;
+        }
+
+        const offsets = new Float64Array(sampleCount);
+        let sampleIdx = 0;
+        let stscIdx = 0;
+        for (let chunkIdx = 0; chunkIdx < chunkOffsets.length && sampleIdx < sampleCount; chunkIdx++) {
+          const oneBasedChunk = chunkIdx + 1;
+          while (stscIdx + 1 < stscEntries.length && oneBasedChunk >= stscEntries[stscIdx + 1].firstChunk) {
+            stscIdx++;
+          }
+          const spc = stscEntries[stscIdx].samplesPerChunk;
+          let bytePos = chunkOffsets[chunkIdx];
+          for (let k = 0; k < spc && sampleIdx < sampleCount; k++) {
+            offsets[sampleIdx] = bytePos;
+            bytePos += sizes[sampleIdx];
+            sampleIdx++;
+          }
+        }
+        if (sampleIdx !== sampleCount) {
+          return { ok: false, reason: 'stsc-sample-mismatch' };
+        }
+
+        const sttsCount = readU32BE(buf, sttsBox.payloadStart + 4);
+        if (sttsBox.payloadStart + 8 + sttsCount * 8 > sttsBox.boxEnd) {
+          return { ok: false, reason: 'truncated-stts' };
+        }
+        const dtsTicks = new Float64Array(sampleCount);
+        const durTicks = new Uint32Array(sampleCount);
+        let tIdx = 0;
+        let curTick = 0;
+        let tsOff = sttsBox.payloadStart + 8;
+        for (let i = 0; i < sttsCount && tIdx < sampleCount; i++) {
+          const cnt = readU32BE(buf, tsOff);
+          const delta = readU32BE(buf, tsOff + 4);
+          tsOff += 8;
+          for (let k = 0; k < cnt && tIdx < sampleCount; k++) {
+            dtsTicks[tIdx] = curTick;
+            durTicks[tIdx] = delta > 0 ? delta : 1;
+            curTick += delta;
+            tIdx++;
+          }
+        }
+        while (tIdx < sampleCount) {
+          dtsTicks[tIdx] = curTick;
+          durTicks[tIdx] = 1;
+          curTick += 1;
+          tIdx++;
+        }
+
+        let ctsTicks = null;
+        let hasCtts = false;
+        if (cttsBox && cttsBox.payloadStart + 8 <= cttsBox.boxEnd) {
+          const cVer = buf[cttsBox.payloadStart];
+          const cCount = readU32BE(buf, cttsBox.payloadStart + 4);
+          if (cttsBox.payloadStart + 8 + cCount * 8 <= cttsBox.boxEnd) {
+            ctsTicks = new Int32Array(sampleCount);
+            hasCtts = true;
+            let cIdx = 0;
+            let cOff = cttsBox.payloadStart + 8;
+            for (let i = 0; i < cCount && cIdx < sampleCount; i++) {
+              const cnt = readU32BE(buf, cOff);
+              const offVal = cVer === 1 ? readI32BE(buf, cOff + 4) : readU32BE(buf, cOff + 4);
+              cOff += 8;
+              for (let k = 0; k < cnt && cIdx < sampleCount; k++) {
+                ctsTicks[cIdx++] = offVal;
+              }
+            }
+          }
+        }
+
+        let stssList = null;
+        if (stssBox && stssBox.payloadStart + 8 <= stssBox.boxEnd) {
+          const kCount = readU32BE(buf, stssBox.payloadStart + 4);
+          if (stssBox.payloadStart + 8 + kCount * 4 <= stssBox.boxEnd) {
+            stssList = [];
+            let kOff = stssBox.payloadStart + 8;
+            for (let i = 0; i < kCount; i++) {
+              const sn = readU32BE(buf, kOff);
+              if (sn >= 1 && sn <= sampleCount) stssList.push(sn - 1);
+              kOff += 4;
+            }
+          }
+        }
+
+        return {
+          ok: true,
+          sampleCount,
+          totalBytes,
+          totalTicks: curTick,
+          offsets,
+          sizes,
+          dtsTicks,
+          durTicks,
+          ctsTicks,
+          hasCtts,
+          stssList,
+        };
+      }
+
+      async function demuxMp4File(file) {
+        try {
+          if (!file || file.size < 24) {
+            return { supported: false, reason: 'file-too-small' };
+          }
+          let pos = 0;
+          let moovStart = -1;
+          let moovHeaderSize = 8;
+          let moovSize = 0;
+          let sawFtyp = false;
+          let boxLoops = 0;
+
+          while (pos + 8 <= file.size && boxLoops < 512) {
+            boxLoops++;
+            const hdrBytes = new Uint8Array(await file.slice(pos, Math.min(file.size, pos + 16)).arrayBuffer());
+            if (hdrBytes.length < 8) break;
+            let size = readU32BE(hdrBytes, 0);
+            const type = readFourCC(hdrBytes, 4);
+            let hdrLen = 8;
+            if (size === 1) {
+              if (hdrBytes.length < 16) break;
+              size = readU64BE(hdrBytes, 8);
+              hdrLen = 16;
+            } else if (size === 0) {
+              size = file.size - pos;
+            }
+            if (size < hdrLen || pos + size > file.size) break;
+
+            if (type === 'ftyp') sawFtyp = true;
+            else if (type === 'moof') return { supported: false, reason: 'fragmented-mp4' };
+            else if (type === 'moov') {
+              moovStart = pos;
+              moovHeaderSize = hdrLen;
+              moovSize = size;
+            }
+            pos += size;
+          }
+
+          if (!sawFtyp || moovStart < 0) {
+            return { supported: false, reason: 'not-iso-bmff' };
+          }
+          if (moovSize > 64 * 1024 * 1024) {
+            return { supported: false, reason: 'moov-too-large' };
+          }
+
+          const moovBuf = new Uint8Array(
+            await file.slice(moovStart + moovHeaderSize, moovStart + moovSize).arrayBuffer()
+          );
+          const moovChildren = iterIsoBoxes(moovBuf, 0, moovBuf.length);
+          if (moovChildren.some((x) => x.type === 'mvex')) {
+            return { supported: false, reason: 'fragmented-mp4' };
+          }
+
+          const mvhdBox = moovChildren.find((x) => x.type === 'mvhd');
+          let movieTimescale = 1000;
+          if (mvhdBox && mvhdBox.payloadStart + 16 <= mvhdBox.boxEnd) {
+            const mVer = moovBuf[mvhdBox.payloadStart];
+            movieTimescale = mVer === 1
+              ? readU32BE(moovBuf, mvhdBox.payloadStart + 20)
+              : readU32BE(moovBuf, mvhdBox.payloadStart + 12);
+            if (!movieTimescale) movieTimescale = 1000;
+          }
+
+          let videoTrack = null;
+          let audioTrack = null;
+
+          for (const child of moovChildren) {
+            if (child.type !== 'trak') continue;
+            const trakChildren = iterIsoBoxes(moovBuf, child.payloadStart, child.boxEnd);
+            const tkhdBox = trakChildren.find((x) => x.type === 'tkhd');
+            const edtsBox = trakChildren.find((x) => x.type === 'edts');
+            const mdiaBox = trakChildren.find((x) => x.type === 'mdia');
+            if (!mdiaBox) continue;
+
+            const mdiaChildren = iterIsoBoxes(moovBuf, mdiaBox.payloadStart, mdiaBox.boxEnd);
+            const mdhdBox = mdiaChildren.find((x) => x.type === 'mdhd');
+            const hdlrBox = mdiaChildren.find((x) => x.type === 'hdlr');
+            const minfBox = mdiaChildren.find((x) => x.type === 'minf');
+            if (!mdhdBox || !hdlrBox || !minfBox || hdlrBox.payloadStart + 12 > hdlrBox.boxEnd) continue;
+
+            const handlerType = readFourCC(moovBuf, hdlrBox.payloadStart + 8);
+            const mdVer = moovBuf[mdhdBox.payloadStart];
+            const timescale = mdVer === 1
+              ? readU32BE(moovBuf, mdhdBox.payloadStart + 20)
+              : readU32BE(moovBuf, mdhdBox.payloadStart + 12);
+            if (!timescale || timescale <= 0) continue;
+
+            const stblBox = iterIsoBoxes(moovBuf, minfBox.payloadStart, minfBox.boxEnd).find((x) => x.type === 'stbl');
+            if (!stblBox) continue;
+            const stsdBox = iterIsoBoxes(moovBuf, stblBox.payloadStart, stblBox.boxEnd).find((x) => x.type === 'stsd');
+            if (!stsdBox || stsdBox.payloadStart + 8 > stsdBox.boxEnd) continue;
+            const stsdCount = readU32BE(moovBuf, stsdBox.payloadStart + 4);
+            if (stsdCount < 1) continue;
+            const stsdEntries = iterIsoBoxes(moovBuf, stsdBox.payloadStart + 8, stsdBox.boxEnd);
+            if (!stsdEntries.length) continue;
+
+            let elstInfo = { complex: false, emptyDelaySec: 0, mediaTimeOffsetTicks: 0 };
+            if (edtsBox) {
+              const elstBox = iterIsoBoxes(moovBuf, edtsBox.payloadStart, edtsBox.boxEnd).find((x) => x.type === 'elst');
+              if (elstBox) {
+                elstInfo = parseElstBox(moovBuf, elstBox.payloadStart, elstBox.boxEnd, movieTimescale, timescale);
+              }
+            }
+
+            if (handlerType === 'vide' && !videoTrack) {
+              if (elstInfo.complex) {
+                return { supported: false, reason: 'complex-video-elst' };
+              }
+              const rotInfo = tkhdBox
+                ? parseTkhdRotation(moovBuf, tkhdBox.payloadStart, tkhdBox.boxEnd)
+                : { supported: true, rotation: 0 };
+              if (!rotInfo.supported) {
+                return { supported: false, reason: rotInfo.reason };
+              }
+
+              const entry = stsdEntries[0];
+              if (entry.payloadStart + 78 > entry.boxEnd) {
+                return { supported: false, reason: 'truncated-video-stsd' };
+              }
+              const codedWidth = readU16BE(moovBuf, entry.payloadStart + 24);
+              const codedHeight = readU16BE(moovBuf, entry.payloadStart + 26);
+              if (!codedWidth || !codedHeight) {
+                return { supported: false, reason: 'invalid-coded-dims' };
+              }
+              const cfgBoxes = iterIsoBoxes(moovBuf, entry.payloadStart + 78, entry.boxEnd);
+              let codec = '';
+              let description = null;
+
+              if (entry.type === 'avc1' || entry.type === 'avc3') {
+                const avcC = cfgBoxes.find((x) => x.type === 'avcC');
+                if (!avcC || avcC.payloadStart + 4 > avcC.boxEnd) {
+                  return { supported: false, reason: 'missing-avcC' };
+                }
+                const p = moovBuf.slice(avcC.payloadStart, avcC.boxEnd);
+                codec = `${entry.type}.${hex2(p[1])}${hex2(p[2])}${hex2(p[3])}`;
+                description = p;
+              } else if (entry.type === 'hvc1' || entry.type === 'hev1') {
+                const hvcC = cfgBoxes.find((x) => x.type === 'hvcC');
+                if (!hvcC || hvcC.payloadStart + 23 > hvcC.boxEnd) {
+                  return { supported: false, reason: 'missing-hvcC' };
+                }
+                const p = moovBuf.slice(hvcC.payloadStart, hvcC.boxEnd);
+                const parsedHevc = parseHevcCodecString(p);
+                if (!parsedHevc) return { supported: false, reason: 'invalid-hvcC' };
+                codec = parsedHevc.replace(/^hvc1\./, `${entry.type}.`);
+                description = p;
+              } else if (entry.type === 'av01') {
+                const av1C = cfgBoxes.find((x) => x.type === 'av1C');
+                if (!av1C || av1C.payloadStart + 4 > av1C.boxEnd) {
+                  return { supported: false, reason: 'missing-av1C' };
+                }
+                const p = moovBuf.slice(av1C.payloadStart, av1C.boxEnd);
+                const prof = (p[1] >> 5) & 0x07;
+                const lvl = p[1] & 0x1f;
+                const tier = (p[2] >> 7) & 0x01 ? 'H' : 'M';
+                const highBd = (p[2] >> 6) & 0x01;
+                const twelve = (p[2] >> 5) & 0x01;
+                const bd = highBd ? (twelve ? 12 : 10) : 8;
+                codec = `av01.${prof}.${String(lvl).padStart(2, '0')}${tier}.${String(bd).padStart(2, '0')}`;
+                description = p;
+              } else if (entry.type === 'vp09') {
+                const vpcC = cfgBoxes.find((x) => x.type === 'vpcC');
+                if (!vpcC || vpcC.payloadStart + 7 > vpcC.boxEnd) {
+                  return { supported: false, reason: 'missing-vpcC' };
+                }
+                const prof = moovBuf[vpcC.payloadStart + 4];
+                const lvl = moovBuf[vpcC.payloadStart + 5];
+                const bd = ((moovBuf[vpcC.payloadStart + 6] >> 4) & 0x0f) || 8;
+                codec = `vp09.${String(prof).padStart(2, '0')}.${String(lvl).padStart(2, '0')}.${String(bd).padStart(2, '0')}`;
+              } else if (entry.type === 'vp08') {
+                codec = 'vp8';
+              } else {
+                return { supported: false, reason: `unsupported-video-codec:${entry.type}` };
+              }
+
+              const tbl = buildSampleTables(moovBuf, stblBox.payloadStart, stblBox.boxEnd, true);
+              if (!tbl.ok) {
+                return { supported: false, reason: tbl.reason };
+              }
+
+              let minPtsTick = Infinity;
+              const rawPtsTicks = new Float64Array(tbl.sampleCount);
+              for (let i = 0; i < tbl.sampleCount; i++) {
+                const pt = tbl.dtsTicks[i] + (tbl.hasCtts ? tbl.ctsTicks[i] : 0);
+                rawPtsTicks[i] = pt;
+                if (pt < minPtsTick) minPtsTick = pt;
+              }
+              const hasElst = !!edtsBox;
+              const baseTick = hasElst
+                ? (elstInfo.mediaTimeOffsetTicks - Math.round(elstInfo.emptyDelaySec * timescale))
+                : minPtsTick;
+
+              const ptsUs = new Float64Array(tbl.sampleCount);
+              const durUs = new Uint32Array(tbl.sampleCount);
+              let minUs = Infinity;
+              for (let i = 0; i < tbl.sampleCount; i++) {
+                const us = Math.round(((rawPtsTicks[i] - baseTick) * 1000000) / timescale);
+                ptsUs[i] = us;
+                if (us < minUs) minUs = us;
+                durUs[i] = Math.max(1, Math.round((tbl.durTicks[i] * 1000000) / timescale));
+              }
+
+              let clipStartUs = 0;
+              if (minUs < 0) {
+                const shiftUs = -minUs;
+                clipStartUs = shiftUs;
+                for (let i = 0; i < tbl.sampleCount; i++) {
+                  ptsUs[i] += shiftUs;
+                }
+              }
+
+              const durationSec = tbl.totalTicks / timescale;
+              const avgFps = durationSec > 0 ? tbl.sampleCount / durationSec : 30;
+
+              const isKey = new Uint8Array(tbl.sampleCount);
+              let keyIndices;
+              if (tbl.stssList && tbl.stssList.length > 0) {
+                for (let i = 0; i < tbl.stssList.length; i++) {
+                  isKey[tbl.stssList[i]] = 1;
+                }
+                isKey[0] = 1;
+                const keys = [];
+                for (let i = 0; i < tbl.sampleCount; i++) {
+                  if (isKey[i]) keys.push(i);
+                }
+                keyIndices = new Uint32Array(keys);
+              } else {
+                isKey.fill(1);
+                const step = Math.max(1, Math.round(avgFps || 30));
+                const keys = [];
+                for (let i = 0; i < tbl.sampleCount; i += step) keys.push(i);
+                keyIndices = new Uint32Array(keys);
+              }
+
+              videoTrack = {
+                timescale,
+                codedWidth,
+                codedHeight,
+                rotation: rotInfo.rotation,
+                codec,
+                description,
+                sampleCount: tbl.sampleCount,
+                totalBytes: tbl.totalBytes,
+                durationSec,
+                avgFps,
+                clipStartUs,
+                hasCtts: tbl.hasCtts,
+                offsets: tbl.offsets,
+                sizes: tbl.sizes,
+                ptsUs,
+                durUs,
+                isKey,
+                keyIndices,
+              };
+            } else if (handlerType === 'soun' && !audioTrack) {
+              const entry = stsdEntries[0];
+              if (entry.payloadStart + 28 > entry.boxEnd) continue;
+              const entryVer = readU16BE(moovBuf, entry.payloadStart + 8);
+              const chCount = readU16BE(moovBuf, entry.payloadStart + 16) || 2;
+              const srFixed = readU32BE(moovBuf, entry.payloadStart + 24);
+              const entrySr = srFixed ? Math.round(srFixed / 65536) : 48000;
+              const childOff = entryVer === 2 ? 64 : entryVer === 1 ? 44 : 28;
+              let audioChildren = entry.payloadStart + childOff <= entry.boxEnd
+                ? iterIsoBoxes(moovBuf, entry.payloadStart + childOff, entry.boxEnd)
+                : [];
+              if (!audioChildren.length && entryVer !== 0 && entry.payloadStart + 28 <= entry.boxEnd) {
+                audioChildren = iterIsoBoxes(moovBuf, entry.payloadStart + 28, entry.boxEnd);
+              }
+
+              let decoderConfig = null;
+              let asc = null;
+              let aacPassthroughEligible = false;
+
+              if (entry.type === 'mp4a') {
+                let esdsBox = audioChildren.find((x) => x.type === 'esds');
+                if (!esdsBox) {
+                  const waveBox = audioChildren.find((x) => x.type === 'wave');
+                  if (waveBox) {
+                    const waveChildren = iterIsoBoxes(moovBuf, waveBox.payloadStart, waveBox.boxEnd);
+                    esdsBox = waveChildren.find((x) => x.type === 'esds');
+                  }
+                }
+                if (esdsBox && esdsBox.payloadStart + 8 <= esdsBox.boxEnd) {
+                  const esds = parseEsdsDescriptor(moovBuf, esdsBox.payloadStart, esdsBox.boxEnd);
+                  const sr = esds.sampleRate || entrySr;
+                  const ch = esds.channelConfig || chCount;
+                  if (esds.objectTypeIndication === 0x40 && esds.asc && esds.asc.length >= 2) {
+                    const aot = esds.audioObjectType || 2;
+                    decoderConfig = {
+                      codec: `mp4a.40.${aot}`,
+                      sampleRate: sr,
+                      numberOfChannels: ch === 7 ? 8 : ch,
+                      description: esds.asc,
+                    };
+                    asc = esds.asc;
+                    aacPassthroughEligible =
+                      aot === 2 &&
+                      (sr === 44100 || sr === 48000) &&
+                      (ch === 1 || ch === 2) &&
+                      !elstInfo.complex &&
+                      elstInfo.emptyDelaySec <= 0.001 &&
+                      elstInfo.mediaTimeOffsetTicks === 0;
+                  } else if (esds.objectTypeIndication === 0x69 || esds.objectTypeIndication === 0x6b) {
+                    decoderConfig = { codec: 'mp3', sampleRate: sr, numberOfChannels: ch };
+                  }
+                }
+              } else if (entry.type === 'Opus') {
+                decoderConfig = { codec: 'opus', sampleRate: 48000, numberOfChannels: chCount };
+                const dOps = audioChildren.find((x) => x.type === 'dOps');
+                if (dOps && dOps.payloadStart + 2 <= dOps.boxEnd) {
+                  decoderConfig.numberOfChannels = moovBuf[dOps.payloadStart + 1] || chCount;
+                }
+              } else if (entry.type === 'fLaC') {
+                const dfLa = audioChildren.find((x) => x.type === 'dfLa');
+                if (dfLa && dfLa.payloadStart + 4 < dfLa.boxEnd) {
+                  decoderConfig = {
+                    codec: 'flac',
+                    sampleRate: entrySr,
+                    numberOfChannels: chCount,
+                    description: moovBuf.slice(dfLa.payloadStart + 4, dfLa.boxEnd),
+                  };
+                }
+              }
+
+              const tbl = buildSampleTables(moovBuf, stblBox.payloadStart, stblBox.boxEnd, false);
+              if (!tbl.ok) continue;
+
+              const ptsUs = new Float64Array(tbl.sampleCount);
+              const durUs = new Uint32Array(tbl.sampleCount);
+              const baseTick = edtsBox && !elstInfo.complex
+                ? (elstInfo.mediaTimeOffsetTicks - Math.round(elstInfo.emptyDelaySec * timescale))
+                : 0;
+              let minUs = Infinity;
+              for (let i = 0; i < tbl.sampleCount; i++) {
+                const us = Math.round(((tbl.dtsTicks[i] - baseTick) * 1000000) / timescale);
+                ptsUs[i] = us;
+                if (us < minUs) minUs = us;
+                durUs[i] = Math.max(1, Math.round((tbl.durTicks[i] * 1000000) / timescale));
+              }
+              if (minUs < 0) {
+                const shift = -minUs;
+                for (let i = 0; i < tbl.sampleCount; i++) ptsUs[i] += shift;
+              }
+              const durationSec = tbl.totalTicks / timescale;
+              const avgBitrateKbps = durationSec > 0 ? Math.round((tbl.totalBytes * 8) / durationSec / 1000) : 0;
+
+              audioTrack = {
+                timescale,
+                decoderConfig,
+                asc,
+                aacPassthroughEligible,
+                sampleCount: tbl.sampleCount,
+                totalBytes: tbl.totalBytes,
+                durationSec,
+                avgBitrateKbps,
+                offsets: tbl.offsets,
+                sizes: tbl.sizes,
+                ptsUs,
+                durUs,
+              };
+            }
+          }
+
+          if (!videoTrack) {
+            return { supported: false, reason: 'no-video-track' };
+          }
+          return {
+            supported: true,
+            movieTimescale,
+            video: videoTrack,
+            audio: audioTrack,
+          };
+        } catch (err) {
+          return { supported: false, reason: err && err.message ? err.message : 'demux-error' };
+        }
+      }
+
+      /* =========================================================================
+       * 9B. LUỒNG ÂM THANH SIÊU TỐC (DIRECT AAC PASSTHROUGH & STREAMING AUDIODECODER)
+       *     - 0ms sao chép thẳng AAC-LC gốc nếu đạt chuẩn (không đọc toàn file vào RAM)
+       *     - Giải mã streaming qua WebCodecs AudioDecoder nếu cần nén lại
+       *     - Dự phòng có khóa RAM (1 slot) qua decodeAudioData nếu container không hỗ trợ
+       * ========================================================================= */
+      async function decodeAudioTrackWithWebCodecs(file, audioTrack) {
+        const decCfg = audioTrack && audioTrack.decoderConfig;
+        if (!state.capabilities.hasAudioDecoder || !decCfg) return null;
+        try {
+          const sup = await window.AudioDecoder.isConfigSupported(decCfg);
+          if (!sup || !sup.supported) return null;
+        } catch {
+          return null;
+        }
+
+        const chunks = [];
+        let totalFrames = 0;
+        let decSampleRate = decCfg.sampleRate || 48000;
+        let decChannels = decCfg.numberOfChannels || 2;
+        let decErr = null;
+        let audioDecoder = null;
+
+        try {
+          audioDecoder = new window.AudioDecoder({
+            output: (audioData) => {
+              try {
+                const nFrames = audioData.numberOfFrames;
+                const nCh = audioData.numberOfChannels;
+                if (nFrames > 0 && nCh > 0) {
+                  decSampleRate = audioData.sampleRate || decSampleRate;
+                  decChannels = nCh;
+                  const chArrays = [];
+                  for (let c = 0; c < nCh; c++) {
+                    const f32 = new Float32Array(nFrames);
+                    audioData.copyTo(f32, { planeIndex: c, format: 'f32-planar' });
+                    chArrays.push(f32);
+                  }
+                  chunks.push({ chArrays, nFrames });
+                  totalFrames += nFrames;
+                }
+              } catch (copyErr) {
+                decErr = copyErr instanceof Error ? copyErr : new Error(String(copyErr));
+              } finally {
+                audioData.close();
+              }
+            },
+            error: (e) => {
+              decErr = e instanceof Error ? e : new Error(String(e || 'Lỗi AudioDecoder bất đồng bộ'));
+            },
+          });
+
+          audioDecoder.configure(decCfg);
+          const readBytes = createFileChunkReader(file, 2 * 1024 * 1024);
+
+          for (let i = 0; i < audioTrack.sampleCount; i++) {
+            if (state.cancelRequested) throw new Error('CANCELLED_BY_USER');
+            if (decErr) throw decErr;
+            const sz = audioTrack.sizes[i];
+            if (sz <= 0) continue;
+            while (audioDecoder.decodeQueueSize >= 16) {
+              if (state.cancelRequested) throw new Error('CANCELLED_BY_USER');
+              if (decErr) throw decErr;
+              await new Promise((r) => setTimeout(r, 4));
+            }
+            const raw = await readBytes(audioTrack.offsets[i], sz);
+            const encChunk = new window.EncodedAudioChunk({
+              type: 'key',
+              timestamp: Math.max(0, Math.round(audioTrack.ptsUs[i])),
+              duration: Math.max(1, Math.round(audioTrack.durUs[i])),
+              data: raw,
+            });
+            audioDecoder.decode(encChunk);
+          }
+
+          if (decErr) throw decErr;
+          await audioDecoder.flush();
+          if (decErr) throw decErr;
+        } finally {
+          try {
+            if (audioDecoder && audioDecoder.state !== 'closed') audioDecoder.close();
+          } catch {}
+        }
+
+        if (!totalFrames || !chunks.length) return null;
+
+        let mergedBuf = null;
+        if (typeof window.AudioBuffer === 'function') {
+          mergedBuf = new window.AudioBuffer({
+            length: totalFrames,
+            numberOfChannels: decChannels,
+            sampleRate: decSampleRate,
+          });
+        } else {
+          const OfflineCtx = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+          if (!OfflineCtx) return null;
+          mergedBuf = new OfflineCtx(decChannels, totalFrames, decSampleRate).createBuffer(
+            decChannels,
+            totalFrames,
+            decSampleRate
+          );
+        }
+
+        for (let c = 0; c < decChannels; c++) {
+          const dst = mergedBuf.getChannelData(c);
+          let off = 0;
+          for (let k = 0; k < chunks.length; k++) {
+            const src = chunks[k].chArrays[Math.min(c, chunks[k].chArrays.length - 1)];
+            dst.set(src, off);
+            off += chunks[k].nFrames;
+          }
+        }
+
+        return mergedBuf;
+      }
+
+      async function encodeAudioFromDemuxedTrack(file, audioTrack, cfg, item, onProgress) {
+        if (cfg.muteAudio || !audioTrack || audioTrack.sampleCount === 0) {
+          return { mode: 'none', packets: [], rawPackets: [], config: null };
+        }
+
+        // Fast Path A: Direct AAC-LC Passthrough (không giải mã hay mã hóa lại)
+        if (
+          audioTrack.aacPassthroughEligible &&
+          audioTrack.asc &&
+          audioTrack.avgBitrateKbps > 0 &&
+          audioTrack.avgBitrateKbps <= cfg.audioBitrateKbps * 1.18
+        ) {
+          try {
+            const readBytes = createFileChunkReader(file, 2 * 1024 * 1024);
+            const rawPackets = [];
+            let lastTs = -1;
+            for (let i = 0; i < audioTrack.sampleCount; i++) {
+              if ((i & 255) === 0 && state.cancelRequested) {
+                throw new Error('CANCELLED_BY_USER');
+              }
+              const sz = audioTrack.sizes[i];
+              if (sz <= 0) continue;
+              const data = await readBytes(audioTrack.offsets[i], sz);
+              const rawTs = Math.max(0, Math.round(audioTrack.ptsUs[i]));
+              const ts = lastTs < 0 ? rawTs : Math.max(rawTs, lastTs + 1);
+              lastTs = ts;
+              rawPackets.push({
+                data,
+                timestamp: ts,
+                duration: Math.max(1, Math.round(audioTrack.durUs[i])),
+              });
+            }
+            if (rawPackets.length > 0) {
+              const cfgOut = {
+                codec: 'mp4a.40.2',
+                sampleRate: audioTrack.decoderConfig.sampleRate,
+                numberOfChannels: audioTrack.decoderConfig.numberOfChannels,
+                description: audioTrack.asc,
+              };
+              appendTechLog(
+                `[WebCodecs Audio Turbo] Sao chép thẳng luồng AAC gốc (${audioTrack.avgBitrateKbps} kbps, ${rawPackets.length} gói) — 0ms nén lại!`
+              );
+              return { mode: 'raw-aac', packets: [], rawPackets, config: cfgOut };
+            }
+          } catch (ptErr) {
+            if (ptErr && ptErr.message === 'CANCELLED_BY_USER') throw ptErr;
+            appendTechLog(`[WebCodecs Audio Turbo] Passthrough AAC gặp lỗi (${ptErr.message}) — chuyển sang giải mã streaming.`);
+          }
+        }
+
+        // Fast Path B: Streaming WebCodecs AudioDecoder -> AudioEncoder
+        if (state.capabilities.hasAudioDecoder && audioTrack.decoderConfig) {
+          try {
+            const decodedBuf = await decodeAudioTrackWithWebCodecs(file, audioTrack);
+            if (state.cancelRequested) throw new Error('CANCELLED_BY_USER');
+            if (decodedBuf && decodedBuf.length > 0 && decodedBuf.numberOfChannels > 0) {
+              const chosenAudioCfg = await probeWebCodecsAudioConfig(
+                decodedBuf.numberOfChannels,
+                cfg.audioBitrateKbps * 1000
+              );
+              if (!chosenAudioCfg) {
+                return { mode: 'none', packets: [], rawPackets: [], config: null };
+              }
+              const normalized = await resampleAudioBuffer(
+                decodedBuf,
+                chosenAudioCfg.sampleRate,
+                chosenAudioCfg.numberOfChannels
+              );
+              if (state.cancelRequested) throw new Error('CANCELLED_BY_USER');
+              let packets;
+              try {
+                packets = await encodeAudioBufferWithFormat(normalized, chosenAudioCfg, 'f32-planar');
+              } catch (planarErr) {
+                if (planarErr && planarErr.message === 'CANCELLED_BY_USER') throw planarErr;
+                packets = await encodeAudioBufferWithFormat(normalized, chosenAudioCfg, 'f32');
+              }
+              appendTechLog(
+                `[WebCodecs Audio Turbo] Giải mã & nén AAC streaming thành công (${packets.length} gói, tiết kiệm RAM).`
+              );
+              return { mode: 'encoded', packets, rawPackets: [], config: chosenAudioCfg };
+            }
+          } catch (decErr) {
+            if (decErr && decErr.message === 'CANCELLED_BY_USER') throw decErr;
+            appendTechLog(`[WebCodecs Audio Turbo] Streaming AudioDecoder gặp lỗi (${decErr.message}) — dùng bộ giải mã dự phòng có khóa RAM.`);
+          }
+        }
+
+        // Fallback Path C: Legacy decodeAudioData dưới khóa tuần tự bảo vệ RAM
+        const fallback = await withAudioDecodeLock(() => encodeAudioTrackFirst(item, cfg, onProgress));
+        return {
+          mode: fallback && fallback.packets && fallback.packets.length ? 'encoded' : 'none',
+          packets: (fallback && fallback.packets) || [],
+          rawPackets: [],
+          config: (fallback && fallback.config) || null,
+        };
+      }
+
       function waitVideoSeek(video, targetSec, timeoutMs) {
         return new Promise((resolve) => {
           let done = false;
@@ -4737,6 +5951,1039 @@
         }
       }
 
+      /* =========================================================================
+       * 9C. LẬP LỊCH CHIA ĐOẠN GOP ĐA KÊNH CHO TỪNG VIDEO
+       * ========================================================================= */
+      function buildVideoSegmentPlan(videoTrack, requestedSegments) {
+        const sampleCount = videoTrack.sampleCount;
+        const keys = videoTrack.keyIndices;
+        const K = Math.max(1, Math.floor(requestedSegments || 1));
+        if (
+          K <= 1 ||
+          videoTrack.durationSec < 8 ||
+          !keys ||
+          keys.length < K * 2 ||
+          sampleCount < K * 30
+        ) {
+          return [{
+            segIndex: 0,
+            decodeStart: 0,
+            decodeEnd: sampleCount,
+            encodeStartPtsUs: videoTrack.clipStartUs,
+            encodeEndPtsUs: Infinity,
+            isFirstSeg: true,
+            isLastSeg: true,
+          }];
+        }
+
+        const starts = [0];
+        let prevIdx = 0;
+        let prevPts = videoTrack.ptsUs[0];
+
+        for (let s = 1; s < K; s++) {
+          const targetSample = Math.round((sampleCount * s) / K);
+          const minSample = prevIdx + 15;
+          const maxSample = sampleCount - (K - s) * 15;
+          let bestKey = -1;
+          let bestDist = Infinity;
+
+          for (let j = 0; j < keys.length; j++) {
+            const cand = keys[j];
+            if (cand < minSample || cand > maxSample) continue;
+            if (videoTrack.ptsUs[cand] <= prevPts + 50000) continue;
+            const dist = Math.abs(cand - targetSample);
+            if (dist < bestDist) {
+              bestDist = dist;
+              bestKey = cand;
+            }
+          }
+
+          if (bestKey !== -1) {
+            starts.push(bestKey);
+            prevIdx = bestKey;
+            prevPts = videoTrack.ptsUs[bestKey];
+          }
+        }
+
+        const totalSegs = starts.length;
+        const cttsLookahead = videoTrack.hasCtts ? 24 : 0;
+        const plan = [];
+        for (let k = 0; k < totalSegs; k++) {
+          const isFirst = k === 0;
+          const isLast = k === totalSegs - 1;
+          const decodeStart = starts[k];
+          const decodeEnd = isLast ? sampleCount : Math.min(sampleCount, starts[k + 1] + cttsLookahead);
+          const encodeStartPtsUs = isFirst ? videoTrack.clipStartUs : videoTrack.ptsUs[starts[k]];
+          const encodeEndPtsUs = isLast ? Infinity : videoTrack.ptsUs[starts[k + 1]];
+          plan.push({
+            segIndex: k,
+            decodeStart,
+            decodeEnd,
+            encodeStartPtsUs,
+            encodeEndPtsUs,
+            isFirstSeg: isFirst,
+            isLastSeg: isLast,
+          });
+        }
+        return plan;
+      }
+
+      /* =========================================================================
+       * 9D. WORKER MÃ HÓA ĐOẠN WEBCODECS TURBO (ĐỘC LẬP HOÀN TOÀN + DỰ PHÒNG MAIN THREAD)
+       * ========================================================================= */
+      function turboWebCodecsSegmentWorkerMain() {
+        var cancelled = false;
+        self.onmessage = async function (ev) {
+          var msg = ev.data || {};
+          if (msg.cmd === 'cancel') {
+            cancelled = true;
+            return;
+          }
+          if (msg.cmd !== 'run') return;
+
+          var decoder = null;
+          var encoder = null;
+          var fatalErr = null;
+          var waiters = [];
+
+          var wakeDequeue = function () {
+            if (!waiters.length) return;
+            var list = waiters.splice(0, waiters.length);
+            for (var i = 0; i < list.length; i++) {
+              try { list[i](); } catch (e) {}
+            }
+          };
+
+          var waitDrain = function () {
+            return new Promise(function (resolve) {
+              var settled = false;
+              var done = function () {
+                if (settled) return;
+                settled = true;
+                clearTimeout(t);
+                resolve();
+              };
+              waiters.push(done);
+              var t = setTimeout(done, 4);
+            });
+          };
+
+          try {
+            var file = msg.file;
+            var segIndex = msg.segIndex || 0;
+            var dims = msg.dims;
+            var keepOrigFps = !!msg.keepOrigFps;
+            var maxFps = msg.maxFps || 60;
+            var applyFpsCap = !!msg.applyFpsCap;
+            var clipStartUs = msg.clipStartUs || 0;
+            var encodeStartPtsUs = msg.encodeStartPtsUs || 0;
+            var encodeEndPtsUs = msg.encodeEndPtsUs === null ? Infinity : msg.encodeEndPtsUs;
+            var isFirstSeg = !!msg.isFirstSeg;
+            var isLastSeg = !!msg.isLastSeg;
+            var offsets = msg.offsets;
+            var sizes = msg.sizes;
+            var ptsUs = msg.ptsUs;
+            var durUs = msg.durUs;
+            var isKey = msg.isKey;
+            var defaultFrameDurUs = msg.defaultFrameDurUs || 33333;
+            var sampleCount = sizes.length;
+
+            var cachedStart = 0;
+            var cachedBuf = null;
+            var winSize = 4 * 1024 * 1024;
+            var readSlice = async function (offset, length) {
+              if (length <= 0) return new Uint8Array(0);
+              var end = offset + length;
+              if (cachedBuf && offset >= cachedStart && end <= cachedStart + cachedBuf.byteLength) {
+                var rel = offset - cachedStart;
+                return cachedBuf.slice(rel, rel + length);
+              }
+              var fetchEnd = Math.min(file.size, Math.max(end, offset + winSize));
+              var ab = await file.slice(offset, fetchEnd).arrayBuffer();
+              cachedStart = offset;
+              cachedBuf = new Uint8Array(ab);
+              return cachedBuf.slice(0, length);
+            };
+
+            var metas = [];
+            var buffers = [];
+            var firstDecoderConfig = null;
+            var encodedCount = 0;
+            var decodedProcessed = 0;
+            var pastBoundaryCount = 0;
+            var lastEncodedTs = -1;
+            var lastKeyTs = -1;
+            var lastProgressWall = 0;
+            var stepUs = applyFpsCap && maxFps > 0 ? (1000000 / maxFps) : 0;
+            var lastBucket = !applyFpsCap
+              ? -1
+              : (isFirstSeg ? -1 : Math.floor((encodeStartPtsUs - clipStartUs - stepUs * 0.5) / stepUs));
+
+            var canvas = null;
+            var ctx = null;
+
+            encoder = new VideoEncoder({
+              output: function (chunk, meta) {
+                var ab = new ArrayBuffer(chunk.byteLength);
+                chunk.copyTo(ab);
+                var cDur = (typeof chunk.duration === 'number' && isFinite(chunk.duration) && chunk.duration > 0)
+                  ? chunk.duration
+                  : defaultFrameDurUs;
+                metas.push({
+                  type: chunk.type,
+                  timestamp: chunk.timestamp,
+                  duration: cDur,
+                });
+                buffers.push(ab);
+                if (!firstDecoderConfig && meta && meta.decoderConfig) {
+                  var dc = {};
+                  for (var prop in meta.decoderConfig) {
+                    if (Object.prototype.hasOwnProperty.call(meta.decoderConfig, prop)) {
+                      dc[prop] = meta.decoderConfig[prop];
+                    }
+                  }
+                  if (dc.description) {
+                    var srcDesc = dc.description;
+                    var u8 = srcDesc instanceof ArrayBuffer
+                      ? new Uint8Array(srcDesc)
+                      : new Uint8Array(srcDesc.buffer, srcDesc.byteOffset || 0, srcDesc.byteLength);
+                    dc.description = u8.slice();
+                  }
+                  firstDecoderConfig = dc;
+                }
+                wakeDequeue();
+              },
+              error: function (e) {
+                fatalErr = e instanceof Error ? e : new Error(String(e || 'VideoEncoder error'));
+                wakeDequeue();
+              },
+            });
+            encoder.ondequeue = wakeDequeue;
+            encoder.configure(msg.encoderConfig);
+
+            decoder = new VideoDecoder({
+              output: function (decodedFrame) {
+                try {
+                  decodedProcessed++;
+                  if (cancelled || fatalErr) return;
+
+                  var rawTs = typeof decodedFrame.timestamp === 'number' ? decodedFrame.timestamp : 0;
+                  if (rawTs < encodeStartPtsUs) {
+                    return;
+                  }
+                  if (!isLastSeg && rawTs >= encodeEndPtsUs) {
+                    pastBoundaryCount++;
+                    return;
+                  }
+
+                  if (applyFpsCap && stepUs > 0) {
+                    var relUs = Math.max(0, rawTs - clipStartUs);
+                    var bucket = Math.floor((relUs + stepUs * 0.04) / stepUs);
+                    if (bucket <= lastBucket) {
+                      return;
+                    }
+                    lastBucket = bucket;
+                  }
+
+                  var shiftedTs = Math.max(0, Math.round(rawTs - clipStartUs));
+                  var tsUs = lastEncodedTs < 0 ? shiftedTs : Math.max(shiftedTs, lastEncodedTs + 1);
+                  var frameDur = (typeof decodedFrame.duration === 'number' && isFinite(decodedFrame.duration) && decodedFrame.duration > 0)
+                    ? Math.round(decodedFrame.duration)
+                    : defaultFrameDurUs;
+
+                  var outFrame = null;
+                  if (decodedFrame.displayWidth === dims.width && decodedFrame.displayHeight === dims.height) {
+                    outFrame = new VideoFrame(decodedFrame, { timestamp: tsUs, duration: frameDur });
+                  } else {
+                    if (!canvas) {
+                      if (typeof OffscreenCanvas !== 'function') {
+                        throw new Error('NO_OFFSCREEN_CANVAS_IN_WORKER');
+                      }
+                      canvas = new OffscreenCanvas(dims.width, dims.height);
+                      ctx = canvas.getContext('2d', { alpha: false, desynchronized: true });
+                      ctx.imageSmoothingEnabled = true;
+                      ctx.imageSmoothingQuality = 'high';
+                    }
+                    ctx.drawImage(decodedFrame, 0, 0, dims.width, dims.height);
+                    outFrame = new VideoFrame(canvas, { timestamp: tsUs, duration: frameDur });
+                  }
+
+                  var forceKey = encodedCount === 0 || (tsUs - lastKeyTs >= 2000000);
+                  try {
+                    if (encoder.state !== 'configured') {
+                      throw new Error('VideoEncoder đã đóng ở khung #' + (encodedCount + 1));
+                    }
+                    encoder.encode(outFrame, { keyFrame: forceKey });
+                    encodedCount++;
+                    lastEncodedTs = tsUs;
+                    if (forceKey) lastKeyTs = tsUs;
+                  } finally {
+                    outFrame.close();
+                  }
+
+                  var nowW = performance.now();
+                  if (nowW - lastProgressWall >= 120) {
+                    lastProgressWall = nowW;
+                    self.postMessage({
+                      type: 'progress',
+                      segIndex: segIndex,
+                      encodedCount: encodedCount,
+                      processedSamples: decodedProcessed,
+                      sampleCount: sampleCount,
+                      lastPtsUs: shiftedTs,
+                    });
+                  }
+                } catch (frameErr) {
+                  fatalErr = frameErr instanceof Error ? frameErr : new Error(String(frameErr));
+                } finally {
+                  decodedFrame.close();
+                  wakeDequeue();
+                }
+              },
+              error: function (e) {
+                fatalErr = e instanceof Error ? e : new Error(String(e || 'VideoDecoder error'));
+                wakeDequeue();
+              },
+            });
+            decoder.ondequeue = wakeDequeue;
+            decoder.configure(msg.decoderConfig);
+
+            for (var i = 0; i < sampleCount; i++) {
+              if (cancelled) throw new Error('CANCELLED_BY_USER');
+              if (fatalErr) throw fatalErr;
+              if (!isLastSeg && pastBoundaryCount >= 4) break;
+
+              var sz = sizes[i];
+              if (sz <= 0) continue;
+
+              while (decoder.decodeQueueSize >= 6 || encoder.encodeQueueSize >= 6) {
+                if (cancelled) throw new Error('CANCELLED_BY_USER');
+                if (fatalErr) throw fatalErr;
+                await waitDrain();
+              }
+
+              var bytes = await readSlice(offsets[i], sz);
+              if (cancelled) throw new Error('CANCELLED_BY_USER');
+              if (fatalErr) throw fatalErr;
+
+              var chunk = new EncodedVideoChunk({
+                type: isKey[i] ? 'key' : 'delta',
+                timestamp: Math.round(ptsUs[i]),
+                duration: Math.max(1, Math.round(durUs[i])),
+                data: bytes,
+              });
+              decoder.decode(chunk);
+            }
+
+            if (cancelled) throw new Error('CANCELLED_BY_USER');
+            if (fatalErr) throw fatalErr;
+            await decoder.flush();
+            if (fatalErr) throw fatalErr;
+            if (encoder.state === 'configured') {
+              await encoder.flush();
+            }
+            if (fatalErr) throw fatalErr;
+
+            self.postMessage(
+              {
+                type: 'done',
+                segIndex: segIndex,
+                metas: metas,
+                buffers: buffers,
+                firstDecoderConfig: firstDecoderConfig,
+                encodedCount: encodedCount,
+              },
+              buffers
+            );
+          } catch (err) {
+            var errMsg = String(err && err.message ? err.message : err);
+            self.postMessage({
+              type: 'error',
+              segIndex: msg.segIndex || 0,
+              message: errMsg,
+            });
+          } finally {
+            try { if (decoder && decoder.state !== 'closed') decoder.close(); } catch (e1) {}
+            try { if (encoder && encoder.state !== 'closed') encoder.close(); } catch (e2) {}
+          }
+        };
+      }
+
+      function buildTurboSegmentWorkerCode() {
+        return '(' + turboWebCodecsSegmentWorkerMain.toString() + ')();';
+      }
+
+      function runTurboSegmentInWorker(segTask) {
+        return new Promise((resolve, reject) => {
+          if (state.cancelRequested) {
+            reject(new Error('CANCELLED_BY_USER'));
+            return;
+          }
+          let worker = null;
+          let workerUrl = '';
+          let settled = false;
+
+          const cleanup = () => {
+            unregisterCancelFn(cancelSeg);
+            try { if (worker) worker.terminate(); } catch {}
+            try { if (workerUrl) URL.revokeObjectURL(workerUrl); } catch {}
+          };
+
+          const cancelSeg = () => {
+            if (settled) return;
+            settled = true;
+            try { if (worker) worker.postMessage({ cmd: 'cancel' }); } catch {}
+            cleanup();
+            reject(new Error('CANCELLED_BY_USER'));
+          };
+
+          try {
+            const blob = new Blob([buildTurboSegmentWorkerCode()], { type: 'text/javascript' });
+            workerUrl = URL.createObjectURL(blob);
+            worker = new Worker(workerUrl);
+          } catch (workerErr) {
+            cleanup();
+            reject(Object.assign(new Error(`WORKER_BLOCKED: ${workerErr.message}`), { isWorkerBlocked: true }));
+            return;
+          }
+
+          registerCancelFn(cancelSeg);
+
+          worker.onerror = (ev) => {
+            if (settled) return;
+            settled = true;
+            cleanup();
+            reject(new Error(ev && ev.message ? ev.message : `Lỗi WebCodecs Worker đoạn #${segTask.segIndex + 1}`));
+          };
+
+          worker.onmessage = (ev) => {
+            if (settled) return;
+            const d = ev.data || {};
+            if (d.type === 'progress') {
+              if (segTask.onSegProgress) segTask.onSegProgress(d);
+              return;
+            }
+            if (d.type === 'done') {
+              settled = true;
+              cleanup();
+              resolve(d);
+              return;
+            }
+            if (d.type === 'error') {
+              settled = true;
+              cleanup();
+              const err = new Error(d.message || `Lỗi mã hóa đoạn #${segTask.segIndex + 1}`);
+              if (err.message.includes('NO_OFFSCREEN_CANVAS_IN_WORKER')) {
+                err.isWorkerBlocked = true;
+              }
+              reject(err);
+            }
+          };
+
+          const offSlice = segTask.offsets.slice(segTask.decodeStart, segTask.decodeEnd);
+          const szSlice = segTask.sizes.slice(segTask.decodeStart, segTask.decodeEnd);
+          const ptsSlice = segTask.ptsUs.slice(segTask.decodeStart, segTask.decodeEnd);
+          const durSlice = segTask.durUs.slice(segTask.decodeStart, segTask.decodeEnd);
+          const keySlice = segTask.isKey.slice(segTask.decodeStart, segTask.decodeEnd);
+
+          const decCfgCopy = { ...segTask.decoderConfig };
+          if (decCfgCopy.description) {
+            const d = decCfgCopy.description;
+            decCfgCopy.description = (d instanceof Uint8Array ? d : new Uint8Array(d)).slice();
+          }
+
+          worker.postMessage(
+            {
+              cmd: 'run',
+              file: segTask.file,
+              segIndex: segTask.segIndex,
+              decoderConfig: decCfgCopy,
+              encoderConfig: segTask.encoderConfig,
+              dims: segTask.dims,
+              keepOrigFps: segTask.keepOrigFps,
+              maxFps: segTask.maxFps,
+              applyFpsCap: segTask.applyFpsCap,
+              clipStartUs: segTask.clipStartUs,
+              encodeStartPtsUs: segTask.encodeStartPtsUs,
+              encodeEndPtsUs: segTask.encodeEndPtsUs,
+              isFirstSeg: segTask.isFirstSeg,
+              isLastSeg: segTask.isLastSeg,
+              offsets: offSlice,
+              sizes: szSlice,
+              ptsUs: ptsSlice,
+              durUs: durSlice,
+              isKey: keySlice,
+              defaultFrameDurUs: segTask.defaultFrameDurUs,
+            },
+            [offSlice.buffer, szSlice.buffer, ptsSlice.buffer, durSlice.buffer, keySlice.buffer]
+          );
+        });
+      }
+
+      async function runTurboSegmentMainThread(segTask) {
+        let decoder = null;
+        let encoder = null;
+        let fatalErr = null;
+        let localCancelled = false;
+        const waiters = [];
+
+        const wakeDequeue = () => {
+          if (!waiters.length) return;
+          const list = waiters.splice(0, waiters.length);
+          for (let i = 0; i < list.length; i++) {
+            try { list[i](); } catch {}
+          }
+        };
+
+        const waitDrain = () => new Promise((resolve) => {
+          let done = false;
+          const finish = () => {
+            if (done) return;
+            done = true;
+            clearTimeout(t);
+            resolve();
+          };
+          waiters.push(finish);
+          const t = setTimeout(finish, 4);
+        });
+
+        const cancelFn = () => {
+          localCancelled = true;
+          wakeDequeue();
+        };
+        registerCancelFn(cancelFn);
+
+        try {
+          const readBytes = createFileChunkReader(segTask.file, 4 * 1024 * 1024);
+          const metas = [];
+          const buffers = [];
+          let firstDecoderConfig = null;
+          let encodedCount = 0;
+          let decodedProcessed = 0;
+          let pastBoundaryCount = 0;
+          let lastEncodedTs = -1;
+          let lastKeyTs = -1;
+          let lastProgressWall = 0;
+          const stepUs = segTask.applyFpsCap && segTask.maxFps > 0 ? (1000000 / segTask.maxFps) : 0;
+          let lastBucket = !segTask.applyFpsCap
+            ? -1
+            : (segTask.isFirstSeg ? -1 : Math.floor((segTask.encodeStartPtsUs - segTask.clipStartUs - stepUs * 0.5) / stepUs));
+
+          let canvas = null;
+          let ctx = null;
+          const localCount = segTask.decodeEnd - segTask.decodeStart;
+
+          encoder = new window.VideoEncoder({
+            output: (chunk, meta) => {
+              const ab = new ArrayBuffer(chunk.byteLength);
+              chunk.copyTo(ab);
+              const cDur = (Number.isFinite(chunk.duration) && chunk.duration > 0)
+                ? chunk.duration
+                : segTask.defaultFrameDurUs;
+              metas.push({ type: chunk.type, timestamp: chunk.timestamp, duration: cDur });
+              buffers.push(ab);
+              if (!firstDecoderConfig && meta && meta.decoderConfig) {
+                const dc = { ...meta.decoderConfig };
+                if (dc.description) {
+                  const s = dc.description;
+                  dc.description = (s instanceof ArrayBuffer ? new Uint8Array(s) : new Uint8Array(s.buffer, s.byteOffset || 0, s.byteLength)).slice();
+                }
+                firstDecoderConfig = dc;
+              }
+              wakeDequeue();
+            },
+            error: (e) => {
+              fatalErr = e instanceof Error ? e : new Error(String(e || 'VideoEncoder error'));
+              wakeDequeue();
+            },
+          });
+          encoder.ondequeue = wakeDequeue;
+          encoder.configure(segTask.encoderConfig);
+
+          decoder = new window.VideoDecoder({
+            output: (decodedFrame) => {
+              try {
+                decodedProcessed++;
+                if (localCancelled || state.cancelRequested || fatalErr) return;
+
+                const rawTs = typeof decodedFrame.timestamp === 'number' ? decodedFrame.timestamp : 0;
+                if (rawTs < segTask.encodeStartPtsUs) return;
+                if (!segTask.isLastSeg && rawTs >= segTask.encodeEndPtsUs) {
+                  pastBoundaryCount++;
+                  return;
+                }
+
+                if (segTask.applyFpsCap && stepUs > 0) {
+                  const relUs = Math.max(0, rawTs - segTask.clipStartUs);
+                  const bucket = Math.floor((relUs + stepUs * 0.04) / stepUs);
+                  if (bucket <= lastBucket) return;
+                  lastBucket = bucket;
+                }
+
+                const shiftedTs = Math.max(0, Math.round(rawTs - segTask.clipStartUs));
+                const tsUs = lastEncodedTs < 0 ? shiftedTs : Math.max(shiftedTs, lastEncodedTs + 1);
+                const frameDur = (Number.isFinite(decodedFrame.duration) && decodedFrame.duration > 0)
+                  ? Math.round(decodedFrame.duration)
+                  : segTask.defaultFrameDurUs;
+
+                let outFrame = null;
+                if (decodedFrame.displayWidth === segTask.dims.width && decodedFrame.displayHeight === segTask.dims.height) {
+                  outFrame = new window.VideoFrame(decodedFrame, { timestamp: tsUs, duration: frameDur });
+                } else {
+                  if (!canvas) {
+                    canvas = document.createElement('canvas');
+                    canvas.width = segTask.dims.width;
+                    canvas.height = segTask.dims.height;
+                    ctx = canvas.getContext('2d', { alpha: false, desynchronized: true });
+                    ctx.imageSmoothingEnabled = true;
+                    ctx.imageSmoothingQuality = 'high';
+                  }
+                  ctx.drawImage(decodedFrame, 0, 0, segTask.dims.width, segTask.dims.height);
+                  outFrame = new window.VideoFrame(canvas, { timestamp: tsUs, duration: frameDur });
+                }
+
+                const forceKey = encodedCount === 0 || (tsUs - lastKeyTs >= 2000000);
+                try {
+                  if (encoder.state !== 'configured') {
+                    throw new Error(`VideoEncoder đã đóng ở khung #${encodedCount + 1}.`);
+                  }
+                  encoder.encode(outFrame, { keyFrame: forceKey });
+                  encodedCount++;
+                  lastEncodedTs = tsUs;
+                  if (forceKey) lastKeyTs = tsUs;
+                } finally {
+                  outFrame.close();
+                }
+
+                const nowW = performance.now();
+                if (nowW - lastProgressWall >= 120 && segTask.onSegProgress) {
+                  lastProgressWall = nowW;
+                  segTask.onSegProgress({
+                    segIndex: segTask.segIndex,
+                    encodedCount,
+                    processedSamples: decodedProcessed,
+                    sampleCount: localCount,
+                    lastPtsUs: shiftedTs,
+                  });
+                }
+              } catch (frameErr) {
+                fatalErr = frameErr instanceof Error ? frameErr : new Error(String(frameErr));
+              } finally {
+                decodedFrame.close();
+                wakeDequeue();
+              }
+            },
+            error: (e) => {
+              fatalErr = e instanceof Error ? e : new Error(String(e || 'VideoDecoder error'));
+              wakeDequeue();
+            },
+          });
+          decoder.ondequeue = wakeDequeue;
+          decoder.configure(segTask.decoderConfig);
+
+          for (let idx = segTask.decodeStart; idx < segTask.decodeEnd; idx++) {
+            if (localCancelled || state.cancelRequested) throw new Error('CANCELLED_BY_USER');
+            if (fatalErr) throw fatalErr;
+            if (!segTask.isLastSeg && pastBoundaryCount >= 4) break;
+
+            const sz = segTask.sizes[idx];
+            if (sz <= 0) continue;
+
+            while (decoder.decodeQueueSize >= 6 || encoder.encodeQueueSize >= 6) {
+              if (localCancelled || state.cancelRequested) throw new Error('CANCELLED_BY_USER');
+              if (fatalErr) throw fatalErr;
+              await waitDrain();
+            }
+
+            const bytes = await readBytes(segTask.offsets[idx], sz);
+            if (localCancelled || state.cancelRequested) throw new Error('CANCELLED_BY_USER');
+            if (fatalErr) throw fatalErr;
+
+            decoder.decode(new window.EncodedVideoChunk({
+              type: segTask.isKey[idx] ? 'key' : 'delta',
+              timestamp: Math.round(segTask.ptsUs[idx]),
+              duration: Math.max(1, Math.round(segTask.durUs[idx])),
+              data: bytes,
+            }));
+          }
+
+          if (localCancelled || state.cancelRequested) throw new Error('CANCELLED_BY_USER');
+          if (fatalErr) throw fatalErr;
+          await decoder.flush();
+          if (fatalErr) throw fatalErr;
+          if (encoder.state === 'configured') await encoder.flush();
+          if (fatalErr) throw fatalErr;
+
+          return {
+            segIndex: segTask.segIndex,
+            metas,
+            buffers,
+            firstDecoderConfig,
+            encodedCount,
+          };
+        } finally {
+          unregisterCancelFn(cancelFn);
+          try { if (decoder && decoder.state !== 'closed') decoder.close(); } catch {}
+          try { if (encoder && encoder.state !== 'closed') encoder.close(); } catch {}
+        }
+      }
+
+      async function runTurboSegmentTask(segTask) {
+        try {
+          return await runTurboSegmentInWorker(segTask);
+        } catch (err) {
+          if (err && err.isWorkerBlocked && !state.cancelRequested) {
+            if (segTask.segIndex === 0) {
+              appendTechLog('[WebCodecs Turbo] Trình duyệt chặn Web Worker — chuyển sang chạy luồng Turbo trực tiếp.');
+            }
+            return await runTurboSegmentMainThread(segTask);
+          }
+          throw err;
+        }
+      }
+
+      /* =========================================================================
+       * 9E. BỘ MÁY WEBCODECS TURBO ĐA KÊNH (DEMUX → K WORKER ĐOẠN → MP4-MUXER)
+       * ========================================================================= */
+      function areUint8Equal(a, b) {
+        if (!a && !b) return true;
+        if (!a || !b) return false;
+        const ua = a instanceof Uint8Array ? a : new Uint8Array(a.buffer || a, a.byteOffset || 0, a.byteLength);
+        const ub = b instanceof Uint8Array ? b : new Uint8Array(b.buffer || b, b.byteOffset || 0, b.byteLength);
+        if (ua.byteLength !== ub.byteLength) return false;
+        for (let i = 0; i < ua.byteLength; i++) {
+          if (ua[i] !== ub[i]) return false;
+        }
+        return true;
+      }
+
+      async function probeWebCodecsDecoderConfig(videoTrack, opts = {}) {
+        if (!state.capabilities.hasVideoDecoder || !videoTrack || !videoTrack.codec) return null;
+        const hwModes = opts && opts.excludeHardware
+          ? ['prefer-software']
+          : ['prefer-hardware', 'no-preference', 'prefer-software'];
+        for (const hw of hwModes) {
+          const cand = {
+            codec: videoTrack.codec,
+            codedWidth: videoTrack.codedWidth,
+            codedHeight: videoTrack.codedHeight,
+            hardwareAcceleration: hw,
+          };
+          if (videoTrack.description && videoTrack.description.byteLength > 0) {
+            cand.description = videoTrack.description;
+          }
+          try {
+            const res = await window.VideoDecoder.isConfigSupported(cand);
+            if (res && res.supported) {
+              return res.config || cand;
+            }
+          } catch {}
+        }
+        return null;
+      }
+
+      async function compressWithWebCodecsTurbo(item, cfg, onProgress, opts = {}) {
+        if (!state.capabilities.hasVideoDecoder || !state.capabilities.hasWebCodecs) {
+          return null;
+        }
+
+        const Mp4Muxer = ensureMp4MuxerLoaded();
+        onProgress(2, 'Đang phân tích cấu trúc MP4 (Turbo Demux)...');
+
+        const demux = await demuxMp4File(item.file);
+        if (state.cancelRequested) throw new Error('CANCELLED_BY_USER');
+        if (!demux || !demux.supported) {
+          appendTechLog(`[WebCodecs Turbo] Bỏ qua luồng Turbo (${demux ? demux.reason : 'unsupported'}) — dùng luồng <video> chuẩn.`);
+          return null;
+        }
+
+        const vTrack = demux.video;
+        const decoderConfig = await probeWebCodecsDecoderConfig(vTrack, opts);
+        if (!decoderConfig) {
+          appendTechLog(`[WebCodecs Turbo] VideoDecoder chưa hỗ trợ "${vTrack.codec}" — dùng luồng <video> chuẩn.`);
+          return null;
+        }
+
+        const dims = computeTargetDimensions(vTrack.codedWidth, vTrack.codedHeight, cfg.maxShortSide);
+        const keepOrigFps = !cfg.fps || cfg.fps === 'original';
+        const maxFps = keepOrigFps ? 0 : Math.max(10, Math.min(120, Number(cfg.fps) || 60));
+        const applyFpsCap = !keepOrigFps && vTrack.avgFps > maxFps * 1.02;
+        const encoderFpsHint = keepOrigFps
+          ? Math.max(24, Math.min(120, Math.round(vTrack.avgFps || item.meta.fps || 60)))
+          : maxFps;
+        const vBitrate = cfg.videoBitrateKbps * 1000;
+
+        const vConfig = await probeWebCodecsVideoConfig(dims.width, dims.height, encoderFpsHint, vBitrate, opts);
+        if (!vConfig) {
+          throw new Error(`VideoEncoder không hỗ trợ cấu hình H.264 cho ${dims.width}×${dims.height}.`);
+        }
+
+        const chosenHw = vConfig.hardwareAcceleration || 'default';
+        const isHwEncoder = chosenHw === 'prefer-hardware';
+        const defaultFrameDurUs = Math.max(1000, Math.round(1000000 / Math.max(10, applyFpsCap ? maxFps : (vTrack.avgFps || 30))));
+
+        let requestedK = Number(opts.segmentBudget) || resolveChannelBudget(cfg, 1).totalChannels;
+        if (state.segmentSplitPref === 'off') requestedK = 1;
+        if (isHwEncoder && state.detectedGpuSessionCap > 0) {
+          requestedK = Math.min(requestedK, state.detectedGpuSessionCap);
+        }
+        requestedK = Math.max(1, requestedK);
+
+        // Chạy song song bước âm thanh ngay khi bắt đầu encode hình
+        const audioPromise = encodeAudioFromDemuxedTrack(item.file, demux.audio, cfg, item, () => {});
+
+        let segResults = null;
+        let actualK = 1;
+        let currentK = requestedK;
+        const turboStartWall = performance.now();
+
+        try {
+          while (true) {
+            if (state.cancelRequested) throw new Error('CANCELLED_BY_USER');
+            const plan = buildVideoSegmentPlan(vTrack, currentK);
+            actualK = plan.length;
+            item.activeChannels = actualK;
+            if (state.activeVideoItems.has(item.id)) {
+              state.activeVideoItems.set(item.id, actualK);
+            }
+
+            appendTechLog(
+              `[WebCodecs Turbo] "${item.file.name}" (${vTrack.codec} ${vTrack.codedWidth}×${vTrack.codedHeight}, ${vTrack.sampleCount} khung) → ${actualK} kênh (${chosenHw}).`
+            );
+            onProgress(6, `WebCodecs Turbo (${actualK} kênh): Đang giải mã & nén...`);
+
+            const segProgress = plan.map((p) => ({
+              encodedCount: 0,
+              processedSamples: 0,
+              sampleCount: Math.max(1, p.decodeEnd - p.decodeStart),
+              lastPtsUs: 0,
+            }));
+            let lastUiUpdate = 0;
+
+            const onSegProgress = (d) => {
+              const slot = segProgress[d.segIndex];
+              if (!slot) return;
+              slot.encodedCount = d.encodedCount || 0;
+              slot.processedSamples = d.processedSamples || 0;
+              slot.sampleCount = d.sampleCount || slot.sampleCount;
+              slot.lastPtsUs = d.lastPtsUs || 0;
+
+              const now = performance.now();
+              if (now - lastUiUpdate < 160) return;
+              lastUiUpdate = now;
+
+              let sumProc = 0;
+              let sumTotal = 0;
+              let sumEnc = 0;
+              for (let s = 0; s < segProgress.length; s++) {
+                sumProc += Math.min(segProgress[s].sampleCount, segProgress[s].processedSamples);
+                sumTotal += segProgress[s].sampleCount;
+                sumEnc += segProgress[s].encodedCount;
+              }
+              const frac = sumTotal > 0 ? Math.min(1, sumProc / sumTotal) : 0;
+              const elapsedSec = Math.max(0.2, (now - turboStartWall) / 1000);
+              const encSec = vTrack.durationSec * frac;
+              const speedX = encSec / elapsedSec;
+              const fpsLive = Math.round(sumEnc / elapsedSec);
+              item.liveSpeedX = speedX;
+              const pct = Math.min(95, Math.max(6, Math.round(6 + frac * 89)));
+              const spdText = formatSpeedX(speedX);
+              onProgress(
+                pct,
+                `WebCodecs Turbo (${actualK} kênh): ${Math.round(frac * 100)}% • ${fpsLive} fps${spdText ? ' (' + spdText + ')' : ''}`
+              );
+            };
+
+            if (isHwEncoder) state.activeHwEncoders += actualK;
+            try {
+              const results = await Promise.all(
+                plan.map((seg) =>
+                  runTurboSegmentTask({
+                    file: item.file,
+                    segIndex: seg.segIndex,
+                    decoderConfig,
+                    encoderConfig: vConfig,
+                    dims,
+                    keepOrigFps,
+                    maxFps,
+                    applyFpsCap,
+                    clipStartUs: vTrack.clipStartUs,
+                    encodeStartPtsUs: seg.encodeStartPtsUs,
+                    encodeEndPtsUs: seg.encodeEndPtsUs,
+                    isFirstSeg: seg.isFirstSeg,
+                    isLastSeg: seg.isLastSeg,
+                    decodeStart: seg.decodeStart,
+                    decodeEnd: seg.decodeEnd,
+                    offsets: vTrack.offsets,
+                    sizes: vTrack.sizes,
+                    ptsUs: vTrack.ptsUs,
+                    durUs: vTrack.durUs,
+                    isKey: vTrack.isKey,
+                    defaultFrameDurUs,
+                    onSegProgress,
+                  })
+                )
+              );
+
+              results.sort((a, b) => a.segIndex - b.segIndex);
+
+              // Kiểm tra đồng nhất SPS/PPS (avcC) giữa mọi kênh đoạn trước khi ghép
+              if (actualK > 1) {
+                const baseDesc = results[0].firstDecoderConfig && results[0].firstDecoderConfig.description;
+                let mismatch = false;
+                for (let k = 1; k < results.length; k++) {
+                  const segDesc = results[k].firstDecoderConfig && results[k].firstDecoderConfig.description;
+                  if (segDesc && baseDesc && !areUint8Equal(baseDesc, segDesc)) {
+                    mismatch = true;
+                    break;
+                  }
+                }
+                if (mismatch) {
+                  appendTechLog('[WebCodecs Turbo] Phát hiện sai khác tham số avcC giữa các đoạn — tự chuyển về 1 kênh Turbo để đảm bảo tương thích tuyệt đối.');
+                  currentK = 1;
+                  continue;
+                }
+              }
+
+              segResults = results;
+              break;
+            } catch (segErr) {
+              if (state.cancelRequested || (segErr && segErr.message === 'CANCELLED_BY_USER')) {
+                throw segErr;
+              }
+              if (actualK > 1) {
+                if (isHwEncoder) {
+                  const newCap = Math.max(1, actualK - 1);
+                  state.detectedGpuSessionCap = state.detectedGpuSessionCap > 0
+                    ? Math.min(state.detectedGpuSessionCap, newCap)
+                    : newCap;
+                }
+                const nextK = actualK > 2 ? Math.floor(actualK / 2) : 1;
+                appendTechLog(
+                  `[WebCodecs Turbo] Chạy ${actualK} kênh đoạn gặp giới hạn (${segErr.message}) — hạ xuống ${nextK} kênh...`
+                );
+                currentK = nextK;
+                continue;
+              }
+              if (segErr && segErr.message !== 'CANCELLED_BY_USER') {
+                segErr.hwAccelUsed = chosenHw;
+              }
+              throw segErr;
+            } finally {
+              if (isHwEncoder) state.activeHwEncoders = Math.max(0, state.activeHwEncoders - actualK);
+            }
+          }
+        } catch (err) {
+          audioPromise.catch(() => {});
+          throw err;
+        }
+
+        const audioRes = await audioPromise;
+        if (state.cancelRequested) throw new Error('CANCELLED_BY_USER');
+
+        const totalVideoChunks = segResults.reduce((s, r) => s + (r && r.metas ? r.metas.length : 0), 0);
+        if (totalVideoChunks === 0) {
+          throw new Error('WebCodecs Turbo không tạo được khung hình nào.');
+        }
+
+        onProgress(96, 'Đang đóng gói MP4 FastStart...');
+
+        const hasAudio =
+          (audioRes.mode === 'raw-aac' && audioRes.rawPackets.length > 0 && audioRes.config) ||
+          (audioRes.mode === 'encoded' && audioRes.packets.length > 0 && audioRes.config);
+
+        const target = new Mp4Muxer.ArrayBufferTarget();
+        const muxerOpts = {
+          target,
+          video: {
+            codec: 'avc',
+            width: dims.width,
+            height: dims.height,
+            rotation: vTrack.rotation || 0,
+          },
+          fastStart: 'in-memory',
+          firstTimestampBehavior: hasAudio ? 'cross-track-offset' : 'offset',
+        };
+        if (hasAudio) {
+          muxerOpts.audio = {
+            codec: 'aac',
+            numberOfChannels: audioRes.config.numberOfChannels,
+            sampleRate: audioRes.config.sampleRate,
+          };
+        }
+
+        const muxer = new Mp4Muxer.Muxer(muxerOpts);
+
+        if (audioRes.mode === 'raw-aac' && hasAudio) {
+          for (let i = 0; i < audioRes.rawPackets.length; i++) {
+            const pkt = audioRes.rawPackets[i];
+            const meta = i === 0
+              ? {
+                  decoderConfig: {
+                    codec: 'mp4a.40.2',
+                    numberOfChannels: audioRes.config.numberOfChannels,
+                    sampleRate: audioRes.config.sampleRate,
+                    description: audioRes.config.description,
+                  },
+                }
+              : undefined;
+            muxer.addAudioChunkRaw(pkt.data, 'key', pkt.timestamp, pkt.duration, meta);
+            audioRes.rawPackets[i] = null;
+          }
+        } else if (audioRes.mode === 'encoded' && hasAudio) {
+          for (let i = 0; i < audioRes.packets.length; i++) {
+            muxer.addAudioChunk(audioRes.packets[i].chunk, audioRes.packets[i].meta);
+            audioRes.packets[i] = null;
+          }
+        }
+
+        let lastMuxedVideoTs = -1;
+        let sentVideoDecoderCfg = false;
+        for (let k = 0; k < segResults.length; k++) {
+          const seg = segResults[k];
+          if (!seg) continue;
+          for (let c = 0; c < seg.metas.length; c++) {
+            const m = seg.metas[c];
+            const data = new Uint8Array(seg.buffers[c]);
+            seg.buffers[c] = null;
+            const rawTs = Math.max(0, Math.round(m.timestamp));
+            const ts = lastMuxedVideoTs < 0 ? rawTs : Math.max(rawTs, lastMuxedVideoTs + 1);
+            lastMuxedVideoTs = ts;
+            const dur = (Number.isFinite(m.duration) && m.duration > 0) ? Math.round(m.duration) : defaultFrameDurUs;
+            let meta = undefined;
+            if (!sentVideoDecoderCfg && seg.firstDecoderConfig) {
+              meta = { decoderConfig: seg.firstDecoderConfig };
+              sentVideoDecoderCfg = true;
+            }
+            muxer.addVideoChunkRaw(data, m.type === 'key' ? 'key' : 'delta', ts, dur, meta);
+          }
+          segResults[k] = null;
+        }
+
+        muxer.finalize();
+        const outBlob = new Blob([target.buffer], { type: 'video/mp4' });
+        if (!outBlob.size) {
+          throw new Error('MP4-Muxer tạo tệp đầu ra rỗng.');
+        }
+
+        const modeTag = chosenHw === 'prefer-software' ? 'Software' : 'GPU';
+        const rotSwap = vTrack.rotation === 90 || vTrack.rotation === 270;
+        const outW = rotSwap ? dims.height : dims.width;
+        const outH = rotSwap ? dims.width : dims.height;
+        const audioTag = hasAudio
+          ? (audioRes.mode === 'raw-aac' ? ' / AAC Passthrough' : ' / AAC')
+          : ' (Không tiếng)';
+
+        return {
+          blob: outBlob,
+          ext: 'mp4',
+          engineLabel: `WebCodecs Turbo ${modeTag} (${actualK} kênh)`,
+          outCodec: `${vConfig.codec}${audioTag} (MP4 FastStart)`,
+          width: outW,
+          height: outH,
+        };
+      }
+
       async function compressWithWebCodecs(item, cfg, onProgress, opts = {}) {
         if (!state.capabilities.hasWebCodecs) {
           throw new Error('Trình duyệt không hỗ trợ WebCodecs API.');
@@ -4748,8 +6995,26 @@
         const Mp4Muxer = ensureMp4MuxerLoaded();
         onProgress(2, 'Đang chuẩn bị WebCodecs + MP4-Muxer...');
 
-        // BƯỚC 1: Mã hóa toàn bộ âm thanh TRƯỚC vòng lặp hình
-        const audioResult = await encodeAudioTrackFirst(item, cfg, onProgress);
+        if (state.capabilities.hasVideoDecoder && !opts.forceVideoElement) {
+          try {
+            const turboRes = await compressWithWebCodecsTurbo(item, cfg, onProgress, opts);
+            if (turboRes) return turboRes;
+          } catch (turboErr) {
+            if (state.cancelRequested || (turboErr && turboErr.message === 'CANCELLED_BY_USER')) {
+              throw turboErr;
+            }
+            if (turboErr && turboErr.hwAccelUsed === 'prefer-hardware' && !opts.excludeHardware) {
+              throw turboErr;
+            }
+            appendTechLog(`[WebCodecs Turbo] Chuyển sang luồng <video> dự phòng (${turboErr.message})...`);
+          }
+        }
+
+        item.usingVideoElement = true;
+        item.activeChannels = 1;
+
+        // BƯỚC 1: Mã hóa toàn bộ âm thanh TRƯỚC vòng lặp hình (có khóa RAM khi chạy nhiều kênh)
+        const audioResult = await withAudioDecodeLock(() => encodeAudioTrackFirst(item, cfg, onProgress));
         const encodedAudioPackets = audioResult.packets;
         const chosenAudioCfg = audioResult.config;
 
@@ -5021,7 +7286,7 @@
             video.onended = null;
             try { video.pause(); } catch {}
             try { canvasStream.getTracks().forEach((t) => t.stop()); } catch {}
-            if (state.activeCancelFn === cancelRec) state.activeCancelFn = null;
+            unregisterCancelFn(cancelRec);
           };
 
           const cancelRec = () => {
@@ -5040,7 +7305,7 @@
             return;
           }
 
-          state.activeCancelFn = cancelRec;
+          registerCancelFn(cancelRec);
 
           recorder.ondataavailable = (ev) => {
             if (ev.data && ev.data.size > 0) chunks.push(ev.data);
@@ -5130,6 +7395,9 @@
         if (item.meta.browserDecodable === false) {
           throw new Error('Smart Native chỉ hỗ trợ định dạng trình duyệt phát được — hãy tải FFmpeg.wasm.');
         }
+
+        item.usingVideoElement = true;
+        item.activeChannels = 1;
 
         const video = document.createElement('video');
         video.playsInline = true;
@@ -5464,6 +7732,11 @@
             outCodec: '',
             outWidth: 0,
             outHeight: 0,
+            activeChannels: 0,
+            liveSpeedX: 0,
+            elapsedMs: 0,
+            speedX: 0,
+            usingVideoElement: false,
             outputBlob: null,
             outputUrl: null,
             outputName: '',
@@ -5569,6 +7842,11 @@
         item.outCodec = '';
         item.outWidth = 0;
         item.outHeight = 0;
+        item.activeChannels = 0;
+        item.liveSpeedX = 0;
+        item.elapsedMs = 0;
+        item.speedX = 0;
+        item.usingVideoElement = false;
         item.outputBlob = null;
         item.outputUrl = null;
         item.outputName = '';
@@ -5586,6 +7864,7 @@
         state.queue.forEach(revokeItemUrls);
         state.queue = [];
         dom.batchSection.classList.add('hidden');
+        if (dom.batchSpeedMeta) dom.batchSpeedMeta.textContent = '';
         renderQueueList();
         updateBatchSummaryUI();
         updateEstimatePanel();
@@ -5634,6 +7913,49 @@
         dom.batchProgressPct.textContent = `${overallPct}%`;
         dom.batchProgressFill.style.width = `${overallPct}%`;
         dom.batchProgressFill.className = `progress-fill${overallPct === 100 && doneItems.length > 0 ? ' emerald' : ''}`;
+
+        const cfg = getActiveConfig();
+        const budget = resolveChannelBudget(cfg, pendingOrRetryCount || total);
+
+        if (state.isBatchRunning) {
+          const activeList = state.queue.filter((x) => x.status === 'processing');
+          const activeChannelsSum = activeList.reduce((s, x) => s + Math.max(1, x.activeChannels || 1), 0);
+          if (dom.batchChannelBadge) {
+            dom.batchChannelBadge.textContent = `Đang chạy ${activeChannelsSum}/${budget.totalChannels} kênh`;
+          }
+          if (activeList.length === 1) {
+            const it = activeList[0];
+            dom.batchProgressLabel.textContent = `Đang nén (${activeChannelsSum} kênh): ${it.file.name}`;
+          } else if (activeList.length > 1) {
+            dom.batchProgressLabel.textContent = `Đang nén song song ${activeList.length} video (${activeChannelsSum} kênh)...`;
+          }
+
+          if (dom.batchSpeedMeta && state.batchStartWall > 0) {
+            const elapsedSec = Math.max(0.2, (performance.now() - state.batchStartWall) / 1000);
+            const targetIds = state.batchTargetIds;
+            let totalMediaSec = 0;
+            let doneMediaSec = 0;
+            for (const it of state.queue) {
+              if (targetIds && !targetIds.has(it.id)) continue;
+              const d = it.meta && it.meta.duration > 0 ? it.meta.duration : 0;
+              totalMediaSec += d;
+              if (it.status === 'done') doneMediaSec += d;
+              else if (it.status === 'processing') doneMediaSec += d * ((it.progress || 0) / 100);
+            }
+            const aggSpeed = doneMediaSec / elapsedSec;
+            const remMedia = Math.max(0, totalMediaSec - doneMediaSec);
+            const etaSec = aggSpeed > 0.05 ? remMedia / aggSpeed : 0;
+            const spdStr = formatSpeedX(aggSpeed);
+            const etaStr = formatEtaSeconds(etaSec);
+            dom.batchSpeedMeta.textContent = spdStr
+              ? `Tốc độ tổng ${spdStr}${etaStr ? ' • Còn ' + etaStr : ''}`
+              : '';
+          }
+        } else if (dom.batchChannelBadge) {
+          dom.batchChannelBadge.textContent = budget.isAuto
+            ? `Tự động ${budget.totalChannels} kênh`
+            : `${budget.totalChannels} kênh song song`;
+        }
 
         dom.btnStartBatchLabel.textContent =
           pendingOrRetryCount > 0
@@ -5729,10 +8051,13 @@
           }
 
           let statusBadge = '<span class="badge badge-slate">Chờ nén</span>';
+          let channelPillHtml = '';
           let itemClass = 'queue-item';
           if (item.status === 'processing') {
             itemClass += ' is-processing';
             statusBadge = `<span class="badge badge-fb" data-role="status-badge">Đang nén ${item.progress}%</span>`;
+            const chTxt = item.activeChannels > 1 ? `${item.activeChannels} kênh đoạn` : '1 kênh';
+            channelPillHtml = `<span class="badge channel-pill" data-role="channel-badge" style="font-size:11px">${chTxt}</span>`;
           } else if (item.status === 'done') {
             itemClass += ' is-done';
             statusBadge = '<span class="badge badge-emerald">Hoàn tất ✓</span>';
@@ -5764,6 +8089,11 @@
               ? `<span class="badge badge-slate" style="font-size:11px">${escapeHtml(item.engineUsed)}</span>`
               : `<span class="badge badge-slate" style="font-size:11px">Bộ máy: ${escapeHtml(getPlannedEngineLabel(item, itemCfg))}</span>`;
 
+          const speedBadgeHtml =
+            item.status === 'done' && item.elapsedMs > 0
+              ? `<span class="badge speed-badge" style="font-size:11px">${(item.elapsedMs / 1000).toFixed(1)}s${item.speedX > 0 ? ' • ' + formatSpeedX(item.speedX) : ''}</span>`
+              : '';
+
           const errorHtml =
             item.status === 'error' && item.errorMsg
               ? `<div class="item-error-text">${escapeHtml(item.errorMsg)}</div>`
@@ -5794,9 +8124,11 @@
                 <div class="queue-title-row">
                   <span class="queue-filename" title="${escapeHtml(item.file.name)}">${escapeHtml(item.file.name)}</span>
                   ${statusBadge}
+                  ${channelPillHtml}
                   <span class="${codecBadgeClass}" ${codecTooltip}>${escapeHtml(item.codecInfo.inputCodecLabel)}${isAv1 ? ' • AV1' : ''}</span>
                   ${fmtBadgeHtml}
                   ${engineTagHtml}
+                  ${speedBadgeHtml}
                 </div>
                 <div class="queue-meta-row">
                   ${sizeHtml}
@@ -5821,11 +8153,13 @@
       }
 
       /* =========================================================================
-       * 13. CHẠY NÉN HÀNG LOẠT TUẦN TỰ (AN TOÀN RAM + FALLBACK 3 TẦNG)
+       * 13. CHẠY NÉN HÀNG LOẠT ĐA KÊNH SONG SONG (WORKER POOL + FALLBACK 3 TẦNG)
        * ========================================================================= */
-      async function compressSingleItemWithRouting(item, cfg) {
+      async function compressSingleItemWithRouting(item, cfg, routingOpts = {}) {
         const itemCfg = resolveItemConfig(item, cfg);
         const fmtTag = itemCfg.formatDef ? itemCfg.formatDef.shortName : 'MP4';
+        const segBudget = Math.max(1, Number(routingOpts.segmentBudget) || 1);
+
         if (cfg.autoBitrate) {
           if (itemCfg.srcVideoBitrateKbps > 0) {
             appendTechLog(
@@ -5882,6 +8216,12 @@
             if (fill) fill.style.width = `${item.progress}%`;
             const badge = card.querySelector('[data-role="status-badge"]');
             if (badge) badge.textContent = `Đang nén ${item.progress}%`;
+            const chBadge = card.querySelector('[data-role="channel-badge"]');
+            if (chBadge) {
+              chBadge.textContent = item.activeChannels > 1
+                ? `${item.activeChannels} kênh đoạn`
+                : (routingOpts.workerSlot ? `Kênh #${routingOpts.workerSlot}` : '1 kênh');
+            }
             const stEl = card.querySelector('[data-role="stage-text"]');
             if (stEl && stage) stEl.textContent = stage;
           }
@@ -5900,19 +8240,39 @@
 
           try {
             if (eng === 'ffmpeg') {
+              item.activeChannels = 1;
               return await compressWithFFmpeg(item, itemCfg, updateItemProgress);
             }
             if (eng === 'webcodecs') {
               try {
-                return await compressWithWebCodecs(item, itemCfg, updateItemProgress);
+                return await compressWithWebCodecs(item, itemCfg, updateItemProgress, { segmentBudget: segBudget });
               } catch (wcErr) {
                 if (wcErr && wcErr.message !== 'CANCELLED_BY_USER' && wcErr.hwAccelUsed === 'prefer-hardware' && !state.cancelRequested) {
+                  if (segBudget > 1 || state.activeHwEncoders >= 1) {
+                    const capVal = Math.max(1, state.activeHwEncoders || (segBudget - 1));
+                    state.detectedGpuSessionCap = state.detectedGpuSessionCap > 0
+                      ? Math.min(state.detectedGpuSessionCap, capVal)
+                      : capVal;
+                    appendTechLog(`[WEBCODECS] GPU bận/hết phiên phần cứng với "${item.file.name}" (${wcErr.message}) — thử lại GPU 1 kênh...`);
+                    await new Promise((r) => setTimeout(r, 250));
+                    if (state.cancelRequested) throw new Error('CANCELLED_BY_USER');
+                    try {
+                      return await compressWithWebCodecs(item, itemCfg, updateItemProgress, { segmentBudget: 1 });
+                    } catch (soloErr) {
+                      if (soloErr && soloErr.message !== 'CANCELLED_BY_USER' && soloErr.hwAccelUsed === 'prefer-hardware' && !state.cancelRequested) {
+                        appendTechLog(`[WEBCODECS] Bộ mã hóa phần cứng tiếp tục lỗi (${soloErr.message}) — chuyển sang WebCodecs (Software)...`);
+                        return await compressWithWebCodecs(item, itemCfg, updateItemProgress, { excludeHardware: true, segmentBudget: segBudget });
+                      }
+                      throw soloErr;
+                    }
+                  }
                   appendTechLog(`[WEBCODECS] Bộ mã hóa phần cứng gặp lỗi với "${item.file.name}" (${wcErr.message}) — thử lại WebCodecs (Software)...`);
-                  return await compressWithWebCodecs(item, itemCfg, updateItemProgress, { excludeHardware: true });
+                  return await compressWithWebCodecs(item, itemCfg, updateItemProgress, { excludeHardware: true, segmentBudget: segBudget });
                 }
                 throw wcErr;
               }
             }
+            item.activeChannels = 1;
             return await compressWithMediaRecorder(item, itemCfg, updateItemProgress);
           } catch (err) {
             if (err && err.message === 'CANCELLED_BY_USER') throw err;
@@ -5940,19 +8300,27 @@
         }
 
         const cfg = getActiveConfig();
+        const budget = resolveChannelBudget(cfg, targets.length);
         state.isBatchRunning = true;
         state.cancelRequested = false;
+        state.detectedGpuSessionCap = 0;
+        state.activeHwEncoders = 0;
+        state.batchStartWall = performance.now();
+        state.batchTargetIds = new Set(targets.map((t) => t.id));
+        state.activeVideoItems.clear();
         lastSummaryUpdateTs = 0;
+        if (dom.batchSpeedMeta) dom.batchSpeedMeta.textContent = '';
         updateBatchSummaryUI();
         renderQueueList();
 
         let wakeLock = null;
         let warnedHiddenTab = false;
         const onVisibilityChange = () => {
-          if (document.hidden && state.isBatchRunning && !warnedHiddenTab) {
+          const usesVideoEl = state.queue.some((x) => x.status === 'processing' && x.usingVideoElement);
+          if (document.hidden && state.isBatchRunning && usesVideoEl && !warnedHiddenTab) {
             warnedHiddenTab = true;
-            appendTechLog('[Hệ thống] Tab đang ở chế độ nền — trình duyệt có thể giảm tốc GPU. Giữ tab hiển thị để GPU nén nhanh nhất.');
-            showToast('Giữ tab hiển thị để GPU nén nhanh nhất', 'warning');
+            appendTechLog('[Hệ thống] Có video đang dùng luồng <video> ở tab nền — trình duyệt có thể giảm tốc GPU. Giữ tab hiển thị để đạt tốc độ cao nhất.');
+            showToast('Giữ tab hiển thị để luồng <video> nén nhanh nhất', 'warning');
           }
         };
         document.addEventListener('visibilitychange', onVisibilityChange);
@@ -5965,6 +8333,7 @@
         let okCount = 0;
         let errCount = 0;
         let lastSuccessItem = null;
+        let nextIdx = 0;
 
         const fmtLog = cfg.outputFormat === 'original'
           ? 'Giữ định dạng gốc'
@@ -5976,82 +8345,138 @@
           : cfg.keepOrigBitrate
           ? 'Giữ nguyên Bitrate gốc'
           : `${cfg.videoBitrateKbps} kbps`;
-        appendTechLog(`=== Bắt đầu nén hàng loạt ${targets.length} video (${cfg.presetName} • ${fmtLog} • ${resLog} • ${fpsLog} • ${brLog}) ===`);
+        appendTechLog(
+          `=== Bắt đầu nén đa kênh ${targets.length} video (${budget.totalChannels} kênh ${budget.isAuto ? 'Tự động' : 'Thủ công'} • Chia đoạn GOP: ${budget.allowSegmentSplit ? 'Bật' : 'Tắt'} • ${cfg.presetName} • ${fmtLog} • ${resLog} • ${fpsLog} • ${brLog}) ===`
+        );
+
+        const poolSize = Math.max(1, Math.min(budget.totalChannels, targets.length));
 
         try {
-          for (let i = 0; i < targets.length; i++) {
-            if (state.cancelRequested) break;
-            const item = targets[i];
+          const workers = Array.from({ length: poolSize }, (_, workerIdx) => (async () => {
+            while (!state.cancelRequested) {
+              if (nextIdx >= targets.length) break;
+              const idx = nextIdx++;
+              const item = targets[idx];
 
-            item.status = 'processing';
-            item.progress = 1;
-            item.errorMsg = '';
-            item.warnMsg = '';
-            item.stageText = `Đang khởi động (${i + 1}/${targets.length})...`;
-            dom.batchProgressLabel.textContent = `Đang nén video ${i + 1} / ${targets.length}: ${item.file.name}`;
-            renderQueueList();
-            updateBatchSummaryUI();
+              let usedChannels = 0;
+              for (const ch of state.activeVideoItems.values()) usedChannels += ch;
+              const freeChannels = Math.max(1, budget.totalChannels - usedChannels);
+              const remainingPending = targets.length - nextIdx;
+              const segBudget = !budget.allowSegmentSplit
+                ? 1
+                : remainingPending === 0
+                ? freeChannels
+                : Math.max(1, Math.floor(freeChannels / (remainingPending + 1)));
 
-            try {
-              const res = await compressSingleItemWithRouting(item, cfg);
-              if (state.cancelRequested) {
-                item.status = 'cancelled';
-                item.stageText = 'Đã hủy';
-                break;
+              state.activeVideoItems.set(item.id, segBudget);
+              item.status = 'processing';
+              item.progress = 1;
+              item.errorMsg = '';
+              item.warnMsg = '';
+              item.activeChannels = segBudget;
+              item.liveSpeedX = 0;
+              item.elapsedMs = 0;
+              item.speedX = 0;
+              item.usingVideoElement = false;
+              item.stageText = `Đang khởi động (${segBudget > 1 ? segBudget + ' kênh đoạn' : 'Kênh #' + (workerIdx + 1)})...`;
+
+              scheduleQueueRender();
+              updateBatchSummaryUI();
+
+              const itemT0 = performance.now();
+              try {
+                const res = await compressSingleItemWithRouting(item, cfg, {
+                  segmentBudget: segBudget,
+                  workerSlot: workerIdx + 1,
+                });
+                if (state.cancelRequested) {
+                  item.status = 'cancelled';
+                  item.stageText = 'Đã hủy';
+                  break;
+                }
+
+                const elapsedMs = Math.max(1, Math.round(performance.now() - itemT0));
+                const speedX = item.meta.duration > 0 ? item.meta.duration / (elapsedMs / 1000) : 0;
+
+                try { if (item.outputUrl) URL.revokeObjectURL(item.outputUrl); } catch {}
+                item.outputBlob = res.blob;
+                item.outputUrl = URL.createObjectURL(res.blob);
+                item.outputName = `${stripExtension(item.file.name)}_video-compressed.${res.ext}`;
+                item.engineUsed = res.engineLabel;
+                item.outCodec = res.outCodec;
+                item.outWidth = res.width;
+                item.outHeight = res.height;
+                item.elapsedMs = elapsedMs;
+                item.speedX = speedX;
+                item.progress = 100;
+                item.status = 'done';
+                item.stageText = 'Hoàn tất';
+
+                const changedContainer = res.ext !== getFileExtension(item.file.name);
+                if (res.blob.size >= item.file.size && !cfg.keepOrigBitrate && !changedContainer) {
+                  item.warnMsg = 'Tệp nén không nhỏ hơn bản gốc — nên giữ bản gốc.';
+                  appendTechLog(`[Cảnh báo dung lượng] "${item.file.name}": tệp nén (${formatBytes(res.blob.size)}) không nhỏ hơn bản gốc (${formatBytes(item.file.size)}) — nên giữ bản gốc.`);
+                } else {
+                  item.warnMsg = '';
+                }
+
+                okCount++;
+                lastSuccessItem = item;
+                const delta = item.file.size - res.blob.size;
+                const pctAbs = item.file.size > 0 ? Math.round((Math.abs(delta) / item.file.size) * 100) : 0;
+                const pctStr = delta >= 0 ? `-${pctAbs}%` : `+${pctAbs}%`;
+                const spdLog = formatSpeedX(speedX);
+                appendTechLog(
+                  `✓ Hoàn tất "${item.file.name}": ${formatBytes(item.file.size)} → ${formatBytes(res.blob.size)} (${pctStr}) trong ${(elapsedMs / 1000).toFixed(1)}s${spdLog ? ' [' + spdLog + ']' : ''} bằng ${res.engineLabel}`
+                );
+              } catch (err) {
+                if (state.cancelRequested || (err && err.message === 'CANCELLED_BY_USER')) {
+                  item.status = 'cancelled';
+                  item.stageText = 'Đã hủy';
+                  appendTechLog(`Đã hủy nén "${item.file.name}" theo yêu cầu.`);
+                  break;
+                }
+                item.status = 'error';
+                item.errorMsg = err && err.message ? err.message : String(err);
+                item.stageText = 'Thất bại';
+                errCount++;
+                appendTechLog(`✗ Lỗi "${item.file.name}": ${item.errorMsg}`);
+              } finally {
+                state.activeVideoItems.delete(item.id);
               }
 
-              try { if (item.outputUrl) URL.revokeObjectURL(item.outputUrl); } catch {}
-              item.outputBlob = res.blob;
-              item.outputUrl = URL.createObjectURL(res.blob);
-              item.outputName = `${stripExtension(item.file.name)}_video-compressed.${res.ext}`;
-              item.engineUsed = res.engineLabel;
-              item.outCodec = res.outCodec;
-              item.outWidth = res.width;
-              item.outHeight = res.height;
-              item.progress = 100;
-              item.status = 'done';
-              item.stageText = 'Hoàn tất';
+              scheduleQueueRender();
+              updateBatchSummaryUI();
+              updateEstimatePanel();
 
-              const changedContainer = res.ext !== getFileExtension(item.file.name);
-              if (res.blob.size >= item.file.size && !cfg.keepOrigBitrate && !changedContainer) {
-                item.warnMsg = 'Tệp nén không nhỏ hơn bản gốc — nên giữ bản gốc.';
-                appendTechLog(`[Cảnh báo dung lượng] "${item.file.name}": tệp nén (${formatBytes(res.blob.size)}) không nhỏ hơn bản gốc (${formatBytes(item.file.size)}) — nên giữ bản gốc.`);
-              } else {
-                item.warnMsg = '';
-              }
-
-              okCount++;
-              lastSuccessItem = item;
-              const delta = item.file.size - res.blob.size;
-              const pctAbs = item.file.size > 0 ? Math.round((Math.abs(delta) / item.file.size) * 100) : 0;
-              const pctStr = delta >= 0 ? `-${pctAbs}%` : `+${pctAbs}%`;
-              appendTechLog(`✓ Hoàn tất "${item.file.name}": ${formatBytes(item.file.size)} → ${formatBytes(res.blob.size)} (${pctStr}) bằng ${res.engineLabel}`);
-            } catch (err) {
-              if (state.cancelRequested || (err && err.message === 'CANCELLED_BY_USER')) {
-                item.status = 'cancelled';
-                item.stageText = 'Đã hủy';
-                appendTechLog(`Đã hủy nén "${item.file.name}" theo yêu cầu.`);
-                break;
-              }
-              item.status = 'error';
-              item.errorMsg = err && err.message ? err.message : String(err);
-              item.stageText = 'Thất bại';
-              errCount++;
-              appendTechLog(`✗ Lỗi "${item.file.name}": ${item.errorMsg}`);
+              await new Promise((r) => setTimeout(r, 60));
             }
+          })());
 
-            renderQueueList();
-            updateBatchSummaryUI();
-            updateEstimatePanel();
-
-            // Nghỉ 120ms giữa các video để trình duyệt giải phóng GC RAM
-            await new Promise((r) => setTimeout(r, 120));
-          }
+          await Promise.all(workers);
         } finally {
           document.removeEventListener('visibilitychange', onVisibilityChange);
           try { if (wakeLock) await wakeLock.release(); } catch {}
           state.isBatchRunning = false;
-          state.activeCancelFn = null;
+          state.activeVideoItems.clear();
+          cancelAllActiveTasks();
+        }
+
+        const totalElapsedSec = Math.max(0.1, (performance.now() - state.batchStartWall) / 1000);
+        let doneMediaSec = 0;
+        for (const t of targets) {
+          if (t.status === 'done' && t.meta && t.meta.duration > 0) {
+            doneMediaSec += t.meta.duration;
+          }
+        }
+        state.batchTargetIds = null;
+        const avgBatchSpeed = doneMediaSec > 0 ? doneMediaSec / totalElapsedSec : 0;
+        const avgBatchSpdStr = formatSpeedX(avgBatchSpeed);
+
+        if (dom.batchSpeedMeta) {
+          dom.batchSpeedMeta.textContent = okCount > 0
+            ? `Hoàn thành trong ${totalElapsedSec.toFixed(1)}s${avgBatchSpdStr ? ' • Trung bình ' + avgBatchSpdStr : ''}`
+            : '';
         }
 
         if (state.cancelRequested) {
@@ -6059,7 +8484,9 @@
           showToast(`Đã dừng quá trình nén (${okCount} video hoàn tất).`, 'warning');
         } else if (errCount === 0 && okCount > 0) {
           dom.batchProgressLabel.textContent = `Hoàn tất toàn bộ ${okCount} video ✓`;
-          showToast(`Nén thành công ${okCount}/${targets.length} video!`, 'success');
+          const speedMsg = avgBatchSpdStr ? ` (${totalElapsedSec.toFixed(1)}s • ${avgBatchSpdStr})` : ` (${totalElapsedSec.toFixed(1)}s)`;
+          showToast(`Nén thành công ${okCount}/${targets.length} video${speedMsg}!`, 'success');
+          appendTechLog(`=== Hoàn tất lô ${okCount}/${targets.length} video trong ${totalElapsedSec.toFixed(2)}s${avgBatchSpdStr ? ' (tốc độ tổng ' + avgBatchSpdStr + ')' : ''} ===`);
         } else if (okCount > 0) {
           dom.batchProgressLabel.textContent = `Hoàn tất ${okCount} video • ${errCount} video lỗi`;
           showToast(`Hoàn tất ${okCount} video, có ${errCount} video gặp lỗi (xem chi tiết trong hàng đợi).`, 'warning');
@@ -6301,6 +8728,29 @@
         dom.optEngineQuick.addEventListener('change', (e) => onEngineChanged(e.target.value));
         dom.optEngineAdv.addEventListener('change', (e) => onEngineChanged(e.target.value));
 
+        const onConcurrencyChanged = (val) => {
+          state.concurrencyPref = val || 'auto';
+          if (dom.optConcurrency) dom.optConcurrency.value = state.concurrencyPref;
+          if (dom.optConcurrencyAdv) dom.optConcurrencyAdv.value = state.concurrencyPref;
+          updateEstimatePanel();
+          updateBatchSummaryUI();
+          if (state.queue.length > 0) scheduleQueueRender();
+        };
+        if (dom.optConcurrency) {
+          dom.optConcurrency.addEventListener('change', (e) => onConcurrencyChanged(e.target.value));
+        }
+        if (dom.optConcurrencyAdv) {
+          dom.optConcurrencyAdv.addEventListener('change', (e) => onConcurrencyChanged(e.target.value));
+        }
+        if (dom.optSegmentSplit) {
+          dom.optSegmentSplit.addEventListener('change', (e) => {
+            state.segmentSplitPref = e.target.value || 'auto';
+            updateEstimatePanel();
+            updateBatchSummaryUI();
+            if (state.queue.length > 0) scheduleQueueRender();
+          });
+        }
+
         dom.optBitrate.addEventListener('input', () => {
           state.keepOrigBitrate = false;
           syncKeepOrigBitrateUI();
@@ -6318,10 +8768,8 @@
         dom.btnCancelBatch.addEventListener('click', () => {
           if (!state.isBatchRunning) return;
           state.cancelRequested = true;
-          if (typeof state.activeCancelFn === 'function') {
-            try { state.activeCancelFn(); } catch {}
-          }
-          showToast('Đang dừng quá trình nén...', 'warning');
+          cancelAllActiveTasks();
+          showToast('Đang dừng toàn bộ các kênh nén...', 'warning');
         });
         dom.btnClearQueue.addEventListener('click', clearEntireQueue);
         dom.btnDownloadZip.addEventListener('click', downloadAllAsZip);
@@ -6400,10 +8848,11 @@
           PRISTINE_BODY_HTML = injectEmbeddedPayload(document.body.innerHTML, '');
           bindEvents();
           updatePresetUI();
-          appendTechLog(
-            `Khởi động thành công • WebCodecs: ${state.capabilities.hasWebCodecs ? 'Có' : 'Không'} • MediaRecorder: ${state.capabilities.hasMediaRecorder ? 'Có' : 'Không'} • GzipStream: ${state.capabilities.hasCompressionStream ? 'Có' : 'Không'}`
-          );
           await hydrateEmbeddedAndCachedLibs();
+          const autoCh = resolveAutoChannelCount(getActiveConfig());
+          appendTechLog(
+            `Khởi động thành công • CPU: ${state.capabilities.cpuCores} luồng • Đa kênh tự động: ${autoCh} kênh • WebCodecs: ${state.capabilities.hasWebCodecs ? 'Có' : 'Không'} (VideoDecoder: ${state.capabilities.hasVideoDecoder ? 'Có' : 'Không'}, AudioDecoder: ${state.capabilities.hasAudioDecoder ? 'Có' : 'Không'}, OffscreenCanvas: ${state.capabilities.hasOffscreenCanvas ? 'Có' : 'Không'}) • MediaRecorder: ${state.capabilities.hasMediaRecorder ? 'Có' : 'Không'} • GzipStream: ${state.capabilities.hasCompressionStream ? 'Có' : 'Không'}`
+          );
         } catch (err) {
           appendTechLog(`[Lỗi khởi động] ${err && err.stack ? err.stack : err}`);
           showToast(`Lỗi khởi động ứng dụng: ${err && err.message ? err.message : err}`, 'error');

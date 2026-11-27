@@ -244,9 +244,65 @@
     .pulse-dot {
       animation: pulseDot 1.6s ease-in-out infinite;
     }
+
+    /* Top Workspace Tab Switcher Bar */
+    #workspaceTabBar {
+      background: rgba(4, 8, 18, 0.9);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid rgba(148, 163, 184, 0.16);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.45);
+      transition: opacity 0.24s ease, transform 0.24s ease;
+    }
+    .ws-tab-btn {
+      transition: all 0.2s ease;
+    }
+    .ws-tab-btn.active {
+      background: linear-gradient(135deg, rgba(14, 165, 233, 0.24), rgba(99, 102, 241, 0.24));
+      border-color: rgba(56, 189, 248, 0.55);
+      color: #f8fafc;
+      box-shadow: 0 0 14px rgba(56, 189, 248, 0.22);
+    }
+    body.hud-hidden #workspaceTabBar,
+    body.relativity-cinema #workspaceTabBar {
+      opacity: 0 !important;
+      pointer-events: none !important;
+      transform: translateY(-100%);
+    }
+    body.relativity-cinema #tabRelativityView {
+      top: 0 !important;
+    }
+
   </style>
 </head>
 <body class="relative w-screen h-screen overflow-hidden">
+
+  <!-- TOP WORKSPACE TAB SWITCHER (DEFAULT: COSMOS LAB 3D PRO) -->
+  <nav id="workspaceTabBar" role="tablist" aria-label="Chuyển đổi không gian mô phỏng" class="fixed top-0 left-0 right-0 h-[42px] z-[70] px-2.5 flex items-center justify-between gap-2">
+    <div class="flex items-center gap-1.5 overflow-x-auto custom-scroll py-1">
+      <button id="wsTabCosmos" data-ws-tab="cosmos" role="tab" aria-selected="true" class="ws-tab-btn active px-2.5 py-1 rounded-lg border border-transparent text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-800/70 flex items-center gap-1.5 whitespace-nowrap cursor-pointer">
+        <i class="fa-solid fa-earth-americas text-sky-400"></i>
+        <span>Hệ Mặt Trời &amp; Sandbox 3D</span>
+      </button>
+      <button id="wsTabRelativity" data-ws-tab="relativity" role="tab" aria-selected="false" class="ws-tab-btn px-2.5 py-1 rounded-lg border border-transparent text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-800/70 flex items-center gap-1.5 whitespace-nowrap cursor-pointer">
+        <i class="fa-solid fa-atom text-violet-400"></i>
+        <span>Vũ Trụ Tương Đối GPU</span>
+        <span class="hidden sm:inline-flex items-center px-1.5 py-0.5 rounded-full text-[9.5px] font-mono bg-violet-500/20 text-violet-200 border border-violet-400/35">6 Mô phỏng • Lý thuyết</span>
+      </button>
+    </div>
+    <div class="flex items-center gap-1.5 shrink-0">
+      <span id="wsEngineBadge" class="hidden lg:inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-slate-900/80 border border-slate-700/70 text-[10px] font-mono text-sky-300">
+        Three.js N-Body 3D
+      </span>
+      <button id="wsPopoutRelativityBtn" type="button" title="Mở Phòng Thí Nghiệm Vũ Trụ Tương Đối ở tab trình duyệt mới" class="px-2 py-1 rounded-lg bg-slate-800/80 hover:bg-sky-500/20 border border-slate-700/70 hover:border-sky-400/45 text-[11px] font-medium text-slate-200 hover:text-white flex items-center gap-1.5 transition cursor-pointer">
+        <i class="fa-solid fa-arrow-up-right-from-square text-[10px] text-sky-400"></i>
+        <span class="hidden md:inline">Tab mới</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- TAB 1: COSMOS LAB 3D PRO (DEFAULT VIEW) -->
+  <div id="tabCosmosView" class="fixed inset-0 z-10">
 
   <!-- FULL-SCREEN 3D WEBGL VIEWPORT -->
   <div id="viewport3D"></div>
@@ -269,7 +325,7 @@
   </button>
 
   <!-- TOP CONTROL BAR -->
-  <header class="hud-chrome fixed top-2.5 left-2.5 right-2.5 z-30 flex items-center justify-between gap-2 pointer-events-none">
+  <header class="hud-chrome fixed top-[50px] left-2.5 right-2.5 z-30 flex items-center justify-between gap-2 pointer-events-none">
     <!-- Left Brand, Toggle & Live Clock -->
     <div class="flex items-center gap-2 pointer-events-auto shrink-0">
       <button id="toggleLeftBtn" title="Thu gọn / Mở kho thiên thể 3D" class="glass-panel hover:bg-slate-800/85 text-slate-200 w-9 h-9 rounded-xl flex items-center justify-center transition">
@@ -368,9 +424,6 @@
           <i class="fa-solid fa-plus text-[11px]"></i>
         </button>
       </div>
-      <button id="helpBtn" title="Hướng dẫn thao tác nhanh" class="glass-panel hover:bg-slate-800/85 text-sky-300 w-9 h-9 rounded-xl flex items-center justify-center transition">
-        <i class="fa-solid fa-circle-question text-sm"></i>
-      </button>
       <button id="toggleRightBtn" title="Thu gọn / Mở bảng thông số & đánh giá" class="glass-panel hover:bg-slate-800/85 text-emerald-400 w-9 h-9 rounded-xl flex items-center justify-center transition relative">
         <i class="fa-solid fa-chart-line text-sm"></i>
         <span id="logBadge" class="hidden absolute -top-1 -right-1 w-4 h-4 rounded-full bg-rose-500 text-[9px] font-bold text-white flex items-center justify-center">0</span>
@@ -379,7 +432,7 @@
   </header>
 
   <!-- FOLLOW LOCK STATUS BANNER -->
-  <div id="followBanner" class="hud-chrome hidden fixed top-[58px] left-1/2 -translate-x-1/2 z-20 glass-panel px-3.5 py-1.5 rounded-full border border-sky-500/45 flex items-center gap-2 text-xs shadow-lg max-w-[92vw]">
+  <div id="followBanner" class="hud-chrome hidden fixed top-[98px] left-1/2 -translate-x-1/2 z-20 glass-panel px-3.5 py-1.5 rounded-full border border-sky-500/45 flex items-center gap-2 text-xs shadow-lg max-w-[92vw]">
     <span class="w-2 h-2 rounded-full bg-sky-400 pulse-dot shrink-0"></span>
     <span class="text-slate-300 truncate">Đang khóa: <strong id="followBodyName" class="text-white">Trái Đất</strong></span>
     <span class="hidden sm:inline text-[10px] text-sky-300/90 border-l border-slate-700 pl-2">Cuộn chuột để zoom sát bề mặt</span>
@@ -392,7 +445,7 @@
   <div id="toastContainer" class="hud-chrome fixed bottom-16 left-1/2 -translate-x-1/2 z-40 flex flex-col items-center gap-1.5 pointer-events-none w-[92vw] max-w-md"></div>
 
   <!-- LEFT PANEL: ENTITY VAULT (23 ENTITIES) + SLINGSHOT + DROP SLIDERS -->
-  <aside id="leftPanel" class="hud-chrome side-panel-left fixed top-14 bottom-16 left-2.5 z-20 w-[292px] max-w-[85vw] glass-panel rounded-2xl flex flex-col overflow-hidden">
+  <aside id="leftPanel" class="hud-chrome side-panel-left fixed top-[96px] bottom-16 left-2.5 z-20 w-[292px] max-w-[85vw] glass-panel rounded-2xl flex flex-col overflow-hidden">
     <!-- Mode Switch & Category Tabs -->
     <div class="p-2.5 border-b border-slate-800/80 space-y-2">
       <div class="grid grid-cols-2 gap-1 bg-slate-900/85 p-1 rounded-xl border border-slate-800">
@@ -473,7 +526,7 @@
   </aside>
 
   <!-- RIGHT PANEL: LIVE TELEMETRY INSPECTOR & IMPACT EVALUATION LOG -->
-  <aside id="rightPanel" class="hud-chrome side-panel-right fixed top-14 bottom-16 right-2.5 z-20 w-[322px] max-w-[86vw] glass-panel rounded-2xl flex flex-col overflow-hidden">
+  <aside id="rightPanel" class="hud-chrome side-panel-right fixed top-[96px] bottom-16 right-2.5 z-20 w-[322px] max-w-[86vw] glass-panel rounded-2xl flex flex-col overflow-hidden">
     <!-- Tabs -->
     <div class="p-2 border-b border-slate-800/80 flex items-center gap-1.5">
       <button id="tabInspectorBtn" class="flex-1 py-1.5 px-2 rounded-lg text-xs font-semibold bg-sky-500/20 text-sky-300 border border-sky-400/40 transition">
@@ -665,61 +718,11 @@
       <span id="camScaleVal">3.41 AU</span>
     </div>
   </footer>
+  </div>
 
-  <!-- COMPACT ON-SCREEN QUICK GUIDE MODAL -->
-  <div id="helpModal" class="fixed inset-0 z-50 bg-slate-950/75 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="glass-panel max-w-xl w-full rounded-2xl p-5 border border-sky-500/35 shadow-2xl space-y-4">
-      <div class="flex items-start justify-between gap-3">
-        <div class="flex items-center gap-3">
-          <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-sky-500 via-cyan-500 to-indigo-600 flex items-center justify-center text-white text-lg shadow-lg shadow-sky-500/25">
-            <i class="fa-solid fa-earth-americas"></i>
-          </div>
-          <div>
-            <h2 class="font-display text-base font-bold text-white">Cosmos Lab 3D Pro — Vũ Trụ & Thí Nghiệm Hấp Dẫn</h2>
-            <p class="text-xs text-slate-400">Shader hành tinh GLSL, Hố Đen dò tia Thuyết Tương Đối & Hố Sâu Einstein-Rosen</p>
-          </div>
-        </div>
-        <button id="closeHelpBtn" class="text-slate-400 hover:text-white w-8 h-8 rounded-lg hover:bg-slate-800 flex items-center justify-center transition">
-          <i class="fa-solid fa-xmark"></i>
-        </button>
-      </div>
-
-      <div class="space-y-2 text-xs text-slate-300">
-        <div class="flex items-start gap-2.5 p-2.5 rounded-xl bg-slate-900/75 border border-slate-800">
-          <i class="fa-solid fa-magnifying-glass-plus text-sky-400 mt-0.5 text-sm"></i>
-          <div>
-            <strong class="text-white">Zoom Logarit Siêu Mượt & Theo Dõi:</strong> Cuộn chuột (hoặc chụm 2 ngón) để zoom từ <b>vành đai Kuiper ra tới sát bề mặt vệ tinh</b>. Click thiên thể bất kỳ để khóa camera 360°; nhấn <b>H</b> để ẩn toàn bộ HUD ngắm cảnh.
-          </div>
-        </div>
-        <div class="flex items-start gap-2.5 p-2.5 rounded-xl bg-slate-900/75 border border-slate-800">
-          <i class="fa-solid fa-circle-dot text-orange-400 mt-0.5 text-sm"></i>
-          <div>
-            <strong class="text-white">Hố Đen Gargantua & Hố Sâu 3D:</strong> Hố Đen bẻ cong ánh sáng tạo <b>vòng photon & hiệu ứng Doppler</b> chân thực. Đặt <b>Hố Sâu</b> từ kho bên trái sẽ tạo cặp cổng <b>A ↔ B</b> liên thông dịch chuyển tức thời tàu vũ trụ & hành tinh!
-          </div>
-        </div>
-        <div class="flex items-start gap-2.5 p-2.5 rounded-xl bg-slate-900/75 border border-slate-800">
-          <i class="fa-solid fa-crosshairs text-emerald-400 mt-0.5 text-sm"></i>
-          <div>
-            <strong class="text-white">23 Loại Thiên Thể Kéo Thả & Kéo Bắn:</strong> Chọn từ sao Neutron, Hố Trắng, hành tinh Dung Nham/Băng/Đại Dương, Trạm Vũ Trụ... và kéo thả vào không gian kèm đường dự đoán quỹ đạo theo thời gian thực.
-          </div>
-        </div>
-      </div>
-
-      <div class="flex flex-wrap items-center justify-end gap-2 pt-1">
-        <button id="demoBlackHoleBtn" class="px-3 py-2 rounded-xl bg-orange-500/20 hover:bg-orange-500/35 text-orange-200 border border-orange-400/40 text-xs font-semibold transition">
-          <i class="fa-solid fa-circle-dot mr-1.5"></i>Xem Hố Đen Gargantua
-        </button>
-        <button id="demoWormholeBtn" class="px-3 py-2 rounded-xl bg-cyan-500/20 hover:bg-cyan-500/35 text-cyan-200 border border-cyan-400/40 text-xs font-semibold transition">
-          <i class="fa-solid fa-hurricane mr-1.5"></i>Thử Hố Sâu
-        </button>
-        <button id="demoMeteorBtn" class="px-3 py-2 rounded-xl bg-rose-500/20 hover:bg-rose-500/35 text-rose-200 border border-rose-400/40 text-xs font-semibold transition">
-          <i class="fa-solid fa-meteor mr-1.5"></i>Bắn Trái Đất
-        </button>
-        <button id="demoStartBtn" class="px-4 py-2 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 text-xs font-bold shadow-lg shadow-sky-500/25 transition">
-          Vào Không Gian 3D
-        </button>
-      </div>
-    </div>
+  <!-- TAB 2: PHÒNG THÍ NGHIỆM VŨ TRỤ TƯƠNG ĐỐI GPU (WEBGL2 RAYMARCHING + LÝ THUYẾT) -->
+  <div id="tabRelativityView" class="hidden fixed top-[42px] left-0 right-0 bottom-0 z-20 bg-[#04060d]">
+    <iframe id="relativityFrame" title="Phòng Thí Nghiệm Vũ Trụ Tương Đối GPU" class="w-full h-full border-0 block bg-[#04060d]"></iframe>
   </div>
 
   <script>
@@ -734,6 +737,10 @@
      */
     (function () {
       'use strict';
+
+      let isCosmosTabActive = true;
+      let cosmosRafId = null;
+      let isCosmosInitialized = false;
 
       // =======================================================================
       // 1. PHYSICS CONSTANTS, TIMING & 23-ENTITY CATALOG
@@ -5153,6 +5160,7 @@
       });
 
       window.addEventListener('keydown', (e) => {
+        if (!isCosmosTabActive) return;
         if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
         if (e.code === 'Space') { e.preventDefault(); togglePause(); }
         else if (e.key === '+' || e.key === '=') zoomCameraByFactor(0.72);
@@ -6021,26 +6029,8 @@
           showToast(b.isAnchored ? `${b.name} đã neo cố định trong không gian.` : `${b.name} đang trôi tự do theo lực hấp dẫn.`, 'info');
         });
 
-        // Quick Guide Modal
-        const modal = document.getElementById('helpModal');
-        document.getElementById('helpBtn').addEventListener('click', () => modal.classList.remove('hidden'));
-        document.getElementById('closeHelpBtn').addEventListener('click', () => modal.classList.add('hidden'));
-        document.getElementById('demoStartBtn').addEventListener('click', () => { SoundFX.init(); modal.classList.add('hidden'); });
-        document.getElementById('demoBlackHoleBtn').addEventListener('click', () => { SoundFX.init(); modal.classList.add('hidden'); loadPreset('blackhole_showcase'); });
-        document.getElementById('demoWormholeBtn').addEventListener('click', () => { SoundFX.init(); modal.classList.add('hidden'); loadPreset('wormhole_bridge'); });
-        document.getElementById('demoMeteorBtn').addEventListener('click', () => { SoundFX.init(); modal.classList.add('hidden'); loadPreset('meteor_earth'); });
-
         window.addEventListener('resize', () => {
-          const pr = Math.min(window.devicePixelRatio || 1, 2);
-          camera.aspect = window.innerWidth / window.innerHeight;
-          camera.updateProjectionMatrix();
-          renderer.setPixelRatio(pr);
-          renderer.setSize(window.innerWidth, window.innerHeight);
-          for (const m of animatedShaderMaterials) {
-            if (m.uniforms && m.uniforms.uPixelRatio) m.uniforms.uPixelRatio.value = pr;
-          }
-          if (mainBeltPoints) mainBeltPoints.material.uniforms.uPixelRatio.value = pr;
-          if (kuiperBeltPoints) kuiperBeltPoints.material.uniforms.uPixelRatio.value = pr;
+          if (isCosmosTabActive) syncRendererSize();
         });
 
         if (window.innerWidth < 768) {
@@ -6065,8 +6055,25 @@
         return `${km.toLocaleString('vi-VN')} km`;
       }
 
+      function syncRendererSize() {
+        const pr = Math.min(window.devicePixelRatio || 1, 2);
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setPixelRatio(pr);
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        for (const m of animatedShaderMaterials) {
+          if (m.uniforms && m.uniforms.uPixelRatio) m.uniforms.uPixelRatio.value = pr;
+        }
+        if (mainBeltPoints) mainBeltPoints.material.uniforms.uPixelRatio.value = pr;
+        if (kuiperBeltPoints) kuiperBeltPoints.material.uniforms.uPixelRatio.value = pr;
+      }
+
       function animate(now) {
-        requestAnimationFrame(animate);
+        if (!isCosmosTabActive) {
+          cosmosRafId = null;
+          return;
+        }
+        cosmosRafId = requestAnimationFrame(animate);
         const rawDt = Math.min(0.05, Math.max(0.001, (now - lastFrameTime) / 1000));
         lastFrameTime = now;
 
@@ -6103,6 +6110,23 @@
         }
       }
 
+      window.__cosmosTabController = {
+        setActive(active) {
+          isCosmosTabActive = Boolean(active);
+          if (!isCosmosTabActive) {
+            if (cosmosRafId) {
+              cancelAnimationFrame(cosmosRafId);
+              cosmosRafId = null;
+            }
+            resetAllInteractionState();
+          } else if (isCosmosInitialized) {
+            syncRendererSize();
+            lastFrameTime = performance.now();
+            if (!cosmosRafId) cosmosRafId = requestAnimationFrame(animate);
+          }
+        }
+      };
+
       window.onload = function () {
         try {
           buildStarfield3D();
@@ -6111,13 +6135,3644 @@
           buildEntityPalette();
           bindUIEvents();
           loadPreset('solar');
+          isCosmosInitialized = true;
           lastFrameTime = performance.now();
-          requestAnimationFrame(animate);
+          if (isCosmosTabActive) cosmosRafId = requestAnimationFrame(animate);
         } catch (err) {
           console.error('Lỗi khởi tạo Cosmos Lab 3D Pro:', err);
           showToast('Không thể khởi tạo WebGL 3D trên trình duyệt này.', 'danger');
         }
       };
+    })();
+  </script>
+
+  <!-- EMBEDDED TAB 2 SOURCE (VŨ TRỤ TƯƠNG ĐỐI GPU) -->
+  <script id="relativityAppSource" type="text/plain">
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Phòng Thí Nghiệm Vũ Trụ Tương Đối</title>
+<style>
+  :root {
+    --bg-deep: #04060d;
+    --panel-bg: rgba(8, 13, 26, 0.76);
+    --panel-border: rgba(110, 168, 254, 0.22);
+    --accent: #38bdf8;
+    --accent-2: #a855f7;
+    --accent-warm: #f59e0b;
+    --text-main: #eef4ff;
+    --text-muted: #94a3b8;
+    --danger: #f43f5e;
+    --success: #10b981;
+    --radius: 14px;
+    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-mono: 'JetBrains Mono', 'Fira Code', ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  html, body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: var(--bg-deep);
+    color: var(--text-main);
+    font-family: var(--font-sans);
+    user-select: none;
+  }
+
+  #glCanvas {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    display: block;
+    cursor: grab;
+    touch-action: none;
+    z-index: 1;
+  }
+
+  #glCanvas:active {
+    cursor: grabbing;
+  }
+
+  /* Top Navigation Bar */
+  .top-bar {
+    position: fixed;
+    top: 12px;
+    left: 12px;
+    right: 12px;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    pointer-events: none;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+  }
+
+  .top-bar > * {
+    pointer-events: auto;
+  }
+
+  .glass {
+    background: var(--panel-bg);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid var(--panel-border);
+    border-radius: var(--radius);
+    box-shadow: 0 10px 35px rgba(0, 0, 0, 0.5);
+  }
+
+  .brand-pill {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 14px;
+    flex-shrink: 0;
+  }
+
+  .brand-orb {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, #000 32%, #f59e0b 52%, #38bdf8 78%, transparent 100%);
+    box-shadow: 0 0 14px rgba(56, 189, 248, 0.65);
+    flex-shrink: 0;
+  }
+
+  .brand-title {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    line-height: 1.2;
+  }
+
+  .brand-sub {
+    font-size: 10px;
+    color: var(--accent);
+    font-family: var(--font-mono);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  /* Simulation Mode Selector */
+  .mode-tabs {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 5px;
+    overflow-x: auto;
+    max-width: 100%;
+    scrollbar-width: none;
+  }
+
+  .mode-tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .mode-btn {
+    background: transparent;
+    border: 1px solid transparent;
+    color: var(--text-muted);
+    font-family: var(--font-sans);
+    font-size: 12px;
+    font-weight: 600;
+    padding: 7px 11px;
+    border-radius: 9px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .mode-btn:hover {
+    color: var(--text-main);
+    background: rgba(255, 255, 255, 0.06);
+  }
+
+  .mode-btn.active {
+    color: #fff;
+    background: linear-gradient(135deg, rgba(56, 189, 248, 0.28), rgba(168, 85, 247, 0.28));
+    border-color: rgba(56, 189, 248, 0.55);
+    box-shadow: 0 0 16px rgba(56, 189, 248, 0.22);
+  }
+
+  /* Quick Action Buttons */
+  .top-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px;
+    flex-shrink: 0;
+  }
+
+  .icon-btn {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--text-main);
+    font-size: 12px;
+    font-weight: 600;
+    padding: 7px 10px;
+    border-radius: 9px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+  }
+
+  .icon-btn:hover {
+    background: rgba(56, 189, 248, 0.18);
+    border-color: rgba(56, 189, 248, 0.45);
+  }
+
+  .icon-btn.active {
+    background: rgba(56, 189, 248, 0.28);
+    border-color: var(--accent);
+    color: #fff;
+  }
+
+  /* GPU Telemetry Badge (Bottom Left) */
+  .gpu-badge {
+    position: fixed;
+    left: 12px;
+    bottom: 12px;
+    z-index: 20;
+    padding: 10px 13px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    max-width: 310px;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+  }
+
+  .gpu-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .gpu-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--success);
+    box-shadow: 0 0 8px var(--success);
+    display: inline-block;
+    margin-right: 6px;
+  }
+
+  .gpu-name {
+    color: var(--text-muted);
+    font-size: 10px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 280px;
+  }
+
+  .metric-val {
+    color: var(--accent);
+    font-weight: 700;
+  }
+
+  /* Right Control & Theory Panel */
+  .side-panel {
+    position: fixed;
+    top: 72px;
+    right: 12px;
+    bottom: 12px;
+    width: 340px;
+    max-width: calc(100vw - 24px);
+    z-index: 20;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+  }
+
+  .panel-tabs {
+    display: flex;
+    border-bottom: 1px solid var(--panel-border);
+    padding: 6px;
+    gap: 4px;
+    flex-shrink: 0;
+  }
+
+  .panel-tab {
+    flex: 1;
+    background: transparent;
+    border: 1px solid transparent;
+    color: var(--text-muted);
+    font-size: 12px;
+    font-weight: 600;
+    padding: 7px 8px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .panel-tab.active {
+    background: rgba(56, 189, 248, 0.18);
+    border-color: rgba(56, 189, 248, 0.4);
+    color: #fff;
+  }
+
+  .panel-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(148, 163, 184, 0.3) transparent;
+  }
+
+  .sim-header {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .sim-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #fff;
+  }
+
+  .sim-subtitle {
+    font-size: 11.5px;
+    color: var(--text-muted);
+    line-height: 1.45;
+  }
+
+  /* Telemetry Grid */
+  .telemetry-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .tele-card {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+    padding: 8px 10px;
+  }
+
+  .tele-label {
+    font-size: 10px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 3px;
+  }
+
+  .tele-value {
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    font-weight: 700;
+    color: #f8fafc;
+  }
+
+  .tele-value.accent {
+    color: var(--accent);
+  }
+
+  .tele-value.warm {
+    color: var(--accent-warm);
+  }
+
+  /* Control Sliders */
+  .control-group {
+    display: flex;
+    flex-direction: column;
+    gap: 11px;
+  }
+
+  .slider-item {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .slider-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+  }
+
+  .slider-name {
+    color: #e2e8f0;
+    font-weight: 500;
+  }
+
+  .slider-val {
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 6px;
+    border-radius: 999px;
+    background: rgba(148, 163, 184, 0.25);
+    outline: none;
+    cursor: pointer;
+  }
+
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #38bdf8;
+    border: 2px solid #fff;
+    box-shadow: 0 0 10px rgba(56, 189, 248, 0.7);
+    cursor: pointer;
+    transition: transform 0.15s ease;
+  }
+
+  input[type="range"]::-webkit-slider-thumb:hover {
+    transform: scale(1.15);
+  }
+
+  .toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 10px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+    font-size: 12px;
+  }
+
+  .switch {
+    position: relative;
+    width: 38px;
+    height: 20px;
+    flex-shrink: 0;
+  }
+
+  .switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+
+  .switch-track {
+    position: absolute;
+    inset: 0;
+    background: rgba(148, 163, 184, 0.35);
+    border-radius: 999px;
+    cursor: pointer;
+    transition: 0.2s;
+  }
+
+  .switch-track::before {
+    content: "";
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    left: 3px;
+    top: 3px;
+    background: #fff;
+    border-radius: 50%;
+    transition: 0.2s;
+  }
+
+  .switch input:checked + .switch-track {
+    background: var(--accent);
+  }
+
+  .switch input:checked + .switch-track::before {
+    transform: translateX(18px);
+  }
+
+  .action-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .primary-btn {
+    flex: 1;
+    background: linear-gradient(135deg, #0284c7, #7c3aed);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 9px 12px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: filter 0.2s, transform 0.15s;
+  }
+
+  .primary-btn:hover {
+    filter: brightness(1.12);
+  }
+
+  .primary-btn:active {
+    transform: scale(0.98);
+  }
+
+  .secondary-btn {
+    background: rgba(255, 255, 255, 0.07);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    color: #e2e8f0;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 9px 12px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+
+  .secondary-btn:hover {
+    background: rgba(255, 255, 255, 0.14);
+  }
+
+  /* GPU Preset Grid */
+  .preset-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+
+  .preset-btn {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--text-muted);
+    padding: 8px;
+    border-radius: 9px;
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.2s;
+  }
+
+  .preset-btn strong {
+    display: block;
+    font-size: 11.5px;
+    color: #f1f5f9;
+  }
+
+  .preset-btn span {
+    font-size: 10px;
+    font-family: var(--font-mono);
+  }
+
+  .preset-btn.active {
+    background: rgba(56, 189, 248, 0.18);
+    border-color: var(--accent);
+    color: #e0f2fe;
+  }
+
+  /* Theory Tab Styling */
+  .equation-box {
+    background: rgba(15, 23, 42, 0.85);
+    border: 1px solid rgba(56, 189, 248, 0.3);
+    border-left: 3px solid var(--accent);
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: #bae6fd;
+    line-height: 1.5;
+    overflow-x: auto;
+  }
+
+  .theory-card {
+    background: rgba(255, 255, 255, 0.035);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+    padding: 11px 12px;
+    font-size: 12px;
+    line-height: 1.55;
+    color: #cbd5e1;
+  }
+
+  .theory-card h4 {
+    font-size: 12.5px;
+    color: #fff;
+    margin-bottom: 5px;
+  }
+
+  .hint-bar {
+    position: fixed;
+    left: 50%;
+    bottom: 14px;
+    transform: translateX(-50%);
+    z-index: 15;
+    padding: 6px 14px;
+    font-size: 11px;
+    color: var(--text-muted);
+    pointer-events: none;
+    white-space: nowrap;
+    transition: opacity 0.3s ease;
+  }
+
+  /* Cinema Mode (Hide HUD) */
+  body.cinema-mode .top-bar,
+  body.cinema-mode .side-panel,
+  body.cinema-mode .gpu-badge,
+  body.cinema-mode .hint-bar {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-8px);
+  }
+
+  .cinema-exit-btn {
+    position: fixed;
+    top: 14px;
+    right: 14px;
+    z-index: 30;
+    display: none;
+  }
+
+  body.cinema-mode .cinema-exit-btn {
+    display: inline-flex;
+  }
+
+  /* Toast Notification */
+  .toast {
+    position: fixed;
+    top: 72px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-10px);
+    z-index: 50;
+    padding: 9px 16px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #fff;
+    background: rgba(15, 23, 42, 0.92);
+    border: 1px solid var(--accent);
+    border-radius: 999px;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.25s ease;
+  }
+
+  .toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  /* WebGL Fallback Notice */
+  #fallbackError {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    background: #04060d;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    text-align: center;
+  }
+
+
+  /* Enhanced Theory Reader & Expandable Panel */
+  .side-panel {
+    width: 368px;
+    transition: opacity 0.3s ease, transform 0.3s ease, width 0.25s cubic-bezier(0.22, 1, 0.36, 1), max-height 0.25s ease;
+  }
+
+  .side-panel.theory-wide {
+    width: min(680px, calc(100vw - 24px));
+  }
+
+  .theory-top-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .theory-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    padding: 4px 9px;
+    border-radius: 999px;
+    background: linear-gradient(135deg, rgba(56, 189, 248, 0.2), rgba(168, 85, 247, 0.2));
+    border: 1px solid rgba(56, 189, 248, 0.38);
+    color: #bae6fd;
+  }
+
+  .theory-expand-btn {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(56, 189, 248, 0.32);
+    color: #7dd3fc;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 5px 9px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .theory-expand-btn:hover {
+    background: rgba(56, 189, 248, 0.18);
+    color: #fff;
+  }
+
+  .theory-overview {
+    font-size: 12.5px;
+    line-height: 1.62;
+    color: #dbeafe;
+    background: rgba(15, 23, 42, 0.55);
+    border: 1px solid rgba(148, 163, 184, 0.16);
+    border-radius: 10px;
+    padding: 10px 12px;
+    user-select: text;
+  }
+
+  .equations-list {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+  }
+
+  .eq-item {
+    background: rgba(10, 18, 36, 0.9);
+    border: 1px solid rgba(56, 189, 248, 0.26);
+    border-left: 3px solid var(--accent);
+    border-radius: 10px;
+    padding: 8px 11px;
+    user-select: text;
+  }
+
+  .eq-label {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #93c5fd;
+    margin-bottom: 3px;
+  }
+
+  .eq-formula {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: #e0f2fe;
+    line-height: 1.5;
+    overflow-x: auto;
+  }
+
+  .symbols-box {
+    background: rgba(15, 23, 42, 0.62);
+    border: 1px solid rgba(168, 85, 247, 0.24);
+    border-radius: 10px;
+    padding: 10px 11px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    user-select: text;
+  }
+
+  .symbols-header {
+    font-size: 10.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #d8b4fe;
+    margin-bottom: 2px;
+  }
+
+  .symbols-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .symbol-row {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 8px;
+    align-items: baseline;
+    font-size: 11.5px;
+    line-height: 1.48;
+  }
+
+  .symbol-key {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 700;
+    color: #7dd3fc;
+    background: rgba(56, 189, 248, 0.12);
+    border: 1px solid rgba(56, 189, 248, 0.25);
+    border-radius: 6px;
+    padding: 1px 6px;
+    white-space: nowrap;
+  }
+
+  .symbol-desc {
+    color: #cbd5e1;
+  }
+
+  .facts-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 7px;
+  }
+
+  .fact-chip {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    border-radius: 10px;
+    padding: 8px 10px;
+    user-select: text;
+  }
+
+  .fact-val {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 700;
+    color: #fbbf24;
+    margin-bottom: 2px;
+  }
+
+  .fact-lbl {
+    font-size: 10.5px;
+    line-height: 1.4;
+    color: #94a3b8;
+  }
+
+  .theory-card {
+    user-select: text;
+  }
+
+  .theory-card-head {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    flex-wrap: wrap;
+    margin-bottom: 6px;
+  }
+
+  .theory-num {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    font-weight: 700;
+    color: #38bdf8;
+    background: rgba(56, 189, 248, 0.14);
+    border: 1px solid rgba(56, 189, 248, 0.3);
+    border-radius: 6px;
+    padding: 1px 6px;
+  }
+
+  .theory-tag {
+    font-size: 10px;
+    font-weight: 600;
+    color: #c4b5fd;
+    background: rgba(168, 85, 247, 0.14);
+    border: 1px solid rgba(168, 85, 247, 0.28);
+    border-radius: 999px;
+    padding: 1px 7px;
+  }
+
+  .theory-card h4 {
+    margin-bottom: 6px;
+    font-size: 13px;
+    color: #f8fafc;
+  }
+
+  .theory-card p {
+    font-size: 12px;
+    line-height: 1.62;
+    color: #cbd5e1;
+  }
+
+  .theory-points {
+    margin: 7px 0 0 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 11.5px;
+    line-height: 1.55;
+    color: #cbd5e1;
+  }
+
+  .theory-points li strong {
+    color: #f1f5f9;
+  }
+
+  .math-inline {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: #bae6fd;
+    background: rgba(15, 23, 42, 0.78);
+    border: 1px solid rgba(56, 189, 248, 0.22);
+    border-radius: 5px;
+    padding: 0 5px;
+  }
+
+  /* Responsive Layout */
+  @media (max-width: 960px) {
+    .brand-sub { display: none; }
+    .top-bar { flex-wrap: wrap; }
+    .mode-tabs { order: 3; width: 100%; }
+    .side-panel {
+      top: auto;
+      bottom: 10px;
+      right: 10px;
+      left: 10px;
+      width: auto;
+      max-height: 44vh;
+    }
+    .side-panel.theory-wide {
+      width: auto;
+      max-height: 70vh;
+    }
+    .gpu-badge {
+      display: none;
+    }
+    .hint-bar {
+      display: none;
+    }
+  }
+</style>
+</head>
+<body>
+
+<canvas id="glCanvas"></canvas>
+
+<div id="fallbackError">
+  <div class="glass" style="padding:24px; max-width:440px;">
+    <h2 style="margin-bottom:10px; color:#f43f5e;">Trình duyệt không hỗ trợ WebGL2 GPU</h2>
+    <p id="fallbackMsg" style="font-size:13px; color:#cbd5e1; line-height:1.6;">
+      Ứng dụng cần WebGL2 để chạy Raytracing/Raymarching trực tiếp trên GPU. Vui lòng bật tăng tốc phần cứng (Hardware Acceleration) trong trình duyệt.
+    </p>
+  </div>
+</div>
+
+<!-- Top Bar -->
+<header class="top-bar">
+  <div class="brand-pill glass">
+    <div class="brand-orb"></div>
+    <div>
+      <div class="brand-title">Vũ Trụ Tương Đối GPU</div>
+      <div class="brand-sub">Einstein • Hawking • WebGL2</div>
+    </div>
+  </div>
+
+  <nav class="mode-tabs glass" id="modeTabs" aria-label="Chọn mô phỏng">
+    <button class="mode-btn active" data-mode="blackhole">🕳️ Hố Đen Kerr</button>
+    <button class="mode-btn" data-mode="wormhole">🌀 Hố Sâu Vũ Trụ</button>
+    <button class="mode-btn" data-mode="hawking">⚛️ Bức Xạ Hawking</button>
+    <button class="mode-btn" data-mode="gravwaves">🌊 Sóng Hấp Dẫn</button>
+    <button class="mode-btn" data-mode="alcubierre">🚀 Động Cơ Warp</button>
+    <button class="mode-btn" data-mode="relativity">⚡ Tương Đối Hẹp</button>
+  </nav>
+
+  <div class="top-actions glass">
+    <button class="icon-btn" id="btnPause" title="Tạm dừng / Tiếp tục (Phím Space)">⏸ Tạm dừng</button>
+    <button class="icon-btn" id="btnAudio" title="Âm thanh nền vũ trụ">🔇 Âm thanh</button>
+    <button class="icon-btn" id="btnSnapshot" title="Chụp ảnh GPU chất lượng cao">📷 Chụp</button>
+    <button class="icon-btn" id="btnCinema" title="Ẩn giao diện xem toàn màn hình">🎬 Điện ảnh</button>
+  </div>
+</header>
+
+<button class="icon-btn glass cinema-exit-btn" id="btnExitCinema">✕ Hiện giao diện</button>
+
+<!-- Bottom Left GPU Badge -->
+<aside class="gpu-badge glass">
+  <div class="gpu-row">
+    <span><span class="gpu-dot" id="gpuDot"></span><strong style="color:#fff;">GPU Engine</strong></span>
+    <span><span class="metric-val" id="fpsVal">60</span> FPS • <span class="metric-val" id="msVal">16.6</span> ms</span>
+  </div>
+  <div class="gpu-row">
+    <span style="color:var(--text-muted);">Độ phân giải GPU</span>
+    <span class="metric-val" id="resVal">1920×1080</span>
+  </div>
+  <div class="gpu-row">
+    <span style="color:var(--text-muted);">Bước Raymarching</span>
+    <span class="metric-val" id="stepsVal">110 bước</span>
+  </div>
+  <div class="gpu-name" id="gpuName">Đang nhận diện GPU...</div>
+</aside>
+
+<!-- Center Hint -->
+<div class="hint-bar glass" id="hintBar">
+  Kéo chuột để xoay 360° • Cuộn để thu phóng • Nhấp đúp để đặt lại góc nhìn • Space để tạm dừng
+</div>
+
+<!-- Right Control Panel -->
+<aside class="side-panel glass" id="sidePanel">
+  <div class="panel-tabs">
+    <button class="panel-tab active" data-tab="controls">🎛 Điều khiển</button>
+    <button class="panel-tab" data-tab="theory">📘 Lý thuyết</button>
+    <button class="panel-tab" data-tab="gpu">⚡ GPU &amp; Đồ họa</button>
+  </div>
+
+  <!-- Tab 1: Simulation Controls -->
+  <div class="panel-body" id="tabControls">
+    <div class="sim-header">
+      <div class="sim-title" id="simTitle">Hố Đen Quay Kerr-Schwarzschild</div>
+      <div class="sim-subtitle" id="simSubtitle">Dò tia trắc địa thời gian thực trong không-thời gian cong với đĩa bồi tụ tương đối tính và vòng photon.</div>
+    </div>
+
+    <div class="telemetry-grid" id="telemetryGrid"></div>
+
+    <div class="control-group" id="slidersContainer"></div>
+
+    <div class="action-row" id="specialActions"></div>
+  </div>
+
+  <!-- Tab 2: Physics Theory -->
+  <div class="panel-body" id="tabTheory" style="display:none;">
+    <div class="theory-top-bar">
+      <span class="theory-badge" id="theoryBadge">Tương Đối Rộng</span>
+      <button class="theory-expand-btn" id="btnExpandTheory" type="button" title="Mở rộng khung đọc lý thuyết chi tiết">⤢ Mở rộng đọc chi tiết</button>
+    </div>
+    <div class="sim-header">
+      <div class="sim-title" id="theoryTitle">Tương Đối Rộng &amp; Metric Kerr</div>
+      <div class="sim-subtitle" id="theoryAuthor">Albert Einstein (1915) • Roy Kerr (1963)</div>
+    </div>
+    <p class="theory-overview" id="theoryOverview"></p>
+    <div class="equations-list" id="theoryEquations"></div>
+    <div class="symbols-box" id="theorySymbols"></div>
+    <div class="facts-grid" id="theoryFacts"></div>
+    <div id="theoryCards" style="display:flex; flex-direction:column; gap:10px;"></div>
+  </div>
+
+  <!-- Tab 3: GPU & Rendering Settings -->
+  <div class="panel-body" id="tabGpu" style="display:none;">
+    <div class="sim-header">
+      <div class="sim-title">Tối Ưu Năng Lực GPU</div>
+      <div class="sim-subtitle">Điều chỉnh độ phân giải kết xuất, số bước dò tia (raymarching) và hậu kỳ HDR Bloom trực tiếp trên card đồ họa của bạn.</div>
+    </div>
+
+    <div class="preset-grid" id="gpuPresets">
+      <button class="preset-btn" data-preset="eco">
+        <strong>Tiết kiệm</strong>
+        <span>0.65× • 56 bước</span>
+      </button>
+      <button class="preset-btn active" data-preset="balanced">
+        <strong>Chuẩn (Mặc định)</strong>
+        <span>1.0× • 110 bước</span>
+      </button>
+      <button class="preset-btn" data-preset="high">
+        <strong>Đồ họa Cao</strong>
+        <span>1.25× • 156 bước</span>
+      </button>
+      <button class="preset-btn" data-preset="ultra">
+        <strong>Ultra GPU Max</strong>
+        <span>1.6× • 220 bước</span>
+      </button>
+    </div>
+
+    <div class="control-group">
+      <div class="slider-item">
+        <div class="slider-head">
+          <span class="slider-name">Tỉ lệ độ phân giải GPU</span>
+          <span class="slider-val" id="valResScale">1.00×</span>
+        </div>
+        <input type="range" id="slResScale" min="0.4" max="2.0" step="0.05" value="1.0">
+      </div>
+
+      <div class="slider-item">
+        <div class="slider-head">
+          <span class="slider-name">Số bước dò tia (Ray Steps)</span>
+          <span class="slider-val" id="valRaySteps">110</span>
+        </div>
+        <input type="range" id="slRaySteps" min="40" max="240" step="4" value="110">
+      </div>
+
+      <div class="slider-item">
+        <div class="slider-head">
+          <span class="slider-name">Cường độ HDR Bloom</span>
+          <span class="slider-val" id="valBloom">0.65</span>
+        </div>
+        <input type="range" id="slBloom" min="0.0" max="1.4" step="0.05" value="0.65">
+      </div>
+
+      <div class="slider-item">
+        <div class="slider-head">
+          <span class="slider-name">Quang sai thấu kính (Chromatic)</span>
+          <span class="slider-val" id="valChromatic">0.25</span>
+        </div>
+        <input type="range" id="slChromatic" min="0.0" max="1.0" step="0.05" value="0.25">
+      </div>
+
+      <div class="slider-item">
+        <div class="slider-head">
+          <span class="slider-name">Tốc độ thời gian mô phỏng</span>
+          <span class="slider-val" id="valTimeScale">1.00×</span>
+        </div>
+        <input type="range" id="slTimeScale" min="0.1" max="3.0" step="0.05" value="1.0">
+      </div>
+
+      <div class="toggle-row">
+        <span>Tự động xoay camera quỹ đạo</span>
+        <label class="switch">
+          <input type="checkbox" id="chkAutoOrbit" checked>
+          <span class="switch-track"></span>
+        </label>
+      </div>
+    </div>
+
+    <div class="theory-card">
+      <h4>Thông số Pipeline WebGL2</h4>
+      <p id="gpuPipelineInfo" style="font-family:var(--font-mono); font-size:11px; color:#94a3b8;">
+        Đang kiểm tra phần mở rộng HDR Float Buffer...
+      </p>
+    </div>
+  </div>
+</aside>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(() => {
+  'use strict';
+
+  // =========================================================================
+  // 1. SIMULATION CONFIGURATIONS & PHYSICS METADATA
+  // =========================================================================
+  const SIM_CONFIGS = {
+    blackhole: {
+      title: 'Hố Đen Quay Kerr-Schwarzschild',
+      subtitle: 'Dò tia trắc địa thời gian thực trong không-thời gian cong: vòng photon, đĩa bồi tụ plasma, dịch chuyển Doppler tương đối tính & thấu kính hấp dẫn.',
+      camera: { yaw: 0.35, pitch: 0.24, dist: 9.2, minDist: 3.6, maxDist: 22.0 },
+      params: [
+        { key: 'p1', label: 'Khối lượng Hố đen (M / M☉)', min: 0.45, max: 2.2, step: 0.05, val: 1.0, fmt: v => (v * 10).toFixed(1) + ' M☉' },
+        { key: 'p2', label: 'Tham số quay Kerr (a*)', min: 0.0, max: 0.99, step: 0.01, val: 0.78, fmt: v => v.toFixed(2) + ' c' },
+        { key: 'p3', label: 'Độ sáng Đĩa bồi tụ', min: 0.2, max: 2.2, step: 0.05, val: 1.15, fmt: v => Math.round(v * 100) + '%' },
+        { key: 'p4', label: 'Hiệu ứng Doppler tương đối tính', min: 0.0, max: 1.5, step: 0.05, val: 1.0, fmt: v => Math.round(v * 100) + '%' },
+        { key: 'p5', label: 'Tia phản lực tương đối tính (Jet)', type: 'toggle', val: 1.0 }
+      ],
+      actions: [
+        { id: 'bhGargantua', label: '✨ Gargantua (Interstellar)', primary: true },
+        { id: 'bhM87', label: '🔭 Góc nhìn M87*', primary: false }
+      ],
+      theory: {
+        title: 'Phương trình trường Einstein & Metric Kerr',
+        author: 'Albert Einstein (1915) • Karl Schwarzschild (1916) • Roy Kerr (1963)',
+        equation: 'r_s = 2GM / c²   |   r_ph = 1.5 r_s\nd²u/dφ² + u = 3GMu² / c²  (Quỹ đạo tia sáng)',
+        cards: [
+          { h: 'Chân trời sự kiện & Vòng Photon', p: 'Ánh sáng đi gần bán kính 1.5 r_s bị uốn cong thành quỹ đạo tròn không bền, tạo nên vòng sáng sắc nét bao quanh bóng đen hố đen (bán kính biểu kiến ≈ 2.6 r_s).' },
+          { h: 'Thấu kính hấp dẫn (Gravitational Lensing)', p: 'Phần phía sau đĩa bồi tụ không bị che khuất mà bị không-thời gian cong bẻ gập lên phía trên và xuống phía dưới bóng hố đen.' },
+          { h: 'Dịch chuyển Doppler & Beaming', p: 'Vật chất quay ở tốc độ gần bằng tốc độ ánh sáng: phía tiến về phía người quan sát sáng rực và ngả xanh-trắng, phía lùi xa tối hơn và dịch chuyển đỏ.' }
+        ]
+      },
+      telemetry: (p) => {
+        const mSolar = p.p1 * 10.0;
+        const rsKm = (2.953 * mSolar).toFixed(1);
+        const rphKm = (1.5 * 2.953 * mSolar).toFixed(1);
+        const iscoFactor = (3.0 - 2.0 * p.p2 * 0.72).toFixed(2);
+        const dilation = Math.sqrt(Math.max(0.05, 1.0 - 1.0 / (parseFloat(iscoFactor) + 0.35))).toFixed(3);
+        return [
+          { l: 'Bán kính r_s', v: rsKm + ' km', cls: 'accent' },
+          { l: 'Vòng Photon', v: rphKm + ' km', cls: 'warm' },
+          { l: 'Quỹ đạo ISCO', v: iscoFactor + ' r_s', cls: '' },
+          { l: 'Giãn thời gian dτ/dt', v: dilation + '×', cls: 'accent' }
+        ];
+      }
+    },
+
+    wormhole: {
+      title: 'Hố Sâu Vũ Trụ — Cầu Einstein-Rosen',
+      subtitle: 'Dò tia trắc địa qua metric Morris-Thorne nối liền 2 vũ trụ song song: Vũ trụ A (Tinh vân Lam) và Vũ trụ B (Thiên hà Hoàng kim).',
+      camera: { yaw: 0.25, pitch: 0.12, dist: 1.0, minDist: 0.6, maxDist: 2.2 },
+      params: [
+        { key: 'p1', label: 'Bán kính cổ hố sâu (b₀)', min: 0.7, max: 2.6, step: 0.05, val: 1.45, fmt: v => v.toFixed(2) + ' r₀' },
+        { key: 'p2', label: 'Độ cong họng hố sâu (W)', min: 0.4, max: 2.2, step: 0.05, val: 1.0, fmt: v => v.toFixed(2) },
+        { key: 'p3', label: 'Vị trí du hành xuyên hố sâu (l)', min: -7.5, max: 7.5, step: 0.05, val: 4.8, fmt: v => (v >= 0 ? 'Vũ trụ A (+' : 'Vũ trụ B (') + v.toFixed(2) + ')' },
+        { key: 'p4', label: 'Trường Vật chất Ngoại lai (Năng lượng âm)', min: 0.0, max: 1.5, step: 0.05, val: 0.75, fmt: v => Math.round(v * 100) + '%' },
+        { key: 'p5', label: 'Lưới tọa độ Không-Thời gian', type: 'toggle', val: 0.0 }
+      ],
+      actions: [
+        { id: 'whTraverse', label: '🚀 Bay xuyên sang Vũ trụ B', primary: true },
+        { id: 'whReset', label: '↺ Về Vũ trụ A', primary: false }
+      ],
+      theory: {
+        title: 'Metric Morris-Thorne & Vật chất Ngoại lai',
+        author: 'Albert Einstein & Nathan Rosen (1935) • Kip Thorne & Michael Morris (1988)',
+        equation: 'ds² = -c²dt² + dl² + (b₀² + l²)(dθ² + sin²θ dφ²)',
+        cards: [
+          { h: 'Đường hầm xuyên không-thời gian', p: 'Tọa độ xuyên tâm l chạy từ +∞ (Vũ trụ A) qua cổ hố sâu (l = 0, chu vi cực tiểu 2πb₀) sang -∞ (Vũ trụ B). Ánh sáng đi xuyên qua cổ tạo thành một "quả cầu pha lê" soi chiếu vũ trụ bên kia.' },
+          { h: 'Vật chất ngoại lai (Exotic Matter)', p: 'Để giữ cổ hố sâu mở và không sụp đổ thành kỳ dị, cần mật độ năng lượng âm (vi phạm điều kiện năng lượng yếu T_μν k^μ k^ν < 0), tương tự hiệu ứng Casimir lượng tử.' },
+          { h: 'Vòng Einstein đa bậc', p: 'Các tia sáng sượt sát cổ hố sâu quay nhiều vòng trước khi thoát ra, tạo nên các vòng ảnh biến dạng xen kẽ của cả hai vũ trụ.' }
+        ]
+      },
+      telemetry: (p) => {
+        const l = p.p3;
+        const r = Math.sqrt(p.p1 * p.p1 + l * l);
+        const side = Math.abs(l) < 0.35 ? 'TẠI CỔ HỐ SÂU' : (l > 0 ? 'VŨ TRỤ A (Lam)' : 'VŨ TRỤ B (Vàng)');
+        const exotic = (-1.2 * p.p1 / Math.max(0.3, p.p2)).toFixed(2);
+        return [
+          { l: 'Vùng hiện tại', v: side, cls: l < 0 ? 'warm' : 'accent' },
+          { l: 'Bán kính nhúng r(l)', v: r.toFixed(2) + ' r₀', cls: '' },
+          { l: 'Mật độ Năng lượng âm', v: exotic + '×10⁴² J', cls: 'warm' },
+          { l: 'Chu vi cổ 2πb₀', v: (2 * Math.PI * p.p1).toFixed(2) + ' r₀', cls: 'accent' }
+        ];
+      }
+    },
+
+    hawking: {
+      title: 'Bức Xạ Hawking & Bay Hơi Lượng Tử',
+      subtitle: 'Thăng giáng chân không lượng tử tại chân trời sự kiện: cặp hạt-phản hạt ảo bị tách rời bởi lực thủy triều, khiến hố đen bức xạ nhiệt và bay hơi.',
+      camera: { yaw: 0.4, pitch: 0.2, dist: 7.4, minDist: 3.4, maxDist: 16.0 },
+      params: [
+        { key: 'p1', label: 'Khối lượng Hố đen vi mô (log₁₀ M)', min: 0.18, max: 1.6, step: 0.02, val: 0.95, fmt: v => '10^' + (9.5 + v * 3.5).toFixed(1) + ' kg' },
+        { key: 'p2', label: 'Mật độ Cặp hạt ảo chân không', min: 0.2, max: 2.0, step: 0.05, val: 1.15, fmt: v => Math.round(v * 100) + '%' },
+        { key: 'p3', label: 'Cường độ Bức xạ nhiệt Hawking', min: 0.3, max: 2.0, step: 0.05, val: 1.1, fmt: v => Math.round(v * 100) + '%' },
+        { key: 'p4', label: 'Lưới Toàn ảnh (Holographic Horizon)', type: 'toggle', val: 1.0 },
+        { key: 'p5', label: 'Hiệu ứng Xé cặp hạt (Tidal Split)', min: 0.2, max: 2.0, step: 0.05, val: 1.0, fmt: v => Math.round(v * 100) + '%' }
+      ],
+      actions: [
+        { id: 'hkEvaporate', label: '💥 Tua nhanh sự Bay hơi', primary: true },
+        { id: 'hkReset', label: '↺ Phục hồi khối lượng', primary: false }
+      ],
+      theory: {
+        title: 'Nhiệt độ Hawking & Entropy Bekenstein-Hawking',
+        author: 'Stephen Hawking (1974) • Jacob Bekenstein (1972)',
+        equation: 'T_H = ħc³ / (8π G M k_B)\nS_BH = (k_B c³ A) / (4 G ħ)   |   τ ∝ M³',
+        cards: [
+          { h: 'Nghịch lý nhiệt độ nghịch đảo', p: 'Hố đen càng NHỎ thì nhiệt độ Hawking càng CỰC LỚN! Khi khối lượng giảm dần, bức xạ chuyển từ hồng ngoại → cam → trắng → tia gamma xanh tím chói lòa trong vụ nổ cuối cùng.' },
+          { h: 'Tách cặp hạt ảo chân không', p: 'Theo Nguyên lý Bất định Heisenberg, chân không liên tục sinh ra cặp hạt-phản hạt ảo. Hạt năng lượng âm rơi vào chân trời làm giảm khối lượng hố đen; hạt dương thoát ra thành bức xạ Hawking.' },
+          { h: 'Nghịch lý Thông tin & Nguyên lý Toàn ảnh', p: 'Entropy hố đen tỷ lệ với diện tích chân trời A (không phải thể tích), dẫn tới giả thuyết thông tin lượng tử được mã hóa trên bề mặt 2D của chân trời sự kiện.' }
+        ]
+      },
+      telemetry: (p) => {
+        const expM = 9.5 + p.p1 * 3.5; // kg exponent
+        const tempK = 1.227e23 / Math.pow(10, expM);
+        const tempStr = tempK >= 1e9 ? (tempK / 1e9).toFixed(2) + ' GK' : (tempK >= 1e6 ? (tempK / 1e6).toFixed(1) + ' MK' : tempK.toExponential(1) + ' K');
+        const lifeExp = (3 * expM - 39.5).toFixed(1);
+        const powerW = (3.56e32 / Math.pow(10, 2 * expM - 20)).toExponential(1);
+        return [
+          { l: 'Nhiệt độ T_H', v: tempStr, cls: p.p1 < 0.45 ? 'accent' : 'warm' },
+          { l: 'Công suất bức xạ', v: powerW + ' W', cls: 'warm' },
+          { l: 'Thời gian bay hơi', v: '10^' + lifeExp + ' năm', cls: '' },
+          { l: 'Entropy S_BH', v: '∝ A / 4l_P²', cls: 'accent' }
+        ];
+      }
+    },
+
+    gravwaves: {
+      title: 'Độ Cong Không-Thời Gian & Sóng Hấp Dẫn',
+      subtitle: 'Mô phỏng mặt nhúng Flamm 3D và sóng hấp dẫn tứ cực (h₊, hₓ) lan truyền với tốc độ ánh sáng từ hệ đôi hố đen xoắn ốc hợp nhất.',
+      camera: { yaw: 0.65, pitch: 0.56, dist: 11.5, minDist: 5.5, maxDist: 22.0 },
+      params: [
+        { key: 'p1', label: 'Độ sâu Giếng hấp dẫn (Khối lượng)', min: 0.4, max: 2.2, step: 0.05, val: 1.2, fmt: v => (v * 30).toFixed(0) + ' M☉' },
+        { key: 'p2', label: 'Tần số quỹ đạo / Sóng (f_GW)', min: 0.4, max: 3.0, step: 0.05, val: 1.35, fmt: v => (v * 85).toFixed(0) + ' Hz' },
+        { key: 'p3', label: 'Biên độ Sóng hấp dẫn (Strain h)', min: 0.1, max: 2.0, step: 0.05, val: 1.0, fmt: v => (v * 1.2).toFixed(2) + '×10⁻²¹' },
+        { key: 'p4', label: 'Khoảng cách 2 Hố đen', min: 0.7, max: 2.8, step: 0.05, val: 1.65, fmt: v => (v * 210).toFixed(0) + ' km' },
+        { key: 'p5', label: 'Hiển thị Vầng giao thoa Sóng', type: 'toggle', val: 1.0 }
+      ],
+      actions: [
+        { id: 'gwChirp', label: '🌀 Kích hoạt Hợp nhất (Chirp)', primary: true },
+        { id: 'gwReset', label: '↺ Quỹ đạo ổn định', primary: false }
+      ],
+      theory: {
+        title: 'Sóng Hấp Dẫn Tứ Cực & Phương trình Einstein',
+        author: 'Albert Einstein (1916) • Phát hiện trực tiếp LIGO (2015)',
+        equation: 'G_μν = (8πG / c⁴) T_μν   |   □ h̄_μν = -(16πG / c⁴) T_μν',
+        cards: [
+          { h: 'Không-thời gian uốn cong', p: 'Vật chất bảo không-thời gian cách uốn cong, và không-thời gian cong bảo vật chất cách chuyển động. Hai giếng sâu ở tâm thể hiện độ cong cực đại của cặp hố đen.' },
+          { h: 'Sóng tứ cực xoắn ốc (Quadrupole Ripples)', p: 'Khi hai hố đen quay quanh nhau, chúng phát ra các gợn sóng kéo giãn và nén không gian theo hai phân cực vuông góc (h₊ và hₓ) với tần số gấp đôi tần số quỹ đạo.' },
+          { h: 'Hiệu ứng Chirp (Tiếng rít hợp nhất)', p: 'Mất năng lượng qua sóng hấp dẫn khiến hai hố đen tiến sát nhau hơn, quay nhanh hơn và phát biên độ sóng tăng vọt ngay trước khoảnh khắc hợp nhất.' }
+        ]
+      },
+      telemetry: (p) => {
+        const fGw = (p.p2 * 85).toFixed(0);
+        const strain = (p.p3 * 1.21).toFixed(2);
+        const lum = (p.p1 * p.p2 * p.p2 * 1.8).toFixed(1);
+        return [
+          { l: 'Tần số sóng f_GW', v: fGw + ' Hz', cls: 'accent' },
+          { l: 'Biến dạng Strain h', v: strain + '×10⁻²¹', cls: 'warm' },
+          { l: 'Tốc độ lan truyền', v: '1.000 c', cls: '' },
+          { l: 'Công suất phát xạ', v: lum + '×10⁴⁹ W', cls: 'accent' }
+        ];
+      }
+    },
+
+    alcubierre: {
+      title: 'Động Cơ Bẻ Cong Không Gian Alcubierre',
+      subtitle: 'Bong bóng không-thời gian nén không gian phía trước và giãn không gian phía sau tàu, cho phép di chuyển biểu kiến nhanh hơn ánh sáng.',
+      camera: { yaw: 0.72, pitch: 0.28, dist: 8.6, minDist: 4.0, maxDist: 18.0 },
+      params: [
+        { key: 'p1', label: 'Tốc độ Warp biểu kiến (v_s / c)', min: 0.3, max: 10.0, step: 0.1, val: 3.5, fmt: v => v.toFixed(1) + ' c' },
+        { key: 'p2', label: 'Độ sắc nét thành bong bóng (σ)', min: 1.2, max: 6.0, step: 0.1, val: 3.0, fmt: v => v.toFixed(1) },
+        { key: 'p3', label: 'Bán kính bong bóng (R)', min: 1.0, max: 2.8, step: 0.05, val: 1.85, fmt: v => v.toFixed(2) + ' R₀' },
+        { key: 'p4', label: 'Hiển thị Vành Năng lượng âm', min: 0.0, max: 1.5, step: 0.05, val: 1.0, fmt: v => Math.round(v * 100) + '%' },
+        { key: 'p5', label: 'Dòng ánh sáng dịch chuyển Doppler', type: 'toggle', val: 1.0 }
+      ],
+      actions: [
+        { id: 'warpJump', label: '⚡ Tăng tốc Warp 10c', primary: true },
+        { id: 'warpCruise', label: '↺ Bay hành trình 2c', primary: false }
+      ],
+      theory: {
+        title: 'Metric Alcubierre & Độ giãn nở York (θ)',
+        author: 'Miguel Alcubierre (1994) — Nghiệm chính xác của Tương đối rộng',
+        equation: 'ds² = -c²dt² + [dx - v_s f(r_s) dt]² + dy² + dz²',
+        cards: [
+          { h: 'Không vi phạm giới hạn ánh sáng cục bộ', p: 'Con tàu bên trong bong bóng đứng yên trong vùng không-thời gian phẳng cục bộ (gia tốc bằng 0, không bị giãn thời gian). Chính bản thân không gian di chuyển.' },
+          { h: 'Nén phía trước — Giãn phía sau', p: 'Mặt trước bong bóng nén không gian (θ < 0, ánh sáng dồn xanh chói), mặt sau giãn không gian (θ > 0, ánh sáng dịch chuyển đỏ thẫm).' },
+          { h: 'Vành Xuyến Năng Lượng Âm', p: 'Phương trình Einstein đòi hỏi một vành xuyến (torus) mật độ năng lượng âm bao quanh thành bong bóng để duy trì độ cong metric.' }
+        ]
+      },
+      telemetry: (p) => {
+        const distLy = 4.24; // Proxima Centauri
+        const travelMonths = (distLy / p.p1 * 12).toFixed(1);
+        return [
+          { l: 'Vận tốc biểu kiến', v: p.p1.toFixed(1) + ' c', cls: 'accent' },
+          { l: 'Gia tốc trong khoang', v: '0.00 g', cls: '' },
+          { l: 'Tới Proxima Centauri', v: travelMonths + ' tháng', cls: 'warm' },
+          { l: 'Giãn thời gian tàu', v: '1.000× (Bằng TĐ)', cls: 'accent' }
+        ];
+      }
+    },
+
+    relativity: {
+      title: 'Tương Đối Hẹp & Du Hành Cận Quang Tốc',
+      subtitle: 'Trải nghiệm thực tế các hiệu ứng quang học ở vận tốc 0 → 0.995c: Quang sai tương đối tính, Dịch chuyển Doppler & Nghịch lý anh em sinh đôi.',
+      camera: { yaw: 0.0, pitch: 0.0, dist: 5.0, minDist: 2.0, maxDist: 10.0 },
+      params: [
+        { key: 'p1', label: 'Vận tốc tàu vũ trụ (β = v / c)', min: 0.0, max: 0.995, step: 0.005, val: 0.86, fmt: v => (v * 100).toFixed(1) + '% c' },
+        { key: 'p2', label: 'Cường độ dịch chuyển phổ Doppler', min: 0.0, max: 1.5, step: 0.05, val: 1.0, fmt: v => Math.round(v * 100) + '%' },
+        { key: 'p3', label: 'Độ sáng Đường hầm Không gian', min: 0.2, max: 2.0, step: 0.05, val: 1.05, fmt: v => Math.round(v * 100) + '%' },
+        { key: 'p4', label: 'Hiệu ứng Đèn pha (Relativistic Beaming)', min: 0.0, max: 1.5, step: 0.05, val: 1.0, fmt: v => Math.round(v * 100) + '%' },
+        { key: 'p5', label: 'Lưới mốc cự ly Co độ dài Lorentz', type: 'toggle', val: 1.0 }
+      ],
+      actions: [
+        { id: 'relMax', label: '🔥 Tăng tốc 0.99c (γ ≈ 7.1)', primary: true },
+        { id: 'relResetClock', label: '⏱ Đặt lại Đồng hồ Sinh đôi', primary: false }
+      ],
+      theory: {
+        title: 'Biến đổi Lorentz, Quang sai & Nghịch lý Sinh đôi',
+        author: 'Albert Einstein (1905) — Thuyết Tương Đối Hẹp',
+        equation: 'γ = 1 / √(1 - v²/c²)   |   cos θ\' = (cos θ + β) / (1 + β cos θ)\nΔt_TráiĐất = γ · Δτ_Tàu',
+        cards: [
+          { h: 'Quang sai tương đối tính (Relativistic Aberration)', p: 'Khi tiến gần tốc độ ánh sáng, các ngôi sao hai bên và thậm chí phía sau dường như dồn tụ về một vùng sáng hẹp ngay trước mũi tàu.' },
+          { h: 'Dịch chuyển Doppler & Đèn pha (Headlight Effect)', p: 'Các ngôi sao phía trước dịch chuyển xanh về vùng cực tím và sáng lên theo lũy thừa bậc 3 của hệ số Doppler D; phía sau mờ đi và đỏ thẫm.' },
+          { h: 'Nghịch lý Anh em Sinh đôi', p: 'Ở 0.99c (γ ≈ 7.09), 1 giây trôi qua trên tàu tương đương hơn 7 giây trên Trái Đất — bạn có thể quan sát trực tiếp hai đồng hồ đang chạy ở bảng thông số!' }
+        ]
+      },
+      telemetry: (p, state) => {
+        const beta = Math.min(0.995, Math.max(0.0, p.p1));
+        const gamma = 1.0 / Math.sqrt(1.0 - beta * beta);
+        const contraction = (100.0 / gamma).toFixed(1);
+        return [
+          { l: 'Hệ số Lorentz (γ)', v: gamma.toFixed(2) + '×', cls: 'accent' },
+          { l: 'Co độ dài (L / L₀)', v: contraction + '%', cls: '' },
+          { l: 'Đồng hồ Tàu (τ)', v: state.shipTime.toFixed(1) + ' s', cls: 'accent' },
+          { l: 'Đồng hồ Trái Đất (t)', v: state.earthTime.toFixed(1) + ' s', cls: 'warm' }
+        ];
+      }
+    }
+  };
+
+
+  const DETAILED_THEORY = {
+    blackhole: {
+      badge: 'Tương Đối Rộng • Thiên Vật Lý',
+      title: 'Hố Đen Quay Kerr-Schwarzschild & Động Lực Học Đĩa Bồi Tụ',
+      author: 'Albert Einstein (1915) • Karl Schwarzschild (1916) • Roy Kerr (1963)',
+      overview: 'Hố đen là nghiệm chân không chính xác của Phương trình Trường Einstein, nơi mật độ khối lượng nén vượt qua giới hạn suy biến khiến độ cong không-thời gian phân kỳ tạo thành <strong>chân trời sự kiện</strong> — ranh giới một chiều mà ngay cả ánh sáng có vận tốc <span class="math-inline">c</span> cũng không thể thoát ra ngoài.',
+      equations: [
+        { label: 'Phương trình Trường Einstein (1915)', formula: 'G<sub>μν</sub> + Λg<sub>μν</sub> = (8πG / c⁴) T<sub>μν</sub>' },
+        { label: 'Bán kính chân trời Kerr (r<sub>+</sub>) & Giới hạn tĩnh Ergosphere (r<sub>E</sub>)', formula: 'r<sub>±</sub> = (GM / c²)(1 ± √(1 − a*²))   |   r<sub>E</sub>(θ) = (GM / c²)(1 + √(1 − a*² cos²θ))' },
+        { label: 'Bán kính Schwarzschild, Mặt cầu Photon & Bóng Hố đen', formula: 'r<sub>s</sub> = 2GM / c²   |   r<sub>ph</sub> = 1.5 r<sub>s</sub>   |   R<sub>shadow</sub> = (3√3 / 2) r<sub>s</sub> ≈ 2.598 r<sub>s</sub>' },
+        { label: 'Phương trình quỹ đạo tia sáng không-thời gian cong', formula: 'd²u / dφ² + u = (3GM / c²) u²   (với u = 1/r)' }
+      ],
+      symbols: [
+        { sym: 'M', desc: 'Khối lượng hố đen; với 10 M☉, r<sub>s</sub> ≈ 29.5 km.' },
+        { sym: 'a* = Jc / (GM²)', desc: 'Tham số spin không thứ nguyên (0 ≤ a* < 1); giới hạn Thorne vật lý thực tế là 0.998.' },
+        { sym: 'r<sub>ISCO</sub>', desc: 'Quỹ đạo tròn ổn định trong cùng: từ 3 r<sub>s</sub> (không quay) rút về 0.5 r<sub>s</sub> (a* → 1).' },
+        { sym: 'D', desc: 'Hệ số Doppler tương đối tính D = [γ(1 − β cos θ)]⁻¹ điều khiển độ sáng đĩa bồi tụ.' },
+        { sym: 'dτ / dt', desc: 'Tỉ số giãn thời gian hấp dẫn: thời gian riêng trôi chậm dần và đóng băng khi tiến tới r<sub>+</sub>.' }
+      ],
+      facts: [
+        { val: '6.5 tỷ M☉', lbl: 'Khối lượng hố đen M87* (EHT chụp năm 2019)' },
+        { val: '4.15 triệu M☉', lbl: 'Khối lượng hố đen Sgr A* tại tâm Ngân Hà' },
+        { val: 'tới 42% mc²', lbl: 'Hiệu suất chuyển khối lượng thành bức xạ ở spin cực đại' },
+        { val: '29% M', lbl: 'Năng lượng quay tối đa có thể trích xuất qua cơ chế Penrose' }
+      ],
+      cards: [
+        {
+          tag: 'Cấu trúc hình học',
+          h: 'Chân trời sự kiện, Ergosphere & Hiệu ứng Kéo Hệ Quy Chiếu',
+          p: 'Theo định lý "Không có tóc" (No-hair Theorem), mọi hố đen dừng trong tự nhiên được xác định duy nhất bởi 3 đại lượng: khối lượng <span class="math-inline">M</span>, mô-men động lượng <span class="math-inline">J</span> và điện tích <span class="math-inline">Q</span>. Khi hố đen quay (<span class="math-inline">a* &gt; 0</span>), không-thời gian xung quanh bị xoắn kéo theo chiều quay (Frame-Dragging / Lense-Thirring).',
+          points: [
+            '<strong>Vùng Ergosphere:</strong> Nằm giữa chân trời ngoài <span class="math-inline">r<sub>+</sub></span> và mặt giới hạn tĩnh <span class="math-inline">r<sub>E</sub></span>; không vật thể nào đứng yên được so với sao ở xa nhưng vẫn có thể thoát ra ngoài.',
+            '<strong>Cơ chế Penrose (1969):</strong> Hạt tách đôi trong Ergosphere sao cho mảnh rơi vào chân trời mang năng lượng âm (so với vô cực), giúp mảnh thoát ra thu thêm động năng từ spin hố đen.',
+            '<strong>Kỳ dị vòng (Ring Singularity):</strong> Ở nghiệm Kerr, kỳ dị không phải là một điểm mà là vòng nhẫn bán kính <span class="math-inline">a = J/(Mc)</span> nằm trong mặt phẳng xích đạo.'
+          ]
+        },
+        {
+          tag: 'Quang học hấp dẫn',
+          h: 'Mặt cầu Photon & Bóng Hố Đen bất đối xứng hình chữ D',
+          p: 'Tại bán kính tới hạn <span class="math-inline">r<sub>ph</sub> = 1.5 r<sub>s</sub></span> (hố đen Schwarzschild), lực hấp dẫn bẻ cong đường đi của photon thành quỹ đạo tròn không bền. Bất kỳ nhiễu loạn nhỏ nào cũng khiến photon rơi vào hố đen hoặc thoát ra tạo thành <strong>vòng photon</strong> sắc nét.',
+          points: [
+            '<strong>Bóng hố đen (Black Hole Shadow):</strong> Do ánh sáng đi sát mặt cầu photon bị uốn cong ra ngoài, kích thước biểu kiến của vùng tối nhìn từ xa là <span class="math-inline">R<sub>shadow</sub> = (3√3/2) r<sub>s</sub> ≈ 2.6 r<sub>s</sub></span>, lớn gấp ~2.6 lần chân trời thực.',
+            '<strong>Bất đối xứng khi quay nhanh:</strong> Với <span class="math-inline">a* → 1</span>, photon quay cùng chiều (prograde) tiến sát được tới gần chân trời hơn (<span class="math-inline">r<sub>ph</sub><sup>-</sup> → GM/c²</span>) so với photon quay ngược chiều (<span class="math-inline">4 GM/c²</span>), làm bóng hố đen dẹt một bên thành hình chữ D.'
+          ]
+        },
+        {
+          tag: 'Vật lý plasma',
+          h: 'Quỹ đạo ISCO & Nguồn gốc phát sáng của Đĩa Bồi Tụ',
+          p: 'Vật chất rơi vào hố đen mang mô-men động lượng nên không rơi thẳng mà dàn phẳng thành đĩa bồi tụ quay vi sai theo định luật Kepler. Ma sát từ-thủy động lực (MRI) nung nóng plasma lên hàng chục triệu đến hàng tỷ Kelvin, phát tia X và ánh sáng khả kiến.',
+          points: [
+            '<strong>Bán kính ISCO:</strong> Ranh giới trong cùng mà vật chất còn quay tròn ổn định được. Vượt qua ISCO, plasma mất ổn định và lao tự do vào chân trời.',
+            '<strong>Hiệu suất năng lượng vượt phản ứng nhiệt hạch:</strong> Tổng hợp hạt nhân H → He chỉ chuyển hóa 0.7% khối lượng thành năng lượng, trong khi đĩa bồi tụ quanh hố đen quay giải phóng tới 30–42% <span class="math-inline">mc²</span> — biến chuẩn tinh (Quasar) thành thiên thể sáng nhất vũ trụ.'
+          ]
+        },
+        {
+          tag: 'Raytracing Tương đối',
+          h: 'Thấu kính hấp dẫn cực mạnh & Ảnh đa bậc của Đĩa bồi tụ',
+          p: 'Khác với vật thể trong không gian Euclid phẳng, phần đĩa bồi tụ nằm phía sau hố đen không bị bóng tối che khuất. Các tia sáng phát từ mặt trên của phần đĩa phía sau bị uốn cong vòng qua đỉnh hố đen về phía mắt người quan sát, tạo thành vầng hào quang vòm ở phía trên.',
+          points: [
+            '<strong>Ảnh sơ cấp & thứ cấp:</strong> Tia sáng phát từ mặt dưới của phần đĩa phía sau vòng qua đáy hố đen tạo vầng sáng bên dưới.',
+            '<strong>Ảnh bậc n (n = 1, 2, ...):</strong> Photon quay nửa vòng, 1 vòng hoặc nhiều vòng quanh mặt cầu photon trước khi thoát ra chồng khít lên mép bóng tối tạo thành các vòng photon lồng nhau siêu mảnh.'
+          ]
+        },
+        {
+          tag: 'Hiệu ứng bức xạ',
+          h: 'Dịch chuyển Doppler Tương đối tính & Hiệu ứng Đèn pha',
+          p: 'Plasma ở mép trong đĩa bồi tụ di chuyển với tốc độ từ <span class="math-inline">0.3c</span> đến hơn <span class="math-inline">0.7c</span>. Phía đĩa đang lao về phía camera trải qua hai hiệu ứng cộng hưởng khiến một bên đĩa rực sáng vượt trội so với bên còn lại:',
+          points: [
+            '<strong>Dịch chuyển xanh/đỏ Doppler:</strong> Tần số ánh sáng tăng lên (<span class="math-inline">ν<sub>obs</sub> = D·ν<sub>emit</sub></span>) ở phía tiến lại gần (ngả trắng-xanh) và giảm xuống ở phía lùi xa (ngả cam-đỏ thẫm).',
+            '<strong>Relativistic Beaming:</strong> Cường độ bức xạ riêng tỷ lệ với <span class="math-inline">D³</span> (bức xạ liên tục) hoặc <span class="math-inline">D⁴</span> (tổng thông lượng bolometric), tạo nên sự chênh lệch độ sáng gấp hàng chục lần.'
+          ]
+        },
+        {
+          tag: 'Từ trường cực đoan',
+          h: 'Tia Phản Lực Tương Đối Tính — Cơ chế Blandford–Znajek (1977)',
+          p: 'Các hố đen siêu khối lượng như M87* phóng ra hai luồng tia plasma hẹp dài hàng nghìn năm ánh sáng vuông góc với mặt đĩa. Cơ chế Blandford–Znajek giải thích đường sức từ trường kẹt trong đĩa bồi tụ xuyên qua vùng Ergosphere và bị chính vòng quay của hố đen xoắn lại như lò xo.',
+          points: [
+            'Lực điện từ tạo ra một "máy phát điện vũ trụ" tăng tốc electron và positron lên hệ số Lorentz <span class="math-inline">γ &gt; 10</span>.',
+            'Bức xạ Synchrotron từ các hạt chuyển động xoắn ốc dọc đường sức từ tạo ánh sáng xanh-tím năng lượng cao dọc theo hai cực quay.'
+          ]
+        },
+        {
+          tag: 'Thực hành GPU',
+          h: 'Đối chiếu quan sát thực tế & Gợi ý thí nghiệm trên thanh trượt',
+          p: 'Shader trên màn hình giải trực tiếp phương trình trắc địa không-thời gian <span class="math-inline">a = −1.5 r<sub>s</sub> h² p / r⁵</span> cùng thành phần kéo hệ quy chiếu Kerr ở mỗi pixel theo thời gian thực.',
+          points: [
+            'Nhấn <strong>✨ Gargantua (Interstellar)</strong> để quan sát đĩa bồi tụ sát góc nhìn xích đạo với <span class="math-inline">a* = 0.96</span> và hiệu ứng Doppler rõ rệt.',
+            'Nhấn <strong>🔭 Góc nhìn M87*</strong> để nâng camera gần cực bắc (<span class="math-inline">pitch ≈ 72°</span>), tái hiện vòng sáng hình nhẫn tương tự ảnh chụp nổi tiếng của mạng kính viễn vọng EHT.'
+          ]
+        }
+      ]
+    },
+
+    wormhole: {
+      badge: 'Hình Học Vi Phân • Tôpô Không-Thời Gian',
+      title: 'Hố Sâu Vũ Trụ — Cầu Einstein–Rosen & Metric Morris–Thorne',
+      author: 'Albert Einstein & Nathan Rosen (1935) • Kip Thorne & Michael Morris (1988)',
+      overview: 'Hố sâu (Wormhole) là một cấu trúc tôpô dạng "tay cầm" nối liền hai vùng tách biệt của cùng một vũ trụ hoặc hai vũ trụ song song qua một đường hầm ngắn gọi là <strong>cổ hố sâu</strong> (throat) có bán kính cực tiểu <span class="math-inline">b₀</span>, cho phép ánh sáng và vật chất đi xuyên mà không gặp chân trời sự kiện.',
+      equations: [
+        { label: 'Metric Morris–Thorne tổng quát (1988)', formula: 'ds² = −e<sup>2Φ(l)</sup>c²dt² + dl² + r(l)²(dθ² + sin²θ dφ²)' },
+        { label: 'Hàm bán kính nhúng & Phương trình trắc địa ánh sáng', formula: 'r(l) = √(b₀² + (l / W)²)   |   d²l / dλ² = h² · r′(l) / r(l)³' },
+        { label: 'Mặt nhúng Paraboloid Flamm trong không gian Euclid 3D', formula: 'z(r) = ± b₀ · arccosh(r / b₀)   (với r ≥ b₀)' },
+        { label: 'Điều kiện mở rộng cổ (Flare-out) & Vi phạm NEC', formula: 'r″(0) > 0  ⇒  T<sub>μν</sub> k<sup>μ</sup> k<sup>ν</sup> < 0   (ρc² + p<sub>r</sub> < 0)' }
+      ],
+      symbols: [
+        { sym: 'l ∈ (−∞, +∞)', desc: 'Tọa độ xuyên tâm riêng: l > 0 thuộc Vũ trụ A (Tinh vân Lam), l = 0 là cổ hố sâu, l < 0 là Vũ trụ B (Thiên hà Hoàng kim).' },
+        { sym: 'b₀', desc: 'Bán kính cực tiểu của cổ hố sâu (chu vi cổ bằng 2πb₀).' },
+        { sym: 'W', desc: 'Tham số độ dốc / chiều dài đặc trưng chuyển tiếp giữa hai mặt vũ trụ.' },
+        { sym: 'h = r(l) sin α', desc: 'Mô-men động lượng bảo toàn dọc tia trắc địa; tia có h < b₀ đi xuyên thẳng sang vũ trụ bên kia.' },
+        { sym: 'Φ(l)', desc: 'Hàm dịch chuyển đỏ (redshift function); để đi qua được không gặp chân trời, Φ(l) phải hữu hạn ở mọi nơi.' }
+      ],
+      facts: [
+        { val: 'b₀ > 0', lbl: 'Không có kỳ dị trung tâm và không có chân trời sự kiện một chiều' },
+        { val: 'h < b₀', lbl: 'Điều kiện để tia sáng từ Vũ trụ A xuyên qua cổ sang Vũ trụ B' },
+        { val: 'NEC < 0', lbl: 'Bắt buộc có mật độ năng lượng âm để chống sự sụp đổ hấp dẫn' },
+        { val: 'ER = EPR', lbl: 'Giả thuyết liên kết hố sâu lượng tử với rối lượng tử (2013)' }
+      ],
+      cards: [
+        {
+          tag: 'Lịch sử vật lý',
+          h: 'Từ Cầu Einstein–Rosen (1935) không đi qua được đến Morris–Thorne',
+          p: 'Năm 1935, Einstein và Rosen phát hiện phần mở rộng giải tích tối đa của metric Schwarzschild nối hai tờ không-thời gian phẳng qua một "cầu". Tuy nhiên, cầu Einstein–Rosen cổ điển cực kỳ bất ổn: nó mở ra rồi thắt nghẽn và sụp đổ nhanh hơn tốc độ ánh sáng nên ngay cả một photon cũng không kịp xuyên qua.',
+          points: [
+            'Năm 1988, Michael Morris và Kip Thorne đảo ngược bài toán: thiết kế trước một metric đi qua được êm ái (gia tốc thủy triều chịu được cho phi hành gia) rồi thay vào phương trình Einstein để tìm phân bố vật chất cần thiết.'
+          ]
+        },
+        {
+          tag: 'Hình học 3D',
+          h: 'Tại sao Hố Sâu trong không gian 3D trông như Quả Cầu Pha Lê?',
+          p: 'Trong phim ảnh hay sách phổ thông, hố sâu thường được vẽ phẳng như cái phễu 2D. Nhưng trong không gian 3 chiều, miệng hố sâu đối xứng cầu theo mọi hướng: dù tiếp cận từ góc độ nào, bạn cũng thấy một quả cầu sáng rực đóng vai trò ống kính soi trực tiếp bầu trời của vũ trụ bên kia.',
+          points: [
+            '<strong>Vùng lõi quả cầu (<span class="math-inline">h &lt; b₀</span>):</strong> Toàn bộ các tia sáng đi qua vùng này xuyên thẳng qua tọa độ <span class="math-inline">l = 0</span> và hội tụ ảnh của Vũ trụ B (hoàng kim).',
+            '<strong>Vùng ngoài quả cầu (<span class="math-inline">h &gt; b₀</span>):</strong> Tia sáng bị phản xạ trở lại cùng phía <span class="math-inline">l</span>, hiển thị bầu trời Vũ trụ A bị bẻ cong.'
+          ]
+        },
+        {
+          tag: 'Quỹ đạo tia sáng',
+          h: 'Vòng ảnh Einstein đa bậc ở mép cổ Hố Sâu',
+          p: 'Khi tham số va chạm <span class="math-inline">h</span> tiến sát giá trị tới hạn <span class="math-inline">b₀</span>, phương trình <span class="math-inline">dφ/dl = h / r(l)²</span> tích lũy góc quay <span class="math-inline">ψ</span> rất lớn. Tia sáng quấn quanh cổ hố sâu nhiều vòng trước khi bật ra về phía Vũ trụ A hoặc Vũ trụ B.',
+          points: [
+            'Kết quả tạo ra chuỗi vòng sáng đồng tâm xen kẽ nhau sát mép quả cầu hố sâu — một vòng ảnh từ Vũ trụ A xen kẽ một vòng ảnh từ Vũ trụ B thu nhỏ theo cấp số nhân.'
+          ]
+        },
+        {
+          tag: 'Vật lý lượng tử',
+          h: 'Vật Chất Ngoại Lai (Exotic Matter) & Hiệu ứng Casimir',
+          p: 'Bình thường lực hấp dẫn luôn hút và hội tụ chùm tia sáng. Để các tia sáng đi qua cổ hố sâu phân kỳ trở lại (điều kiện flare-out), họng hố sâu phải tạo ra lực "phản hấp dẫn" cục bộ bằng vật chất có mật độ năng lượng âm (<span class="math-inline">ρc² + p<sub>r</sub> &lt; 0</span>) vi phạm Điều kiện Năng lượng Null (NEC).',
+          points: [
+            'Vật lý cổ điển không có vật chất ngoại lai, nhưng Lý thuyết Trường Lượng tử (QFT) cho phép mật độ năng lượng âm cục bộ thông qua <strong>Hiệu ứng Casimir</strong> giữa hai bản kim loại dẫn điện song song cực gần nhau hoặc trạng thái chân không nén (Squeezed Vacuum).'
+          ]
+        },
+        {
+          tag: 'Nhân quả học',
+          h: 'Cỗ Máy Thời Gian & Giả thuyết Bảo vệ Niên đại (Hawking)',
+          p: 'Morris, Thorne và Yurtsever (1988) chỉ ra rằng nếu đặt một miệng hố sâu chuyển động ở vận tốc cận quang tốc rồi đưa về (tạo chênh lệch giãn thời gian kiểu Nghịch lý Sinh đôi) hoặc đặt gần một sao neutron khối lượng lớn, hai đầu hố sâu sẽ lệch nhau về thời gian tọa độ.',
+          points: [
+            'Đi qua hố sâu khi đó có thể tạo ra <strong>Đường cong Thời gian Đóng (CTC)</strong> cho phép du hành về quá khứ tại thời điểm hố sâu đã tồn tại.',
+            'Stephen Hawking đề xuất <strong>Giả thuyết Bảo vệ Niên đại (Chronology Protection Conjecture)</strong>: thăng giáng chân không lượng tử sẽ phân kỳ tại đường chân trời Cauchy, phá hủy hố sâu ngay khoảnh khắc nó sắp trở thành cỗ máy thời gian.'
+          ]
+        },
+        {
+          tag: 'Hướng nghiên cứu mới',
+          h: 'Giả thuyết ER = EPR & Hướng dẫn trải nghiệm xuyên Vũ trụ B',
+          p: 'Năm 2013, Juan Maldacena và Leonard Susskind đề xuất hai thực thể tưởng chừng xa lạ thực chất là hai mặt của cùng một hiện tượng: <strong>ER (Cầu Einstein–Rosen) = EPR (Rối lượng tử Einstein–Podolsky–Rosen)</strong>. Các nghiên cứu trên máy tính lượng tử và lỗ đen hai phía (Gao–Jafferis–Wall, 2017) cho thấy truyền thông tin lượng tử giữa hai hệ rối tương đương một hố sâu có thể đi qua tạm thời.',
+          points: [
+            'Nhấn <strong>🚀 Bay xuyên sang Vũ trụ B</strong> để xem tọa độ <span class="math-inline">l</span> trượt liên tục qua <span class="math-inline">l = 0</span>: quả cầu hố sâu bung rộng ra chiếm trọn màn hình rồi lật ngược thành khung trời Vũ trụ B Hoàng kim!',
+            'Bật <strong>Lưới tọa độ Không-Thời gian</strong> để theo dõi cách đường kinh tuyến và vĩ tuyến xoắn xuyên qua hai vũ trụ.'
+          ]
+        }
+      ]
+    },
+
+    hawking: {
+      badge: 'Lý Thuyết Trường Lượng Tử • Nhiệt Động Lực Hố Đen',
+      title: 'Bức Xạ Hawking, Bay Hơi Lượng Tử & Nghịch Lý Thông Tin',
+      author: 'Stephen Hawking (1974) • Jacob Bekenstein (1972) • Don Page (1993)',
+      overview: 'Trước năm 1974, hố đen được xem là hoàn toàn đen tuyệt đối. Stephen Hawking kết hợp Thuyết Tương đối rộng với Lý thuyết Trường Lượng tử trong không-thời gian cong và chứng minh chân trời sự kiện phát bức xạ nhiệt như một vật đen hoàn hảo, khiến hố đen mất dần khối lượng và cuối cùng bay hơi hoàn toàn.',
+      equations: [
+        { label: 'Nhiệt độ Hawking (kết hợp ħ, c, G, k<sub>B</sub>)', formula: 'T<sub>H</sub> = (ħ c³) / (8π G M k<sub>B</sub>) ≈ 6.17 × 10⁻⁸ (M☉ / M) K' },
+        { label: 'Entropy Bekenstein–Hawking & Nguyên lý Toàn ảnh', formula: 'S<sub>BH</sub> = (k<sub>B</sub> c³ A) / (4 G ħ) = k<sub>B</sub> A / (4 ℓ<sub>P</sub>²)' },
+        { label: 'Công suất bức xạ & Thời gian sống bay hơi', formula: 'P = (ħ c⁶) / (15360 π G² M²)   |   τ<sub>evap</sub> = (5120 π G² M³) / (ħ c⁴)' },
+        { label: 'Định luật I Nhiệt động lực học Hố đen', formula: 'dM c² = (κ / 8πG) dA + Ω<sub>H</sub> dJ + Φ<sub>H</sub> dQ' }
+      ],
+      symbols: [
+        { sym: 'T<sub>H</sub>', desc: 'Nhiệt độ Hawking tỉ lệ NGHỊCH với khối lượng M: hố đen càng nhỏ càng nóng dữ dội.' },
+        { sym: 'S<sub>BH</sub>', desc: 'Entropy hố đen tỉ lệ với diện tích chân trời A = 16π(GM/c²)², chứ không tỉ lệ với thể tích.' },
+        { sym: 'ℓ<sub>P</sub> = √(ħG/c³)', desc: 'Độ dài Planck (~1.616 × 10⁻³⁵ m) — thang đo lượng tử của không-thời gian.' },
+        { sym: 'κ = c⁴/(4GM)', desc: 'Gia tốc trọng trường bề mặt (Surface Gravity) đóng vai trò tương tự nhiệt độ.' },
+        { sym: 'τ<sub>evap</sub> ∝ M³', desc: 'Tuổi thọ hố đen tỷ lệ lập phương với khối lượng ban đầu.' }
+      ],
+      facts: [
+        { val: '60 nano-K', lbl: 'Nhiệt độ T_H của hố đen 1 M☉ (lạnh hơn nhiều nền CMB 2.7 K)' },
+        { val: '10⁶⁷ năm', lbl: 'Thời gian bay hơi của hố đen khối lượng 1 Mặt Trời' },
+        { val: '~10¹² kg', lbl: 'Hố đen nguyên thủy nặng cỡ núi đang kết thúc bay hơi hiện nay' },
+        { val: '10¹⁰⁴ k_B', lbl: 'Entropy của hố đen Sgr A* — lớn hơn toàn bộ phần còn lại của Ngân Hà' }
+      ],
+      cards: [
+        {
+          tag: 'Thống nhất vật lý',
+          h: 'Công thức đẹp nhất giao thoa 4 hằng số cơ bản của Tự nhiên',
+          p: 'Công thức <span class="math-inline">T<sub>H</sub> = ħc³/(8πGMk<sub>B</sub>)</span> được khắc trên bia mộ Stephen Hawking tại Tu viện Westminster vì nó lần đầu liên kết bốn trụ cột vật lý tách biệt: <strong>Cơ học lượng tử (<span class="math-inline">ħ</span>)</strong>, <strong>Tương đối hẹp (<span class="math-inline">c</span>)</strong>, <strong>Hấp dẫn (<span class="math-inline">G</span>)</strong> và <strong>Nhiệt động lực học (<span class="math-inline">k<sub>B</sub></span>)</strong>.',
+          points: [
+            'Các hố đen sao (≥ 3 M☉) có nhiệt độ thấp hơn bức xạ nền vi sóng vũ trụ (2.725 K) hàng chục triệu lần, nên hiện tại chúng hấp thụ năng lượng nhiều hơn phát ra và đang lớn lên, không co lại.'
+          ]
+        },
+        {
+          tag: 'Cơ chế lượng tử',
+          h: 'Phép biến đổi Bogoliubov & Tách cặp thăng giáng chân không',
+          p: 'Cách giải thích trực quan phổ biến nhất dựa vào Nguyên lý Bất định Heisenberg (<span class="math-inline">ΔE·Δt ≥ ħ/2</span>): chân không lượng tử liên tục sinh rồi hủy các cặp hạt–phản hạt ảo. Gần chân trời sự kiện, lực thủy triều cực mạnh tách hai hạt ra xa hơn độ dài Compton trước khi chúng kịp tái hợp.',
+          points: [
+            '<strong>Cơ chế chuẩn xác (Bogoliubov):</strong> Trong không-thời gian cong, khái niệm "trạng thái chân không" phụ thuộc vào hệ quy chiếu. Chân không đối với người rơi tự do qua chân trời lại chứa một phổ nhiệt thực sự các lượng tử đối với người đứng quan sát ở xa vô cực.',
+            'Hạt mang năng lượng âm (so với vô cực) rơi vào trong làm giảm khối lượng-năng lượng tổng của hố đen, trong khi hạt năng lượng dương thoát ra ngoài trở thành tia bức xạ Hawking thực.'
+          ]
+        },
+        {
+          tag: 'Nhiệt động lực dị thường',
+          h: 'Nhiệt dung âm (C < 0) & Vụ nổ tia Gamma cuối cùng',
+          p: 'Đối với vật thể thông thường, khi tỏa nhiệt nó nguội đi. Nhưng hố đen có <strong>nhiệt dung âm</strong> (<span class="math-inline">C = dE/dT<sub>H</sub> ∝ −M² &lt; 0</span>): càng mất năng lượng qua bức xạ, khối lượng <span class="math-inline">M</span> càng giảm khiến nhiệt độ <span class="math-inline">T<sub>H</sub></span> tăng vọt theo hàm nghịch đảo.',
+          points: [
+            'Quá trình này tạo ra vòng phản hồi tự gia tốc: nhiệt độ tăng → công suất bức xạ <span class="math-inline">P ∝ 1/M²</span> bùng nổ → hố đen nóng dần từ hồng ngoại → cam → trắng → tia gamma năng lượng cực cao.',
+            'Trong giây cuối cùng khi khối lượng còn ~<span class="math-inline">10⁶ kg</span>, hố đen giải phóng năng lượng tương đương hàng triệu quả bom nhiệt hạch.'
+          ]
+        },
+        {
+          tag: 'Tương đương nhiệt động',
+          h: 'Bốn Định luật Nhiệt động lực học Hố đen (Bardeen–Carter–Hawking)',
+          p: 'Năm 1973, các nhà vật lý phát hiện sự tương đồng toán học tuyệt đối giữa cơ học hố đen và 4 định luật nhiệt động lực học cổ điển:',
+          points: [
+            '<strong>Định luật 0:</strong> Trọng lực bề mặt <span class="math-inline">κ</span> đồng nhất trên toàn bộ chân trời của hố đen dừng (tương đương nhiệt độ <span class="math-inline">T</span> ở trạng thái cân bằng).',
+            '<strong>Định luật I:</strong> Bảo toàn năng lượng liên hệ biến thiên khối lượng <span class="math-inline">dM</span> với biến thiên diện tích chân trời <span class="math-inline">dA</span>, spin <span class="math-inline">dJ</span> và điện tích <span class="math-inline">dQ</span>.',
+            '<strong>Định luật II tổng quát:</strong> Tổng entropy <span class="math-inline">S<sub>tot</sub> = S<sub>ngoài</sub> + S<sub>BH</sub></span> không bao giờ giảm, ngay cả khi hố đen co lại.'
+          ]
+        },
+        {
+          tag: 'Bài toán thế kỷ',
+          h: 'Nghịch lý Thông tin Hố đen & Đường cong Page (2019–nay)',
+          p: 'Nếu ném một cuốn bách khoa toàn thư vào hố đen rồi chờ nó bay hơi hết thành bức xạ nhiệt Hawking hoàn toàn ngẫu nhiên (chỉ phụ thuộc vào <span class="math-inline">M, J, Q</span>), toàn bộ thông tin lượng tử chi tiết của cuốn sách dường như biến mất — vi phạm tính đơn vị (Unitarity) của Cơ học lượng tử!',
+          points: [
+            '<strong>Đường cong Page (1993):</strong> Để bảo toàn thông tin, entropy rối của bức xạ phải tăng lên tới nửa thời gian sống ("thời điểm Page") rồi giảm dần về 0 khi hố đen tan biến hết.',
+            '<strong>Đột phá Quantum Extremal Surfaces (2019):</strong> Tính toán bán cổ điển mới cho thấy một phần lõi bên trong ("Đảo thông tin" — Entanglement Island) được mã hóa lại vào bức xạ thoát ra sau thời điểm Page, khôi phục đường cong Page.'
+          ]
+        },
+        {
+          tag: 'Toàn ảnh & Thí nghiệm',
+          h: 'Nguyên lý Toàn ảnh (Holographic Principle) & Thử nghiệm bay hơi',
+          p: 'Việc Entropy <span class="math-inline">S<sub>BH</sub></span> tỉ lệ với diện tích bề mặt <span class="math-inline">A</span> thay vì thể tích dẫn Gerald ’t Hooft và Leonard Susskind tới <strong>Nguyên lý Toàn ảnh</strong>: toàn bộ lượng thông tin vật lý trong một thể tích không gian 3D có thể được mã hóa hoàn toàn trên biên 2D bao quanh nó (như lưới bề mặt trên chân trời ở mô phỏng).',
+          points: [
+            'Nhấn <strong>💥 Tua nhanh sự Bay hơi</strong> để theo dõi khối lượng giảm từ <span class="math-inline">10¹⁴ kg</span> xuống <span class="math-inline">10¹⁰ kg</span>: quan sát chân trời co nhỏ lại trong khi nhiệt độ Hawking bùng từ cam ấm sang lam-tím chói gắt.',
+            'Điều chỉnh <strong>Hiệu ứng Xé cặp hạt</strong> và bật/tắt <strong>Lưới Toàn ảnh</strong> để quan sát cấu trúc lớp thông tin bề mặt Planck.'
+          ]
+        }
+      ]
+    },
+
+    gravwaves: {
+      badge: 'Thiên Văn Học Sóng Hấp Dẫn • LIGO / Virgo',
+      title: 'Độ Cong Không-Thời Gian, Mặt Nhúng Flamm & Sóng Hấp Dẫn Tứ Cực',
+      author: 'Albert Einstein (1916) • Kip Thorne, Rainer Weiss & Barry Barish (LIGO, 2015)',
+      overview: 'Khi các vật thể siêu đặc như cặp hố đen hoặc sao neutron quay gia tốc quanh nhau, chúng khuấy động cấu trúc hình học của chính không-thời gian, phát ra các gợn sóng biến dạng metric lan truyền với tốc độ ánh sáng <span class="math-inline">c</span> kéo giãn và nén không gian theo phương vuông góc với chiều truyền.',
+      equations: [
+        { label: 'Phương trình sóng hấp dẫn tuyến tính hóa (h<sub>μν</sub> = g<sub>μν</sub> − η<sub>μν</sub>)', formula: '□ h̄<sub>μν</sub> = −(16πG / c⁴) T<sub>μν</sub>   (với □ = −c⁻²∂<sub>t</sub>² + ∇²)' },
+        { label: 'Công thức Tứ cực Einstein cho biên độ biến dạng Strain', formula: 'h<sub>ij</sub><sup>TT</sup> = (2G / c⁴ R) · d²Q<sub>ij</sub><sup>TT</sup>(t − R/c) / dt²' },
+        { label: 'Công suất phát xạ sóng hấp dẫn của hệ đôi quỹ đạo tròn', formula: 'L<sub>GW</sub> = (32 / 5) (G⁴ / c⁵) [ (m₁ m₂)² (m₁ + m₂) / a⁵ ]' },
+        { label: 'Tần số sóng & Khối lượng Chirp điều khiển tiếng rít hợp nhất', formula: 'f<sub>GW</sub> = 2 f<sub>orb</sub>   |   M<sub>c</sub> = (m₁ m₂)<sup>3/5</sup> / (m₁ + m₂)<sup>1/5</sup>' }
+      ],
+      symbols: [
+        { sym: 'h = ΔL / L', desc: 'Biến dạng tương đối (Strain) không thứ nguyên; sự kiện GW150914 đo được h ≈ 10⁻²¹.' },
+        { sym: 'h₊, h<sub>×</sub>', desc: 'Hai trạng thái phân cực ngang (cộng và chéo) lệch nhau góc 45° đặc trưng cho hạt spin-2 (graviton).' },
+        { sym: 'Q<sub>ij</sub>', desc: 'Tenxơ mô-men tứ cực khối lượng của hệ phân bố vật chất.' },
+        { sym: 'M<sub>c</sub>', desc: 'Khối lượng Chirp — đại lượng xác định trực tiếp tốc độ tăng tần số f<sub>GW</sub> theo thời gian.' },
+        { sym: 'a', desc: 'Khoảng cách chia tách giữa 2 thiên thể quay quanh khối tâm chung.' }
+      ],
+      facts: [
+        { val: '10⁻²¹ strain', lbl: 'Độ lệch gương 4 km chỉ bằng 1/1000 đường kính hạt proton!' },
+        { val: '3.0 M☉ c²', lbl: 'Năng lượng giải phóng trong 0.2 giây hợp nhất của GW150914' },
+        { val: '1.0000 c', lbl: 'Sai khác tốc độ sóng hấp dẫn & ánh sáng < 10⁻¹⁵ (từ GW170817)' },
+        { val: '3.6×10⁴⁹ W', lbl: 'Công suất đỉnh lớn hơn tổng toàn bộ ngôi sao khả kiến trong vũ trụ' }
+      ],
+      cards: [
+        {
+          tag: 'Bản chất hình học',
+          h: 'Sóng Hấp Dẫn là sự co giãn của chính thước đo Không gian',
+          p: 'Khác với sóng âm cần môi trường khí hay sóng điện từ dao động trong không gian cố định, sóng hấp dẫn làm thay đổi trực tiếp khoảng cách vật lý <span class="math-inline">ds</span> giữa các điểm tự do trong không gian. Khi sóng đi qua một vòng tròn các hạt thử, vòng tròn bị ép thành hình elip theo trục đứng đồng thời giãn theo trục ngang ở nửa chu kỳ đầu, rồi đảo ngược 90° ở nửa chu kỳ sau.',
+          points: [
+            'Để phát hiện biến dạng <span class="math-inline">h ~ 10⁻²¹</span>, giao thoa kế laser LIGO dài 4 km phải đo chính xác sự thay đổi chiều dài cỡ <span class="math-inline">10⁻¹⁸ m</span> (nhỏ hơn bán kính proton hàng nghìn lần).'
+          ]
+        },
+        {
+          tag: 'Định luật bảo toàn',
+          h: 'Tại sao chỉ có bức xạ Tứ cực (Quadrupole) và hai phân cực h₊, hₓ?',
+          p: 'Điện từ học có bức xạ lưỡng cực vì tồn tại điện tích âm và dương; nhưng khối lượng hấp dẫn chỉ có một dấu dương và bị ràng buộc bởi các định luật bảo toàn:',
+          points: [
+            '<strong>Không có bức xạ đơn cực:</strong> Bảo toàn khối lượng-năng lượng khiến một ngôi sao phồng xẹp đối xứng cầu hoàn toàn không phát sóng hấp dẫn.',
+            '<strong>Không có bức xạ lưỡng cực:</strong> Bảo toàn động lượng và mô-men động lượng triệt tiêu thành phần lưỡng cực (<span class="math-inline">d̈ = 0</span>). Do đó bậc phát xạ thấp nhất là <strong>tứ cực</strong> — hệ quả tất yếu tạo ra tần số sóng <span class="math-inline">f<sub>GW</sub> = 2 f<sub>orb</sub></span> gấp đôi tốc độ quay.'
+          ]
+        },
+        {
+          tag: 'Chuỗi hợp nhất',
+          h: 'Ba giai đoạn vàng: Inspiral (Xoắn ốc) → Merger → Ringdown',
+          p: 'Khi hệ đôi hố đen quay quanh nhau, chúng mang năng lượng quỹ đạo tỏa ra dưới dạng sóng hấp dẫn theo công thức <span class="math-inline">L<sub>GW</sub> ∝ a⁻⁵</span>:',
+          points: [
+            '<strong>1. Inspiral (Xoắn ốc tiến lại gần):</strong> Quỹ đạo thu hẹp ngày càng nhanh, tần số và biên độ sóng đồng thời tăng vọt tạo nên tín hiệu đặc trưng gọi là <em>"Chirp"</em>.',
+            '<strong>2. Merger (Hợp nhất):</strong> Hai chân trời sự kiện hòa làm một ở vận tốc tương đối lên tới <span class="math-inline">0.6c</span>, phát công suất cực đại.',
+            '<strong>3. Ringdown (Tắt dần dao động):</strong> Hố đen mới tạo thành bị méo dạng ban đầu nhanh chóng rung động theo các mode tắt dần (Quasinormal Modes) để ổn định thành hố đen Kerr nhẵn mịn.'
+          ]
+        },
+        {
+          tag: 'Dấu mốc 2015',
+          h: 'Mặt nhúng Paraboloid Flamm & Sự kiện lịch sử GW150914',
+          p: 'Bề mặt lưới 3D trong mô phỏng trực quan hóa mặt nhúng kiểu Flamm với hai giếng thế sâu ứng với hai hố đen quay quanh nhau. Ngày 14/09/2015, hai trạm LIGO (Hanford & Livingston) ghi nhận lần đầu tiên trong lịch sử vụ va chạm của hai hố đen 36 M☉ và 29 M☉ cách Trái Đất 1.3 tỷ năm ánh sáng.',
+          points: [
+            'Sản phẩm là một hố đen quay 62 M☉ — trọn vẹn <strong>3 lần khối lượng Mặt Trời</strong> đã biến hoàn toàn thành năng lượng sóng hấp dẫn thuần túy trong tích tắc chưa đầy 0.2 giây.'
+          ]
+        },
+        {
+          tag: 'Đa tín hiệu',
+          h: 'GW170817: Vụ va chạm Sao Neutron & Nguồn gốc Vàng, Bạch kim',
+          p: 'Tháng 8/2017, LIGO và Virgo phát hiện sóng hấp dẫn từ cặp sao neutron hợp nhất kèm theo tia chớp Gamma (Fermi) chỉ trễ hơn 1.7 giây sau hành trình 130 triệu năm ánh sáng, khai sinh kỷ nguyên Thiên văn học Đa tín hiệu (Multi-Messenger Astronomy).',
+          points: [
+            'Kết quả đo xác nhận sóng hấp dẫn truyền đúng bằng tốc độ ánh sáng <span class="math-inline">c</span> (loại bỏ hàng loạt thuyết hấp dẫn biến thể) và khẳng định vụ nổ Kilonova là lò luyện các nguyên tố nặng như Vàng, Bạch kim và Uranium trong vũ trụ.'
+          ]
+        },
+        {
+          tag: 'Tương lai & Thực hành',
+          h: 'Kính viễn vọng không gian LISA, Pulsar Timing & Thí nghiệm Chirp',
+          p: 'Vì LIGO mặt đất bị giới hạn bởi nhiễu địa chấn ở tần số thấp (&lt; 10 Hz), thế hệ quan sát mới đang mở rộng sang dải tần nano-Hz (NANOGrav dùng mạng sao xung Pulsar thiên hà) và mHz (trạm không gian LISA của ESA gồm 3 vệ tinh tạo tam giác cạnh 2.5 triệu km).',
+          points: [
+            'Nhấn <strong>🌀 Kích hoạt Hợp nhất (Chirp)</strong> để xem hai hố đen rút ngắn khoảng cách <span class="math-inline">a</span>, tần số <span class="math-inline">f<sub>GW</sub></span> và biên độ Strain đồng loạt vọt lên cực đại đúng như pha Inspiral của GW150914!'
+          ]
+        }
+      ]
+    },
+
+    alcubierre: {
+      badge: 'Nghiệm Metric Đặc Biệt • Vật Lý Lý Thuyết',
+      title: 'Động Cơ Bẻ Cong Không Gian Alcubierre & Độ Giãn Nở York',
+      author: 'Miguel Alcubierre (1994) — Classical and Quantum Gravity',
+      overview: 'Năm 1994, nhà vật lý Miguel Alcubierre tìm ra một nghiệm chính xác của Phương trình Trường Einstein cho phép tàu vũ trụ di chuyển giữa hai điểm sao với tốc độ biểu kiến vượt <span class="math-inline">c</span> bằng cách <strong>nén không gian phía trước và giãn không gian phía sau</strong> thay vì đẩy con tàu tăng tốc cục bộ.',
+      equations: [
+        { label: 'Metric Không-Thời Gian Alcubierre (di chuyển dọc trục +x)', formula: 'ds² = −c²dt² + [dx − v<sub>s</sub>(t) · f(r<sub>s</sub>) dt]² + dy² + dz²' },
+        { label: 'Hàm định dạng thành bong bóng (Shaping Function)', formula: 'f(r<sub>s</sub>) = [tanh(σ(r<sub>s</sub> + R)) − tanh(σ(r<sub>s</sub> − R))] / [2 tanh(σR)]' },
+        { label: 'Vô hướng giãn nở York (độ nén/giãn thể tích không gian)', formula: 'θ = v<sub>s</sub> · (x<sub>s</sub> / r<sub>s</sub>) · (df / dr<sub>s</sub>)   |   r<sub>s</sub> = √((x − x<sub>s</sub>)² + y² + z²)' },
+        { label: 'Mật độ năng lượng đòi hỏi (theo quan sát viên Euler)', formula: 'T<sub>00</sub> = −(c⁴ / 32πG) · v<sub>s</sub>² · (ρ² / r<sub>s</sub>²) · (df / dr<sub>s</sub>)² < 0' }
+      ],
+      symbols: [
+        { sym: 'v<sub>s</sub> = dx<sub>s</sub>/dt', desc: 'Vận tốc biểu kiến của tâm bong bóng Warp so với hệ sao ở xa (có thể > c).' },
+        { sym: 'R', desc: 'Bán kính bong bóng Warp bao bọc con tàu ở vùng phẳng trung tâm (nơi f(0) ≈ 1).' },
+        { sym: 'σ', desc: 'Độ sắc nét (nghịch đảo bề dày) của thành bong bóng Warp.' },
+        { sym: 'θ', desc: 'Độ giãn nở York: θ < 0 phía trước mũi (nén không gian), θ > 0 phía đuôi (giãn không gian).' },
+        { sym: 'ρ = √(y²+z²)', desc: 'Khoảng cách vuông góc tới trục chuyển động; tạo nên vành xuyến (Torus) năng lượng âm.' }
+      ],
+      facts: [
+        { val: '0.00 g', lbl: 'Gia tốc trọng trường cảm nhận bởi phi hành gia trong tàu' },
+        { val: '1.000×', lbl: 'Thời gian riêng trên tàu trôi hoàn toàn đồng bộ với Trái Đất' },
+        { val: '4.24 năm AS', lbl: 'Tới Proxima Centauri trong ~5 tháng ở Warp 10c' },
+        { val: 'T₀₀ < 0', lbl: 'Bắt buộc có vành xuyến mật độ năng lượng âm bao quanh thành' }
+      ],
+      cards: [
+        {
+          tag: 'Nguyên lý tương đối',
+          h: 'Tại sao Động cơ Warp không vi phạm giới hạn ánh sáng c?',
+          p: 'Thuyết Tương đối hẹp cấm vật chất chuyển động nhanh hơn ánh sáng <em>trong</em> không-thời gian cục bộ, nhưng Thuyết Tương đối rộng không hề giới hạn tốc độ co giãn của <em>chính</em> không-thời gian (tương tự các thiên hà xa xôi thời kỳ lạm phát vũ trụ tách xa nhau nhanh hơn <span class="math-inline">c</span>).',
+          points: [
+            'Bên trong bong bóng (<span class="math-inline">r<sub>s</sub> ≪ R</span>), hàm định dạng <span class="math-inline">f(r<sub>s</sub>) ≈ 1</span> và đạo hàm <span class="math-inline">df/dr<sub>s</sub> ≈ 0</span>: không gian hoàn toàn phẳng, mọi chùm sáng bên trong khoang vẫn đi nhanh hơn con tàu.'
+          ]
+        },
+        {
+          tag: 'Rơi tự do tuyệt đối',
+          h: 'Gia tốc 0.00 g & Không có Nghịch lý Sinh đôi',
+          p: 'Trong tên lửa phản lực thông thường, muốn đạt gần <span class="math-inline">c</span> phải chịu gia tốc khổng lồ và thời gian trên tàu chậm hẳn lại. Ngược lại, đường thế giới tâm bong bóng <span class="math-inline">x = x<sub>s</sub>(t)</span> là một <strong>đường trắc địa rơi tự do</strong> chính xác:',
+          points: [
+            'Phi hành đoàn ở trạng thái không trọng lượng êm ái (<span class="math-inline">0.00 g</span>) dù chuyển đổi từ <span class="math-inline">0c</span> lên <span class="math-inline">10c</span>.',
+            'Thời gian riêng <span class="math-inline">dτ = dt</span> bằng đúng thời gian ở Trái Đất — bạn có thể đi tới hệ sao khác rồi trở về mà người thân không già đi hàng trăm năm.'
+          ]
+        },
+        {
+          tag: 'Bài toán năng lượng',
+          h: 'Vành xuyến Năng lượng âm & Bước tiến giảm yêu cầu từ 10⁶⁴ kg xuống Sao Mộc',
+          p: 'Nhìn vào công thức mật độ năng lượng <span class="math-inline">T<sub>00</sub> ∝ −(df/dr<sub>s</sub>)²</span>: vì bình phương luôn dương và có dấu trừ phía trước, thành bong bóng phải chứa mật độ năng lượng ÂM tập trung thành một vành xuyến (torus) quanh eo bong bóng.',
+          points: [
+            '<strong>Ước tính gốc của Alcubierre / Pfenning–Ford (1997):</strong> Đòi hỏi khối lượng năng lượng âm lớn hơn khối lượng toàn vũ trụ khả kiến.',
+            '<strong>Tối ưu hóa Harold White (NASA, 2011):</strong> Làm dày và dao động thành bong bóng giảm lượng năng lượng xuống tương đương khối lượng tàu Voyager (~700 kg).',
+            '<strong>Nghiên cứu Bobrick & Martire / Lentz (2021):</strong> Chứng minh trên lý thuyết tồn tại lớp nghiệm Warp tốc độ dưới <span class="math-inline">c</span> hoặc dạng soliton plasma sử dụng năng lượng DƯƠNG thuần túy.'
+          ]
+        },
+        {
+          tag: 'Chân trời nhân quả',
+          h: 'Các rào cản vật lý lớn nhất: Không thể lái tàu & Bức xạ Hawking',
+          p: 'Khi <span class="math-inline">v<sub>s</sub> &gt; c</span>, mặt trước thành bong bóng xuất hiện một <strong>chân trời sự kiện nhân quả</strong> tách rời buồng lái ở tâm khỏi không gian phía trước:',
+          points: [
+            '<strong>Không thể bật/tắt từ bên trong:</strong> Bất kỳ tín hiệu điều khiển hay tia laser nào từ con tàu cũng đi tối đa bằng <span class="math-inline">c</span> nên không đuổi kịp mặt trước bong bóng để dừng tàu — bong bóng phải được thiết lập sẵn dọc hành trình như một "đường ray" không-thời gian.',
+            '<strong>Nhiệt độ Hawking thành bong bóng:</strong> Finazzi và cộng sự (2009) chỉ ra thăng giáng lượng tử tại chân trời bong bóng tạo ra bức xạ Hawking nhiệt độ cực cao phá hủy khoang tàu.'
+          ]
+        },
+        {
+          tag: 'Quang học Warp',
+          h: 'Hiệu ứng Nén Xanh phía trước, Giãn Đỏ phía sau & Sóng hạt tích tụ',
+          p: 'Trong hệ quy chiếu bên ngoài, vô hướng York <span class="math-inline">θ</span> âm ở bán cầu trước (<span class="math-inline">x<sub>s</sub> &gt; 0</span>) nén các đường lưới không-thời gian và dịch chuyển ánh sáng về cực tím/X-quang; bán cầu sau giãn rộng và dịch chuyển đỏ thẫm.',
+          points: [
+            '<strong>Tích tụ năng lượng mũi tàu (McMonigal et al., 2012):</strong> Trong suốt hành trình vượt <span class="math-inline">c</span>, bong bóng quét và bẫy các hạt vũ trụ lẫn photon phía trước tại ranh giới mũi; khi phanh hãm giảm tốc xuống dưới <span class="math-inline">c</span>, luồng hạt tích năng lượng cực đại bắn phóng ra phía trước có thể thổi bay hành tinh đích!'
+          ]
+        },
+        {
+          tag: 'Thực hành GPU',
+          h: 'Quan sát Vành Xuyến & Tham số Độ Sắc Nét thành bong bóng (σ)',
+          p: 'Mô phỏng dò tia qua trường deflection của hàm <span class="math-inline">f(r<sub>s</sub>)</span> và vẽ trực tiếp vành xuyến năng lượng âm màu lam-tím cùng lăng kính Doppler trước/sau con tàu:',
+          points: [
+            'Tăng <strong>Độ sắc nét thành (σ)</strong> lên cao để thấy thành bong bóng nén mỏng như dao cạo và sự bẻ cong ánh sáng nền gắt hơn.',
+            'Nhấn <strong>⚡ Tăng tốc Warp 10c</strong> để quan sát đồng thời độ biến dạng thấu kính không gian và ước tính thời gian bay tới sao cận kề <em>Proxima Centauri</em>.'
+          ]
+        }
+      ]
+    },
+
+    relativity: {
+      badge: 'Thuyết Tương Đối Hẹp • Quang Học Tương Đối',
+      title: 'Biến Đổi Lorentz, Quang Sai Tương Đối Tính & Nghịch Lý Sinh Đôi',
+      author: 'Albert Einstein (1905) • Hermann Minkowski (1908) • James Terrell & Roger Penrose (1959)',
+      overview: 'Thuyết Tương đối hẹp xuất phát từ hai tiên đề tưởng chừng đơn giản: mọi định luật vật lý như nhau trong mọi hệ quy chiếu quán tính và tốc độ ánh sáng trong chân không <span class="math-inline">c</span> luôn bất biến với mọi người quan sát — kéo theo việc không gian và thời gian không tách rời mà đan bện thành khối 4 chiều Minkowski.',
+      equations: [
+        { label: 'Hệ số Lorentz, Giãn Thời gian & Co Độ dài', formula: 'γ = 1 / √(1 − β²)   |   Δt<sub>TĐ</sub> = γ · Δτ<sub>Tàu</sub>   |   L = L₀ / γ   (β = v/c)' },
+        { label: 'Phép biến đổi tọa độ Lorentz (1D theo trục x)', formula: 'x′ = γ(x − vt)   |   t′ = γ(t − vx / c²)   |   ds² = −c²dt² + dx² + dy² + dz²' },
+        { label: 'Quang sai tương đối tính (Relativistic Aberration)', formula: 'cos θ<sub>rest</sub> = (cos θ<sub>obs</sub> − β) / (1 − β cos θ<sub>obs</sub>)' },
+        { label: 'Dịch chuyển Doppler & Độ rọi Đèn pha (Relativistic Beaming)', formula: 'D = 1 / [γ(1 − β cos θ<sub>obs</sub>)]   |   I<sub>obs</sub> = D³ · I<sub>emit</sub>' }
+      ],
+      symbols: [
+        { sym: 'β = v / c', desc: 'Tỉ số vận tốc tàu so với tốc độ ánh sáng trong chân không (0 ≤ β < 1).' },
+        { sym: 'γ ≥ 1', desc: 'Hệ số Lorentz: ở 86.6% c thì γ = 2; ở 99% c thì γ ≈ 7.09; ở 99.5% c thì γ ≈ 10.01.' },
+        { sym: 'τ, t', desc: 'Thời gian riêng trên đồng hồ tàu (τ) so với thời gian tọa độ trên Trái Đất (t).' },
+        { sym: 'θ<sub>obs</sub>', desc: 'Góc nhìn của phi hành gia so với mũi tàu (θ = 0° là nhìn thẳng về phía trước).' },
+        { sym: 'D', desc: 'Hệ số Doppler toàn phần gồm cả co giãn thời gian ngang (Transverse Doppler).' }
+      ],
+      facts: [
+        { val: '299,792 km/s', lbl: 'Giới hạn tốc độ nhân quả c — bất biến với mọi nguồn sáng' },
+        { val: 'γ = 10.01×', lbl: 'Hệ số Lorentz tại 99.5% c (1 năm tàu = 10 năm Trái Đất)' },
+        { val: 'E = (γ−1)mc²', lbl: 'Động năng tiến tới vô cực khi v → c (cản vật có khối lượng)' },
+        { val: '29.7 ns/μs', lbl: 'Muon tia vũ trụ sống thọ gấp ~15 lần nhờ giãn thời gian' }
+      ],
+      cards: [
+        {
+          tag: 'Nền tảng 1905',
+          h: 'Hai Tiên đề Einstein & Không-Thời Gian Bất Biến Minkowski',
+          p: 'Thay vì thời gian tuyệt đối <span class="math-inline">t′ = t</span> của cơ học Newton, phép biến đổi Lorentz giữ nguyên khoảng cách không-thời gian 4 chiều <span class="math-inline">ds² = −c²dt² + dx² + dy² + dz²</span>. Hai sự kiện xảy ra đồng thời ở hai nơi khác nhau trong hệ quy chiếu này lại KHÔNG đồng thời trong hệ quy chiếu đang chuyển động (Tính tương đối của sự đồng thời).',
+          points: [
+            'Mỗi giây trôi qua, mọi vật thể đều chuyển động qua không-thời gian 4D với tổng "tốc độ" đúng bằng <span class="math-inline">c</span>: đi càng nhanh trong không gian (<span class="math-inline">v → c</span>) thì thành phần tiến trong thời gian (<span class="math-inline">dτ/dt = 1/γ</span>) càng chậm lại.'
+          ]
+        },
+        {
+          tag: 'Quang học cận quang tốc',
+          h: 'Quang sai Tương đối tính: Bầu trời sao co cụm trước mũi tàu',
+          p: 'Nhiều người lầm tưởng khi bay nhanh tới gần <span class="math-inline">c</span>, các ngôi sao sẽ lướt vùn vụt ra sau lưng. Thực tế ngược lại hoàn toàn! Do sự kết hợp cộng vận tốc ánh sáng theo góc nghiêng (giống việc chạy dưới mưa thấy hạt mưa xiên về mặt), ánh sáng từ các ngôi sao nằm ở hai bên hông (90°) và thậm chí sau lưng dường như bị kéo tụ về phía trước mũi tàu.',
+          points: [
+            'Ở <span class="math-inline">β = 0.99</span>, gần như toàn bộ bầu trời sau và bên cạnh dồn vào một hình nón nhỏ trước mặt góc mở chỉ cỡ <span class="math-inline">~16°</span>, biến cảnh quan phía sau thành khoảng không tối đen thưa sao.'
+          ]
+        },
+        {
+          tag: 'Phổ & Cường độ',
+          h: 'Dịch chuyển Doppler Ngang & Hiệu ứng Đèn pha (Headlight Effect)',
+          p: 'Công thức <span class="math-inline">D = [γ(1 − β cos θ<sub>obs</sub>)]⁻¹</span> chứa đựng một hiệu ứng thuần túy tương đối tính mà sóng âm cổ điển không có: ngay cả khi nhìn vuông góc với hướng bay (<span class="math-inline">θ = 90°</span>), tần số vẫn bị dịch chuyển đỏ theo <span class="math-inline">1/γ</span> vì đồng hồ chuyển động chạy chậm (Doppler ngang).',
+          points: [
+            '<strong>Hiệu ứng Đèn pha:</strong> Mật độ photon và năng lượng mỗi photon đều tăng lên ở vùng phía trước mũi tàu, làm cường độ sáng vọt lên theo <span class="math-inline">D³</span> (thành vùng sáng xanh chói lóa) trong khi vùng phía sau mờ tối đi thê thảm.'
+          ]
+        },
+        {
+          tag: 'Ảnh chụp thực tế',
+          h: 'Co độ dài Lorentz & Hiệu ứng xoay quang học Terrell–Penrose',
+          p: 'Trong hệ quy chiếu đứng yên, con tàu dài <span class="math-inline">L₀</span> bị co ngắn lại dọc phương chuyển động thành <span class="math-inline">L = L₀/γ</span>. Nhưng khi chụp ảnh bằng camera thông thường, ánh sáng từ đuôi và mũi vật thể đến ống kính tại cùng một thời điểm thực chất rời khỏi vật thể ở các thời điểm khác nhau:',
+          points: [
+            'Năm 1959, James Terrell và Roger Penrose độc lập chứng minh một khối cầu đi ngang qua ở <span class="math-inline">0.99c</span> vẫn hiện lên trên ảnh chụp là hình tròn hoàn hảo, còn một khối lập phương trông không bị ép dẹt mà như bị <strong>xoay góc</strong> để lộ cả mặt sau!'
+          ]
+        },
+        {
+          tag: 'Nghịch lý nổi tiếng',
+          h: 'Lời giải chuẩn xác cho Nghịch lý Anh em Sinh đôi (Twin Paradox)',
+          p: 'Nếu người anh A ở Trái Đất và người em B bay đi rồi quay về ở <span class="math-inline">0.99c</span>, tại sao không thể nói Trái Đất chuyển động so với tàu nên A trẻ hơn B? Chìa khóa nằm ở <strong>tính bất đối xứng hình học Minkowski</strong>:',
+          points: [
+            'Người anh A nằm yên suốt trong <em>một</em> hệ quy chiếu quán tính duy nhất — đường thế giới thẳng đứng trong biểu đồ không-thời gian tương ứng với <strong>thời gian riêng CỰC ĐẠI</strong> giữa 2 biến cố xuất phát và gặp lại.',
+            'Người em B bắt buộc phải giảm tốc, quay đầu và đổi sang hệ quy chiếu quán tính khác để trở về; cú nhảy mặt phẳng đồng thời tại điểm quay đầu làm đồng hồ Trái Đất "nhảy vọt" trong góc nhìn của B.'
+          ]
+        },
+        {
+          tag: 'Thử nghiệm 360°',
+          h: 'Bức tường Động năng, Bức xạ nền CMB & Thử xoay góc nhìn buồng lái',
+          p: 'Khi đẩy thanh trượt <strong>β</strong> tiến sát <span class="math-inline">0.995c</span> (<span class="math-inline">γ ≈ 10</span>), năng lượng cần để gia tốc tiếp tăng cực nhanh (<span class="math-inline">E<sub>k</sub> = (γ − 1)mc²</span>), đồng thời bức xạ nền vi sóng vũ trụ CMB (2.7 K) bị dịch chuyển xanh phía trước thành tia X và Gamma đe dọa buồng lái.',
+          points: [
+            'Nhấn <strong>🔥 Tăng tốc 0.99c (γ ≈ 7.1)</strong> rồi <strong>kéo chuột xoay camera 180°</strong> nhìn ra phía sau đuôi tàu trong mô phỏng để tận mắt thấy bầu trời phía sau tối thẫm và dịch chuyển đỏ rực so với vùng cực tím chói trước mũi!',
+            'Quan sát <strong>Đồng hồ Tàu (τ)</strong> và <strong>Đồng hồ Trái Đất (t)</strong> chạy lệch nhịp trực tiếp trên bảng Thông số.'
+          ]
+        }
+      ]
+    }
+  };
+
+
+  // Merge Detailed Theory Metadata into SIM_CONFIGS
+  Object.keys(DETAILED_THEORY).forEach(k => {
+    if (SIM_CONFIGS[k]) SIM_CONFIGS[k].theory = DETAILED_THEORY[k];
+  });
+
+  // =========================================================================
+  // 2. GLSL ES 3.00 SHADERS (GPU RAYTRACING / RAYMARCHING + HDR BLOOM PASS)
+  // =========================================================================
+  const FULLSCREEN_VS = `#version 300 es
+  precision highp float;
+  out vec2 vUv;
+  void main() {
+    vec2 pos = vec2((gl_VertexID << 1) & 2, gl_VertexID & 2);
+    vUv = pos;
+    gl_Position = vec4(pos * 2.0 - 1.0, 0.0, 1.0);
+  }`;
+
+  const COMMON_GLSL = `#version 300 es
+  precision highp float;
+  in vec2 vUv;
+  out vec4 fragColor;
+
+  uniform vec2 uResolution;
+  uniform float uTime;
+  uniform vec3 uCamPos;
+  uniform vec3 uCamTarget;
+  uniform float uFov;
+  uniform int uSteps;
+  uniform float uP1;
+  uniform float uP2;
+  uniform float uP3;
+  uniform float uP4;
+  uniform float uP5;
+
+  const float PI = 3.14159265359;
+
+  float hash13(vec3 p3) {
+    p3 = fract(p3 * 0.1031);
+    p3 += dot(p3, p3.zyx + 31.32);
+    return fract((p3.x + p3.y) * p3.z);
+  }
+
+  vec3 hash33(vec3 p3) {
+    p3 = fract(p3 * vec3(0.1031, 0.1030, 0.0973));
+    p3 += dot(p3, p3.yxz + 33.33);
+    return fract((p3.xxy + p3.yxx) * p3.zyx);
+  }
+
+  float noise3D(vec3 p) {
+    vec3 i = floor(p);
+    vec3 f = fract(p);
+    f = f * f * (3.0 - 2.0 * f);
+    float n000 = hash13(i + vec3(0.0, 0.0, 0.0));
+    float n100 = hash13(i + vec3(1.0, 0.0, 0.0));
+    float n010 = hash13(i + vec3(0.0, 1.0, 0.0));
+    float n110 = hash13(i + vec3(1.0, 1.0, 0.0));
+    float n001 = hash13(i + vec3(0.0, 0.0, 1.0));
+    float n101 = hash13(i + vec3(1.0, 0.0, 1.0));
+    float n011 = hash13(i + vec3(0.0, 1.0, 1.0));
+    float n111 = hash13(i + vec3(1.0, 1.0, 1.0));
+    float nx00 = mix(n000, n100, f.x);
+    float nx10 = mix(n010, n110, f.x);
+    float nx01 = mix(n001, n101, f.x);
+    float nx11 = mix(n011, n111, f.x);
+    float nxy0 = mix(nx00, nx10, f.y);
+    float nxy1 = mix(nx01, nx11, f.y);
+    return mix(nxy0, nxy1, f.z);
+  }
+
+  float fbm(vec3 p) {
+    float v = 0.0;
+    float a = 0.5;
+    mat3 rot = mat3(
+      0.80,  0.60, 0.00,
+     -0.60,  0.80, 0.00,
+      0.00,  0.00, 1.00
+    );
+    for (int i = 0; i < 4; i++) {
+      v += a * noise3D(p);
+      p = rot * p * 2.04 + vec3(1.7, 9.2, 4.3);
+      a *= 0.5;
+    }
+    return v;
+  }
+
+  vec3 blackbody(float t) {
+    t = clamp(t, 0.0, 2.5);
+    vec3 c1 = vec3(0.45, 0.06, 0.02);
+    vec3 c2 = vec3(1.00, 0.34, 0.06);
+    vec3 c3 = vec3(1.00, 0.78, 0.42);
+    vec3 c4 = vec3(0.86, 0.94, 1.15);
+    vec3 c5 = vec3(0.58, 0.78, 1.40);
+    if (t < 0.4) return mix(c1, c2, t / 0.4);
+    if (t < 0.9) return mix(c2, c3, (t - 0.4) / 0.5);
+    if (t < 1.5) return mix(c3, c4, (t - 0.9) / 0.6);
+    return mix(c4, c5, clamp((t - 1.5) / 1.0, 0.0, 1.0));
+  }
+
+  // Rich procedural Universe A skybox (Deep Indigo + Cyan/Violet Milky Way + Crisp Stars)
+  vec3 cosmicSkyA(vec3 d) {
+    d = normalize(d);
+    vec3 col = vec3(0.008, 0.012, 0.028);
+
+    // Galactic plane tilt
+    float gal = exp(-abs(d.y * 0.85 + d.x * 0.35 - d.z * 0.2) * 4.8);
+    float n1 = fbm(d * 3.8 + vec3(1.2, 0.5, 2.1));
+    float n2 = fbm(d * 7.5 - vec3(0.4, 2.2, 1.1));
+    float dust = smoothstep(0.38, 0.72, n2);
+
+    vec3 neb = mix(vec3(0.06, 0.14, 0.36), vec3(0.32, 0.16, 0.52), n1);
+    neb += vec3(0.10, 0.34, 0.55) * smoothstep(0.45, 0.85, n1);
+    col += neb * gal * (0.45 + 0.75 * n1) * (1.0 - 0.58 * dust);
+
+    // Multi-layer crisp starfield
+    for (int i = 0; i < 2; i++) {
+      float scale = (i == 0) ? 85.0 : 175.0;
+      vec3 p = d * scale;
+      vec3 id = floor(p);
+      vec3 f = fract(p) - 0.5;
+      vec3 rnd = hash33(id + float(i) * 19.3);
+      float dist = length(f - (rnd - 0.5) * 0.65);
+      float star = smoothstep(0.11, 0.01, dist) * step(0.84, rnd.x);
+      vec3 starCol = mix(vec3(1.0, 0.72, 0.52), vec3(0.68, 0.86, 1.0), rnd.y);
+      col += starCol * star * (0.9 + 1.8 * pow(rnd.z, 3.0)) * (i == 0 ? 1.3 : 0.75);
+    }
+    return col;
+  }
+
+  // Rich procedural Universe B skybox (Golden Amber + Crimson/Magenta Alien Nebula)
+  vec3 cosmicSkyB(vec3 d) {
+    d = normalize(d);
+    vec3 col = vec3(0.022, 0.008, 0.016);
+
+    float gal = exp(-abs(d.z * 0.8 - d.y * 0.45 + d.x * 0.25) * 4.2);
+    float n1 = fbm(d * 4.2 + vec3(4.1, 1.9, 0.7));
+    float n2 = fbm(d * 8.2 + vec3(2.3, 5.1, 3.3));
+    float dust = smoothstep(0.42, 0.76, n2);
+
+    vec3 neb = mix(vec3(0.55, 0.16, 0.08), vec3(0.92, 0.54, 0.16), n1);
+    neb += vec3(0.58, 0.12, 0.42) * smoothstep(0.4, 0.85, n2);
+    col += neb * gal * (0.55 + 0.85 * n1) * (1.0 - 0.5 * dust);
+
+    // Bright binary distant sun in Universe B
+    vec3 sunDir = normalize(vec3(-0.45, 0.28, -0.84));
+    float sun = pow(max(dot(d, sunDir), 0.0), 140.0);
+    col += vec3(1.6, 0.95, 0.45) * sun + vec3(0.85, 0.32, 0.12) * pow(max(dot(d, sunDir), 0.0), 14.0) * 0.55;
+
+    for (int i = 0; i < 2; i++) {
+      float scale = (i == 0) ? 80.0 : 165.0;
+      vec3 p = d * scale;
+      vec3 id = floor(p);
+      vec3 f = fract(p) - 0.5;
+      vec3 rnd = hash33(id + float(i) * 41.7 + 7.1);
+      float dist = length(f - (rnd - 0.5) * 0.65);
+      float star = smoothstep(0.11, 0.01, dist) * step(0.82, rnd.x);
+      vec3 starCol = mix(vec3(1.0, 0.58, 0.35), vec3(1.0, 0.94, 0.76), rnd.y);
+      col += starCol * star * (1.0 + 1.9 * pow(rnd.z, 3.0)) * (i == 0 ? 1.35 : 0.8);
+    }
+    return col;
+  }
+
+  mat3 getCameraMatrix(vec3 ro, vec3 ta) {
+    vec3 cw = normalize(ta - ro);
+    vec3 up = vec3(0.0, 1.0, 0.0);
+    vec3 cu = normalize(cross(cw, up));
+    vec3 cv = cross(cu, cw);
+    return mat3(cu, cv, cw);
+  }
+  `;
+
+  // ---- SHADER 1: KERR-SCHWARZSCHILD BLACK HOLE ----
+  const SHADER_BLACKHOLE = COMMON_GLSL + `
+  void main() {
+    vec2 uv = (gl_FragCoord.xy - 0.5 * uResolution) / uResolution.y;
+    mat3 cam = getCameraMatrix(uCamPos, uCamTarget);
+    vec3 ro = uCamPos;
+    vec3 rd = normalize(cam * vec3(uv, uFov));
+
+    float M = uP1;
+    float spin = uP2;
+    float diskBright = uP3;
+    float dopplerAmt = uP4;
+    float jetOn = uP5;
+
+    float rs = 1.05 * M;
+    float rH = 0.5 * rs * (1.0 + sqrt(max(0.02, 1.0 - spin * spin * 0.65)));
+    float rInner = rH * mix(2.75, 1.38, spin * 0.85);
+    float rOuter = rH * 6.4;
+
+    vec3 p = ro;
+    vec3 v = rd;
+    vec3 col = vec3(0.0);
+    float transmit = 1.0;
+    bool hitHorizon = false;
+    float minR = 1e6;
+
+    for (int i = 0; i < 240; i++) {
+      if (i >= uSteps) break;
+      float r = length(p);
+      minR = min(minR, r);
+
+      if (r < rH * 1.01) {
+        hitHorizon = true;
+        break;
+      }
+      if (r > 32.0 && dot(p, v) > 0.0) {
+        break;
+      }
+
+      // Adaptive geodesic step size
+      float dt = clamp(0.045 * r + 0.012 * (r - rH), 0.028, 0.55);
+      // Refine step near equatorial disk plane
+      if (abs(p.y) < 0.7 && r < rOuter * 1.15) {
+        dt = min(dt, max(0.028, abs(p.y) * 0.45 + 0.025));
+      }
+
+      // Exact Schwarzschild null geodesic acceleration: a = -1.5 * rs * h^2 / r^5 * p
+      vec3 hVec = cross(p, v);
+      float h2 = dot(hVec, hVec);
+      vec3 acc = -1.5 * rs * h2 * p / pow(r, 5.0);
+
+      // Kerr frame-dragging azimuthal twist near ergosphere
+      vec3 drag = cross(vec3(0.0, 1.0, 0.0), p);
+      acc += drag * (spin * rs * rs * 0.35) / pow(r, 4.2);
+
+      vec3 pPrev = p;
+      v = normalize(v + acc * dt);
+      p += v * dt;
+
+      // Volumetric Accretion Disk sampling
+      float rMid = length(p.xz);
+      float diskThick = 0.045 + 0.095 * smoothstep(rInner, rOuter, rMid);
+      if (rMid > rInner * 0.92 && rMid < rOuter && abs(p.y) < diskThick * 2.8) {
+        float yProfile = exp(-(p.y * p.y) / (diskThick * diskThick * 0.55));
+        float radialFade = smoothstep(rInner * 0.92, rInner * 1.25, rMid) * (1.0 - smoothstep(rOuter * 0.58, rOuter, rMid));
+
+        // Keplerian differential orbital swirl
+        float angle = atan(p.z, p.x);
+        float omega = 1.65 / pow(max(rMid, 0.4), 1.25);
+        float swirlAngle = angle + uTime * omega + 3.2 * log(rMid / rInner + 0.25);
+        vec3 samplePos = vec3(cos(swirlAngle) * rMid * 0.85, p.y * 4.5, sin(swirlAngle) * rMid * 0.85);
+
+        float plasma = fbm(samplePos * 1.45 + vec3(0.0, 0.0, uTime * 0.18));
+        float filaments = smoothstep(0.24, 0.82, plasma);
+        float rings = 0.65 + 0.35 * sin(rMid * 8.5 - uTime * 2.2 + plasma * 4.0);
+        float dens = yProfile * radialFade * (0.28 + 0.95 * filaments * rings);
+
+        if (dens > 0.002) {
+          // Tangential orbital velocity for Relativistic Doppler Beaming
+          vec3 velDir = normalize(vec3(-p.z, 0.0, p.x));
+          float beta = clamp(sqrt(0.5 * rs / max(rMid, rInner * 0.8)) * (0.85 + 0.25 * spin), 0.1, 0.72);
+          float doppler = clamp(1.0 + dopplerAmt * beta * dot(velDir, -v), 0.35, 2.25);
+          float beaming = pow(doppler, 2.75);
+
+          // Temperature gradient (hotter inside, shifted by Doppler)
+          float temp = mix(1.38, 0.25, clamp((rMid - rInner) / (rOuter - rInner), 0.0, 1.0));
+          temp *= mix(1.0, doppler, 0.52);
+
+          vec3 diskCol = blackbody(temp) * beaming * diskBright * 1.35;
+          float alpha = clamp(dens * dt * 2.1, 0.0, 0.88);
+          col += transmit * diskCol * alpha;
+          transmit *= (1.0 - alpha * 0.72);
+          if (transmit < 0.02) break;
+        }
+      }
+
+      // Relativistic Synchrotron Polar Jets
+      if (jetOn > 0.5 && abs(p.y) > rH * 1.1 && abs(p.y) < 12.0) {
+        float coneR = 0.22 * rH + abs(p.y) * 0.14;
+        float distAxis = length(p.xz);
+        if (distAxis < coneR * 2.2) {
+          float jetProf = exp(-(distAxis * distAxis) / (coneR * coneR * 0.45));
+          float jetFade = smoothstep(rH * 1.05, rH * 2.4, abs(p.y)) * exp(-abs(p.y) * 0.22);
+          float jNoise = fbm(vec3(p.xz * 2.2, abs(p.y) * 0.85 - uTime * 2.4));
+          vec3 jetCol = mix(vec3(0.25, 0.55, 1.4), vec3(0.75, 0.45, 1.5), jNoise);
+          col += transmit * jetCol * jetProf * jetFade * (0.4 + 0.8 * jNoise) * dt * (0.45 + 0.55 * spin) * 0.85;
+        }
+      }
+    }
+
+    // Photon ring caustic glow for rays grazing the photon sphere
+    float photonRing = exp(-abs(minR - 1.52 * rs) * 7.5) * (hitHorizon ? 0.35 : 1.0);
+    col += vec3(1.15, 0.88, 0.65) * photonRing * 0.42 * diskBright * transmit;
+
+    if (!hitHorizon) {
+      col += transmit * cosmicSkyA(v);
+    }
+
+    fragColor = vec4(col, 1.0);
+  }`;
+
+  // ---- SHADER 2: MORRIS-THORNE TRAVERSABLE WORMHOLE ----
+  const SHADER_WORMHOLE = COMMON_GLSL + `
+  void main() {
+    vec2 uv = (gl_FragCoord.xy - 0.5 * uResolution) / uResolution.y;
+
+    float b0 = uP1;        // Throat radius
+    float W = uP2;         // Throat curvature length scale
+    float camL = uP3;      // Observer radial coordinate l (+ Universe A, - Universe B)
+    float exoticAmt = uP4; // Exotic matter ring glow
+    float showGrid = uP5;
+
+    // Build camera orientation on the 3D manifold
+    mat3 cam = getCameraMatrix(uCamPos, vec3(0.0));
+    vec3 rd = normalize(cam * vec3(uv, uFov));
+
+    // Direction from throat to camera in local flat tangent space
+    vec3 radialAxis = normalize(uCamPos);
+    // Project ray into radial (pl) and tangential (h) components of Morris-Thorne metric
+    // Metric: ds^2 = -dt^2 + dl^2 + r(l)^2 dOmega^2, with r(l) = sqrt(b0^2 + (l / W)^2)
+    float l = camL;
+    float sgnStart = (camL >= 0.0) ? 1.0 : -1.0;
+
+    // When camL crosses 0, keep looking smoothly forward through the throat
+    float pl = dot(rd, radialAxis) * (camL >= 0.0 ? 1.0 : -1.0);
+    vec3 tangVec = rd - radialAxis * dot(rd, radialAxis);
+    float sinAlpha = length(tangVec);
+    vec3 tangDir = (sinAlpha > 1e-5) ? (tangVec / sinAlpha) : normalize(cross(radialAxis, vec3(0.0, 1.0, 0.1)));
+
+    float r0 = sqrt(b0 * b0 + (l * l) / (W * W));
+    float h = r0 * sinAlpha; // Conserved angular momentum along geodesic
+
+    // Unit sphere direction n starts at radialAxis and rotates toward tangDir by angle psi
+    float psi = 0.0;
+    vec3 glow = vec3(0.0);
+
+    for (int i = 0; i < 240; i++) {
+      if (i >= uSteps) break;
+      float r2 = b0 * b0 + (l * l) / (W * W);
+      float r = sqrt(r2);
+
+      // Adaptive step along affine parameter
+      float dt = clamp(0.055 * r + 0.03 * abs(l), 0.035, 0.65);
+
+      // Exact Morris-Thorne geodesic equation:
+      // d^2 l / d lambda^2 = h^2 * r'(l) / r(l)^3, where r'(l) = l / (W^2 * r)
+      float dpl = (h * h * l) / (W * W * r2 * r2);
+      pl += dpl * dt;
+      l += pl * dt;
+      psi += (h / r2) * dt;
+
+      // Exotic matter negative-energy shimmering shell right at the throat (l ~ 0)
+      if (exoticAmt > 0.01 && abs(l) < 1.35 * W) {
+        float throatProx = exp(-(l * l) / (0.28 * W * W));
+        vec3 nCur = cos(psi) * radialAxis + sin(psi) * tangDir;
+        float eNoise = fbm(nCur * 4.5 + vec3(l * 1.5, uTime * 0.45, -uTime * 0.3));
+        vec3 eCol = mix(vec3(0.08, 0.85, 1.25), vec3(0.75, 0.25, 1.35), eNoise);
+        float ringBoost = smoothstep(0.25, 0.95, abs(h / max(b0, 0.1) - 1.0) < 0.35 ? 1.0 : 0.4);
+        glow += eCol * throatProx * (0.25 + 0.85 * pow(eNoise, 1.8)) * dt * exoticAmt * 0.42 * ringBoost;
+      }
+
+      if (abs(l) > 26.0 && l * pl > 0.0) {
+        break;
+      }
+    }
+
+    vec3 finalDir = normalize(cos(psi) * radialAxis + sin(psi) * tangDir);
+    // Flip direction naturally when emerging on the other side
+    vec3 skyCol = (l >= 0.0) ? cosmicSkyA(finalDir) : cosmicSkyB(finalDir);
+
+    // Optional spacetime coordinate grid
+    if (showGrid > 0.5) {
+      float theta = acos(clamp(finalDir.y, -1.0, 1.0));
+      float phi = atan(finalDir.z, finalDir.x);
+      float g1 = smoothstep(0.95, 0.995, abs(cos(theta * 12.0)));
+      float g2 = smoothstep(0.95, 0.995, abs(cos(phi * 12.0)));
+      vec3 gCol = (l >= 0.0) ? vec3(0.15, 0.75, 1.1) : vec3(1.1, 0.65, 0.2);
+      skyCol += gCol * max(g1, g2) * 0.38;
+    }
+
+    // Subtle throat Einstein ring highlight
+    float edgeRing = exp(-abs(h - b0) * 6.5) * (0.4 + 0.6 * exoticAmt);
+    glow += vec3(0.55, 0.88, 1.35) * edgeRing * 0.55;
+
+    fragColor = vec4(skyCol + glow, 1.0);
+  }`;
+
+  // ---- SHADER 3: HAWKING RADIATION & QUANTUM VACUUM ----
+  const SHADER_HAWKING = COMMON_GLSL + `
+  void main() {
+    vec2 uv = (gl_FragCoord.xy - 0.5 * uResolution) / uResolution.y;
+    mat3 cam = getCameraMatrix(uCamPos, uCamTarget);
+    vec3 ro = uCamPos;
+    vec3 rd = normalize(cam * vec3(uv, uFov));
+
+    float massParam = uP1;     // 0.18 (hot micro BH) to 1.6 (cooler BH)
+    float pairDens = uP2;
+    float radBright = uP3;
+    float holoGrid = uP4;
+    float tidalSplit = uP5;
+
+    float rH = 0.65 + 0.95 * massParam;
+    // Hawking temperature scales inversely with mass: T_H ~ 1/M
+    float tempNorm = clamp(0.95 / max(massParam, 0.16), 0.45, 2.5);
+    vec3 hawkingTint = blackbody(tempNorm);
+
+    vec3 p = ro;
+    vec3 v = rd;
+    vec3 col = vec3(0.0);
+    float transmit = 1.0;
+    bool hitHorizon = false;
+    vec3 hitPos = vec3(0.0);
+    float minR = 1e6;
+
+    for (int i = 0; i < 240; i++) {
+      if (i >= uSteps) break;
+      float r = length(p);
+      minR = min(minR, r);
+
+      if (r < rH) {
+        hitHorizon = true;
+        hitPos = p;
+        break;
+      }
+      if (r > 24.0 && dot(p, v) > 0.0) break;
+
+      float dt = clamp(0.045 * r + 0.015 * (r - rH), 0.03, 0.45);
+      vec3 hVec = cross(p, v);
+      float h2 = dot(hVec, hVec);
+      vec3 acc = -1.5 * rH * h2 * p / pow(r, 5.0);
+      v = normalize(v + acc * dt);
+      p += v * dt;
+
+      // Quantum Vacuum Fluctuations & Virtual Particle-Antiparticle Pairs near horizon
+      float shellDist = r - rH;
+      if (shellDist > 0.02 && shellDist < 3.6) {
+        float radialFalloff = exp(-shellDist * 1.15);
+
+        // Escaping positive-energy Hawking quanta (flowing outward)
+        vec3 dir = normalize(p);
+        vec3 flowOut = dir * (r * 2.8 - uTime * (1.2 + 0.9 * tidalSplit));
+        float nOut = fbm(flowOut * 1.35 + vec3(uTime * 0.25));
+        float quantaOut = pow(smoothstep(0.46, 0.88, nOut), 2.4);
+
+        // Infalling negative-energy partner particles (spiraling inward)
+        vec3 flowIn = dir * (r * 3.4 + uTime * (1.4 + 0.8 * tidalSplit));
+        float nIn = fbm(flowIn * 1.65 - vec3(0.0, uTime * 0.35, 0.0));
+        float quantaIn = pow(smoothstep(0.52, 0.90, nIn), 2.6) * exp(-shellDist * 2.4);
+
+        // Discrete spark-like virtual pair bursts
+        vec3 cell = floor(p * 3.6 + dir * (-uTime * 0.9));
+        vec3 cf = fract(p * 3.6 + dir * (-uTime * 0.9)) - 0.5;
+        vec3 rnd = hash33(cell);
+        float blink = 0.5 + 0.5 * sin(uTime * (3.5 + 4.0 * rnd.z) + rnd.x * 20.0);
+        float spark = smoothstep(0.18, 0.02, length(cf - (rnd - 0.5) * 0.55)) * step(0.68, rnd.y) * blink;
+
+        vec3 outCol = mix(hawkingTint, vec3(0.35, 0.88, 1.45), 0.35) * (quantaOut * 1.15 + spark * 2.2);
+        vec3 inCol = vec3(1.15, 0.16, 0.45) * quantaIn * 1.35;
+
+        // Thermal Hawking corona glow
+        vec3 corona = hawkingTint * exp(-shellDist * 2.1) * (0.35 + 0.45 * tempNorm) * 0.32;
+
+        vec3 stepEmit = (corona + (outCol + inCol) * pairDens * 0.72) * radialFalloff * radBright * dt;
+        col += transmit * stepEmit;
+      }
+    }
+
+    if (hitHorizon) {
+      // Optional Holographic Planck-scale Information Grid on the stretched horizon
+      if (holoGrid > 0.5) {
+        vec3 n = normalize(hitPos);
+        float fresnel = pow(1.0 - abs(dot(n, -v)), 2.8);
+        float lat = abs(sin(acos(clamp(n.y, -1.0, 1.0)) * 22.0));
+        float lon = abs(sin((atan(n.z, n.x) + uTime * 0.25) * 22.0));
+        float grid = smoothstep(0.92, 0.99, max(lat, lon));
+        col += hawkingTint * (grid * 0.45 + fresnel * 0.85) * radBright * 0.75;
+      }
+    } else {
+      float ring = exp(-abs(minR - 1.5 * rH) * 5.5);
+      col += hawkingTint * ring * 0.55 * radBright;
+      col += transmit * cosmicSkyA(v);
+    }
+
+    fragColor = vec4(col, 1.0);
+  }`;
+
+  // ---- SHADER 4: SPACETIME CURVATURE & GRAVITATIONAL WAVES ----
+  const SHADER_GRAVWAVES = COMMON_GLSL + `
+  float spacetimeHeight(vec2 xz, vec2 b1, vec2 b2, float massDepth, float freq, float amp) {
+    float d1 = length(xz - b1);
+    float d2 = length(xz - b2);
+    // Twin Flamm paraboloid-inspired relativistic gravity wells
+    float wells = -massDepth * (1.25 / sqrt(d1 * d1 + 0.32) + 1.25 / sqrt(d2 * d2 + 0.32));
+
+    // Propagating quadrupole gravitational waves (m = 2 spiral arms)
+    float r = length(xz);
+    float phi = atan(xz.y, xz.x);
+    float k = 1.65 * freq;
+    float wavePhase = k * r - 2.0 * (uTime * freq * 1.45 - phi);
+    float waveEnv = smoothstep(0.75, 2.6, r) / sqrt(r * 0.55 + 0.85);
+    float ripple = amp * 0.38 * sin(wavePhase) * waveEnv;
+
+    return wells + ripple;
+  }
+
+  void main() {
+    vec2 uv = (gl_FragCoord.xy - 0.5 * uResolution) / uResolution.y;
+    mat3 cam = getCameraMatrix(uCamPos, uCamTarget);
+    vec3 ro = uCamPos;
+    vec3 rd = normalize(cam * vec3(uv, uFov));
+
+    float massDepth = uP1;
+    float freq = uP2;
+    float amp = uP3;
+    float sep = uP4;
+    float showHalo = uP5;
+
+    float ang = uTime * freq * 1.45;
+    vec2 b1 = vec2(cos(ang), sin(ang)) * sep;
+    vec2 b2 = -b1;
+
+    vec3 col = cosmicSkyA(rd) * 0.75;
+
+    // Raymarch the 3D curved spacetime manifold
+    float t = 0.2;
+    bool hitSheet = false;
+    vec3 hitP = vec3(0.0);
+
+    for (int i = 0; i < 200; i++) {
+      if (i >= uSteps) break;
+      vec3 p = ro + rd * t;
+      if (length(p.xz) > 18.0 && t > 14.0) break;
+
+      float h = spacetimeHeight(p.xz, b1, b2, massDepth, freq, amp);
+      float diff = p.y - h;
+      if (diff < 0.025) {
+        // Binary refine intersection
+        float tLo = t - 0.16;
+        float tHi = t;
+        for (int j = 0; j < 5; j++) {
+          float tMid = 0.5 * (tLo + tHi);
+          vec3 pm = ro + rd * tMid;
+          if (pm.y - spacetimeHeight(pm.xz, b1, b2, massDepth, freq, amp) > 0.0) tLo = tMid;
+          else tHi = tMid;
+        }
+        hitP = ro + rd * tHi;
+        hitSheet = true;
+        break;
+      }
+      t += clamp(diff * 0.42, 0.04, 0.45);
+      if (t > 36.0) break;
+    }
+
+    if (hitSheet && length(hitP.xz) < 16.5) {
+      float eps = 0.05;
+      float hC = spacetimeHeight(hitP.xz, b1, b2, massDepth, freq, amp);
+      float hX = spacetimeHeight(hitP.xz + vec2(eps, 0.0), b1, b2, massDepth, freq, amp);
+      float hZ = spacetimeHeight(hitP.xz + vec2(0.0, eps), b1, b2, massDepth, freq, amp);
+      vec3 n = normalize(vec3(hC - hX, eps, hC - hZ));
+
+      // Coordinate grid lines warped along the manifold
+      vec2 gridUv = hitP.xz * 1.25;
+      vec2 g = abs(fract(gridUv - 0.5) - 0.5) / fwidth(gridUv);
+      float line = 1.0 - min(min(g.x, g.y), 1.0);
+
+      // Secondary fine subgrid
+      vec2 gridUv2 = hitP.xz * 5.0;
+      vec2 g2 = abs(fract(gridUv2 - 0.5) - 0.5) / fwidth(gridUv2);
+      float line2 = (1.0 - min(min(g2.x, g2.y), 1.0)) * 0.28;
+
+      float radialFade = 1.0 - smoothstep(9.5, 16.2, length(hitP.xz));
+      float strainVal = clamp(-hitP.y * 0.35, 0.0, 1.5);
+      float waveGlow = clamp(abs(hC + massDepth * (1.25 / sqrt(dot(hitP.xz - b1, hitP.xz - b1) + 0.32) + 1.25 / sqrt(dot(hitP.xz - b2, hitP.xz - b2) + 0.32))) * 2.5, 0.0, 1.2);
+
+      vec3 gridCol = mix(vec3(0.08, 0.62, 1.15), vec3(0.95, 0.35, 0.85), clamp(strainVal * 0.7, 0.0, 1.0));
+      gridCol = mix(gridCol, vec3(1.25, 0.85, 0.35), smoothstep(0.8, 1.5, strainVal));
+      gridCol += vec3(0.25, 0.95, 1.1) * waveGlow * 0.55;
+
+      float fresnel = pow(1.0 - max(dot(n, -rd), 0.0), 2.5);
+      vec3 sheetCol = vec3(0.02, 0.05, 0.14) * (0.4 + 0.6 * fresnel) + gridCol * (line * 0.95 + line2) + gridCol * waveGlow * 0.18;
+      col = mix(col, sheetCol, radialFade * 0.92);
+    }
+
+    // Render the two orbiting Black Holes hovering above the gravity wells
+    vec3 bhPos1 = vec3(b1.x, 0.35, b1.y);
+    vec3 bhPos2 = vec3(b2.x, 0.35, b2.y);
+    float bhRad = 0.28 + 0.14 * massDepth;
+
+    for (int k = 0; k < 2; k++) {
+      vec3 c = (k == 0) ? bhPos1 : bhPos2;
+      vec3 oc = ro - c;
+      float b = dot(oc, rd);
+      float cVal = dot(oc, oc) - bhRad * bhRad;
+      float disc = b * b - cVal;
+      float closest = length(oc - rd * max(-b, 0.0));
+      // Glowing photon aura around each compact object
+      float aura = exp(-max(closest - bhRad, 0.0) * 5.2);
+      col += vec3(1.2, 0.72, 0.35) * aura * 0.85;
+      if (disc > 0.0 && -b > 0.0) {
+        col = vec3(0.01, 0.01, 0.02) + vec3(0.85, 0.55, 1.15) * pow(1.0 - sqrt(disc) / bhRad, 3.0) * 0.6;
+      }
+    }
+
+    // Optional volumetric quadrupole wave interference halo
+    if (showHalo > 0.5) {
+      float tPlane = (0.35 - ro.y) / rd.y;
+      if (tPlane > 0.0 && tPlane < 30.0) {
+        vec3 hp = ro + rd * tPlane;
+        float r = length(hp.xz);
+        float phi = atan(hp.z, hp.x);
+        float wave = 0.5 + 0.5 * sin(1.65 * freq * r - 2.0 * (uTime * freq * 1.45 - phi));
+        float env = smoothstep(sep * 0.7, sep * 1.5, r) * exp(-r * 0.22);
+        col += vec3(0.18, 0.58, 1.2) * pow(wave, 3.0) * env * amp * 0.32;
+      }
+    }
+
+    fragColor = vec4(col, 1.0);
+  }`;
+
+  // ---- SHADER 5: ALCUBIERRE WARP DRIVE ----
+  const SHADER_ALCUBIERRE = COMMON_GLSL + `
+  float warpShape(float r, float R, float sigma) {
+    float num = tanh(sigma * (r + R)) - tanh(sigma * (r - R));
+    float den = 2.0 * tanh(sigma * R);
+    return num / max(den, 1e-4);
+  }
+
+  void main() {
+    vec2 uv = (gl_FragCoord.xy - 0.5 * uResolution) / uResolution.y;
+    mat3 cam = getCameraMatrix(uCamPos, uCamTarget);
+    vec3 ro = uCamPos;
+    vec3 rd = normalize(cam * vec3(uv, uFov));
+
+    float vs = uP1;         // Warp speed (v_s / c)
+    float sigma = uP2;      // Wall sharpness
+    float R = uP3;          // Bubble radius
+    float exoticAmt = uP4;  // Negative energy torus intensity
+    float dopplerFlow = uP5;
+
+    vec3 p = ro;
+    vec3 v = rd;
+    vec3 col = vec3(0.0);
+    float totalShift = 0.0;
+
+    // Warp travel axis is +Z
+    for (int i = 0; i < 200; i++) {
+      if (i >= uSteps) break;
+      float r = length(p);
+      if (r > 24.0 && dot(p, v) > 0.0) break;
+
+      float dt = clamp(0.05 * r + 0.02 * abs(r - R), 0.03, 0.45);
+
+      // Gradient of Alcubierre shaping function f(r) peaks sharply at the bubble wall (r ~ R)
+      float eps = 0.03;
+      float f0 = warpShape(r, R, sigma);
+      float dfdr = (warpShape(r + eps, R, sigma) - warpShape(r - eps, R, sigma)) / (2.0 * eps);
+
+      // York time expansion scalar: theta ~ v_s * (z / r) * df/dr
+      float york = vs * (p.z / max(r, 0.05)) * dfdr;
+      totalShift += york * dt * 0.14;
+
+      // Spacetime lensing deflection across the warp bubble wall
+      vec3 gradF = (p / max(r, 0.05)) * dfdr;
+      vec3 defl = gradF * (vs * 0.18 * (p.z / max(r, 0.05))) + vec3(0.0, 0.0, 1.0) * dfdr * vs * 0.06;
+      v = normalize(v + defl * dt);
+      p += v * dt;
+
+      // Negative Energy Density Torus (T_00 ~ -(v_s^2 / 32pi) * (rho^2 / r^2) * (df/dr)^2)
+      float rho = length(p.xy);
+      float wallMask = abs(dfdr);
+      if (wallMask > 0.04) {
+        float torusMask = (rho * rho) / max(r * r, 0.01);
+        float flowNoise = fbm(vec3(p.xy * 1.8, p.z * 1.4 - uTime * (1.2 + vs * 0.4)));
+
+        // Exotic matter ring (cyan-violet)
+        vec3 negCol = mix(vec3(0.10, 0.85, 1.35), vec3(0.75, 0.22, 1.45), flowNoise);
+        col += negCol * wallMask * torusMask * exoticAmt * (0.35 + 0.75 * flowNoise) * dt * 0.34;
+
+        // Front contraction (blueshift) vs Rear expansion (redshift)
+        if (dopplerFlow > 0.5) {
+          float front = max(p.z / max(r, 0.05), 0.0);
+          float back = max(-p.z / max(r, 0.05), 0.0);
+          col += vec3(0.35, 0.72, 1.65) * front * wallMask * dt * 0.24 * clamp(vs * 0.3, 0.3, 1.6);
+          col += vec3(1.55, 0.24, 0.12) * back * wallMask * dt * 0.24 * clamp(vs * 0.3, 0.3, 1.6);
+        }
+      }
+
+      // Central Warp Probe / Nacelle Ring sitting calmly in flat spacetime inside the bubble
+      float shipRing = abs(length(vec2(length(p.xy) - 0.42, p.z)) - 0.045);
+      float shipCore = length(p * vec3(1.6, 1.6, 0.65)) - 0.26;
+      if (shipRing < 0.03 || shipCore < 0.02) {
+        vec3 glowCore = (shipRing < shipCore) ? vec3(0.35, 0.92, 1.55) * 1.6 : vec3(0.85, 0.92, 1.05) * 0.95;
+        col += glowCore * 0.65;
+        break;
+      }
+    }
+
+    // Background sky shifted by cumulative York-time contraction/expansion
+    vec3 sky = cosmicSkyA(v);
+    float s = clamp(totalShift, -0.85, 0.85);
+    vec3 shiftTint = mix(vec3(1.35, 0.65, 0.45), vec3(0.62, 0.88, 1.55), s * 0.5 + 0.5);
+    col += sky * shiftTint;
+
+    fragColor = vec4(col, 1.0);
+  }`;
+
+  // ---- SHADER 6: SPECIAL RELATIVITY & RELATIVISTIC STARFLIGHT ----
+  const SHADER_RELATIVITY = COMMON_GLSL + `
+  // Approximate spectral Doppler color shift
+  vec3 dopplerShiftColor(vec3 baseCol, float D, float amt) {
+    float logD = log2(clamp(D, 0.12, 8.0)) * amt;
+    vec3 blueCol = vec3(0.42, 0.74, 1.55) * length(baseCol);
+    vec3 redCol  = vec3(1.45, 0.22, 0.08) * length(baseCol);
+    if (logD > 0.0) return mix(baseCol, blueCol, clamp(logD * 0.48, 0.0, 0.92));
+    return mix(baseCol, redCol, clamp(-logD * 0.52, 0.0, 0.92));
+  }
+
+  void main() {
+    vec2 uv = (gl_FragCoord.xy - 0.5 * uResolution) / uResolution.y;
+
+    float beta = clamp(uP1, 0.0, 0.995);
+    float dopplerAmt = uP2;
+    float tunnelBright = uP3;
+    float beamAmt = uP4;
+    float showGrid = uP5;
+
+    float gamma = 1.0 / sqrt(max(1e-4, 1.0 - beta * beta));
+
+    // Allow user to look around from inside the relativistic cockpit
+    mat3 cam = getCameraMatrix(uCamPos, vec3(0.0));
+    vec3 rd = normalize(cam * vec3(uv, uFov));
+
+    // Ship travels along -Z axis in rest frame; forward direction is vec3(0, 0, -1)
+    vec3 fwd = vec3(0.0, 0.0, -1.0);
+    float cosThetaObs = dot(rd, fwd);
+
+    // Exact Relativistic Aberration: transform observer ray angle to cosmic rest frame
+    float cosThetaRest = (cosThetaObs - beta) / (1.0 - beta * cosThetaObs);
+    vec3 perp = rd - fwd * cosThetaObs;
+    float sinObs = length(perp);
+    float sinRest = sqrt(max(0.0, 1.0 - cosThetaRest * cosThetaRest));
+    vec3 restDir = normalize(fwd * cosThetaRest + (sinObs > 1e-5 ? (perp / sinObs) * sinRest : vec3(0.0)));
+
+    // Exact Relativistic Doppler Factor D = 1 / (gamma * (1 - beta * cos(theta_obs)))
+    float D = 1.0 / (gamma * (1.0 - beta * cosThetaObs));
+    float beaming = mix(1.0, pow(clamp(D, 0.2, 4.2), 1.85), beamAmt * 0.65);
+
+    // Aberrated cosmic skybox
+    vec3 col = dopplerShiftColor(cosmicSkyA(restDir), D, dopplerAmt) * beaming;
+
+    // 3D Volumetric Starstream & Lorentz-Contracted Coordinate Rings
+    float travelZ = uTime * (1.5 + beta * 14.0 * sqrt(gamma));
+    vec3 ray = restDir;
+
+    for (int i = 0; i < 42; i++) {
+      if (i >= uSteps / 2) break;
+      float zLayer = float(i) * 1.15 + fract(-travelZ * 0.25) * 1.15;
+      if (ray.z >= -0.02) break;
+      float t = -zLayer / ray.z;
+      if (t <= 0.0 || t > 55.0) continue;
+
+      vec3 p = ray * t;
+      p.z -= floor(travelZ * 0.25) * 1.15;
+
+      // Lorentz-contracted cosmic milepost rings
+      if (showGrid > 0.5) {
+        float rXY = length(p.xy);
+        float ring = exp(-abs(rXY - 3.6) * 14.0) * exp(-t * 0.055);
+        float ticks = 0.5 + 0.5 * cos(atan(p.y, p.x) * 12.0);
+        vec3 ringCol = dopplerShiftColor(vec3(0.22, 0.72, 1.15), D, dopplerAmt);
+        col += ringCol * ring * (0.35 + 0.65 * ticks) * 0.22 * tunnelBright;
+      }
+
+      // Passing star streaks
+      vec2 cell = floor(p.xy * 0.85);
+      vec2 cf = fract(p.xy * 0.85) - 0.5;
+      vec3 rnd = hash33(vec3(cell, floor(zLayer + floor(travelZ * 0.25) * 1.15)));
+      if (rnd.x > 0.76) {
+        float dStar = length(cf - (rnd.yz - 0.5) * 0.65);
+        float glow = smoothstep(0.14, 0.01, dStar) * exp(-t * 0.045);
+        vec3 sCol = dopplerShiftColor(mix(vec3(1.0, 0.85, 0.65), vec3(0.7, 0.9, 1.0), rnd.y), D, dopplerAmt);
+        col += sCol * glow * beaming * tunnelBright * 0.85;
+      }
+    }
+
+    // Relativistic Cherenkov / CMB forward blueshift corona at extreme beta > 0.85
+    if (beta > 0.75) {
+      float fwdGlow = pow(max(cosThetaObs, 0.0), 12.0) * smoothstep(0.75, 0.995, beta);
+      col += vec3(0.45, 0.78, 1.65) * fwdGlow * 0.85 * tunnelBright;
+    }
+
+    fragColor = vec4(col, 1.0);
+  }`;
+
+  // ---- POST-PROCESSING PASS: HDR RADIAL BLOOM + CHROMATIC ABERRATION + ACES FILMIC ----
+  const SHADER_POST = `#version 300 es
+  precision highp float;
+  in vec2 vUv;
+  out vec4 fragColor;
+
+  uniform sampler2D uScene;
+  uniform vec2 uTexelSize;
+  uniform float uBloom;
+  uniform float uChromatic;
+
+  vec3 acesFilm(vec3 x) {
+    const float a = 2.51;
+    const float b = 0.03;
+    const float c = 2.43;
+    const float d = 0.59;
+    const float e = 0.14;
+    return clamp((x * (a * x + b)) / (x * (c * x + d) + e), 0.0, 1.0);
+  }
+
+  vec3 sampleBright(vec2 uv) {
+    vec3 c = texture(uScene, clamp(uv, 0.001, 0.999)).rgb;
+    float lum = dot(c, vec3(0.2126, 0.7152, 0.0722));
+    return c * smoothstep(0.68, 1.65, lum);
+  }
+
+  void main() {
+    vec2 dir = vUv - 0.5;
+    float dist = length(dir);
+
+    // Subtle radial lens chromatic aberration
+    vec2 caOffset = dir * dist * uChromatic * 0.012;
+    float r = texture(uScene, clamp(vUv + caOffset, 0.001, 0.999)).r;
+    float g = texture(uScene, vUv).g;
+    float b = texture(uScene, clamp(vUv - caOffset, 0.001, 0.999)).b;
+    vec3 baseCol = vec3(r, g, b);
+
+    // Multi-ring GPU Bloom kernel (16 taps across 2 radii)
+    vec3 bloom = vec3(0.0);
+    if (uBloom > 0.01) {
+      float rad1 = 2.6;
+      float rad2 = 6.2;
+      for (int i = 0; i < 8; i++) {
+        float a = float(i) * 0.78539816;
+        vec2 o = vec2(cos(a), sin(a)) * uTexelSize;
+        bloom += sampleBright(vUv + o * rad1) * 0.65;
+        bloom += sampleBright(vUv + o * rad2) * 0.35;
+      }
+      bloom /= 8.0;
+    }
+
+    vec3 col = baseCol + bloom * uBloom * 1.15;
+
+    // ACES Filmic Tone Mapping + Gamma
+    col = acesFilm(col * 1.05);
+    col = pow(col, vec3(1.0 / 2.2));
+
+    // Gentle cinematic vignette
+    col *= 1.0 - 0.24 * dist * dist;
+
+    fragColor = vec4(col, 1.0);
+  }`;
+
+  // =========================================================================
+  // 3. WEBGL2 ENGINE & FRAMEBUFFER PIPELINE
+  // =========================================================================
+  const canvas = document.getElementById('glCanvas');
+  const gl = canvas.getContext('webgl2', {
+    antialias: false,
+    alpha: false,
+    powerPreference: 'high-performance',
+    preserveDrawingBuffer: true
+  });
+
+  if (!gl) {
+    document.getElementById('fallbackError').style.display = 'flex';
+    return;
+  }
+
+  const extFloat = gl.getExtension('EXT_color_buffer_float');
+  const extLinearFloat = gl.getExtension('OES_texture_float_linear');
+  const extDebug = gl.getExtension('WEBGL_debug_renderer_info');
+
+  const gpuRendererName = extDebug
+    ? gl.getParameter(extDebug.UNMASKED_RENDERER_WEBGL)
+    : gl.getParameter(gl.RENDERER);
+
+  document.getElementById('gpuName').textContent = 'GPU: ' + gpuRendererName;
+  document.getElementById('gpuPipelineInfo').textContent =
+    `WebGL2 Active • HDR Float Buffer: ${extFloat ? 'RGBA16F (HDR)' : 'RGBA8'} • Dual-Pass ACES Bloom • Renderer: ${gpuRendererName}`;
+
+  function compileShader(type, src) {
+    const sh = gl.createShader(type);
+    gl.shaderSource(sh, src);
+    gl.compileShader(sh);
+    if (!gl.getShaderParameter(sh, gl.COMPILE_STATUS)) {
+      console.error('Shader compile error:', gl.getShaderInfoLog(sh));
+      gl.deleteShader(sh);
+      return null;
+    }
+    return sh;
+  }
+
+  function createProgram(vsSrc, fsSrc) {
+    const vs = compileShader(gl.VERTEX_SHADER, vsSrc);
+    const fs = compileShader(gl.FRAGMENT_SHADER, fsSrc);
+    if (!vs || !fs) return null;
+    const prog = gl.createProgram();
+    gl.attachShader(prog, vs);
+    gl.attachShader(prog, fs);
+    gl.linkProgram(prog);
+    if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) {
+      console.error('Program link error:', gl.getProgramInfoLog(prog));
+      gl.deleteProgram(prog);
+      return null;
+    }
+    gl.deleteShader(vs);
+    gl.deleteShader(fs);
+    return prog;
+  }
+
+  const SHADER_SOURCES = {
+    blackhole: SHADER_BLACKHOLE,
+    wormhole: SHADER_WORMHOLE,
+    hawking: SHADER_HAWKING,
+    gravwaves: SHADER_GRAVWAVES,
+    alcubierre: SHADER_ALCUBIERRE,
+    relativity: SHADER_RELATIVITY
+  };
+
+  const programs = {};
+  function getSceneProgram(mode) {
+    if (!programs[mode]) {
+      const p = createProgram(FULLSCREEN_VS, SHADER_SOURCES[mode]);
+      if (p) {
+        programs[mode] = {
+          prog: p,
+          uResolution: gl.getUniformLocation(p, 'uResolution'),
+          uTime: gl.getUniformLocation(p, 'uTime'),
+          uCamPos: gl.getUniformLocation(p, 'uCamPos'),
+          uCamTarget: gl.getUniformLocation(p, 'uCamTarget'),
+          uFov: gl.getUniformLocation(p, 'uFov'),
+          uSteps: gl.getUniformLocation(p, 'uSteps'),
+          uP1: gl.getUniformLocation(p, 'uP1'),
+          uP2: gl.getUniformLocation(p, 'uP2'),
+          uP3: gl.getUniformLocation(p, 'uP3'),
+          uP4: gl.getUniformLocation(p, 'uP4'),
+          uP5: gl.getUniformLocation(p, 'uP5')
+        };
+      }
+    }
+    return programs[mode];
+  }
+
+  const postProgRaw = createProgram(FULLSCREEN_VS, SHADER_POST);
+  const postProg = {
+    prog: postProgRaw,
+    uScene: gl.getUniformLocation(postProgRaw, 'uScene'),
+    uTexelSize: gl.getUniformLocation(postProgRaw, 'uTexelSize'),
+    uBloom: gl.getUniformLocation(postProgRaw, 'uBloom'),
+    uChromatic: gl.getUniformLocation(postProgRaw, 'uChromatic')
+  };
+
+  const vao = gl.createVertexArray();
+  gl.bindVertexArray(vao);
+
+  // Offscreen HDR Framebuffer for Pass 1
+  let fbo = gl.createFramebuffer();
+  let fboTex = gl.createTexture();
+  let fboW = 1, fboH = 1;
+
+  function resizeFramebuffer(w, h) {
+    fboW = Math.max(64, Math.floor(w));
+    fboH = Math.max(64, Math.floor(h));
+    gl.bindTexture(gl.TEXTURE_2D, fboTex);
+    if (extFloat) {
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA16F, fboW, fboH, 0, gl.RGBA, gl.HALF_FLOAT, null);
+    } else {
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, fboW, fboH, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+    }
+    const filter = (!extFloat || extLinearFloat) ? gl.LINEAR : gl.NEAREST;
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, filter);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, filter);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+
+    gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, fboTex, 0);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+  }
+
+  // =========================================================================
+  // 4. APPLICATION STATE & INTERACTION
+  // =========================================================================
+  const state = {
+    mode: 'blackhole',
+    paused: false,
+    simTime: 0.0,
+    timeScale: 1.0,
+    resScale: 1.0,
+    raySteps: 110,
+    bloom: 0.65,
+    chromatic: 0.25,
+    autoOrbit: true,
+    cam: { yaw: 0.35, pitch: 0.24, dist: 9.2, targetYaw: 0.35, targetPitch: 0.24, targetDist: 9.2 },
+    params: {},
+    animating: null, // Active scripted animation (wormhole flythrough, hawking evaporation, gw chirp)
+    shipTime: 0.0,
+    earthTime: 0.0
+  };
+
+  // Initialize default parameters for each mode
+  Object.keys(SIM_CONFIGS).forEach(m => {
+    state.params[m] = {};
+    SIM_CONFIGS[m].params.forEach(p => {
+      state.params[m][p.key] = p.val;
+    });
+  });
+
+  function updateCanvasSize() {
+    const dpr = Math.min(window.devicePixelRatio || 1, 2.0);
+    const w = Math.floor(window.innerWidth * dpr * state.resScale);
+    const h = Math.floor(window.innerHeight * dpr * state.resScale);
+    canvas.width = Math.max(320, w);
+    canvas.height = Math.max(240, h);
+    resizeFramebuffer(canvas.width, canvas.height);
+    document.getElementById('resVal').textContent = `${canvas.width}×${canvas.height}`;
+    document.getElementById('stepsVal').textContent = `${state.raySteps} bước`;
+  }
+
+  window.addEventListener('resize', updateCanvasSize);
+  updateCanvasSize();
+
+  // Toast helper
+  let toastTimer = null;
+  function showToast(msg) {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => el.classList.remove('show'), 2400);
+  }
+
+  // =========================================================================
+  // 5. CAMERA ORBIT & ZOOM CONTROLS (MOUSE + TOUCH)
+  // =========================================================================
+  let dragging = false;
+  let lastX = 0, lastY = 0;
+  let pinchDist = 0;
+
+  canvas.addEventListener('mousedown', e => {
+    dragging = true;
+    lastX = e.clientX;
+    lastY = e.clientY;
+  });
+
+  window.addEventListener('mousemove', e => {
+    if (!dragging) return;
+    const dx = e.clientX - lastX;
+    const dy = e.clientY - lastY;
+    lastX = e.clientX;
+    lastY = e.clientY;
+    state.cam.targetYaw -= dx * 0.0065;
+    state.cam.targetPitch = Math.max(-1.42, Math.min(1.42, state.cam.targetPitch + dy * 0.0065));
+  });
+
+  window.addEventListener('mouseup', () => { dragging = false; });
+
+  canvas.addEventListener('wheel', e => {
+    e.preventDefault();
+    const cfg = SIM_CONFIGS[state.mode].camera;
+    state.cam.targetDist = Math.max(cfg.minDist, Math.min(cfg.maxDist, state.cam.targetDist * (1.0 + e.deltaY * 0.001)));
+  }, { passive: false });
+
+  canvas.addEventListener('dblclick', () => {
+    const cfg = SIM_CONFIGS[state.mode].camera;
+    state.cam.targetYaw = cfg.yaw;
+    state.cam.targetPitch = cfg.pitch;
+    state.cam.targetDist = cfg.dist;
+    showToast('Đã đặt lại góc nhìn mặc định');
+  });
+
+  canvas.addEventListener('touchstart', e => {
+    if (e.touches.length === 1) {
+      dragging = true;
+      lastX = e.touches[0].clientX;
+      lastY = e.touches[0].clientY;
+    } else if (e.touches.length === 2) {
+      dragging = false;
+      pinchDist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+    }
+  }, { passive: true });
+
+  canvas.addEventListener('touchmove', e => {
+    if (e.touches.length === 1 && dragging) {
+      const dx = e.touches[0].clientX - lastX;
+      const dy = e.touches[0].clientY - lastY;
+      lastX = e.touches[0].clientX;
+      lastY = e.touches[0].clientY;
+      state.cam.targetYaw -= dx * 0.0075;
+      state.cam.targetPitch = Math.max(-1.42, Math.min(1.42, state.cam.targetPitch + dy * 0.0075));
+    } else if (e.touches.length === 2) {
+      const d = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      if (pinchDist > 0) {
+        const cfg = SIM_CONFIGS[state.mode].camera;
+        state.cam.targetDist = Math.max(cfg.minDist, Math.min(cfg.maxDist, state.cam.targetDist * (pinchDist / d)));
+      }
+      pinchDist = d;
+    }
+  }, { passive: true });
+
+  canvas.addEventListener('touchend', () => { dragging = false; pinchDist = 0; });
+
+  // =========================================================================
+  // 6. AMBIENT COSMIC AUDIO (WEB AUDIO API)
+  // =========================================================================
+  let audioCtx = null;
+  let audioGain = null;
+  let audioFilter = null;
+  let audioPlaying = false;
+
+  function toggleAudio() {
+    const btn = document.getElementById('btnAudio');
+    if (!audioCtx) {
+      const AudioContextCls = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContextCls) {
+        showToast('Trình duyệt không hỗ trợ Web Audio API');
+        return;
+      }
+      audioCtx = new AudioContextCls();
+      audioGain = audioCtx.createGain();
+      audioGain.gain.value = 0.0;
+
+      audioFilter = audioCtx.createBiquadFilter();
+      audioFilter.type = 'lowpass';
+      audioFilter.frequency.value = 180;
+
+      const freqs = [55, 82.41, 110.0, 164.81];
+      freqs.forEach((f, idx) => {
+        const osc = audioCtx.createOscillator();
+        osc.type = idx % 2 === 0 ? 'sine' : 'triangle';
+        osc.frequency.value = f;
+        const g = audioCtx.createGain();
+        g.gain.value = idx === 0 ? 0.35 : 0.14;
+        osc.connect(g);
+        g.connect(audioFilter);
+        osc.start();
+      });
+
+      audioFilter.connect(audioGain);
+      audioGain.connect(audioCtx.destination);
+    }
+
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    audioPlaying = !audioPlaying;
+    audioGain.gain.setTargetAtTime(audioPlaying ? 0.18 : 0.0, audioCtx.currentTime, 0.25);
+    btn.textContent = audioPlaying ? '🔊 Âm thanh' : '🔇 Âm thanh';
+    btn.classList.toggle('active', audioPlaying);
+  }
+
+  // =========================================================================
+  // 7. DYNAMIC UI RENDERING & BINDING
+  // =========================================================================
+  function renderModeUI(mode) {
+    const cfg = SIM_CONFIGS[mode];
+    const pVals = state.params[mode];
+
+    document.getElementById('simTitle').textContent = cfg.title;
+    document.getElementById('simSubtitle').textContent = cfg.subtitle;
+
+    // Sliders & toggles
+    const container = document.getElementById('slidersContainer');
+    container.innerHTML = '';
+
+    cfg.params.forEach(item => {
+      if (item.type === 'toggle') {
+        const row = document.createElement('div');
+        row.className = 'toggle-row';
+        const checked = pVals[item.key] > 0.5 ? 'checked' : '';
+        row.innerHTML = `
+          <span>${item.label}</span>
+          <label class="switch">
+            <input type="checkbox" data-pkey="${item.key}" ${checked}>
+            <span class="switch-track"></span>
+          </label>
+        `;
+        row.querySelector('input').addEventListener('change', e => {
+          state.params[mode][item.key] = e.target.checked ? 1.0 : 0.0;
+          updateTelemetry();
+        });
+        container.appendChild(row);
+      } else {
+        const wrap = document.createElement('div');
+        wrap.className = 'slider-item';
+        const curVal = pVals[item.key];
+        wrap.innerHTML = `
+          <div class="slider-head">
+            <span class="slider-name">${item.label}</span>
+            <span class="slider-val" id="val_${item.key}">${item.fmt(curVal)}</span>
+          </div>
+          <input type="range" id="sl_${item.key}" min="${item.min}" max="${item.max}" step="${item.step}" value="${curVal}">
+        `;
+        const input = wrap.querySelector('input');
+        input.addEventListener('input', e => {
+          const v = parseFloat(e.target.value);
+          state.params[mode][item.key] = v;
+          state.animating = null;
+          wrap.querySelector('.slider-val').textContent = item.fmt(v);
+          updateTelemetry();
+        });
+        container.appendChild(wrap);
+      }
+    });
+
+    // Special action buttons
+    const actRow = document.getElementById('specialActions');
+    actRow.innerHTML = '';
+    cfg.actions.forEach(act => {
+      const btn = document.createElement('button');
+      btn.className = act.primary ? 'primary-btn' : 'secondary-btn';
+      btn.textContent = act.label;
+      btn.addEventListener('click', () => runSpecialAction(act.id));
+      actRow.appendChild(btn);
+    });
+
+    // Rich Theory tab content
+    const th = cfg.theory;
+    document.getElementById('theoryBadge').textContent = th.badge || 'Vật Lý Vũ Trụ';
+    document.getElementById('theoryTitle').textContent = th.title;
+    document.getElementById('theoryAuthor').textContent = th.author;
+    document.getElementById('theoryOverview').innerHTML = th.overview || '';
+
+    const eqBox = document.getElementById('theoryEquations');
+    eqBox.innerHTML = (th.equations || []).map(eq => `
+      <div class="eq-item">
+        <div class="eq-label">${eq.label}</div>
+        <div class="eq-formula">${eq.formula}</div>
+      </div>
+    `).join('');
+
+    const symBox = document.getElementById('theorySymbols');
+    if (th.symbols && th.symbols.length) {
+      symBox.style.display = 'flex';
+      symBox.innerHTML = `
+        <div class="symbols-header">Chú giải ký hiệu &amp; đại lượng vật lý</div>
+        <div class="symbols-grid">
+          ${th.symbols.map(s => `
+            <div class="symbol-row">
+              <span class="symbol-key">${s.sym}</span>
+              <span class="symbol-desc">${s.desc}</span>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    } else {
+      symBox.style.display = 'none';
+    }
+
+    const factsBox = document.getElementById('theoryFacts');
+    factsBox.innerHTML = (th.facts || []).map(f => `
+      <div class="fact-chip">
+        <div class="fact-val">${f.val}</div>
+        <div class="fact-lbl">${f.lbl}</div>
+      </div>
+    `).join('');
+
+    const tCards = document.getElementById('theoryCards');
+    tCards.innerHTML = th.cards.map((c, idx) => `
+      <div class="theory-card">
+        <div class="theory-card-head">
+          <span class="theory-num">${String(idx + 1).padStart(2, '0')}</span>
+          ${c.tag ? `<span class="theory-tag">${c.tag}</span>` : ''}
+        </div>
+        <h4>${c.h}</h4>
+        <p>${c.p}</p>
+        ${c.points && c.points.length ? `<ul class="theory-points">${c.points.map(pt => `<li>${pt}</li>`).join('')}</ul>` : ''}
+      </div>
+    `).join('');
+
+    updateTelemetry();
+  }
+
+  function updateTelemetry() {
+    const cfg = SIM_CONFIGS[state.mode];
+    const items = cfg.telemetry(state.params[state.mode], state);
+    const grid = document.getElementById('telemetryGrid');
+    grid.innerHTML = items.map(it => `
+      <div class="tele-card">
+        <div class="tele-label">${it.l}</div>
+        <div class="tele-value ${it.cls}">${it.v}</div>
+      </div>
+    `).join('');
+  }
+
+  function syncSliderUI(mode, key, val) {
+    state.params[mode][key] = val;
+    const sl = document.getElementById('sl_' + key);
+    const lbl = document.getElementById('val_' + key);
+    const meta = SIM_CONFIGS[mode].params.find(p => p.key === key);
+    if (sl) sl.value = val;
+    if (lbl && meta && meta.fmt) lbl.textContent = meta.fmt(val);
+  }
+
+  function runSpecialAction(id) {
+    state.animating = null;
+    if (id === 'bhGargantua') {
+      syncSliderUI('blackhole', 'p1', 1.15);
+      syncSliderUI('blackhole', 'p2', 0.96);
+      syncSliderUI('blackhole', 'p3', 1.35);
+      syncSliderUI('blackhole', 'p4', 1.15);
+      state.cam.targetYaw = 0.25;
+      state.cam.targetPitch = 0.14;
+      state.cam.targetDist = 8.4;
+      showToast('Chế độ Gargantua — Hố đen quay cực đại (a* = 0.96)');
+    } else if (id === 'bhM87') {
+      syncSliderUI('blackhole', 'p1', 1.45);
+      syncSliderUI('blackhole', 'p2', 0.85);
+      syncSliderUI('blackhole', 'p5', 1.0);
+      state.cam.targetPitch = 1.25;
+      state.cam.targetDist = 11.2;
+      showToast('Góc nhìn cực bắc tương tự ảnh chụp M87* của EHT');
+    } else if (id === 'whTraverse') {
+      const cur = state.params.wormhole.p3;
+      const target = cur > 0 ? -5.8 : 5.8;
+      state.animating = { type: 'wormhole', target };
+      showToast(target < 0 ? 'Đang bay xuyên cổ hố sâu sang Vũ trụ B...' : 'Đang quay trở lại Vũ trụ A...');
+    } else if (id === 'whReset') {
+      syncSliderUI('wormhole', 'p3', 4.8);
+      showToast('Đã trở về Vũ trụ A');
+    } else if (id === 'hkEvaporate') {
+      syncSliderUI('hawking', 'p1', 1.35);
+      state.animating = { type: 'hawking' };
+      showToast('Tua nhanh quá trình bay hơi lượng tử Hawking...');
+    } else if (id === 'hkReset') {
+      syncSliderUI('hawking', 'p1', 0.95);
+      showToast('Đã phục hồi khối lượng hố đen');
+    } else if (id === 'gwChirp') {
+      syncSliderUI('gravwaves', 'p4', 2.4);
+      syncSliderUI('gravwaves', 'p2', 0.8);
+      state.animating = { type: 'gwChirp' };
+      showToast('Kích hoạt chuỗi xoắn ốc hợp nhất (Chirp Inspiral)...');
+    } else if (id === 'gwReset') {
+      syncSliderUI('gravwaves', 'p4', 1.65);
+      syncSliderUI('gravwaves', 'p2', 1.35);
+      syncSliderUI('gravwaves', 'p3', 1.0);
+      showToast('Đã khôi phục quỹ đạo đôi ổn định');
+    } else if (id === 'warpJump') {
+      state.animating = { type: 'warp', target: 10.0 };
+      showToast('Đang bẻ cong không gian lên Warp 10.0c!');
+    } else if (id === 'warpCruise') {
+      state.animating = { type: 'warp', target: 2.0 };
+      showToast('Hạ tốc độ hành trình Warp 2.0c');
+    } else if (id === 'relMax') {
+      syncSliderUI('relativity', 'p1', 0.99);
+      showToast('Đạt 99% tốc độ ánh sáng (γ ≈ 7.09×)');
+    } else if (id === 'relResetClock') {
+      state.shipTime = 0;
+      state.earthTime = 0;
+      showToast('Đã đặt lại Đồng hồ Sinh đôi về 0.0 s');
+    }
+    updateTelemetry();
+  }
+
+  function switchMode(mode) {
+    if (!SIM_CONFIGS[mode]) return;
+    state.mode = mode;
+    state.animating = null;
+    const cfg = SIM_CONFIGS[mode].camera;
+    state.cam.targetYaw = cfg.yaw;
+    state.cam.targetPitch = cfg.pitch;
+    state.cam.targetDist = cfg.dist;
+
+    document.querySelectorAll('.mode-btn').forEach(b => {
+      b.classList.toggle('active', b.dataset.mode === mode);
+    });
+    renderModeUI(mode);
+  }
+
+  // Bind Mode Tabs
+  document.querySelectorAll('.mode-btn').forEach(btn => {
+    btn.addEventListener('click', () => switchMode(btn.dataset.mode));
+  });
+
+  // Bind Panel Tabs & Theory Wide Reader Toggle
+  const sidePanelEl = document.getElementById('sidePanel');
+  const expandTheoryBtn = document.getElementById('btnExpandTheory');
+  function setTheoryWide(wide) {
+    sidePanelEl.classList.toggle('theory-wide', wide);
+    if (expandTheoryBtn) {
+      expandTheoryBtn.textContent = wide ? '⤡ Thu gọn' : '⤢ Mở rộng đọc chi tiết';
+    }
+  }
+  if (expandTheoryBtn) {
+    expandTheoryBtn.addEventListener('click', () => {
+      setTheoryWide(!sidePanelEl.classList.contains('theory-wide'));
+    });
+  }
+
+  document.querySelectorAll('.panel-tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const tab = btn.dataset.tab;
+      document.querySelectorAll('.panel-tab').forEach(b => b.classList.toggle('active', b === btn));
+      document.getElementById('tabControls').style.display = tab === 'controls' ? 'flex' : 'none';
+      document.getElementById('tabTheory').style.display = tab === 'theory' ? 'flex' : 'none';
+      document.getElementById('tabGpu').style.display = tab === 'gpu' ? 'flex' : 'none';
+      if (tab !== 'theory') setTheoryWide(false);
+    });
+  });
+
+  // Bind Top Action Buttons
+  document.getElementById('btnPause').addEventListener('click', () => {
+    state.paused = !state.paused;
+    const btn = document.getElementById('btnPause');
+    btn.textContent = state.paused ? '▶ Tiếp tục' : '⏸ Tạm dừng';
+    btn.classList.toggle('active', state.paused);
+  });
+
+  document.getElementById('btnAudio').addEventListener('click', toggleAudio);
+
+  document.getElementById('btnSnapshot').addEventListener('click', () => {
+    try {
+      const link = document.createElement('a');
+      link.download = `cosmos_${state.mode}_gpu.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+      showToast('Đã xuất ảnh chụp GPU PNG!');
+    } catch (err) {
+      showToast('Không thể lưu ảnh trên trình duyệt này');
+    }
+  });
+
+  function setCinemaMode(active) {
+    document.body.classList.toggle('cinema-mode', active);
+    if (window.parent && window.parent !== window) {
+      window.parent.postMessage({ type: 'RELATIVITY_CINEMA', active }, '*');
+    }
+  }
+
+  document.getElementById('btnCinema').addEventListener('click', () => setCinemaMode(true));
+  document.getElementById('btnExitCinema').addEventListener('click', () => setCinemaMode(false));
+
+  window.addEventListener('keydown', e => {
+    if (e.code === 'Space' && e.target.tagName !== 'INPUT') {
+      e.preventDefault();
+      document.getElementById('btnPause').click();
+    } else if (e.code === 'Escape') {
+      setCinemaMode(false);
+    }
+  });
+
+  // Bind GPU Presets & Sliders
+  const GPU_PRESETS = {
+    eco:      { resScale: 0.65, raySteps: 56,  bloom: 0.45 },
+    balanced: { resScale: 1.0,  raySteps: 110, bloom: 0.65 },
+    high:     { resScale: 1.25, raySteps: 156, bloom: 0.78 },
+    ultra:    { resScale: 1.6,  raySteps: 220, bloom: 0.90 }
+  };
+
+  document.querySelectorAll('.preset-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const p = GPU_PRESETS[btn.dataset.preset];
+      if (!p) return;
+      state.resScale = p.resScale;
+      state.raySteps = p.raySteps;
+      state.bloom = p.bloom;
+      document.getElementById('slResScale').value = p.resScale;
+      document.getElementById('valResScale').textContent = p.resScale.toFixed(2) + '×';
+      document.getElementById('slRaySteps').value = p.raySteps;
+      document.getElementById('valRaySteps').textContent = String(p.raySteps);
+      document.getElementById('slBloom').value = p.bloom;
+      document.getElementById('valBloom').textContent = p.bloom.toFixed(2);
+      document.querySelectorAll('.preset-btn').forEach(b => b.classList.toggle('active', b === btn));
+      updateCanvasSize();
+      showToast(`Đã áp dụng cấu hình GPU: ${btn.querySelector('strong').textContent}`);
+    });
+  });
+
+  document.getElementById('slResScale').addEventListener('input', e => {
+    state.resScale = parseFloat(e.target.value);
+    document.getElementById('valResScale').textContent = state.resScale.toFixed(2) + '×';
+    updateCanvasSize();
+  });
+
+  document.getElementById('slRaySteps').addEventListener('input', e => {
+    state.raySteps = parseInt(e.target.value, 10);
+    document.getElementById('valRaySteps').textContent = String(state.raySteps);
+    document.getElementById('stepsVal').textContent = `${state.raySteps} bước`;
+  });
+
+  document.getElementById('slBloom').addEventListener('input', e => {
+    state.bloom = parseFloat(e.target.value);
+    document.getElementById('valBloom').textContent = state.bloom.toFixed(2);
+  });
+
+  document.getElementById('slChromatic').addEventListener('input', e => {
+    state.chromatic = parseFloat(e.target.value);
+    document.getElementById('valChromatic').textContent = state.chromatic.toFixed(2);
+  });
+
+  document.getElementById('slTimeScale').addEventListener('input', e => {
+    state.timeScale = parseFloat(e.target.value);
+    document.getElementById('valTimeScale').textContent = state.timeScale.toFixed(2) + '×';
+  });
+
+  document.getElementById('chkAutoOrbit').addEventListener('change', e => {
+    state.autoOrbit = e.target.checked;
+  });
+
+  // Initial UI render
+  renderModeUI('blackhole');
+
+  // =========================================================================
+  // 8. MAIN GPU RENDER LOOP
+  // =========================================================================
+  let hostActive = true;
+  let rafId = null;
+  let lastFrame = performance.now();
+  let fpsAccum = 0;
+  let fpsCount = 0;
+  let teleTimer = 0;
+
+  function tick(now) {
+    if (!hostActive) {
+      rafId = null;
+      return;
+    }
+    const dtRaw = Math.min((now - lastFrame) / 1000, 0.08);
+    lastFrame = now;
+
+    // FPS Counter
+    fpsAccum += dtRaw;
+    fpsCount++;
+    if (fpsAccum >= 0.45) {
+      const fps = Math.round(fpsCount / fpsAccum);
+      const ms = (fpsAccum / fpsCount * 1000).toFixed(1);
+      document.getElementById('fpsVal').textContent = String(fps);
+      document.getElementById('msVal').textContent = ms;
+      const dot = document.getElementById('gpuDot');
+      dot.style.background = fps >= 45 ? '#10b981' : (fps >= 24 ? '#f59e0b' : '#f43f5e');
+      dot.style.boxShadow = `0 0 8px ${dot.style.background}`;
+      fpsAccum = 0;
+      fpsCount = 0;
+    }
+
+    const dt = state.paused ? 0.0 : dtRaw * state.timeScale;
+    state.simTime += dt;
+
+    // Smooth camera interpolation + gentle auto-orbit
+    if (state.autoOrbit && !dragging && !state.paused && state.mode !== 'relativity') {
+      state.cam.targetYaw += dt * 0.12;
+    }
+    state.cam.yaw += (state.cam.targetYaw - state.cam.yaw) * 0.1;
+    state.cam.pitch += (state.cam.targetPitch - state.cam.pitch) * 0.1;
+    state.cam.dist += (state.cam.targetDist - state.cam.dist) * 0.1;
+
+    // Handle scripted animations
+    if (state.animating && !state.paused) {
+      if (state.animating.type === 'wormhole' && state.mode === 'wormhole') {
+        const cur = state.params.wormhole.p3;
+        const diff = state.animating.target - cur;
+        if (Math.abs(diff) < 0.04) {
+          syncSliderUI('wormhole', 'p3', state.animating.target);
+          state.animating = null;
+          showToast(state.params.wormhole.p3 < 0 ? 'Đã sang tới Vũ trụ B!' : 'Đã trở lại Vũ trụ A!');
+        } else {
+          syncSliderUI('wormhole', 'p3', cur + Math.sign(diff) * dt * 2.1);
+        }
+      } else if (state.animating.type === 'hawking' && state.mode === 'hawking') {
+        const cur = state.params.hawking.p1;
+        const next = cur - dt * (0.14 + (1.5 - cur) * 0.28);
+        if (next <= 0.18) {
+          syncSliderUI('hawking', 'p1', 0.18);
+          state.animating = null;
+          showToast('💥 Hố đen đã bùng nổ tia Gamma cuối cùng!');
+        } else {
+          syncSliderUI('hawking', 'p1', next);
+        }
+      } else if (state.animating.type === 'gwChirp' && state.mode === 'gravwaves') {
+        const sep = Math.max(0.7, state.params.gravwaves.p4 - dt * 0.35);
+        const freq = Math.min(3.0, state.params.gravwaves.p2 + dt * 0.55);
+        const amp = Math.min(2.0, state.params.gravwaves.p3 + dt * 0.25);
+        syncSliderUI('gravwaves', 'p4', sep);
+        syncSliderUI('gravwaves', 'p2', freq);
+        syncSliderUI('gravwaves', 'p3', amp);
+        if (sep <= 0.72 && freq >= 2.95) {
+          state.animating = null;
+          showToast('🌊 Đạt đỉnh hợp nhất Chirp (Ringdown)!');
+        }
+      } else if (state.animating.type === 'warp' && state.mode === 'alcubierre') {
+        const cur = state.params.alcubierre.p1;
+        const diff = state.animating.target - cur;
+        if (Math.abs(diff) < 0.08) {
+          syncSliderUI('alcubierre', 'p1', state.animating.target);
+          state.animating = null;
+        } else {
+          syncSliderUI('alcubierre', 'p1', cur + diff * Math.min(1.0, dt * 2.5));
+        }
+      }
+    }
+
+    // Twin paradox live clocks for Special Relativity mode
+    if (state.mode === 'relativity' && !state.paused) {
+      const beta = Math.min(0.995, Math.max(0.0, state.params.relativity.p1));
+      const gamma = 1.0 / Math.sqrt(1.0 - beta * beta);
+      state.shipTime += dt;
+      state.earthTime += dt * gamma;
+    }
+
+    // Periodically refresh dynamic telemetry (clocks / animations)
+    teleTimer += dtRaw;
+    if (teleTimer >= 0.15 && (state.mode === 'relativity' || state.animating)) {
+      updateTelemetry();
+      teleTimer = 0;
+    }
+
+    // Subtle audio modulation based on simulation intensity
+    if (audioPlaying && audioFilter) {
+      const p = state.params[state.mode];
+      const targetFreq = 120 + (p.p1 || 1.0) * 95;
+      audioFilter.frequency.setTargetAtTime(Math.min(600, targetFreq), audioCtx.currentTime, 0.2);
+    }
+
+    // Compute camera position
+    const cp = Math.cos(state.cam.pitch);
+    const camPos = [
+      state.cam.dist * cp * Math.sin(state.cam.yaw),
+      state.cam.dist * Math.sin(state.cam.pitch),
+      state.cam.dist * cp * Math.cos(state.cam.yaw)
+    ];
+
+    // ---- PASS 1: RENDER PHYSICS SHADER TO OFFSCREEN HDR FBO ----
+    const sceneP = getSceneProgram(state.mode);
+    if (sceneP) {
+      gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
+      gl.viewport(0, 0, fboW, fboH);
+      gl.useProgram(sceneP.prog);
+      gl.uniform2f(sceneP.uResolution, fboW, fboH);
+      gl.uniform1f(sceneP.uTime, state.simTime);
+      gl.uniform3f(sceneP.uCamPos, camPos[0], camPos[1], camPos[2]);
+      gl.uniform3f(sceneP.uCamTarget, 0.0, 0.0, 0.0);
+      gl.uniform1f(sceneP.uFov, 1.15);
+      gl.uniform1i(sceneP.uSteps, state.raySteps);
+
+      const mp = state.params[state.mode];
+      gl.uniform1f(sceneP.uP1, mp.p1 ?? 1.0);
+      gl.uniform1f(sceneP.uP2, mp.p2 ?? 0.5);
+      gl.uniform1f(sceneP.uP3, mp.p3 ?? 1.0);
+      gl.uniform1f(sceneP.uP4, mp.p4 ?? 1.0);
+      gl.uniform1f(sceneP.uP5, mp.p5 ?? 0.0);
+
+      gl.drawArrays(gl.TRIANGLES, 0, 3);
+    }
+
+    // ---- PASS 2: POST-PROCESSING BLOOM + CHROMATIC ABERRATION + ACES ----
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    gl.viewport(0, 0, canvas.width, canvas.height);
+    gl.useProgram(postProg.prog);
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, fboTex);
+    gl.uniform1i(postProg.uScene, 0);
+    gl.uniform2f(postProg.uTexelSize, 1.0 / fboW, 1.0 / fboH);
+    gl.uniform1f(postProg.uBloom, state.bloom);
+    gl.uniform1f(postProg.uChromatic, state.chromatic);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+
+    rafId = requestAnimationFrame(tick);
+  }
+
+  window.addEventListener('message', e => {
+    const data = e.data;
+    if (!data || typeof data !== 'object') return;
+    if (data.type === 'SET_ACTIVE') {
+      if (data.active) {
+        hostActive = true;
+        updateCanvasSize();
+        if (audioCtx && audioPlaying && audioCtx.state === 'suspended') {
+          audioCtx.resume().catch(() => {});
+        }
+        lastFrame = performance.now();
+        if (!rafId) rafId = requestAnimationFrame(tick);
+      } else {
+        hostActive = false;
+        if (rafId) {
+          cancelAnimationFrame(rafId);
+          rafId = null;
+        }
+        if (audioCtx && audioCtx.state === 'running') {
+          audioCtx.suspend().catch(() => {});
+        }
+      }
+    } else if (data.type === 'OPEN_THEORY_TAB') {
+      const theoryTabBtn = document.querySelector('.panel-tab[data-tab="theory"]');
+      if (theoryTabBtn) theoryTabBtn.click();
+    }
+  });
+
+  rafId = requestAnimationFrame(tick);
+})();
+<\/script>
+</body>
+</html>
+  </script>
+
+  <!-- WORKSPACE TAB CONTROLLER -->
+  <script>
+    (function () {
+      'use strict';
+
+      const cosmosView = document.getElementById('tabCosmosView');
+      const relativityView = document.getElementById('tabRelativityView');
+      const cosmosBtn = document.getElementById('wsTabCosmos');
+      const relativityBtn = document.getElementById('wsTabRelativity');
+      const engineBadge = document.getElementById('wsEngineBadge');
+      const frame = document.getElementById('relativityFrame');
+      const popoutBtn = document.getElementById('wsPopoutRelativityBtn');
+      const sourceEl = document.getElementById('relativityAppSource');
+
+      let activeTab = 'cosmos';
+      let frameMounted = false;
+      let frameLoaded = false;
+      let popoutUrl = null;
+
+      function getRelativityHtml() {
+        return sourceEl.textContent.replace(/<\\\/script/gi, '</script').trim();
+      }
+
+      function postToRelativity(payload) {
+        if (!frameLoaded || !frame.contentWindow) return;
+        frame.contentWindow.postMessage(payload, '*');
+      }
+
+      frame.addEventListener('load', () => {
+        frameLoaded = true;
+        postToRelativity({ type: 'SET_ACTIVE', active: activeTab === 'relativity' });
+      });
+
+      function switchWorkspaceTab(tab) {
+        if (tab !== 'cosmos' && tab !== 'relativity') return;
+        activeTab = tab;
+
+        const isCosmos = tab === 'cosmos';
+        cosmosView.classList.toggle('hidden', !isCosmos);
+        relativityView.classList.toggle('hidden', isCosmos);
+
+        cosmosBtn.classList.toggle('active', isCosmos);
+        relativityBtn.classList.toggle('active', !isCosmos);
+        cosmosBtn.setAttribute('aria-selected', isCosmos ? 'true' : 'false');
+        relativityBtn.setAttribute('aria-selected', !isCosmos ? 'true' : 'false');
+
+        if (engineBadge) {
+          engineBadge.textContent = isCosmos ? 'Three.js N-Body 3D' : 'WebGL2 Raymarching HDR';
+        }
+        document.title = isCosmos
+          ? 'Cosmos Lab 3D Pro — Vũ Trụ & Tương Đối GPU'
+          : 'Vũ Trụ Tương Đối GPU — Lý Thuyết & Mô Phỏng';
+
+        if (window.__cosmosTabController) {
+          window.__cosmosTabController.setActive(isCosmos);
+        }
+
+        if (!isCosmos) {
+          document.body.classList.remove('hud-hidden');
+          if (!frameMounted) {
+            frameMounted = true;
+            frame.srcdoc = getRelativityHtml();
+          } else {
+            postToRelativity({ type: 'SET_ACTIVE', active: true });
+            try { frame.contentWindow && frame.contentWindow.focus(); } catch (e) {}
+          }
+        } else {
+          document.body.classList.remove('relativity-cinema');
+          postToRelativity({ type: 'SET_ACTIVE', active: false });
+        }
+      }
+
+      cosmosBtn.addEventListener('click', () => switchWorkspaceTab('cosmos'));
+      relativityBtn.addEventListener('click', () => switchWorkspaceTab('relativity'));
+
+      window.addEventListener('message', (e) => {
+        if (e.source !== frame.contentWindow) return;
+        if (e.data && e.data.type === 'RELATIVITY_CINEMA') {
+          document.body.classList.toggle('relativity-cinema', Boolean(e.data.active));
+        }
+      });
+
+      if (popoutBtn) {
+        popoutBtn.addEventListener('click', () => {
+          const html = getRelativityHtml();
+          if (popoutUrl) URL.revokeObjectURL(popoutUrl);
+          popoutUrl = URL.createObjectURL(new Blob([html], { type: 'text/html;charset=utf-8' }));
+          window.open(popoutUrl, '_blank', 'noopener');
+        });
+      }
+
+      if (window.location.hash === '#relativity') {
+        switchWorkspaceTab('relativity');
+      }
     })();
   </script>
 </body>
