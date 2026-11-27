@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="theme-color" content="#090a0d" />
@@ -30,20 +31,26 @@
     * {
       box-sizing: border-box;
       -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
       user-select: none;
       -webkit-user-select: none;
       -webkit-touch-callout: none;
+      -webkit-user-drag: none;
     }
 
     html, body {
+      position: fixed;
+      inset: 0;
       margin: 0;
       padding: 0;
       width: 100%;
+      height: 100%;
       height: 100dvh;
       overflow: hidden;
       overscroll-behavior: none;
       touch-action: manipulation;
       -webkit-text-size-adjust: 100%;
+      text-size-adjust: 100%;
       background-color: var(--desk-bg);
       background-image:
         radial-gradient(ellipse at 30% 0%, rgba(34, 211, 238, 0.08) 0%, transparent 55%),
@@ -51,6 +58,14 @@
         radial-gradient(circle at 50% 50%, #0d1017 0%, #07080b 100%);
       color: #e2e8f0;
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    .lp-chassis,
+    .lp-chassis *,
+    #xy-fx-wrap,
+    #xy-fx-wrap *,
+    .fx-hold-btn {
+      touch-action: none;
     }
 
     .font-tech { font-family: 'Orbitron', sans-serif; }
@@ -219,6 +234,99 @@
         height: 20px;
         margin-top: -8px;
       }
+      input[type="range"].studio-slider::-moz-range-thumb {
+        width: 20px;
+        height: 20px;
+      }
+      #performance-rack select {
+        font-size: 16px;
+        min-height: 36px;
+        padding: 5px 8px;
+        line-height: 1.2;
+      }
+      #studio-header #bpm-down,
+      #studio-header #bpm-up {
+        width: 30px;
+        height: 30px;
+        font-size: 13px;
+      }
+      #studio-header #bpm-tap,
+      #studio-header #btn-autoset,
+      #studio-header #btn-rec-audio,
+      #studio-header #btn-midi-connect,
+      #studio-header #btn-keys-toggle {
+        min-height: 30px;
+        padding: 4px 8px;
+      }
+      #studio-header #btn-fullscreen,
+      #studio-header #btn-guide {
+        width: 32px;
+        height: 32px;
+      }
+      .lp-top-row .lp-hw-btn,
+      #btn-emblem {
+        min-height: 34px;
+      }
+      .lp-track-btn {
+        height: clamp(26px, 3.2vw, 34px);
+        font-size: clamp(8.5px, 1vw, 10.5px);
+      }
+      .lp-mix-btn {
+        height: clamp(26px, 3.2vw, 34px);
+        font-size: clamp(7.5px, 0.9vw, 9.5px);
+      }
+      #performance-rack .dock-tab-btn {
+        min-height: 36px;
+        padding: 7px 4px;
+        font-size: 10.5px;
+      }
+      #performance-rack .fx-hold-btn {
+        min-height: 40px;
+        padding: 8px 4px;
+        font-size: 10px;
+      }
+      #performance-rack .mini-ms-btn {
+        min-height: 26px;
+        padding: 3px 0;
+        font-size: 9.5px;
+        border-radius: 5px;
+      }
+      #performance-rack [data-mix-proxy] {
+        min-height: 32px;
+        font-size: 10px;
+      }
+      #performance-rack #mob-scene-grid button {
+        min-height: 46px;
+      }
+      #performance-rack [data-mob-hw],
+      #performance-rack [data-mob-arrow],
+      #performance-rack #mob-panic-btn,
+      #performance-rack #mob-emblem-fx {
+        min-height: 38px;
+      }
+      #performance-rack #btn-load-sample,
+      #performance-rack #btn-mic-rec,
+      #performance-rack #btn-pad-reverse,
+      #performance-rack #btn-pad-clear-sample,
+      #performance-rack [data-save-slot],
+      #performance-rack #btn-slot-save-active,
+      #performance-rack #btn-export-json,
+      #performance-rack #btn-import-json,
+      #performance-rack #btn-haptics-toggle,
+      #performance-rack #btn-sustain-latch,
+      #performance-rack #xy-mode-btn,
+      #performance-rack #xy-hold-btn,
+      #performance-rack #xy-reset-btn,
+      #performance-rack #mob-stop-all,
+      #performance-rack #project-pack-grid button {
+        min-height: 30px;
+        padding: 4px 8px;
+        font-size: 10px;
+      }
+      #guide-modal #btn-close-guide {
+        width: 40px;
+        height: 40px;
+      }
     }
 
     /* ==========================================================================
@@ -330,11 +438,6 @@
       touch-action: none;
     }
 
-    .lp-pads-8x8.zoom-4x4 {
-      grid-template-columns: repeat(4, 1fr) !important;
-      gap: 7px !important;
-    }
-
     .lp-col-8 {
       display: grid;
       grid-template-rows: repeat(8, 1fr);
@@ -376,9 +479,6 @@
       outline-offset: -2px;
       background: rgba(34, 211, 238, 0.28) !important;
     }
-    .lp-pad[data-q-hidden="1"] {
-      display: none !important;
-    }
 
     .pad-label {
       position: relative;
@@ -392,10 +492,6 @@
       text-align: center;
       line-height: 1.05;
       padding: 0 2px;
-    }
-
-    .zoom-4x4 .pad-label {
-      font-size: 13px !important;
     }
 
     .pad-key {
@@ -435,9 +531,11 @@
       transition: transform 0.05s ease, color 0.1s ease, background 0.1s ease, box-shadow 0.1s ease;
       padding: 2px;
       line-height: 1;
-      touch-action: manipulation;
+      touch-action: none;
     }
-    .lp-hw-btn:hover { border-color: rgba(255, 255, 255, 0.18); color: #e2e8f0; }
+    @media (hover: hover) and (pointer: fine) {
+      .lp-hw-btn:hover { border-color: rgba(255, 255, 255, 0.18); color: #e2e8f0; }
+    }
     .lp-hw-btn:active, .lp-hw-btn.is-pressed { transform: scale(0.94) translateY(1px); }
 
     .lp-scene-btn, .lp-left-btn { aspect-ratio: 1 / 1; }
@@ -456,7 +554,7 @@
       font-size: clamp(7px, 0.9vw, 10px);
       font-weight: 700;
       box-shadow: 0 2px 3px rgba(0, 0, 0, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.06);
-      touch-action: manipulation;
+      touch-action: none;
     }
     .lp-track-btn .led-strip {
       position: absolute;
@@ -528,11 +626,17 @@
       box-shadow: 0 0 12px rgba(34, 211, 238, 0.25);
     }
 
+    #rack-scroll-body,
+    .guide-scroll-body {
+      touch-action: pan-y;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior: contain;
+    }
+
     #rack-scroll-body {
       flex: 1 1 auto;
       min-height: 0;
       overflow-y: auto;
-      touch-action: pan-y;
       padding: 6px;
       display: flex;
       flex-direction: column;
@@ -653,6 +757,21 @@
       cursor: pointer;
     }
 
+    .dock-tab-btn:active,
+    .mini-ms-btn:active,
+    #mobile-mode-strip button:active,
+    .quad-btn:active,
+    #mob-scene-grid button:active,
+    [data-mob-hw]:active,
+    [data-mob-arrow]:active,
+    [data-mix-proxy]:active,
+    #mob-panic-btn:active,
+    #mob-emblem-fx:active,
+    #mob-stop-all:active,
+    #project-pack-grid button:active {
+      transform: scale(0.95);
+    }
+
     @media (pointer: fine) and (min-width: 1120px) {
       #performance-rack input[type="range"].studio-slider {
         height: 20px;
@@ -660,12 +779,13 @@
       }
     }
 
-    /* Mobile Mode & Quadrant Strips (Hidden on Desktop/iPad Portrait) */
+    /* Mobile Mode & Quadrant Strips (Hidden on Desktop/iPad) */
     #mobile-mode-strip, #quadrant-bar {
       display: none;
     }
 
-    .mobile-only-block {
+    .mobile-only-block,
+    .mobile-only-grid {
       display: none;
     }
     .tablet-up-flex {
@@ -685,37 +805,135 @@
       .dock-tab-ipad-only { display: block !important; }
     }
 
+    /* Phone-only 4x4 Zoom Grid Scope */
+    @media (max-width: 639px), (max-height: 540px) and (orientation: landscape) {
+      .lp-pads-8x8.zoom-4x4 {
+        grid-template-columns: repeat(4, 1fr) !important;
+        gap: 7px !important;
+      }
+      .lp-pad[data-q-hidden="1"] {
+        display: none !important;
+      }
+      .zoom-4x4 .pad-label {
+        font-size: 13px !important;
+      }
+    }
+
     /* ==========================================================================
-       RESPONSIVE BREAKPOINT 2: IPAD PORTRAIT & TABLETS (640px - 1119px, h >= 541px)
+       RESPONSIVE BREAKPOINT 2A: IPAD & TABLET LANDSCAPE (2-COLUMN WORKSTATION)
        ========================================================================== */
-    @media (max-width: 1119px) and (min-width: 640px) and (min-height: 541px) {
-      #main-stage {
-        grid-template-columns: 1fr;
-        grid-template-rows: auto minmax(205px, 1fr);
+    @media (min-width: 820px) and (max-width: 1119px) and (orientation: landscape) and (min-height: 541px),
+           (min-width: 820px) and (max-width: 1400px) and (orientation: landscape) and (min-height: 541px) and (pointer: coarse) {
+      #studio-header.studio-header {
+        flex-wrap: nowrap;
+        padding: 5px 10px;
         gap: 8px;
       }
-      .lp-chassis {
-        width: min(96vw, 560px, calc(100dvh - 330px));
-        padding: 10px 12px;
+      #studio-header .oled-screen {
+        flex: 1 1 200px;
+        min-width: 180px;
+        padding: 4px 8px;
+        gap: 8px;
       }
-      .studio-header {
-        flex-wrap: wrap;
+      #studio-header .ipad-hdr-controls {
+        flex-wrap: nowrap;
         gap: 6px;
+      }
+      #studio-header .ipad-vol-box,
+      #studio-header .ipad-flt-box {
+        width: 102px;
+      }
+      #main-stage {
+        grid-template-columns: minmax(0, 1fr) clamp(315px, 34vw, 395px);
+        grid-template-rows: 1fr;
+        gap: 10px;
+      }
+      .lp-chassis {
+        width: min(100%, 760px, calc((100dvh - 88px - env(safe-area-inset-top) - env(safe-area-inset-bottom)) * 0.92));
+        padding: clamp(8px, 1.1vw, 14px);
       }
       #dock-tabs {
         display: flex;
       }
+      .dock-tab-phone-only { display: none !important; }
+      .dock-tab-ipad-only { display: block !important; }
       #rack-scroll-body {
-        padding: 8px 10px;
+        padding: 8px;
         gap: 8px;
       }
-      .track-vu-meter { height: 42px; }
       [data-panel] { display: none !important; }
       body[data-ipad-tab="xyfx"] [data-panel="xyfx"] { display: flex !important; }
       body[data-ipad-tab="synth"] [data-panel="synth"] { display: flex !important; }
       body[data-ipad-tab="mixer"] [data-panel="mixer"] { display: flex !important; }
       body[data-ipad-tab="sampler"] [data-panel="sampler"] { display: flex !important; }
-      #xy-fx-wrap { height: 120px; }
+      #xy-fx-wrap { height: clamp(160px, 28dvh, 240px); }
+      .track-vu-meter { height: clamp(64px, 12dvh, 110px); }
+    }
+
+    @media (min-width: 820px) and (max-width: 1090px) and (orientation: landscape) and (min-height: 541px) {
+      #studio-header .stereo-vu-mini { display: none !important; }
+      #studio-header .vis-wrap { min-width: 54px; max-width: 78px; flex: 0 1 70px; }
+      #oled-project { font-size: 10.5px; }
+      #studio-header .ipad-vol-box,
+      #studio-header .ipad-flt-box { width: 92px; }
+      #studio-header #btn-autoset,
+      #studio-header #btn-rec-audio,
+      #studio-header #btn-midi-connect,
+      #studio-header #btn-keys-toggle {
+        padding-left: 5px;
+        padding-right: 5px;
+        font-size: 9px;
+      }
+    }
+
+    @media (min-width: 820px) and (max-width: 1119px) and (orientation: landscape) and (min-height: 541px) and (max-height: 840px),
+           (min-width: 820px) and (max-width: 1400px) and (orientation: landscape) and (min-height: 541px) and (max-height: 840px) and (pointer: coarse) {
+      .lp-silkscreen-footer { display: none !important; }
+    }
+
+    /* ==========================================================================
+       RESPONSIVE BREAKPOINT 2B: IPAD PORTRAIT & TABLETS
+       ========================================================================== */
+    @media (min-width: 640px) and (max-width: 1119px) and (orientation: portrait) and (min-height: 541px),
+           (min-width: 640px) and (max-width: 819px) and (min-height: 541px) {
+      #studio-header.studio-header {
+        flex-wrap: wrap;
+        gap: 6px;
+        padding: 6px 10px;
+      }
+      #studio-header .oled-screen {
+        flex: 1 1 100%;
+      }
+      #studio-header .ipad-hdr-controls {
+        width: 100%;
+        justify-content: space-between;
+        gap: 6px;
+      }
+      #main-stage {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto minmax(235px, 1fr);
+        gap: 8px;
+      }
+      .lp-chassis {
+        width: min(96vw, 800px, calc((100dvh - 375px - env(safe-area-inset-top) - env(safe-area-inset-bottom)) * 0.92));
+        padding: 10px 12px;
+      }
+      #dock-tabs {
+        display: flex;
+      }
+      .dock-tab-phone-only { display: none !important; }
+      .dock-tab-ipad-only { display: block !important; }
+      #rack-scroll-body {
+        padding: 8px 10px;
+        gap: 8px;
+      }
+      .track-vu-meter { height: 46px; }
+      [data-panel] { display: none !important; }
+      body[data-ipad-tab="xyfx"] [data-panel="xyfx"] { display: flex !important; }
+      body[data-ipad-tab="synth"] [data-panel="synth"] { display: flex !important; }
+      body[data-ipad-tab="mixer"] [data-panel="mixer"] { display: flex !important; }
+      body[data-ipad-tab="sampler"] [data-panel="sampler"] { display: flex !important; }
+      #xy-fx-wrap { height: clamp(118px, 15dvh, 175px); }
     }
 
     /* ==========================================================================
@@ -737,6 +955,7 @@
       }
       .tablet-up-flex { display: none !important; }
       .mobile-only-block { display: flex; }
+      .mobile-only-grid { display: grid; }
 
       .oled-screen {
         padding: 4px 7px;
@@ -756,6 +975,10 @@
         width: 100%;
         flex-shrink: 0;
       }
+      #mobile-mode-strip button {
+        min-height: 34px;
+        padding: 6px 2px;
+      }
 
       body.is-zoom-4x4 #quadrant-bar {
         display: grid;
@@ -763,6 +986,10 @@
         gap: 4px;
         width: 100%;
         flex-shrink: 0;
+      }
+      body.is-zoom-4x4 #quadrant-bar .quad-btn {
+        min-height: 32px;
+        padding: 5px 2px;
       }
 
       #main-stage {
@@ -775,9 +1002,12 @@
       }
 
       .lp-chassis {
-        width: min(100%, 440px, calc(100dvh - 305px));
+        width: min(100%, 460px, calc(100dvh - 300px - env(safe-area-inset-top) - env(safe-area-inset-bottom)));
         padding: 5px;
         border-radius: 13px;
+      }
+      body.is-zoom-4x4 .lp-chassis {
+        width: min(100%, 460px, calc(100dvh - 338px - env(safe-area-inset-top) - env(safe-area-inset-bottom)));
       }
       .lp-top-row, #left-col-btns, #right-col-btns, .lp-bottom-row, .lp-silkscreen-footer, .hw-screw {
         display: none !important;
@@ -807,7 +1037,8 @@
       body[data-phone-tab="tone"] [data-panel="synth"],
       body[data-phone-tab="tone"] [data-panel="sampler"] { display: flex !important; }
 
-      #xy-fx-wrap { height: 96px; }
+      #xy-fx-wrap { height: clamp(94px, 14dvh, 148px); }
+      #performance-rack .synth-select-full { grid-column: span 2 / span 2; }
       .pad-label { font-size: 8px; }
     }
 
@@ -837,7 +1068,15 @@
       }
       .tablet-up-flex { display: none !important; }
       .mobile-only-block { display: flex; }
+      .mobile-only-grid { display: grid; }
       .vis-wrap { height: 28px; max-width: 110px; }
+      #hdr-play-btn,
+      #hdr-bpm-tap,
+      #hdr-full-btn,
+      #hdr-guide-btn {
+        height: 30px;
+        min-height: 30px;
+      }
 
       #main-stage {
         grid-template-columns: auto minmax(280px, 1fr);
@@ -853,8 +1092,9 @@
         gap: 3px;
       }
       #mobile-mode-strip button {
-        padding-top: 3px;
-        padding-bottom: 3px;
+        min-height: 28px;
+        min-width: 0;
+        padding: 3px 2px;
         font-size: 9px;
       }
       body.is-zoom-4x4 #quadrant-bar {
@@ -862,18 +1102,18 @@
         grid-template-columns: repeat(4, 1fr);
         gap: 3px;
       }
-      body.is-zoom-4x4 .quad-btn {
-        padding-top: 2px;
-        padding-bottom: 2px;
+      body.is-zoom-4x4 #quadrant-bar .quad-btn {
+        min-height: 26px;
+        padding: 2px;
         font-size: 8.5px;
       }
       .lp-chassis {
-        width: min(44vw, calc(100dvh - 96px));
+        width: min(44vw, calc(100dvh - 86px - env(safe-area-inset-top) - env(safe-area-inset-bottom)));
         padding: 4px;
         border-radius: 11px;
       }
       body.is-zoom-4x4 .lp-chassis {
-        width: min(44vw, calc(100dvh - 124px));
+        width: min(44vw, calc(100dvh - 116px - env(safe-area-inset-top) - env(safe-area-inset-bottom)));
       }
       .lp-top-row, #left-col-btns, #right-col-btns, .lp-bottom-row, .lp-silkscreen-footer, .hw-screw {
         display: none !important;
@@ -883,13 +1123,42 @@
       .lp-pads-8x8 { gap: 3px; }
 
       #dock-tabs { display: flex; padding: 3px; gap: 3px; }
-      .dock-tab-btn { padding: 4px 3px; font-size: 9px; }
+      #performance-rack .dock-tab-btn {
+        min-height: 30px;
+        padding: 4px 3px;
+        font-size: 9px;
+      }
       .dock-tab-ipad-only { display: none !important; }
       .dock-tab-phone-only { display: block !important; }
 
       #rack-scroll-body { padding: 5px; gap: 5px; }
       .rack-card { padding: 5px 7px; gap: 4px; }
       .track-vu-meter { height: 22px; }
+      #performance-rack .fx-hold-btn {
+        min-height: 34px;
+        padding: 5px 3px;
+        font-size: 9px;
+      }
+      #performance-rack .mini-ms-btn {
+        min-height: 22px;
+        padding: 2px 0;
+        font-size: 8.5px;
+      }
+      #performance-rack #mob-scene-grid button {
+        min-height: 38px;
+        padding: 4px 2px;
+      }
+      #performance-rack [data-mob-hw],
+      #performance-rack [data-mob-arrow],
+      #performance-rack #mob-panic-btn,
+      #performance-rack #mob-emblem-fx {
+        min-height: 32px;
+        padding: 4px 2px;
+      }
+      #performance-rack select {
+        min-height: 32px;
+        padding: 3px 6px;
+      }
 
       [data-panel] { display: none !important; }
       body[data-phone-tab="scenes"] [data-panel="scenes"] { display: flex !important; }
@@ -898,7 +1167,7 @@
       body[data-phone-tab="mixer"] [data-panel="mixer"] { display: flex !important; }
       body[data-phone-tab="tone"] [data-panel="synth"],
       body[data-phone-tab="tone"] [data-panel="sampler"] { display: flex !important; }
-      #xy-fx-wrap { height: 82px; }
+      #xy-fx-wrap { height: clamp(78px, 24dvh, 118px); }
     }
 
     /* Scrollbars inside Rack & Modal */
@@ -928,14 +1197,14 @@
           </div>
           <div id="oled-project" class="text-[11px] sm:text-xs font-bold text-slate-100 truncate sm:max-w-[260px] mt-0.5">Future Bass / Melodic EDM</div>
           <div class="flex items-center gap-1.5 text-[9.5px] font-mono-tech text-slate-400 min-w-0">
-            <span id="oled-scale" class="text-fuchsia-300 cursor-pointer hover:underline shrink-0" title="Chạm để đổi thang âm">F Minor</span>
+            <span id="oled-scale" data-clickable="1" class="text-fuchsia-300 cursor-pointer hover:underline shrink-0" title="Chạm để đổi thang âm">F Minor</span>
             <span class="shrink-0">•</span>
             <span id="oled-subinfo" class="text-sky-300 truncate min-w-0 flex-1 sm:max-w-[290px] lg:max-w-[330px]">Nhấn Scene ► để phát</span>
           </div>
         </div>
 
         <!-- 3-Mode Interactive Visualizer (Tap to toggle Spectrum / Scope / Stereo VU) -->
-        <div id="vis-container" class="vis-wrap" title="Chạm để đổi chế độ hiển thị: SPECTRUM / SCOPE / STEREO VU">
+        <div id="vis-container" data-clickable="1" class="vis-wrap" title="Chạm để đổi chế độ hiển thị: SPECTRUM / SCOPE / STEREO VU">
           <canvas id="spectrum-canvas" class="w-full h-full block"></canvas>
           <span id="vis-mode-pill" class="absolute top-0.5 left-1 text-[7.5px] font-mono-tech font-bold text-cyan-300/80 pointer-events-none">SPEC</span>
           <span id="audio-status-dot" class="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-amber-400 shadow-[0_0_6px_#fbbf24]" title="Web Audio Engine"></span>
@@ -950,16 +1219,16 @@
 
       <!-- Mobile Quick Transport + BPM + Fullscreen + Guide -->
       <div class="mobile-only-block items-center gap-1 shrink-0">
-        <button id="hdr-play-btn" class="px-2.5 py-1.5 rounded-lg bg-emerald-500/20 border border-emerald-400/45 text-emerald-300 text-[10px] font-extrabold font-mono-tech">▶</button>
-        <button id="hdr-bpm-tap" class="px-2 py-1.5 rounded-lg bg-[#0b0e14] border border-white/10 text-cyan-300 text-[10px] font-mono-tech font-bold">
-          <span id="hdr-bpm-val">128</span>
+        <button id="hdr-play-btn" class="min-w-[36px] h-9 px-2.5 rounded-lg bg-emerald-500/20 border border-emerald-400/45 text-emerald-300 text-[11px] font-extrabold font-mono-tech flex items-center justify-center">▶</button>
+        <button id="hdr-bpm-tap" class="min-w-[44px] h-9 px-2 rounded-lg bg-[#0b0e14] border border-white/10 text-cyan-300 text-[10px] font-mono-tech font-bold flex items-center justify-center">
+          <span id="hdr-bpm-val">128</span><span class="text-[7.5px] text-slate-400 ml-0.5">BPM</span>
         </button>
-        <button id="hdr-full-btn" class="w-7 h-7 rounded-lg bg-[#1a1f2c] border border-white/10 text-slate-300 text-[11px] font-bold flex items-center justify-center" title="Toàn màn hình">⛶</button>
-        <button id="hdr-guide-btn" class="w-7 h-7 rounded-lg bg-indigo-500/25 border border-indigo-400/40 text-indigo-200 text-xs font-bold flex items-center justify-center">?</button>
+        <button id="hdr-full-btn" class="w-9 h-9 rounded-lg bg-[#1a1f2c] border border-white/10 text-slate-300 text-xs font-bold flex items-center justify-center" title="Toàn màn hình">⛶</button>
+        <button id="hdr-guide-btn" class="w-9 h-9 rounded-lg bg-indigo-500/25 border border-indigo-400/40 text-indigo-200 text-xs font-bold flex items-center justify-center">?</button>
       </div>
 
       <!-- Desktop/iPad Master Transport, BPM, Vol, Filter & Utilities -->
-      <div class="tablet-up-flex items-center gap-2 flex-wrap justify-end">
+      <div class="tablet-up-flex ipad-hdr-controls items-center gap-2 flex-wrap justify-end">
         <!-- BPM + TAP -->
         <div class="flex items-center gap-1 bg-[#090c12] rounded-lg px-1.5 py-1 border border-white/10 text-[10px]">
           <span class="text-slate-400 font-bold">BPM</span>
@@ -970,17 +1239,17 @@
         </div>
 
         <!-- Master Volume -->
-        <div class="flex items-center gap-1.5 bg-[#090c12] rounded-lg px-2 py-0.5 border border-white/10 text-[10px] w-[118px]">
+        <div class="ipad-vol-box flex items-center gap-1.5 bg-[#090c12] rounded-lg px-2 py-0.5 border border-white/10 text-[10px] w-[118px]">
           <span class="text-slate-400 font-bold shrink-0">VOL</span>
           <input id="master-vol" type="range" min="0" max="100" value="85" class="studio-slider flex-1 min-w-0" />
           <span id="master-vol-val" class="font-mono-tech text-slate-200 w-5 text-right">85</span>
         </div>
 
         <!-- Master DJ Filter -->
-        <div class="flex items-center gap-1.5 bg-[#090c12] rounded-lg px-2 py-0.5 border border-white/10 text-[10px] w-[126px]" title="Bộ lọc DJ: Trái = Lowpass, Giữa = Tắt, Phải = Highpass (Nhấn đúp chữ để Reset)">
+        <div class="ipad-flt-box flex items-center gap-1.5 bg-[#090c12] rounded-lg px-2 py-0.5 border border-white/10 text-[10px] w-[126px]" title="Bộ lọc DJ: Trái = Lowpass, Giữa = Tắt, Phải = Highpass (Chạm chữ để Reset)">
           <span class="text-slate-400 font-bold shrink-0">FLT</span>
           <input id="dj-filter" type="range" min="-100" max="100" value="0" class="studio-slider flex-1 min-w-0" />
-          <span id="dj-filter-val" class="font-mono-tech text-emerald-300 w-7 text-right cursor-pointer">OFF</span>
+          <span id="dj-filter-val" data-clickable="1" class="font-mono-tech text-emerald-300 w-7 text-right cursor-pointer">OFF</span>
         </div>
 
         <!-- Utility Buttons -->
@@ -1158,11 +1427,11 @@
           <button data-phone-tab-btn="mixer" class="dock-tab-btn dock-tab-phone-only">MIXER</button>
           <button data-phone-tab-btn="tone" class="dock-tab-btn dock-tab-phone-only">TONE</button>
 
-          <!-- iPad Portrait Tabs -->
-          <button data-ipad-tab-btn="xyfx" class="dock-tab-btn dock-tab-ipad-only active">XY &amp; LIVE FX</button>
-          <button data-ipad-tab-btn="synth" class="dock-tab-btn dock-tab-ipad-only">SYNTH &amp; GROOVE</button>
-          <button data-ipad-tab-btn="mixer" class="dock-tab-btn dock-tab-ipad-only">MIXER &amp; VU</button>
-          <button data-ipad-tab-btn="sampler" class="dock-tab-btn dock-tab-ipad-only">SAMPLER &amp; SAVE</button>
+          <!-- iPad Tabs -->
+          <button data-ipad-tab-btn="xyfx" class="dock-tab-btn dock-tab-ipad-only active">XY &amp; FX</button>
+          <button data-ipad-tab-btn="synth" class="dock-tab-btn dock-tab-ipad-only">SYNTH</button>
+          <button data-ipad-tab-btn="mixer" class="dock-tab-btn dock-tab-ipad-only">MIXER</button>
+          <button data-ipad-tab-btn="sampler" class="dock-tab-btn dock-tab-ipad-only">SAMPLER</button>
         </div>
 
         <div id="rack-scroll-body">
@@ -1198,6 +1467,8 @@
             </div>
             <div id="xy-fx-wrap">
               <canvas id="xy-fx-canvas"></canvas>
+              <span class="absolute top-1 left-2 text-[8px] font-mono-tech text-slate-400/70 pointer-events-none">LPF</span>
+              <span class="absolute top-1 right-2 text-[8px] font-mono-tech text-slate-400/70 pointer-events-none">HPF</span>
               <div class="absolute bottom-1 left-2 text-[8.5px] font-mono-tech text-cyan-200/70 pointer-events-none" id="xy-readout">LPF ↔ HPF • WASH 0%</div>
             </div>
             <div class="grid grid-cols-4 gap-1.5">
@@ -1254,9 +1525,9 @@
 
             <!-- Patch, Root/Scale, Lightshow, Velocity -->
             <div class="grid grid-cols-2 gap-1.5 text-[10px]">
-              <select id="synth-patch-select" class="bg-[#090c12] text-slate-100 border border-white/10 rounded-lg px-2 py-1 font-semibold focus:outline-none focus:border-cyan-400"></select>
-              <div class="flex gap-1">
-                <select id="root-note-select" class="w-[54px] bg-[#090c12] text-fuchsia-300 border border-white/10 rounded-lg px-1.5 py-1 font-bold focus:outline-none focus:border-fuchsia-400"></select>
+              <select id="synth-patch-select" class="synth-select-full bg-[#090c12] text-slate-100 border border-white/10 rounded-lg px-2 py-1 font-semibold focus:outline-none focus:border-cyan-400"></select>
+              <div class="flex gap-1 synth-select-full">
+                <select id="root-note-select" class="w-[68px] bg-[#090c12] text-fuchsia-300 border border-white/10 rounded-lg px-1.5 py-1 font-bold focus:outline-none focus:border-fuchsia-400"></select>
                 <select id="scale-select" class="flex-1 min-w-0 bg-[#090c12] text-slate-100 border border-white/10 rounded-lg px-1.5 py-1 font-semibold focus:outline-none focus:border-fuchsia-400"></select>
               </div>
               <select id="lightshow-select" class="bg-[#090c12] text-cyan-200 border border-white/10 rounded-lg px-2 py-1 font-semibold focus:outline-none focus:border-cyan-400">
@@ -1324,14 +1595,16 @@
               <button data-mix-proxy="sends" class="py-1 rounded bg-[#191e2a] border border-white/10 text-[9px] font-bold text-violet-300">GRID FX</button>
               <button data-mix-proxy="device" class="py-1 rounded bg-[#191e2a] border border-white/10 text-[9px] font-bold text-emerald-300">GRID FLT</button>
             </div>
-            <div class="grid grid-cols-2 gap-2 text-[9.5px] sm:hidden">
+            <div class="mobile-only-grid grid-cols-2 gap-2 text-[9.5px]">
               <div class="flex items-center gap-1 bg-[#090c12] rounded-lg px-2 py-0.5 border border-white/10">
-                <span class="text-slate-400 font-bold">VOL</span>
+                <span class="text-slate-400 font-bold shrink-0">VOL</span>
                 <input id="mob-master-vol" type="range" min="0" max="100" value="85" class="studio-slider flex-1 min-w-0" />
+                <span id="mob-master-vol-val" class="font-mono-tech text-slate-200 w-6 text-right text-[9.5px]">85</span>
               </div>
               <div class="flex items-center gap-1 bg-[#090c12] rounded-lg px-2 py-0.5 border border-white/10">
-                <span class="text-slate-400 font-bold">FLT</span>
+                <span class="text-slate-400 font-bold shrink-0">FLT</span>
                 <input id="mob-dj-filter" type="range" min="-100" max="100" value="0" class="studio-slider flex-1 min-w-0" />
+                <span id="mob-dj-filter-val" data-clickable="1" class="font-mono-tech text-emerald-300 w-8 text-right text-[9.5px] cursor-pointer">OFF</span>
               </div>
             </div>
 
@@ -1419,7 +1692,7 @@
         </div>
         <button id="btn-close-guide" class="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/15 text-slate-300 font-bold text-sm transition">✕</button>
       </div>
-      <div class="p-4 sm:p-5 overflow-y-auto space-y-3.5 text-xs sm:text-sm text-slate-300 leading-relaxed" style="touch-action: pan-y;">
+      <div class="guide-scroll-body p-4 sm:p-5 overflow-y-auto space-y-3.5 text-xs sm:text-sm text-slate-300 leading-relaxed" style="touch-action: pan-y;">
         <div class="p-3 rounded-xl bg-cyan-500/10 border border-cyan-400/25 text-cyan-100">
           <strong>🚀 Chơi nhạc ngay:</strong> Nhấn nút <strong>Scene ► (1–8)</strong> hoặc bật <strong>AUTO SET</strong> để hệ thống Auto-DJ tự chuyển cảnh EDM (Intro → Groove → Build → Drop 1 → Breakdown → Mega Drop)!
         </div>
@@ -1784,8 +2057,8 @@
 
         init() {
           if (this.initialized) {
-            if (this.ctx && this.ctx.state === 'suspended') {
-              this.ctx.resume();
+            if (this.ctx && this.ctx.state !== 'running') {
+              this.ctx.resume().catch(() => {});
             }
             return;
           }
@@ -3205,6 +3478,79 @@
       }
       initChordMemory();
 
+      function setupTouchZoomLock() {
+        const blockEvent = (e) => e.preventDefault();
+        ['gesturestart', 'gesturechange', 'gestureend'].forEach(ev => {
+          document.addEventListener(ev, blockEvent, { passive: false });
+        });
+        document.addEventListener('dblclick', blockEvent, { passive: false });
+        document.addEventListener('contextmenu', (e) => {
+          const el = e.target && e.target.nodeType === 1 ? e.target : e.target && e.target.parentElement;
+          if (!el || !el.closest('input, textarea')) e.preventDefault();
+        });
+
+        let lastTouchEndTime = 0;
+        let touchStartX = 0;
+        let touchStartY = 0;
+        let touchMoved = false;
+        let pointerDownPrevented = false;
+
+        document.addEventListener('pointerdown', (e) => {
+          if (e.pointerType === 'touch') pointerDownPrevented = e.defaultPrevented;
+        });
+
+        document.addEventListener('touchstart', (e) => {
+          if (e.touches.length > 1) {
+            e.preventDefault();
+            return;
+          }
+          const t = e.touches[0];
+          if (t) {
+            touchStartX = t.clientX;
+            touchStartY = t.clientY;
+            touchMoved = false;
+          }
+        }, { passive: false });
+
+        document.addEventListener('touchmove', (e) => {
+          if (e.touches.length > 1) {
+            e.preventDefault();
+            return;
+          }
+          const t = e.touches[0];
+          if (t && !touchMoved && Math.hypot(t.clientX - touchStartX, t.clientY - touchStartY) > 10) {
+            touchMoved = true;
+          }
+        }, { passive: false });
+
+        document.addEventListener('touchend', (e) => {
+          const el = e.target && e.target.nodeType === 1 ? e.target : e.target && e.target.parentElement;
+          if (el && el.closest('select, option, input, textarea')) {
+            lastTouchEndTime = 0;
+            if (e.touches.length === 0) pointerDownPrevented = false;
+            return;
+          }
+          const now = Date.now();
+          const delta = now - lastTouchEndTime;
+          lastTouchEndTime = now;
+
+          if (!touchMoved && delta > 0 && delta <= 360) {
+            e.preventDefault();
+            if (!pointerDownPrevented && e.touches.length === 0 && el) {
+              const clickable = el.closest('button, [data-clickable]');
+              if (clickable && !clickable.disabled) clickable.click();
+            }
+          }
+          if (e.touches.length === 0) pointerDownPrevented = false;
+        }, { passive: false });
+
+        document.addEventListener('touchcancel', () => {
+          touchMoved = false;
+          pointerDownPrevented = false;
+        });
+      }
+      setupTouchZoomLock();
+
       function triggerHaptic(ms = 8) {
         if (state.haptics && navigator.vibrate) {
           try { navigator.vibrate(ms); } catch (_) {}
@@ -3463,8 +3809,10 @@
       }
 
       function updateZoomLayout() {
-        document.body.classList.toggle('is-zoom-4x4', state.zoom4x4);
-        padGridEl.classList.toggle('zoom-4x4', state.zoom4x4);
+        const isPhoneLayout = window.matchMedia('(max-width: 639px), (max-height: 540px) and (orientation: landscape)').matches;
+        const effectiveZoom = state.zoom4x4 && !state.mixerOverlay && isPhoneLayout;
+        document.body.classList.toggle('is-zoom-4x4', effectiveZoom);
+        padGridEl.classList.toggle('zoom-4x4', effectiveZoom);
         const zBtn = document.getElementById('btn-zoom-4x4');
         if (zBtn) {
           zBtn.classList.toggle('bg-cyan-500/35', state.zoom4x4);
@@ -3492,11 +3840,13 @@
         const qColMin = state.activeQuad % 2 === 1 ? 4 : 0;
         for (let r = 0; r < 8; r++) {
           for (let c = 0; c < 8; c++) {
-            const visible = !state.zoom4x4 || (r >= qRowMin && r < qRowMin + 4 && c >= qColMin && c < qColMin + 4);
+            const visible = !effectiveZoom || (r >= qRowMin && r < qRowMin + 4 && c >= qColMin && c < qColMin + 4);
             padElements[r][c].dataset.qHidden = visible ? '0' : '1';
           }
         }
       }
+      window.addEventListener('resize', updateZoomLayout);
+      window.addEventListener('orientationchange', () => requestAnimationFrame(updateZoomLayout));
 
       /* ======================================================================
          6. CUSTOM FINGER-DRUMMING MAP (64 PADS)
@@ -4055,7 +4405,7 @@
           const tab = btn.dataset.phoneTabBtn;
           document.body.dataset.phoneTab = tab;
           document.querySelectorAll('[data-phone-tab-btn]').forEach(b => b.classList.toggle('active', b === btn));
-          if (tab === 'xyfx') resizeXYCanvas();
+          if (tab === 'xyfx') requestAnimationFrame(resizeXYCanvas);
         });
       });
       document.querySelectorAll('[data-ipad-tab-btn]').forEach(btn => {
@@ -4063,7 +4413,7 @@
           const tab = btn.dataset.ipadTabBtn;
           document.body.dataset.ipadTab = tab;
           document.querySelectorAll('[data-ipad-tab-btn]').forEach(b => b.classList.toggle('active', b === btn));
-          if (tab === 'xyfx') resizeXYCanvas();
+          if (tab === 'xyfx') requestAnimationFrame(resizeXYCanvas);
         });
       });
 
@@ -4228,6 +4578,11 @@
         xyCanvas.height = Math.floor(rect.height * window.devicePixelRatio);
       }
       window.addEventListener('resize', resizeXYCanvas);
+      window.addEventListener('orientationchange', () => requestAnimationFrame(resizeXYCanvas));
+      if (window.visualViewport) window.visualViewport.addEventListener('resize', () => requestAnimationFrame(resizeXYCanvas));
+      if (typeof ResizeObserver !== 'undefined') {
+        new ResizeObserver(() => resizeXYCanvas()).observe(xyWrap);
+      }
       setTimeout(resizeXYCanvas, 60);
 
       function updateXYFromEvent(e) {
@@ -4248,6 +4603,7 @@
         e.preventDefault();
         audio.init();
         xyPointerId = e.pointerId;
+        try { e.currentTarget.setPointerCapture(e.pointerId); } catch (_) {}
         updateXYFromEvent(e);
       });
       window.addEventListener('pointermove', (e) => {
@@ -4292,6 +4648,7 @@
           audio.init();
           triggerHaptic(9);
           pid = e.pointerId;
+          try { e.currentTarget.setPointerCapture(e.pointerId); } catch (_) {}
           btn.classList.add('active');
           audio.setBeatRepeat(idx, true);
         });
@@ -4311,7 +4668,9 @@
         let pid = null;
         btn.addEventListener('pointerdown', (e) => {
           e.preventDefault(); audio.init(); triggerHaptic(10);
-          pid = e.pointerId; btn.classList.add('active'); fn(true);
+          pid = e.pointerId;
+          try { e.currentTarget.setPointerCapture(e.pointerId); } catch (_) {}
+          btn.classList.add('active'); fn(true);
         });
         const up = (e) => {
           if (pid === e.pointerId) {
@@ -5168,6 +5527,11 @@
         specCanvas.height = Math.max(28, Math.floor(rect.height * window.devicePixelRatio));
       }
       window.addEventListener('resize', resizeSpectrumCanvas);
+      window.addEventListener('orientationchange', () => requestAnimationFrame(resizeSpectrumCanvas));
+      if (window.visualViewport) window.visualViewport.addEventListener('resize', () => requestAnimationFrame(resizeSpectrumCanvas));
+      if (typeof ResizeObserver !== 'undefined') {
+        new ResizeObserver(() => resizeSpectrumCanvas()).observe(specCanvas.parentElement);
+      }
       resizeSpectrumCanvas();
 
       document.getElementById('vis-container').addEventListener('click', () => {
@@ -5315,7 +5679,11 @@
           const sec = Math.floor((Date.now() - audio.recStartTime) / 1000);
           const m = String(Math.floor(sec / 60)).padStart(2, '0');
           const s = String(sec % 60).padStart(2, '0');
-          document.getElementById('rec-label').textContent = `${m}:${s}`;
+          const timeTxt = `${m}:${s}`;
+          document.getElementById('rec-label').textContent = timeTxt;
+          document.querySelectorAll('[data-action="rec-wav"]').forEach(b => {
+            if (!b.querySelector('#rec-label')) b.textContent = `■ ${timeTxt}`;
+          });
         }
         requestAnimationFrame(mainAnimationLoop);
       }
@@ -5355,10 +5723,45 @@
         audio.updateDelayTempo(state.bpm);
       }
 
-      document.getElementById('bpm-down').addEventListener('click', () => setBPM(state.bpm - 2));
-      document.getElementById('bpm-up').addEventListener('click', () => setBPM(state.bpm + 2));
-      document.getElementById('mob-bpm-down').addEventListener('click', () => setBPM(state.bpm - 2));
-      document.getElementById('mob-bpm-up').addEventListener('click', () => setBPM(state.bpm + 2));
+      function bindBpmRepeat(id, delta) {
+        const btn = document.getElementById(id);
+        if (!btn) return;
+        let delayTimer = null;
+        let repeatTimer = null;
+        let activePid = null;
+        const stop = () => {
+          activePid = null;
+          clearTimeout(delayTimer);
+          clearInterval(repeatTimer);
+          delayTimer = null;
+          repeatTimer = null;
+        };
+        btn.addEventListener('pointerdown', (e) => {
+          e.preventDefault();
+          audio.init();
+          triggerHaptic(5);
+          stop();
+          activePid = e.pointerId;
+          try { btn.setPointerCapture(e.pointerId); } catch (_) {}
+          setBPM(state.bpm + delta);
+          delayTimer = setTimeout(() => {
+            repeatTimer = setInterval(() => {
+              setBPM(state.bpm + delta);
+            }, 90);
+          }, 360);
+        });
+        const onEnd = (e) => {
+          if (activePid === null || e.pointerId === activePid) stop();
+        };
+        btn.addEventListener('pointerup', onEnd);
+        btn.addEventListener('pointercancel', onEnd);
+        btn.addEventListener('pointerleave', onEnd);
+        window.addEventListener('blur', stop);
+      }
+      bindBpmRepeat('bpm-down', -2);
+      bindBpmRepeat('bpm-up', 2);
+      bindBpmRepeat('mob-bpm-down', -2);
+      bindBpmRepeat('mob-bpm-up', 2);
 
       function handleTapTempo(e) {
         e.preventDefault();
@@ -5391,31 +5794,46 @@
         document.getElementById('master-vol').value = val;
         document.getElementById('mob-master-vol').value = val;
         document.getElementById('master-vol-val').textContent = val;
+        const mobVolVal = document.getElementById('mob-master-vol-val');
+        if (mobVolVal) mobVolVal.textContent = val;
         audio.setMasterVolume(val / 100);
       }
       document.getElementById('master-vol').addEventListener('input', (e) => setMasterVolumeUI(Number(e.target.value)));
       document.getElementById('mob-master-vol').addEventListener('input', (e) => setMasterVolumeUI(Number(e.target.value)));
 
       const djValEl = document.getElementById('dj-filter-val');
+      const mobDjValEl = document.getElementById('mob-dj-filter-val');
       function setDJFilterUI(v) {
         audio.init();
         document.getElementById('dj-filter').value = v;
         document.getElementById('mob-dj-filter').value = v;
         audio.setDJFilter(v);
-        if (Math.abs(v) < 3) {
-          djValEl.textContent = 'OFF';
-          djValEl.className = 'font-mono-tech text-emerald-300 w-7 text-right cursor-pointer';
-        } else if (v < 0) {
-          djValEl.textContent = `LP${Math.abs(v)}`;
-          djValEl.className = 'font-mono-tech text-cyan-300 w-7 text-right cursor-pointer';
-        } else {
-          djValEl.textContent = `HP${v}`;
-          djValEl.className = 'font-mono-tech text-rose-300 w-7 text-right cursor-pointer';
+        let label = 'OFF';
+        let colorCls = 'text-emerald-300';
+        if (Math.abs(v) >= 3 && v < 0) {
+          label = `LP${Math.abs(v)}`;
+          colorCls = 'text-cyan-300';
+        } else if (v >= 3) {
+          label = `HP${v}`;
+          colorCls = 'text-rose-300';
+        }
+        djValEl.textContent = label;
+        djValEl.className = `font-mono-tech ${colorCls} w-7 text-right cursor-pointer`;
+        if (mobDjValEl) {
+          mobDjValEl.textContent = label;
+          mobDjValEl.className = `font-mono-tech ${colorCls} w-8 text-right text-[9.5px] cursor-pointer`;
         }
       }
       document.getElementById('dj-filter').addEventListener('input', (e) => setDJFilterUI(Number(e.target.value)));
       document.getElementById('mob-dj-filter').addEventListener('input', (e) => setDJFilterUI(Number(e.target.value)));
-      djValEl.addEventListener('dblclick', () => setDJFilterUI(0));
+      const resetDJFilter = () => {
+        if (audio.djFilterValue !== 0) {
+          setDJFilterUI(0);
+          showToast('Bộ lọc DJ: OFF');
+        }
+      };
+      djValEl.addEventListener('click', resetDJFilter);
+      if (mobDjValEl) mobDjValEl.addEventListener('click', resetDJFilter);
 
       // Synth & Groove Selectors / Macros
       patchSelect.addEventListener('change', (e) => {
@@ -5587,8 +6005,12 @@
         audio.toggleAudioRecording((isRec) => {
           const dot = document.getElementById('rec-dot');
           const lbl = document.getElementById('rec-label');
-          if (isRec) dot.classList.add('animate-pulse');
-          else { dot.classList.remove('animate-pulse'); lbl.textContent = 'REC WAV'; }
+          if (dot) dot.classList.toggle('animate-pulse', isRec);
+          if (!isRec && lbl) lbl.textContent = 'REC WAV';
+          document.querySelectorAll('[data-action="rec-wav"]').forEach(btn => {
+            styleHwLed(btn, isRec, [244, 63, 94]);
+            if (!isRec && !btn.querySelector('#rec-label')) btn.textContent = 'REC WAV';
+          });
         });
       }));
       document.querySelectorAll('[data-action="keys"]').forEach(b => b.addEventListener('click', () => {
@@ -5604,10 +6026,19 @@
       }));
 
       function toggleFullscreen() {
-        if (!document.fullscreenElement) {
-          document.documentElement.requestFullscreen?.().catch(() => {});
+        const fsEl = document.fullscreenElement || document.webkitFullscreenElement;
+        if (!fsEl) {
+          const req = document.documentElement.requestFullscreen || document.documentElement.webkitRequestFullscreen;
+          if (req) {
+            Promise.resolve(req.call(document.documentElement)).catch(() => {
+              showToast('Trên iPhone/iPad: chọn Chia sẻ → Thêm vào MH chính để toàn màn hình!');
+            });
+          } else {
+            showToast('Trên iPhone/iPad: chọn Chia sẻ → Thêm vào MH chính để toàn màn hình!');
+          }
         } else {
-          document.exitFullscreen?.().catch(() => {});
+          const exit = document.exitFullscreen || document.webkitExitFullscreen;
+          if (exit) Promise.resolve(exit.call(document)).catch(() => {});
         }
       }
       document.getElementById('btn-fullscreen').addEventListener('click', toggleFullscreen);
@@ -5620,6 +6051,36 @@
       document.getElementById('hdr-guide-btn').addEventListener('click', openGuide);
       document.getElementById('btn-close-guide').addEventListener('click', closeGuide);
       guideModal.addEventListener('click', (e) => { if (e.target === guideModal) closeGuide(); });
+
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+          for (const pid of Array.from(state.activePointers.keys())) releasePointer(pid);
+          state.padPointers.clear();
+          if (xyPointerId !== null) {
+            xyPointerId = null;
+            if (!audio.xyHold) {
+              audio.setXYPad(0, 0, false, state.bpm);
+              xyReadout.textContent = audio.xyMode === 'filter_wash' ? 'LPF ↔ HPF • WASH 0%' : 'DLY TIME • GATE 0%';
+            }
+          }
+          document.querySelectorAll('[data-fx-roll].active, #fx-tape-stop.active, #fx-wash-out.active').forEach(btn => {
+            btn.classList.remove('active');
+          });
+          if (audio.initialized) {
+            audio.setBeatRepeat(-1, false);
+            audio.triggerTapeStop(false);
+            audio.triggerWashOut(false);
+          }
+        } else {
+          if (audio.initialized && audio.ctx && audio.ctx.state !== 'running') {
+            audio.ctx.resume().catch(() => {});
+          }
+          if (state.isPlaying) {
+            if (state.wakeLock && state.wakeLock.released) state.wakeLock = null;
+            manageWakeLock(true);
+          }
+        }
+      });
 
       /* ---------------- QWERTY KEYBOARD SUPPORT ---------------- */
       const heldKeys = new Map();
