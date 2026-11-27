@@ -2,8 +2,33 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>EngMaster — 4.500 Từ Vựng &amp; 16 Chuyên Đề Ngữ Pháp (974 Câu Quiz)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="theme-color" content="#ffffff" />
+  <title>English Master</title>
+  <script>
+    (function () {
+      let lastBlockedToast = 0;
+      function blockSaveShortcut(e) {
+        const isSaveKey = e.code === 'KeyS' || (typeof e.key === 'string' && e.key.toLowerCase() === 's') || e.keyCode === 83;
+        if ((e.ctrlKey || e.metaKey) && !e.altKey && isSaveKey) {
+          e.preventDefault();
+          e.stopPropagation();
+          if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation();
+          const now = Date.now();
+          if (now - lastBlockedToast > 1200) {
+            lastBlockedToast = now;
+            if (typeof window.__engmasterToast === 'function') {
+              window.__engmasterToast('🔒 Chế độ bảo vệ: đã chặn lưu trang HTML (Ctrl + S).');
+            }
+          }
+          return false;
+        }
+      }
+      window.addEventListener('keydown', blockSaveShortcut, { capture: true });
+    })();
+  </script>
   <script src="https://cdn.tailwindcss.com/3.4.17"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -21,12 +46,32 @@
     };
   </script>
   <style>
+    html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
+    html, body { overscroll-behavior-y: none; touch-action: manipulation; }
     body { font-family: 'Inter', system-ui, sans-serif; background: #f8fafc; color: #0f172a; }
-    .perspective-1000 { perspective: 1000px; }
-    .transform-style-3d { transform-style: preserve-3d; transition: transform 0.55s cubic-bezier(0.4, 0, 0.2, 1); }
+    button, a, select, input, label, [role="button"] { -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+    @media (pointer: coarse), (max-width: 1024px) {
+      input, select, textarea { font-size: 16px !important; }
+    }
+    .safe-top { padding-top: env(safe-area-inset-top); }
+    .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
+    .no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .tap-feedback { transition: transform 0.12s ease, background-color 0.15s ease, border-color 0.15s ease; }
+    .tap-feedback:active { transform: scale(0.975); }
+
+    .perspective-1000 { perspective: 1200px; -webkit-perspective: 1200px; }
+    .transform-style-3d { transform-style: preserve-3d; -webkit-transform-style: preserve-3d; transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1); will-change: transform; }
     .backface-hidden { backface-visibility: hidden; -webkit-backface-visibility: hidden; }
-    .rotate-y-180 { transform: rotateY(180deg); }
-    .tab-btn.active { background: #4f46e5; color: #ffffff; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.28); }
+    .fc-front-face { transform: rotateY(0deg); -webkit-transform: rotateY(0deg); }
+    .rotate-y-180 { transform: rotateY(180deg); -webkit-transform: rotateY(180deg); }
+    #fcCardInner.rotate-y-180 .fc-front-face { pointer-events: none; }
+    #fcCardInner:not(.rotate-y-180) .fc-back-face { pointer-events: none; }
+    #fcCardWrapper { touch-action: pan-y; }
+
+    #desktopNav .tab-btn.active { background: #4f46e5; color: #ffffff; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.28); }
+    #bottomNav .tab-btn.active { color: #4f46e5; font-weight: 700; }
+    #bottomNav .tab-btn.active .nav-icon-pill { background: #eef2ff; color: #4f46e5; }
     .grammar-nav-btn.active { background: #eef2ff; color: #4338ca; border-left: 3px solid #4f46e5; font-weight: 700; }
     .g-mode-btn.active { color: #4f46e5; border-bottom: 2px solid #4f46e5; font-weight: 700; }
     .fade-in { animation: fadeIn 0.25s ease-out; }
@@ -36,6 +81,64 @@
     .grammar-table th { background: #f1f5f9; text-align: left; padding: 0.65rem 0.85rem; font-weight: 600; font-size: 0.82rem; color: #334155; border-bottom: 1px solid #e2e8f0; }
     .grammar-table td { padding: 0.65rem 0.85rem; font-size: 0.86rem; border-bottom: 1px solid #f1f5f9; vertical-align: top; }
     .grammar-table tr:hover td { background: #f8fafc; }
+
+    @media (max-width: 1023.98px) {
+      #grammarSidebarAside {
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        z-index: 60;
+        width: min(88vw, 370px);
+        height: 100dvh;
+        border-radius: 0 1.25rem 1.25rem 0;
+        transform: translateX(-105%);
+        transition: transform 0.28s cubic-bezier(0.32, 0.72, 0, 1);
+        display: flex;
+        flex-direction: column;
+        overscroll-behavior: contain;
+        padding-top: calc(1rem + env(safe-area-inset-top));
+        padding-bottom: calc(1rem + env(safe-area-inset-bottom));
+      }
+      #grammarSidebarAside.drawer-open {
+        transform: translateX(0);
+      }
+    }
+
+    #grammarTheoryView button[data-speak] {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 36px;
+      min-height: 36px;
+      padding: 0 0.5rem;
+      border-radius: 0.6rem;
+      background: #eef2ff;
+      border: 1px solid #c7d2fe;
+      vertical-align: middle;
+      margin-left: 0.3rem;
+      text-decoration: none !important;
+      transition: transform 0.12s ease, background-color 0.15s ease;
+    }
+    #grammarTheoryView button[data-speak]:active {
+      transform: scale(0.95);
+      background: #e0e7ff;
+    }
+    @media (pointer: coarse) {
+      #grammarTheoryView button[data-speak] {
+        min-width: 40px;
+        min-height: 40px;
+      }
+    }
+    #grammarTheoryView .overflow-x-auto {
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior-x: contain;
+    }
+    @media (max-width: 767.98px) {
+      .grammar-table { min-width: 560px; }
+      .grammar-table th, .grammar-table td { padding: 0.6rem 0.7rem; }
+    }
+
     ::-webkit-scrollbar { width: 6px; height: 6px; }
     ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 999px; }
   </style>
@@ -43,58 +146,44 @@
 <body class="min-h-screen flex flex-col">
 
   <!-- Toast Container -->
-  <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+  <div id="toastContainer" class="fixed bottom-[calc(4.75rem+env(safe-area-inset-bottom))] lg:bottom-5 left-4 right-4 sm:left-auto sm:right-5 z-50 flex flex-col items-center sm:items-end gap-2 pointer-events-none"></div>
 
   <!-- Top Navigation -->
-  <header class="sticky top-0 z-40 bg-white/95 backdrop-blur border-b border-slate-200">
+  <header class="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200 safe-top">
     <div class="max-w-7xl mx-auto px-3 sm:px-6 h-16 flex items-center justify-between gap-2">
       <div class="flex items-center gap-2.5 shrink-0 cursor-pointer" id="brandLogo">
         <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-600 to-violet-600 flex items-center justify-center text-white font-extrabold text-lg shadow-sm">E</div>
         <div class="leading-tight">
-          <div class="font-extrabold text-slate-900 text-base tracking-tight">EngMaster</div>
-          <div class="text-[11px] text-slate-500 font-medium hidden sm:block">4.500 Từ Vựng · 16 Chuyên Đề Ngữ Pháp · 974 Câu Quiz</div>
+          <div class="font-extrabold text-slate-900 text-base tracking-tight">English Master</div>
+          <div class="text-[11px] text-slate-500 font-medium hidden xl:block">Từ Vựng · Ngữ Pháp · Quiz</div>
         </div>
       </div>
 
-      <!-- Desktop Tabs -->
-      <nav class="hidden md:flex items-center gap-1 bg-slate-100 p-1 rounded-xl" id="desktopNav">
-        <button type="button" data-tab="dashboard" class="tab-btn active px-3.5 py-2 rounded-lg text-sm font-semibold text-slate-600 hover:text-slate-900 transition">Tổng quan</button>
-        <button type="button" data-tab="vocab" class="tab-btn px-3.5 py-2 rounded-lg text-sm font-semibold text-slate-600 hover:text-slate-900 transition">Từ vựng</button>
-        <button type="button" data-tab="flashcard" class="tab-btn px-3.5 py-2 rounded-lg text-sm font-semibold text-slate-600 hover:text-slate-900 transition">Flashcard</button>
-        <button type="button" data-tab="quiz" class="tab-btn px-3.5 py-2 rounded-lg text-sm font-semibold text-slate-600 hover:text-slate-900 transition">Trắc nghiệm Từ</button>
-        <button type="button" data-tab="grammar" class="tab-btn px-3.5 py-2 rounded-lg text-sm font-semibold text-slate-600 hover:text-slate-900 transition">Ngữ pháp &amp; Quiz</button>
+      <!-- Desktop / iPad Landscape Tabs -->
+      <nav class="hidden lg:flex items-center gap-1 bg-slate-100 p-1 rounded-xl" id="desktopNav">
+        <button type="button" data-tab="dashboard" class="tab-btn active min-h-[42px] px-3.5 py-2 rounded-lg text-sm font-semibold text-slate-600 hover:text-slate-900 transition">Tổng quan</button>
+        <button type="button" data-tab="vocab" class="tab-btn min-h-[42px] px-3.5 py-2 rounded-lg text-sm font-semibold text-slate-600 hover:text-slate-900 transition">Từ vựng</button>
+        <button type="button" data-tab="flashcard" class="tab-btn min-h-[42px] px-3.5 py-2 rounded-lg text-sm font-semibold text-slate-600 hover:text-slate-900 transition">Flashcard</button>
+        <button type="button" data-tab="quiz" class="tab-btn min-h-[42px] px-3.5 py-2 rounded-lg text-sm font-semibold text-slate-600 hover:text-slate-900 transition">Trắc nghiệm Từ</button>
+        <button type="button" data-tab="grammar" class="tab-btn min-h-[42px] px-3.5 py-2 rounded-lg text-sm font-semibold text-slate-600 hover:text-slate-900 transition">Ngữ pháp &amp; Quiz</button>
       </nav>
 
-      <!-- Voice Accent & Mobile Menu -->
+      <!-- Voice Accent -->
       <div class="flex items-center gap-2">
-        <button type="button" id="accentToggleBtn" class="px-2.5 py-1.5 rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 text-xs font-semibold text-slate-700 transition" title="Đổi giọng phát âm Anh-Mỹ / Anh-Anh">
+        <button type="button" id="accentToggleBtn" class="min-h-[44px] min-w-[68px] px-3.5 py-2 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-xs sm:text-sm font-bold text-slate-700 tap-feedback" title="Đổi giọng phát âm Anh-Mỹ / Anh-Anh">
           🔊 US
         </button>
-        <button type="button" id="mobileMenuBtn" class="md:hidden p-2 rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-100" aria-label="Menu">
-          ☰
-        </button>
-      </div>
-    </div>
-
-    <!-- Mobile Nav Drawer -->
-    <div id="mobileNav" class="hidden md:hidden border-t border-slate-200 bg-white px-3 py-2">
-      <div class="grid grid-cols-2 sm:grid-cols-5 gap-1.5">
-        <button type="button" data-tab="dashboard" class="tab-btn active px-3 py-2 rounded-lg text-xs font-semibold text-slate-600">Tổng quan</button>
-        <button type="button" data-tab="vocab" class="tab-btn px-3 py-2 rounded-lg text-xs font-semibold text-slate-600">Từ vựng</button>
-        <button type="button" data-tab="flashcard" class="tab-btn px-3 py-2 rounded-lg text-xs font-semibold text-slate-600">Flashcard</button>
-        <button type="button" data-tab="quiz" class="tab-btn px-3 py-2 rounded-lg text-xs font-semibold text-slate-600">Trắc nghiệm Từ</button>
-        <button type="button" data-tab="grammar" class="tab-btn col-span-2 sm:col-span-1 px-3 py-2 rounded-lg text-xs font-semibold text-slate-600">Ngữ pháp &amp; Quiz</button>
       </div>
     </div>
   </header>
 
   <!-- Main Content -->
-  <main class="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 py-6">
+  <main class="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 pt-4 sm:pt-6 pb-[calc(6rem+env(safe-area-inset-bottom))] lg:pb-8">
 
     <!-- ===================== TAB 1: DASHBOARD ===================== -->
     <section id="tab-dashboard" class="tab-panel fade-in space-y-6">
       <!-- Hero Banner -->
-      <div class="rounded-2xl bg-gradient-to-r from-indigo-600 via-indigo-700 to-violet-700 text-white p-6 sm:p-8 shadow-md">
+      <div class="rounded-2xl bg-gradient-to-r from-indigo-600 via-indigo-700 to-violet-700 text-white p-5 sm:p-7 lg:p-8 shadow-md">
         <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
           <div class="space-y-2 max-w-2xl">
             <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/15 text-xs font-semibold tracking-wide">
@@ -105,14 +194,14 @@
               Trọn bộ <strong class="text-white">3.000 từ thông dụng</strong>, <strong class="text-white">600 từ TOEIC</strong>, <strong class="text-white">900 từ IELTS (30 chủ đề)</strong> cùng hệ thống Flashcard, Trắc nghiệm nghe-đọc và <strong class="text-white">16 chuyên đề Ngữ pháp kèm kho 974 câu trắc nghiệm xáo trộn ngẫu nhiên</strong>.
             </p>
           </div>
-          <div class="flex flex-wrap gap-2.5 shrink-0">
-            <button type="button" id="heroFlashcardBtn" class="px-4 py-2.5 rounded-xl bg-white text-indigo-700 font-bold text-sm hover:bg-indigo-50 transition shadow-sm">
+          <div class="grid grid-cols-1 sm:flex sm:flex-wrap gap-2.5 w-full lg:w-auto shrink-0">
+            <button type="button" id="heroFlashcardBtn" class="min-h-[46px] px-4 py-2.5 rounded-xl bg-white text-indigo-700 font-bold text-sm hover:bg-indigo-50 shadow-sm flex items-center justify-center gap-1.5 tap-feedback">
               🃏 Học Flashcard ngay
             </button>
-            <button type="button" id="heroQuizBtn" class="px-4 py-2.5 rounded-xl bg-indigo-500/40 hover:bg-indigo-500/60 border border-white/25 text-white font-bold text-sm transition">
+            <button type="button" id="heroQuizBtn" class="min-h-[46px] px-4 py-2.5 rounded-xl bg-indigo-500/40 hover:bg-indigo-500/60 border border-white/25 text-white font-bold text-sm flex items-center justify-center gap-1.5 tap-feedback">
               📝 Trắc nghiệm Từ vựng
             </button>
-            <button type="button" id="heroGrammarBtn" class="px-4 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-900 font-bold text-sm transition">
+            <button type="button" id="heroGrammarBtn" class="min-h-[46px] px-4 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-900 font-bold text-sm flex items-center justify-center gap-1.5 tap-feedback">
               📘 Ngữ pháp &amp; Quiz
             </button>
           </div>
@@ -120,7 +209,7 @@
       </div>
 
       <!-- Global Stats -->
-      <div class="grid grid-cols-2 lg:grid-cols-5 gap-3.5">
+      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-3.5">
         <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm">
           <div class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Tổng kho từ vựng</div>
           <div class="mt-1.5 text-2xl sm:text-3xl font-extrabold text-slate-900" id="statTotalWords">4.500</div>
@@ -141,7 +230,7 @@
           <div class="mt-1.5 text-2xl sm:text-3xl font-extrabold text-indigo-600" id="statAccuracy">0%</div>
           <div class="text-xs text-slate-500 mt-1" id="statQuizCount">0 câu đã làm</div>
         </div>
-        <div class="col-span-2 lg:col-span-1 bg-white rounded-2xl p-4 border border-slate-200 shadow-sm">
+        <div class="col-span-2 md:col-span-2 lg:col-span-1 bg-white rounded-2xl p-4 border border-slate-200 shadow-sm">
           <div class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Ngữ pháp hoàn thành</div>
           <div class="mt-1.5 text-2xl sm:text-3xl font-extrabold text-violet-600" id="statGrammarDone">0/16</div>
           <div class="text-xs text-slate-500 mt-1" id="statGrammarPct">0% · 974 câu quiz</div>
@@ -150,25 +239,25 @@
 
       <!-- 3 Pack Cards -->
       <div>
-        <div class="flex items-center justify-between mb-3">
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
           <h2 class="text-lg font-bold text-slate-900">Các gói từ vựng của bạn</h2>
-          <button type="button" id="resetProgressBtn" class="text-xs font-semibold text-rose-600 hover:underline">Đặt lại toàn bộ tiến độ học</button>
+          <button type="button" id="resetProgressBtn" class="min-h-[40px] px-3 py-2 rounded-xl text-xs font-semibold text-rose-600 hover:bg-rose-50 active:bg-rose-100 transition">Đặt lại toàn bộ tiến độ học</button>
         </div>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-5" id="packCardsGrid"></div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5" id="packCardsGrid"></div>
       </div>
 
       <!-- Quick Grammar Preview (16 Topics + Mixed Test) -->
-      <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
+      <div class="bg-white rounded-2xl border border-slate-200 p-4 sm:p-5 shadow-sm">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
           <div>
             <h2 class="text-lg font-bold text-slate-900">Hệ thống Lý thuyết &amp; Trắc nghiệm Ngữ pháp (16 Chuyên đề · 974 câu)</h2>
             <p class="text-sm text-slate-500">Bấm vào chuyên đề bất kỳ để học công thức, ví dụ có phát âm và làm bài luyện tập ngẫu nhiên.</p>
           </div>
-          <div class="flex flex-wrap gap-2 shrink-0">
-            <button type="button" id="dashboardMixedGrammarBtn" class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold text-xs sm:text-sm shadow-sm transition">
+          <div class="flex flex-col sm:flex-row flex-wrap gap-2 shrink-0">
+            <button type="button" id="dashboardMixedGrammarBtn" class="w-full sm:w-auto min-h-[44px] px-3.5 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold text-xs sm:text-sm shadow-sm tap-feedback">
               🔀 Kiểm tra Ngữ pháp Tổng hợp
             </button>
-            <button type="button" id="openFullGrammarBtn" class="px-3.5 py-2 rounded-xl bg-indigo-50 text-indigo-700 font-semibold text-xs sm:text-sm hover:bg-indigo-100 transition">
+            <button type="button" id="openFullGrammarBtn" class="w-full sm:w-auto min-h-[44px] px-3.5 py-2 rounded-xl bg-indigo-50 text-indigo-700 font-semibold text-xs sm:text-sm hover:bg-indigo-100 tap-feedback">
               Mở toàn bộ Ngữ pháp →
             </button>
           </div>
@@ -181,59 +270,60 @@
     <section id="tab-vocab" class="tab-panel hidden fade-in space-y-5">
       <div class="bg-white rounded-2xl border border-slate-200 p-4 sm:p-5 shadow-sm space-y-4">
         <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
-          <div class="flex flex-wrap gap-2" id="vocabPackPills">
-            <button type="button" data-pack="common3000" class="vocab-pack-btn px-3.5 py-2 rounded-xl text-sm font-semibold transition">3.000 Thông dụng (3000)</button>
-            <button type="button" data-pack="toeic600" class="vocab-pack-btn px-3.5 py-2 rounded-xl text-sm font-semibold transition">600 TOEIC (600)</button>
-            <button type="button" data-pack="ielts900" class="vocab-pack-btn px-3.5 py-2 rounded-xl text-sm font-semibold transition">900 IELTS (900)</button>
+          <div class="flex overflow-x-auto no-scrollbar gap-2 -mx-1 px-1 pb-0.5" id="vocabPackPills">
+            <button type="button" data-pack="common3000" class="vocab-pack-btn shrink-0 min-h-[44px] px-3.5 py-2 rounded-xl text-sm font-semibold tap-feedback">3.000 Thông dụng (3000)</button>
+            <button type="button" data-pack="toeic600" class="vocab-pack-btn shrink-0 min-h-[44px] px-3.5 py-2 rounded-xl text-sm font-semibold tap-feedback">600 TOEIC (600)</button>
+            <button type="button" data-pack="ielts900" class="vocab-pack-btn shrink-0 min-h-[44px] px-3.5 py-2 rounded-xl text-sm font-semibold tap-feedback">900 IELTS (900)</button>
           </div>
           <div class="relative w-full lg:w-80">
-            <input id="vocabSearchInput" type="text" placeholder="Tìm từ tiếng Anh hoặc nghĩa tiếng Việt..." class="w-full pl-9 pr-4 py-2 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" />
-            <span class="absolute left-3 top-2.5 text-slate-400 text-sm">🔍</span>
+            <input id="vocabSearchInput" type="search" inputmode="search" enterkeyhint="search" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="Tìm từ tiếng Anh hoặc nghĩa tiếng Việt..." class="w-full min-h-[46px] pl-10 pr-11 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" />
+            <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm pointer-events-none">🔍</span>
+            <button type="button" id="vocabSearchClearBtn" aria-label="Xóa tìm kiếm" class="hidden absolute right-1.5 top-1/2 -translate-y-1/2 w-9 h-9 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 flex items-center justify-center text-sm font-bold tap-feedback">✕</button>
           </div>
         </div>
 
-        <div class="flex flex-wrap items-center gap-2.5 pt-2 border-t border-slate-100">
-          <select id="vocabStatusFilter" class="px-3 py-1.5 rounded-lg border border-slate-300 text-xs font-semibold text-slate-700 bg-white">
+        <div class="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2.5 pt-3 border-t border-slate-100">
+          <select id="vocabStatusFilter" class="min-h-[44px] px-3 py-2 rounded-xl border border-slate-300 text-xs font-semibold text-slate-700 bg-white">
             <option value="all">Tất cả trạng thái</option>
             <option value="unmastered">Chưa thuộc</option>
             <option value="mastered">Đã thuộc ✓</option>
             <option value="bookmarked">Đã lưu ôn tập ★</option>
           </select>
-          <select id="vocabLetterFilter" class="px-3 py-1.5 rounded-lg border border-slate-300 text-xs font-semibold text-slate-700 bg-white">
+          <select id="vocabLetterFilter" class="min-h-[44px] px-3 py-2 rounded-xl border border-slate-300 text-xs font-semibold text-slate-700 bg-white">
             <option value="all">Tất cả chữ cái (A-Z)</option>
           </select>
-          <select id="vocabTopicFilter" class="hidden px-3 py-1.5 rounded-lg border border-slate-300 text-xs font-semibold text-slate-700 bg-white">
+          <select id="vocabTopicFilter" class="hidden col-span-2 sm:col-span-1 min-h-[44px] px-3 py-2 rounded-xl border border-slate-300 text-xs font-semibold text-slate-700 bg-white">
             <option value="all">Tất cả 30 chủ đề IELTS</option>
           </select>
-          <div class="ml-auto text-xs font-semibold text-slate-500" id="vocabCountLabel">Hiển thị 0 từ</div>
+          <div class="col-span-2 sm:col-span-1 sm:ml-auto text-xs font-semibold text-slate-500" id="vocabCountLabel">Hiển thị 0 từ</div>
         </div>
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5" id="vocabListGrid"></div>
-      <div class="flex items-center justify-center gap-2 pt-2" id="vocabPagination"></div>
+      <div class="flex flex-wrap items-center justify-center gap-2 pt-2" id="vocabPagination"></div>
     </section>
 
     <!-- ===================== TAB 3: FLASHCARD ===================== -->
     <section id="tab-flashcard" class="tab-panel hidden fade-in space-y-5">
-      <div class="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm flex flex-wrap items-center gap-3">
-        <select id="fcPackSelect" class="px-3 py-2 rounded-xl border border-slate-300 text-sm font-semibold text-slate-800 bg-white">
+      <div class="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2.5">
+        <select id="fcPackSelect" class="col-span-2 sm:col-span-1 min-h-[44px] px-3 py-2 rounded-xl border border-slate-300 text-sm font-semibold text-slate-800 bg-white">
           <option value="common3000">Gói 3.000 Từ Thông Dụng</option>
           <option value="toeic600">Gói 600 Từ TOEIC</option>
           <option value="ielts900">Gói 900 Từ IELTS (900 từ)</option>
         </select>
-        <select id="fcFilterSelect" class="px-3 py-2 rounded-xl border border-slate-300 text-sm font-semibold text-slate-700 bg-white">
+        <select id="fcFilterSelect" class="min-h-[44px] px-3 py-2 rounded-xl border border-slate-300 text-sm font-semibold text-slate-700 bg-white">
           <option value="all">Tất cả từ trong gói</option>
           <option value="unmastered">Chỉ từ chưa thuộc</option>
           <option value="bookmarked">Chỉ từ đã lưu ★</option>
         </select>
-        <select id="fcTopicSelect" class="hidden px-3 py-2 rounded-xl border border-slate-300 text-sm font-semibold text-slate-700 bg-white">
+        <select id="fcTopicSelect" class="hidden col-span-2 sm:col-span-1 min-h-[44px] px-3 py-2 rounded-xl border border-slate-300 text-sm font-semibold text-slate-700 bg-white">
           <option value="all">Tất cả 30 chủ đề</option>
         </select>
-        <button type="button" id="fcShuffleBtn" class="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold transition">
+        <button type="button" id="fcShuffleBtn" class="min-h-[44px] px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold tap-feedback">
           🔀 Xáo trộn
         </button>
-        <label class="inline-flex items-center gap-2 text-xs font-semibold text-slate-600 ml-auto cursor-pointer">
-          <input type="checkbox" id="fcAutoSpeak" class="rounded text-indigo-600" checked />
+        <label class="col-span-2 sm:col-span-1 sm:ml-auto inline-flex items-center justify-center sm:justify-start gap-2.5 min-h-[44px] px-3.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-600 cursor-pointer">
+          <input type="checkbox" id="fcAutoSpeak" class="w-4 h-4 rounded text-indigo-600" checked />
           Tự động phát âm
         </label>
       </div>
@@ -255,52 +345,55 @@
           <p class="text-sm text-slate-500">Bạn đã học hết hoặc chưa lưu từ nào. Hãy đổi bộ lọc sang "Tất cả từ trong gói".</p>
         </div>
 
-        <div id="fcCardWrapper" class="perspective-1000 cursor-pointer select-none">
-          <div id="fcCardInner" class="relative w-full min-h-[290px] sm:min-h-[320px] transform-style-3d">
-            <div class="absolute inset-0 backface-hidden bg-white rounded-3xl border border-slate-200 shadow-lg p-6 sm:p-8 flex flex-col justify-between">
-              <div class="flex items-center justify-between">
-                <span id="fcBadge" class="px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 text-xs font-bold">3.000 Thông dụng</span>
-                <div class="flex items-center gap-2">
-                  <button type="button" id="fcSpeakBtn" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-indigo-100 text-slate-700 hover:text-indigo-700 text-xs font-semibold transition">🔊 Nghe</button>
-                  <button type="button" id="fcBookmarkBtn" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-amber-100 text-slate-600 text-xs font-semibold transition">☆ Lưu</button>
+        <div id="fcCardWrapper" class="perspective-1000 cursor-pointer select-none relative">
+          <div id="fcSwipeBadge" class="hidden pointer-events-none absolute top-3 left-1/2 -translate-x-1/2 z-20 px-3.5 py-1.5 rounded-full bg-slate-900/85 text-white text-xs font-bold shadow-md"></div>
+          <div id="fcSwipeStage" class="will-change-transform">
+            <div id="fcCardInner" class="relative w-full min-h-[320px] sm:min-h-[360px] transform-style-3d">
+              <div class="fc-front-face absolute inset-0 backface-hidden bg-white rounded-3xl border border-slate-200 shadow-lg p-5 sm:p-8 flex flex-col justify-between">
+                <div class="flex items-center justify-between gap-2">
+                  <span id="fcBadge" class="px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 text-xs font-bold truncate max-w-[55%]">3.000 Thông dụng</span>
+                  <div class="flex items-center gap-2 shrink-0">
+                    <button type="button" id="fcSpeakBtn" class="min-h-[44px] px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-indigo-100 text-slate-700 hover:text-indigo-700 text-xs sm:text-sm font-semibold tap-feedback">🔊 Nghe</button>
+                    <button type="button" id="fcBookmarkBtn" class="min-h-[44px] px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-amber-100 text-slate-600 text-xs sm:text-sm font-semibold tap-feedback">☆ Lưu</button>
+                  </div>
+                </div>
+                <div class="text-center my-auto py-4">
+                  <div id="fcWord" class="text-3xl sm:text-5xl font-extrabold text-slate-900 tracking-tight break-words">abandon</div>
+                  <div class="mt-3 text-xs sm:text-sm font-medium text-slate-400">Chạm thẻ để lật · Vuốt trái/phải để chuyển thẻ</div>
+                </div>
+                <div class="flex justify-center">
+                  <span id="fcStatusPill" class="text-xs font-semibold text-slate-400">Chưa thuộc</span>
                 </div>
               </div>
-              <div class="text-center my-auto py-4">
-                <div id="fcWord" class="text-3xl sm:text-5xl font-extrabold text-slate-900 tracking-tight break-words">abandon</div>
-                <div class="mt-3 text-xs font-medium text-slate-400">Nhấn vào thẻ hoặc phím Space để lật xem nghĩa</div>
-              </div>
-              <div class="flex justify-center">
-                <span id="fcStatusPill" class="text-xs font-semibold text-slate-400">Chưa thuộc</span>
-              </div>
-            </div>
 
-            <div class="absolute inset-0 backface-hidden rotate-y-180 bg-gradient-to-br from-indigo-600 to-violet-700 text-white rounded-3xl shadow-lg p-6 sm:p-8 flex flex-col justify-between">
-              <div class="flex items-center justify-between">
-                <span class="px-3 py-1 rounded-full bg-white/15 text-xs font-bold">Nghĩa Tiếng Việt</span>
-                <button type="button" id="fcSpeakBackBtn" class="px-3 py-1.5 rounded-xl bg-white/15 hover:bg-white/25 text-white text-xs font-semibold transition">🔊 Nghe lại</button>
+              <div class="fc-back-face absolute inset-0 backface-hidden rotate-y-180 bg-gradient-to-br from-indigo-600 to-violet-700 text-white rounded-3xl shadow-lg p-5 sm:p-8 flex flex-col justify-between">
+                <div class="flex items-center justify-between gap-2">
+                  <span class="px-3 py-1 rounded-full bg-white/15 text-xs font-bold">Nghĩa Tiếng Việt</span>
+                  <button type="button" id="fcSpeakBackBtn" class="min-h-[44px] px-3.5 py-2 rounded-xl bg-white/15 hover:bg-white/25 text-white text-xs sm:text-sm font-semibold tap-feedback">🔊 Nghe lại</button>
+                </div>
+                <div class="text-center my-auto py-4 space-y-3">
+                  <div id="fcWordSmall" class="text-lg font-bold text-indigo-200 break-words">abandon</div>
+                  <div id="fcMeaning" class="text-2xl sm:text-3xl font-extrabold leading-snug break-words">bỏ, từ bỏ</div>
+                </div>
+                <div class="text-center text-xs sm:text-sm text-indigo-200">Chạm thẻ để lật lại mặt trước</div>
               </div>
-              <div class="text-center my-auto py-4 space-y-3">
-                <div id="fcWordSmall" class="text-lg font-bold text-indigo-200">abandon</div>
-                <div id="fcMeaning" class="text-2xl sm:text-3xl font-extrabold leading-snug">bỏ, từ bỏ</div>
-              </div>
-              <div class="text-center text-xs text-indigo-200">Nhấn vào thẻ để lật lại mặt trước</div>
             </div>
           </div>
         </div>
 
-        <div id="fcActions" class="mt-5 flex flex-wrap items-center justify-center gap-3">
-          <button type="button" id="fcPrevBtn" class="px-4 py-2.5 rounded-xl bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-semibold text-sm transition">← Trước</button>
-          <button type="button" id="fcStillLearningBtn" class="px-5 py-2.5 rounded-xl bg-amber-100 hover:bg-amber-200 text-amber-800 font-bold text-sm transition">↺ Cần ôn lại</button>
-          <button type="button" id="fcKnowBtn" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm transition shadow-sm">✓ Đã thuộc</button>
-          <button type="button" id="fcNextBtn" class="px-4 py-2.5 rounded-xl bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-semibold text-sm transition">Tiếp →</button>
+        <div id="fcActions" class="mt-5 grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3">
+          <button type="button" id="fcPrevBtn" class="order-3 sm:order-1 min-h-[46px] sm:min-h-[50px] px-4 py-2.5 rounded-xl bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-semibold text-sm tap-feedback">← Trước</button>
+          <button type="button" id="fcStillLearningBtn" class="order-1 sm:order-2 min-h-[52px] sm:min-h-[50px] px-4 py-2.5 rounded-xl bg-amber-100 hover:bg-amber-200 text-amber-800 font-bold text-sm tap-feedback">↺ Cần ôn lại</button>
+          <button type="button" id="fcKnowBtn" class="order-2 sm:order-3 min-h-[52px] sm:min-h-[50px] px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm shadow-sm tap-feedback">✓ Đã thuộc</button>
+          <button type="button" id="fcNextBtn" class="order-4 sm:order-4 min-h-[46px] sm:min-h-[50px] px-4 py-2.5 rounded-xl bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-semibold text-sm tap-feedback">Tiếp →</button>
         </div>
-        <p class="text-center text-xs text-slate-400 mt-3">Phím tắt: <kbd class="px-1.5 py-0.5 bg-slate-200 rounded text-slate-700">Space</kbd> Lật thẻ · <kbd class="px-1.5 py-0.5 bg-slate-200 rounded text-slate-700">←</kbd> <kbd class="px-1.5 py-0.5 bg-slate-200 rounded text-slate-700">→</kbd> Chuyển thẻ · <kbd class="px-1.5 py-0.5 bg-slate-200 rounded text-slate-700">S</kbd> Phát âm</p>
+        <p class="hidden lg:block text-center text-xs text-slate-400 mt-3">Phím tắt: <kbd class="px-1.5 py-0.5 bg-slate-200 rounded text-slate-700">Space</kbd> Lật thẻ · <kbd class="px-1.5 py-0.5 bg-slate-200 rounded text-slate-700">←</kbd> <kbd class="px-1.5 py-0.5 bg-slate-200 rounded text-slate-700">→</kbd> Chuyển thẻ · <kbd class="px-1.5 py-0.5 bg-slate-200 rounded text-slate-700">S</kbd> Phát âm</p>
       </div>
     </section>
 
     <!-- ===================== TAB 4: VOCAB QUIZ ===================== -->
     <section id="tab-quiz" class="tab-panel hidden fade-in space-y-5">
-      <div id="quizSetupCard" class="max-w-3xl mx-auto bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-5">
+      <div id="quizSetupCard" class="max-w-3xl mx-auto bg-white rounded-2xl border border-slate-200 p-5 sm:p-6 shadow-sm space-y-5">
         <div>
           <h2 class="text-xl font-extrabold text-slate-900">Thiết lập bài Trắc nghiệm Từ vựng</h2>
           <p class="text-sm text-slate-500 mt-1">Chọn gói từ vựng, chế độ câu hỏi và số lượng câu để bắt đầu luyện tập.</p>
@@ -309,7 +402,7 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label class="block text-xs font-bold text-slate-600 uppercase mb-1.5">Gói từ vựng</label>
-            <select id="quizPackSelect" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm font-semibold bg-white">
+            <select id="quizPackSelect" class="w-full min-h-[48px] px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm font-semibold bg-white">
               <option value="common3000">3.000 Từ Thông Dụng (3.000 từ)</option>
               <option value="toeic600">600 Từ TOEIC (600 từ)</option>
               <option value="ielts900">900 Từ IELTS (900 từ)</option>
@@ -318,7 +411,7 @@
           </div>
           <div>
             <label class="block text-xs font-bold text-slate-600 uppercase mb-1.5">Chế độ kiểm tra</label>
-            <select id="quizModeSelect" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm font-semibold bg-white">
+            <select id="quizModeSelect" class="w-full min-h-[48px] px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm font-semibold bg-white">
               <option value="en2vi">Anh → Việt (Nhìn từ chọn nghĩa)</option>
               <option value="vi2en">Việt → Anh (Nhìn nghĩa chọn từ)</option>
               <option value="listen">Nghe phát âm → Chọn nghĩa 🔊</option>
@@ -326,13 +419,13 @@
           </div>
           <div id="quizTopicWrapper" class="hidden">
             <label class="block text-xs font-bold text-slate-600 uppercase mb-1.5">Chủ đề IELTS</label>
-            <select id="quizTopicSelect" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm font-semibold bg-white">
+            <select id="quizTopicSelect" class="w-full min-h-[48px] px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm font-semibold bg-white">
               <option value="all">Tất cả 30 chủ đề</option>
             </select>
           </div>
           <div>
             <label class="block text-xs font-bold text-slate-600 uppercase mb-1.5">Số lượng câu hỏi</label>
-            <select id="quizCountSelect" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm font-semibold bg-white">
+            <select id="quizCountSelect" class="w-full min-h-[48px] px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm font-semibold bg-white">
               <option value="10">10 câu (Nhanh)</option>
               <option value="20" selected>20 câu (Tiêu chuẩn)</option>
               <option value="30">30 câu (Chuyên sâu)</option>
@@ -341,56 +434,56 @@
           </div>
         </div>
 
-        <button type="button" id="startQuizBtn" class="w-full py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-base shadow-sm transition">
+        <button type="button" id="startQuizBtn" class="w-full min-h-[52px] py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-base shadow-sm tap-feedback">
           🚀 Bắt đầu làm bài
         </button>
       </div>
 
-      <div id="quizActiveCard" class="hidden max-w-3xl mx-auto bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-5">
-        <div class="flex items-center justify-between gap-3">
+      <div id="quizActiveCard" class="hidden max-w-3xl mx-auto bg-white rounded-2xl border border-slate-200 p-4 sm:p-6 shadow-sm space-y-5">
+        <div class="flex items-center justify-between flex-wrap gap-2">
           <span id="quizProgressLabel" class="text-sm font-bold text-indigo-700">Câu 1 / 20</span>
-          <div class="flex items-center gap-3 text-xs font-bold">
-            <span class="px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700" id="quizScoreBadge">Đúng: 0</span>
-            <span class="px-2.5 py-1 rounded-lg bg-amber-50 text-amber-700" id="quizStreakBadge">🔥 Chuỗi: 0</span>
-            <button type="button" id="quitQuizBtn" class="text-slate-400 hover:text-rose-600">Thoát</button>
+          <div class="flex items-center flex-wrap gap-2 text-xs font-bold">
+            <span class="px-2.5 py-1.5 rounded-lg bg-emerald-50 text-emerald-700" id="quizScoreBadge">Đúng: 0</span>
+            <span class="px-2.5 py-1.5 rounded-lg bg-amber-50 text-amber-700" id="quizStreakBadge">🔥 Chuỗi: 0</span>
+            <button type="button" id="quitQuizBtn" class="min-h-[40px] px-3 rounded-lg bg-slate-100 text-slate-600 hover:bg-rose-50 hover:text-rose-600 font-semibold tap-feedback">Thoát</button>
           </div>
         </div>
         <div class="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
           <div id="quizProgressBar" class="h-full bg-indigo-600 transition-all duration-300" style="width: 5%"></div>
         </div>
-        <div class="py-4 text-center space-y-3">
+        <div class="py-3 sm:py-4 text-center space-y-3">
           <div id="quizPromptHint" class="text-xs font-semibold uppercase tracking-wider text-slate-400">Chọn nghĩa tiếng Việt đúng của từ sau:</div>
-          <div id="quizQuestionText" class="text-3xl sm:text-4xl font-extrabold text-slate-900">abandon</div>
-          <div class="flex justify-center gap-2">
-            <button type="button" id="quizSpeakBtn" class="px-3.5 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold transition">🔊 Nghe phát âm</button>
-            <button type="button" id="quizBookmarkCurrentBtn" class="px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-amber-100 text-slate-700 text-xs font-bold transition">☆ Lưu từ này</button>
+          <div id="quizQuestionText" class="text-3xl sm:text-4xl font-extrabold text-slate-900 break-words">abandon</div>
+          <div class="flex flex-wrap justify-center gap-2.5">
+            <button type="button" id="quizSpeakBtn" class="min-h-[44px] px-4 py-2 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs sm:text-sm font-bold tap-feedback">🔊 Nghe phát âm</button>
+            <button type="button" id="quizBookmarkCurrentBtn" class="min-h-[44px] px-4 py-2 rounded-xl bg-slate-100 hover:bg-amber-100 text-slate-700 text-xs sm:text-sm font-bold tap-feedback">☆ Lưu từ này</button>
           </div>
         </div>
         <div id="quizOptionsGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
         <div id="quizFeedbackBar" class="hidden rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div id="quizFeedbackText" class="text-sm font-semibold"></div>
-          <button type="button" id="quizNextBtn" class="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm transition shrink-0">
+          <button type="button" id="quizNextBtn" class="w-full sm:w-auto min-h-[48px] px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm sm:text-base shrink-0 tap-feedback">
             Câu tiếp theo →
           </button>
         </div>
       </div>
 
-      <div id="quizResultCard" class="hidden max-w-3xl mx-auto bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 shadow-sm space-y-6">
+      <div id="quizResultCard" class="hidden max-w-3xl mx-auto bg-white rounded-2xl border border-slate-200 p-5 sm:p-8 shadow-sm space-y-6">
         <div class="text-center space-y-2">
           <div class="text-5xl" id="quizResultEmoji">🏆</div>
           <h2 class="text-2xl font-extrabold text-slate-900" id="quizResultTitle">Hoàn thành bài kiểm tra!</h2>
           <p class="text-slate-600 text-sm" id="quizResultSubtitle"></p>
         </div>
-        <div class="grid grid-cols-3 gap-3 text-center">
-          <div class="p-3.5 rounded-xl bg-emerald-50 border border-emerald-100">
+        <div class="grid grid-cols-3 gap-2.5 sm:gap-3 text-center">
+          <div class="p-3 sm:p-3.5 rounded-xl bg-emerald-50 border border-emerald-100">
             <div class="text-xs font-semibold text-emerald-700">Số câu đúng</div>
             <div class="text-2xl font-extrabold text-emerald-700" id="resCorrect">0</div>
           </div>
-          <div class="p-3.5 rounded-xl bg-rose-50 border border-rose-100">
+          <div class="p-3 sm:p-3.5 rounded-xl bg-rose-50 border border-rose-100">
             <div class="text-xs font-semibold text-rose-700">Số câu sai</div>
             <div class="text-2xl font-extrabold text-rose-700" id="resWrong">0</div>
           </div>
-          <div class="p-3.5 rounded-xl bg-indigo-50 border border-indigo-100">
+          <div class="p-3 sm:p-3.5 rounded-xl bg-indigo-50 border border-indigo-100">
             <div class="text-xs font-semibold text-indigo-700">Tỷ lệ chính xác</div>
             <div class="text-2xl font-extrabold text-indigo-700" id="resPct">0%</div>
           </div>
@@ -399,25 +492,45 @@
           <h3 class="text-sm font-bold text-slate-800">Các từ bạn cần ôn lại:</h3>
           <div id="quizWrongList" class="divide-y divide-slate-100 border border-slate-200 rounded-xl overflow-hidden max-h-72 overflow-y-auto"></div>
         </div>
-        <div class="flex flex-wrap justify-center gap-3">
-          <button type="button" id="retryWrongBtn" class="hidden px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-sm transition">↺ Làm lại các câu sai</button>
-          <button type="button" id="newQuizBtn" class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm transition">📝 Làm đề mới</button>
+        <div class="flex flex-col sm:flex-row flex-wrap justify-center gap-3">
+          <button type="button" id="retryWrongBtn" class="hidden w-full sm:w-auto min-h-[48px] px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-sm tap-feedback">↺ Làm lại các câu sai</button>
+          <button type="button" id="newQuizBtn" class="w-full sm:w-auto min-h-[48px] px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm tap-feedback">📝 Làm đề mới</button>
         </div>
       </div>
     </section>
 
     <!-- ===================== TAB 5: FULL GRAMMAR & RANDOM QUIZ (16 TOPICS, 974 Qs) ===================== -->
     <section id="tab-grammar" class="tab-panel hidden fade-in">
+      <!-- Mobile / iPad Portrait Topic Switcher Bar -->
+      <div id="grammarMobileBar" class="lg:hidden mb-4 flex items-center gap-2">
+        <button type="button" id="openGrammarDrawerBtn" class="flex-1 min-w-0 min-h-[48px] px-3.5 py-2.5 rounded-2xl bg-white border border-slate-200 shadow-sm flex items-center justify-between gap-2 text-left tap-feedback">
+          <div class="min-w-0">
+            <div class="text-[10px] font-bold uppercase tracking-wider text-indigo-600">📚 Chọn chuyên đề (<span id="gMobileProgressMini">0/16</span>)</div>
+            <div id="gMobileTopicLabel" class="text-sm font-bold text-slate-900 truncate">1. 12 Thì trong tiếng Anh</div>
+          </div>
+          <span class="shrink-0 text-slate-400 text-sm font-bold">▾</span>
+        </button>
+        <button type="button" id="mobileMixedGrammarBtn" class="shrink-0 min-h-[48px] px-3.5 py-2.5 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs sm:text-sm font-bold shadow-sm tap-feedback">
+          🔀 Tổng hợp
+        </button>
+      </div>
+
+      <!-- Mobile / iPad Portrait Drawer Backdrop -->
+      <div id="grammarDrawerBackdrop" class="hidden lg:hidden fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm transition-opacity"></div>
+
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        <!-- Left Sidebar -->
-        <aside class="lg:col-span-4 xl:col-span-3 bg-white rounded-2xl border border-slate-200 p-4 shadow-sm lg:sticky lg:top-20 space-y-3.5">
-          <div>
-            <h2 class="text-base font-extrabold text-slate-900">📘 GrammarMaster</h2>
-            <p class="text-xs text-slate-500 mt-0.5">16 Chuyên đề · 974 câu Random Quiz</p>
+        <!-- Left Sidebar / Slide-over Drawer -->
+        <aside id="grammarSidebarAside" class="lg:col-span-4 xl:col-span-3 bg-white rounded-2xl border border-slate-200 p-4 shadow-sm lg:sticky lg:top-20 space-y-3.5">
+          <div class="flex items-start justify-between gap-2">
+            <div>
+              <h2 class="text-base font-extrabold text-slate-900">📘 GrammarMaster</h2>
+              <p class="text-xs text-slate-500 mt-0.5">16 Chuyên đề · 974 câu Random Quiz</p>
+            </div>
+            <button type="button" id="closeGrammarDrawerBtn" aria-label="Đóng danh sách chuyên đề" class="lg:hidden w-10 h-10 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center font-bold tap-feedback">✕</button>
           </div>
 
           <!-- Grammar Progress Box -->
-          <div class="p-3.5 rounded-xl bg-gradient-to-r from-indigo-50 to-violet-50 border border-indigo-100 space-y-2">
+          <div class="p-3.5 rounded-xl bg-gradient-to-r from-indigo-50 to-violet-50 border border-indigo-100 space-y-2 shrink-0">
             <div class="flex justify-between items-center text-xs">
               <span class="font-bold text-indigo-700 uppercase tracking-wider">Tiến độ ngữ pháp</span>
               <span id="gOverallProgressText" class="font-extrabold text-indigo-700">0/16 (0%)</span>
@@ -425,21 +538,21 @@
             <div class="w-full h-2 bg-indigo-200/70 rounded-full overflow-hidden">
               <div id="gOverallProgressBar" class="h-full bg-indigo-600 transition-all duration-500" style="width: 0%"></div>
             </div>
-            <button type="button" id="gMixedTestBtn" class="w-full py-2 px-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white text-xs font-bold shadow-sm transition">
+            <button type="button" id="gMixedTestBtn" class="w-full min-h-[44px] py-2 px-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white text-xs font-bold shadow-sm tap-feedback">
               🔀 Kiểm Tra Tổng Hợp Ngẫu Nhiên
             </button>
           </div>
 
-          <input id="grammarSearchInput" type="text" placeholder="Tìm nhanh chuyên đề ngữ pháp..." class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+          <input id="grammarSearchInput" type="search" inputmode="search" placeholder="Tìm nhanh chuyên đề ngữ pháp..." class="w-full min-h-[44px] px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500 shrink-0" />
 
-          <div id="grammarSidebarList" class="space-y-1 max-h-[55vh] overflow-y-auto pr-1"></div>
+          <div id="grammarSidebarList" class="flex-1 lg:flex-none space-y-1.5 overflow-y-auto lg:max-h-[55vh] pr-1"></div>
         </aside>
 
         <!-- Right Content Area -->
-        <div class="lg:col-span-8 xl:col-span-9 space-y-5">
+        <div class="lg:col-span-8 xl:col-span-9 space-y-5 min-w-0">
           <!-- Topic Banner & Mode Tabs -->
           <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-            <div class="p-5 sm:p-6 pb-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div class="p-4 sm:p-6 pb-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
                 <div class="flex items-center flex-wrap gap-2 mb-1">
                   <span id="gTopicBadge" class="px-2.5 py-0.5 rounded-full bg-indigo-100 text-indigo-700 text-xs font-bold">Chuyên đề 1 / 16</span>
@@ -449,26 +562,28 @@
                 <p id="gTopicSubtitle" class="text-xs sm:text-sm text-slate-500 mt-0.5"></p>
               </div>
               <div id="gMarkCompleteWrapper" class="shrink-0">
-                <button type="button" id="gToggleCompleteBtn" class="px-3.5 py-2 rounded-xl text-xs font-semibold border border-slate-200 hover:bg-slate-50 text-slate-700 transition">
+                <button type="button" id="gToggleCompleteBtn" class="min-h-[44px] px-4 py-2 rounded-xl text-xs font-semibold border border-slate-200 hover:bg-slate-50 text-slate-700 tap-feedback">
                   ○ Đánh dấu đã học
                 </button>
               </div>
             </div>
 
             <!-- Inner Mode Tabs: Theory vs Random Quiz -->
-            <div class="px-5 sm:px-6 flex gap-6 border-t border-slate-100">
-              <button type="button" id="gTabTheoryBtn" data-gmode="theory" class="g-mode-btn active py-3 text-sm font-semibold text-slate-500 hover:text-slate-900 transition">
-                📖 Lý thuyết &amp; Công thức
+            <div class="px-3 sm:px-6 flex gap-2 sm:gap-6 border-t border-slate-100">
+              <button type="button" id="gTabTheoryBtn" data-gmode="theory" class="g-mode-btn active min-h-[48px] flex-1 sm:flex-initial justify-center sm:justify-start whitespace-nowrap px-2 sm:px-0 py-3 text-xs sm:text-sm font-semibold text-slate-500 hover:text-slate-900 transition flex items-center gap-1.5">
+                <span class="sm:hidden">📖 Lý thuyết</span>
+                <span class="hidden sm:inline">📖 Lý thuyết &amp; Công thức</span>
               </button>
-              <button type="button" id="gTabPracticeBtn" data-gmode="practice" class="g-mode-btn py-3 text-sm font-semibold text-slate-500 hover:text-slate-900 transition flex items-center gap-2">
-                <span>✍️ Luyện tập (Random Quiz)</span>
+              <button type="button" id="gTabPracticeBtn" data-gmode="practice" class="g-mode-btn min-h-[48px] flex-1 sm:flex-initial justify-center sm:justify-start whitespace-nowrap px-2 sm:px-0 py-3 text-xs sm:text-sm font-semibold text-slate-500 hover:text-slate-900 transition flex items-center gap-1.5">
+                <span class="sm:hidden">✍️ Luyện tập</span>
+                <span class="hidden sm:inline">✍️ Luyện tập (Random Quiz)</span>
                 <span id="gQuizCountPill" class="px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 text-xs font-bold">20/60</span>
               </button>
             </div>
           </div>
 
           <!-- Grammar Theory View -->
-          <div id="grammarTheoryView" class="bg-white rounded-2xl border border-slate-200 p-5 sm:p-7 shadow-sm space-y-5"></div>
+          <div id="grammarTheoryView" class="bg-white rounded-2xl border border-slate-200 p-4 sm:p-7 shadow-sm space-y-5"></div>
 
           <!-- Grammar Practice Quiz View -->
           <div id="grammarPracticeView" class="hidden space-y-5">
@@ -478,18 +593,18 @@
                 <h3 id="gQuizHeaderTitle" class="font-bold text-base text-slate-900">⚡ Bài luyện tập ngẫu nhiên</h3>
                 <p class="text-xs text-slate-500 mt-0.5">Thứ tự câu hỏi và các đáp án A, B, C, D được xáo trộn ngẫu nhiên mỗi lượt làm bài.</p>
               </div>
-              <div class="flex flex-wrap items-center gap-2">
-                <select id="gQuestionCountSelect" class="px-3 py-2 rounded-xl text-xs font-bold bg-amber-50 text-amber-800 border border-amber-200 focus:outline-none">
+              <div class="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 w-full sm:w-auto">
+                <select id="gQuestionCountSelect" class="min-h-[44px] px-3 py-2 rounded-xl text-xs font-bold bg-amber-50 text-amber-800 border border-amber-200 focus:outline-none">
                   <option value="20">Đề 20 câu ngẫu nhiên</option>
                   <option value="30">Đề 30 câu ngẫu nhiên</option>
                   <option value="60">Full 60 câu ngẫu nhiên</option>
                   <option value="all">Toàn bộ câu chuyên đề</option>
                 </select>
-                <select id="gQuizModeSelect" class="px-3 py-2 rounded-xl text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200 focus:outline-none">
+                <select id="gQuizModeSelect" class="min-h-[44px] px-3 py-2 rounded-xl text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200 focus:outline-none">
                   <option value="instant">Chấm điểm từng câu ngay</option>
                   <option value="exam">Chấm điểm khi nộp bài</option>
                 </select>
-                <button type="button" id="gReshuffleBtn" class="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-sm transition">
+                <button type="button" id="gReshuffleBtn" class="col-span-2 sm:col-span-1 min-h-[44px] px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-sm tap-feedback">
                   🔄 Làm lại / Đề mới
                 </button>
               </div>
@@ -504,7 +619,7 @@
                   <p id="gScoreSubtitle" class="text-sm text-indigo-100">Bạn đã trả lời đúng 0/20 câu hỏi.</p>
                 </div>
               </div>
-              <button type="button" id="gRetryFromBannerBtn" class="px-4 py-2.5 rounded-xl bg-white text-indigo-700 hover:bg-indigo-50 font-bold text-xs sm:text-sm shadow-sm transition shrink-0">
+              <button type="button" id="gRetryFromBannerBtn" class="w-full sm:w-auto min-h-[44px] px-4 py-2.5 rounded-xl bg-white text-indigo-700 hover:bg-indigo-50 font-bold text-xs sm:text-sm shadow-sm shrink-0 tap-feedback">
                 🔀 Xáo trộn &amp; Làm bài mới
               </button>
             </div>
@@ -514,7 +629,7 @@
 
             <!-- Submit Button for Exam Mode -->
             <div id="gExamSubmitWrapper" class="hidden pt-2 pb-4 flex justify-center">
-              <button type="button" id="gSubmitExamBtn" class="px-7 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm sm:text-base shadow-md transition">
+              <button type="button" id="gSubmitExamBtn" class="w-full sm:w-auto min-h-[52px] px-7 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm sm:text-base shadow-md tap-feedback">
                 📨 Nộp bài &amp; Xem giải thích chi tiết
               </button>
             </div>
@@ -526,18 +641,47 @@
   </main>
 
   <!-- Footer -->
-  <footer class="bg-white border-t border-slate-200 py-4 text-center text-xs text-slate-500">
-    EngMaster · 4.500 Từ Vựng (3.000 Thông dụng · 600 TOEIC · 900 IELTS) &amp; 16 Chuyên đề Ngữ pháp (974 Câu Trắc nghiệm)
+  <footer class="bg-white border-t border-slate-200 pt-4 pb-[calc(5.25rem+env(safe-area-inset-bottom))] lg:pb-4 px-20 lg:px-4 text-center text-xs text-slate-500">
+    English Master · 4.500 Từ Vựng (3.000 Thông dụng · 600 TOEIC · 900 IELTS) &amp; 16 Chuyên đề Ngữ pháp (974 Câu Trắc nghiệm)
   </footer>
 
+  <!-- Floating Back-to-Top Button -->
+  <button type="button" id="scrollTopBtn" aria-label="Lên đầu trang" class="hidden fixed right-4 lg:right-6 bottom-[calc(5.25rem+env(safe-area-inset-bottom))] lg:bottom-6 z-30 w-12 h-12 rounded-full bg-indigo-600/95 hover:bg-indigo-700 text-white shadow-lg flex items-center justify-center text-lg font-bold tap-feedback">↑</button>
+
+  <!-- Mobile / iPad Portrait Fixed Bottom Tab Bar -->
+  <nav id="bottomNav" aria-label="Điều hướng chính" class="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200/90 shadow-[0_-4px_20px_rgba(15,23,42,0.06)] safe-bottom">
+    <div class="max-w-xl mx-auto grid grid-cols-5 px-1.5 pt-1.5 pb-1">
+      <button type="button" data-tab="dashboard" class="tab-btn active min-h-[54px] flex flex-col items-center justify-center gap-0.5 rounded-xl text-[11px] font-semibold text-slate-500 tap-feedback">
+        <span class="nav-icon-pill w-10 h-7 rounded-full flex items-center justify-center text-base transition">🏠</span>
+        <span>Tổng quan</span>
+      </button>
+      <button type="button" data-tab="vocab" class="tab-btn min-h-[54px] flex flex-col items-center justify-center gap-0.5 rounded-xl text-[11px] font-semibold text-slate-500 tap-feedback">
+        <span class="nav-icon-pill w-10 h-7 rounded-full flex items-center justify-center text-base transition">📚</span>
+        <span>Từ vựng</span>
+      </button>
+      <button type="button" data-tab="flashcard" class="tab-btn min-h-[54px] flex flex-col items-center justify-center gap-0.5 rounded-xl text-[11px] font-semibold text-slate-500 tap-feedback">
+        <span class="nav-icon-pill w-10 h-7 rounded-full flex items-center justify-center text-base transition">🃏</span>
+        <span>Flashcard</span>
+      </button>
+      <button type="button" data-tab="quiz" class="tab-btn min-h-[54px] flex flex-col items-center justify-center gap-0.5 rounded-xl text-[11px] font-semibold text-slate-500 tap-feedback">
+        <span class="nav-icon-pill w-10 h-7 rounded-full flex items-center justify-center text-base transition">📝</span>
+        <span>Quiz Từ</span>
+      </button>
+      <button type="button" data-tab="grammar" class="tab-btn min-h-[54px] flex flex-col items-center justify-center gap-0.5 rounded-xl text-[11px] font-semibold text-slate-500 tap-feedback">
+        <span class="nav-icon-pill w-10 h-7 rounded-full flex items-center justify-center text-base transition">📘</span>
+        <span>Ngữ pháp</span>
+      </button>
+    </div>
+  </nav>
+
   <!-- Reset Confirmation Modal -->
-  <div id="resetModal" class="hidden fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
+  <div id="resetModal" class="hidden fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-xl space-y-4">
       <h3 class="text-lg font-bold text-slate-900">Đặt lại toàn bộ tiến độ học?</h3>
       <p class="text-sm text-slate-600">Hành động này sẽ xóa danh sách từ đã thuộc, từ đã lưu, điểm trắc nghiệm và trạng thái hoàn thành 16 chuyên đề ngữ pháp trên trình duyệt này.</p>
-      <div class="flex justify-end gap-2">
-        <button type="button" id="cancelResetBtn" class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold">Hủy</button>
-        <button type="button" id="confirmResetBtn" class="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-sm font-bold">Xác nhận xóa</button>
+      <div class="grid grid-cols-2 sm:flex sm:justify-end gap-2.5">
+        <button type="button" id="cancelResetBtn" class="min-h-[46px] px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold tap-feedback">Hủy</button>
+        <button type="button" id="confirmResetBtn" class="min-h-[46px] px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-sm font-bold tap-feedback">Xác nhận xóa</button>
       </div>
     </div>
   </div>
@@ -667,6 +811,33 @@
     };
 
     // ===================== 2. HELPERS (SPEECH, SHUFFLE, TOAST) =====================
+    let cachedVoices = [];
+    function refreshVoices() {
+      if (!('speechSynthesis' in window)) return;
+      try {
+        cachedVoices = window.speechSynthesis.getVoices() || [];
+      } catch (e) {}
+    }
+    if ('speechSynthesis' in window) {
+      refreshVoices();
+      if (typeof window.speechSynthesis.addEventListener === 'function') {
+        window.speechSynthesis.addEventListener('voiceschanged', refreshVoices);
+      } else {
+        window.speechSynthesis.onvoiceschanged = refreshVoices;
+      }
+    }
+
+    function pickVoice(accent) {
+      if (!cachedVoices.length) refreshVoices();
+      const target = (accent || 'en-US').toLowerCase();
+      const exact = cachedVoices.find(v => (v.lang || '').toLowerCase() === target);
+      if (exact) return exact;
+      const normTarget = target.replace('_', '-');
+      const prefix = cachedVoices.find(v => (v.lang || '').toLowerCase().replace('_', '-').startsWith(normTarget));
+      if (prefix) return prefix;
+      return cachedVoices.find(v => (v.lang || '').toLowerCase().startsWith('en')) || null;
+    }
+
     function speakWord(text) {
       if (!('speechSynthesis' in window)) {
         showToast('Trình duyệt không hỗ trợ phát âm tự động.');
@@ -674,7 +845,12 @@
       }
       try {
         window.speechSynthesis.cancel();
+        if (typeof window.speechSynthesis.resume === 'function') {
+          window.speechSynthesis.resume();
+        }
         const utt = new SpeechSynthesisUtterance(text);
+        const voice = pickVoice(state.accent);
+        if (voice) utt.voice = voice;
         utt.lang = state.accent;
         utt.rate = 0.93;
         window.speechSynthesis.speak(utt);
@@ -689,6 +865,7 @@
       container.appendChild(el);
       setTimeout(() => { el.remove(); }, 2300);
     }
+    window.__engmasterToast = showToast;
 
     function escHtml(s) {
       return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -703,6 +880,23 @@
       return copy;
     }
 
+    function openGrammarDrawer() {
+      const aside = document.getElementById('grammarSidebarAside');
+      const backdrop = document.getElementById('grammarDrawerBackdrop');
+      if (!aside || !backdrop) return;
+      aside.classList.add('drawer-open');
+      backdrop.classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeGrammarDrawer() {
+      const aside = document.getElementById('grammarSidebarAside');
+      const backdrop = document.getElementById('grammarDrawerBackdrop');
+      if (aside) aside.classList.remove('drawer-open');
+      if (backdrop) backdrop.classList.add('hidden');
+      document.body.style.overflow = '';
+    }
+
     // ===================== 3. TAB SWITCHING =====================
     function switchTab(tabId) {
       state.activeTab = tabId;
@@ -713,7 +907,7 @@
       document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.classList.toggle('active', btn.dataset.tab === tabId);
       });
-      document.getElementById('mobileNav').classList.add('hidden');
+      closeGrammarDrawer();
 
       if (tabId === 'dashboard') renderDashboard();
       if (tabId === 'vocab') renderVocab();
@@ -753,13 +947,14 @@
         violet: { bg: 'bg-violet-50', text: 'text-violet-700', bar: 'bg-violet-600', btn: 'bg-violet-600 hover:bg-violet-700' }
       };
 
-      grid.innerHTML = Object.values(PACK_META).map(meta => {
+      grid.innerHTML = Object.values(PACK_META).map((meta, idx) => {
         const list = PACKS[meta.id];
         const mCount = list.filter(it => state.mastered.has(it.id)).length;
         const pct = Math.round((mCount / list.length) * 100);
         const c = colors[meta.color];
+        const spanCls = idx === 2 ? 'md:col-span-2 lg:col-span-1' : '';
         return `
-          <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm flex flex-col justify-between gap-4 hover:shadow-md transition">
+          <div class="${spanCls} bg-white rounded-2xl border border-slate-200 p-5 shadow-sm flex flex-col justify-between gap-4 hover:shadow-md transition">
             <div class="space-y-2">
               <div class="flex items-center justify-between">
                 <span class="px-2.5 py-1 rounded-full ${c.bg} ${c.text} text-xs font-bold">${meta.badge}</span>
@@ -771,10 +966,10 @@
                 <div class="h-full ${c.bar} transition-all" style="width:${pct}%"></div>
               </div>
             </div>
-            <div class="grid grid-cols-3 gap-2 pt-2 border-t border-slate-100">
-              <button type="button" data-action="open-vocab" data-pack="${meta.id}" class="py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold transition">Từ vựng</button>
-              <button type="button" data-action="open-fc" data-pack="${meta.id}" class="py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold transition">Flashcard</button>
-              <button type="button" data-action="open-quiz" data-pack="${meta.id}" class="py-2 rounded-xl ${c.btn} text-white text-xs font-bold transition">Quiz</button>
+            <div class="grid grid-cols-3 gap-2 pt-2.5 border-t border-slate-100">
+              <button type="button" data-action="open-vocab" data-pack="${meta.id}" class="min-h-[44px] py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold flex items-center justify-center tap-feedback">Từ vựng</button>
+              <button type="button" data-action="open-fc" data-pack="${meta.id}" class="min-h-[44px] py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold flex items-center justify-center tap-feedback">Flashcard</button>
+              <button type="button" data-action="open-quiz" data-pack="${meta.id}" class="min-h-[44px] py-2 rounded-xl ${c.btn} text-white text-xs font-bold flex items-center justify-center tap-feedback">Quiz</button>
             </div>
           </div>
         `;
@@ -783,12 +978,12 @@
       document.getElementById('dashboardGrammarLinks').innerHTML = GRAMMAR_TOPICS.map(t => {
         const done = state.completedGrammar.has(t.id);
         return `
-          <button type="button" data-grammar-jump="${t.id}" class="text-left p-3 rounded-xl border ${done ? 'border-emerald-200 bg-emerald-50/30' : 'border-slate-200'} hover:border-indigo-300 hover:bg-indigo-50/50 transition group">
+          <button type="button" data-grammar-jump="${t.id}" class="text-left p-3.5 min-h-[76px] rounded-xl border ${done ? 'border-emerald-200 bg-emerald-50/30' : 'border-slate-200'} hover:border-indigo-300 hover:bg-indigo-50/50 transition group tap-feedback">
             <div class="flex items-center justify-between gap-1">
               <span class="text-[11px] font-bold text-indigo-600">Chuyên đề ${t.number}</span>
               <span class="text-[10px] font-bold ${done ? 'text-emerald-600' : 'text-slate-400'}">${done ? '✓ Xong' : t.questions.length + ' câu'}</span>
             </div>
-            <div class="text-xs font-bold text-slate-800 group-hover:text-indigo-700 mt-0.5 line-clamp-2">${escHtml(t.shortTitle)}</div>
+            <div class="text-[13px] font-bold text-slate-800 group-hover:text-indigo-700 mt-0.5 line-clamp-2">${escHtml(t.shortTitle)}</div>
           </button>
         `;
       }).join('');
@@ -818,7 +1013,7 @@
     function renderVocab() {
       document.querySelectorAll('.vocab-pack-btn').forEach(btn => {
         const active = btn.dataset.pack === state.vocabPack;
-        btn.className = 'vocab-pack-btn px-3.5 py-2 rounded-xl text-sm font-semibold transition ' +
+        btn.className = 'vocab-pack-btn shrink-0 min-h-[44px] px-3.5 py-2 rounded-xl text-sm font-semibold tap-feedback ' +
           (active ? 'bg-indigo-600 text-white shadow-sm' : 'bg-slate-100 text-slate-700 hover:bg-slate-200');
       });
 
@@ -841,22 +1036,22 @@
           const isM = state.mastered.has(it.id);
           const isB = state.bookmarked.has(it.id);
           return `
-            <div class="bg-white rounded-2xl border ${isM ? 'border-emerald-200 bg-emerald-50/20' : 'border-slate-200'} p-4 shadow-xs hover:shadow-md transition flex flex-col justify-between gap-2.5">
-              <div class="flex items-start justify-between gap-2">
-                <div>
+            <div class="bg-white rounded-2xl border ${isM ? 'border-emerald-200 bg-emerald-50/20' : 'border-slate-200'} p-4 shadow-sm hover:shadow-md transition flex flex-col justify-between gap-2.5">
+              <div class="flex items-start justify-between gap-2.5">
+                <div class="min-w-0">
                   <div class="flex items-center flex-wrap gap-1.5">
-                    <span class="font-extrabold text-slate-900 text-base">${escHtml(it.w)}</span>
+                    <span class="font-extrabold text-slate-900 text-base break-words">${escHtml(it.w)}</span>
                     ${it.topic ? `<span class="px-1.5 py-0.5 rounded bg-violet-100 text-violet-700 text-[10px] font-bold">${escHtml(it.topic)}</span>` : ''}
                   </div>
                   <p class="text-sm text-slate-600 mt-1 leading-snug">${escHtml(it.m)}</p>
                 </div>
-                <button type="button" data-speak="${escHtml(it.w)}" class="shrink-0 w-8 h-8 rounded-lg bg-slate-100 hover:bg-indigo-100 text-slate-700 hover:text-indigo-700 flex items-center justify-center text-sm transition" title="Phát âm">🔊</button>
+                <button type="button" data-speak="${escHtml(it.w)}" class="shrink-0 w-11 h-11 rounded-xl bg-slate-100 hover:bg-indigo-100 text-slate-700 hover:text-indigo-700 flex items-center justify-center text-base tap-feedback" title="Phát âm">🔊</button>
               </div>
-              <div class="flex items-center justify-between pt-2 border-t border-slate-100">
-                <button type="button" data-toggle-mastered="${it.id}" class="text-xs font-semibold px-2.5 py-1 rounded-lg transition ${isM ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-600 hover:bg-emerald-50 hover:text-emerald-700'}">
+              <div class="grid grid-cols-2 gap-2 pt-2.5 border-t border-slate-100">
+                <button type="button" data-toggle-mastered="${it.id}" class="min-h-[42px] px-3 py-2 rounded-xl text-xs font-semibold flex items-center justify-center gap-1 tap-feedback ${isM ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-600 hover:bg-emerald-50 hover:text-emerald-700'}">
                   ${isM ? '✓ Đã thuộc' : '○ Đánh dấu thuộc'}
                 </button>
-                <button type="button" data-toggle-bookmark="${it.id}" class="text-xs font-semibold px-2.5 py-1 rounded-lg transition ${isB ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-600 hover:bg-amber-50 hover:text-amber-700'}">
+                <button type="button" data-toggle-bookmark="${it.id}" class="min-h-[42px] px-3 py-2 rounded-xl text-xs font-semibold flex items-center justify-center gap-1 tap-feedback ${isB ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-600 hover:bg-amber-50 hover:text-amber-700'}">
                   ${isB ? '★ Đã lưu' : '☆ Lưu'}
                 </button>
               </div>
@@ -867,18 +1062,19 @@
 
       const pag = document.getElementById('vocabPagination');
       if (totalPages <= 1) { pag.innerHTML = ''; return; }
-      let html = `<button type="button" data-page="${Math.max(1, state.vocabPage - 1)}" class="px-3 py-1.5 rounded-lg border border-slate-300 bg-white text-xs font-semibold hover:bg-slate-50 ${state.vocabPage === 1 ? 'opacity-40 pointer-events-none' : ''}">← Trước</button>`;
+      const delta = window.innerWidth < 640 ? 1 : 2;
+      let html = `<button type="button" data-page="${Math.max(1, state.vocabPage - 1)}" class="min-w-[42px] min-h-[42px] px-3 py-2 rounded-xl border border-slate-300 bg-white text-xs font-semibold hover:bg-slate-50 tap-feedback ${state.vocabPage === 1 ? 'opacity-40 pointer-events-none' : ''}">← Trước</button>`;
       const range = [];
       for (let p = 1; p <= totalPages; p++) {
-        if (p === 1 || p === totalPages || Math.abs(p - state.vocabPage) <= 2) range.push(p);
+        if (p === 1 || p === totalPages || Math.abs(p - state.vocabPage) <= delta) range.push(p);
       }
       let prev = 0;
       range.forEach(p => {
         if (prev && p - prev > 1) html += `<span class="text-xs text-slate-400 px-1">…</span>`;
-        html += `<button type="button" data-page="${p}" class="px-3 py-1.5 rounded-lg text-xs font-bold transition ${p === state.vocabPage ? 'bg-indigo-600 text-white' : 'border border-slate-300 bg-white text-slate-700 hover:bg-slate-50'}">${p}</button>`;
+        html += `<button type="button" data-page="${p}" class="min-w-[42px] min-h-[42px] px-3 py-2 rounded-xl text-xs font-bold tap-feedback ${p === state.vocabPage ? 'bg-indigo-600 text-white' : 'border border-slate-300 bg-white text-slate-700 hover:bg-slate-50'}">${p}</button>`;
         prev = p;
       });
-      html += `<button type="button" data-page="${Math.min(totalPages, state.vocabPage + 1)}" class="px-3 py-1.5 rounded-lg border border-slate-300 bg-white text-xs font-semibold hover:bg-slate-50 ${state.vocabPage === totalPages ? 'opacity-40 pointer-events-none' : ''}">Tiếp →</button>`;
+      html += `<button type="button" data-page="${Math.min(totalPages, state.vocabPage + 1)}" class="min-w-[42px] min-h-[42px] px-3 py-2 rounded-xl border border-slate-300 bg-white text-xs font-semibold hover:bg-slate-50 tap-feedback ${state.vocabPage === totalPages ? 'opacity-40 pointer-events-none' : ''}">Tiếp →</button>`;
       pag.innerHTML = html;
     }
 
@@ -939,7 +1135,7 @@
 
       const bmBtn = document.getElementById('fcBookmarkBtn');
       bmBtn.textContent = isB ? '★ Đã lưu' : '☆ Lưu';
-      bmBtn.className = 'px-3 py-1.5 rounded-xl text-xs font-semibold transition ' + (isB ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 hover:bg-amber-100 text-slate-600');
+      bmBtn.className = 'min-h-[44px] px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold tap-feedback ' + (isB ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 hover:bg-amber-100 text-slate-600');
 
       const masteredInDeck = state.fcDeck.filter(it => state.mastered.has(it.id)).length;
       document.getElementById('fcCounterText').textContent = `Thẻ ${state.fcIndex + 1} / ${state.fcDeck.length}`;
@@ -1034,17 +1230,17 @@
       if (state.quizMode === 'en2vi') {
         hint.textContent = 'Chọn nghĩa tiếng Việt đúng của từ sau:';
         qText.textContent = q.item.w;
-        qText.className = 'text-3xl sm:text-4xl font-extrabold text-slate-900';
+        qText.className = 'text-3xl sm:text-4xl font-extrabold text-slate-900 break-words';
         speakBtn.classList.remove('hidden');
       } else if (state.quizMode === 'vi2en') {
         hint.textContent = 'Chọn từ tiếng Anh tương ứng với nghĩa sau:';
         qText.textContent = q.item.m;
-        qText.className = 'text-xl sm:text-2xl font-extrabold text-slate-900';
+        qText.className = 'text-xl sm:text-2xl font-extrabold text-slate-900 break-words';
         speakBtn.classList.add('hidden');
       } else {
         hint.textContent = 'Nghe phát âm và chọn nghĩa tiếng Việt đúng:';
         qText.textContent = '🔊 Nhấn nút Nghe để phát âm';
-        qText.className = 'text-xl sm:text-2xl font-bold text-indigo-600';
+        qText.className = 'text-xl sm:text-2xl font-bold text-indigo-600 break-words';
         speakBtn.classList.remove('hidden');
         speakWord(q.item.w);
       }
@@ -1056,8 +1252,8 @@
       document.getElementById('quizOptionsGrid').innerHTML = q.options.map((opt, idx) => {
         const label = state.quizMode === 'vi2en' ? opt.w : opt.m;
         return `
-          <button type="button" data-opt-id="${opt.id}" class="quiz-opt-btn text-left p-4 rounded-xl border-2 border-slate-200 hover:border-indigo-400 hover:bg-indigo-50/40 transition flex items-start gap-3">
-            <span class="w-7 h-7 rounded-lg bg-slate-100 text-slate-700 font-bold text-xs flex items-center justify-center shrink-0">${letters[idx]}</span>
+          <button type="button" data-opt-id="${opt.id}" class="quiz-opt-btn text-left min-h-[58px] p-4 rounded-2xl border-2 border-slate-200 hover:border-indigo-400 hover:bg-indigo-50/40 flex items-start gap-3 tap-feedback">
+            <span class="w-8 h-8 rounded-xl bg-slate-100 text-slate-700 font-bold text-sm flex items-center justify-center shrink-0">${letters[idx]}</span>
             <span class="text-sm font-semibold text-slate-800 leading-snug pt-0.5">${escHtml(label)}</span>
           </button>
         `;
@@ -1085,18 +1281,18 @@
 
       if (state.quizMode === 'listen') {
         document.getElementById('quizQuestionText').textContent = q.item.w;
-        document.getElementById('quizQuestionText').className = 'text-3xl font-extrabold text-slate-900';
+        document.getElementById('quizQuestionText').className = 'text-3xl sm:text-4xl font-extrabold text-slate-900 break-words';
       }
 
       document.querySelectorAll('.quiz-opt-btn').forEach(btn => {
         btn.disabled = true;
         const oid = btn.dataset.optId;
         if (oid === q.item.id) {
-          btn.className = 'quiz-opt-btn text-left p-4 rounded-xl border-2 border-emerald-500 bg-emerald-50 flex items-start gap-3';
+          btn.className = 'quiz-opt-btn text-left min-h-[58px] p-4 rounded-2xl border-2 border-emerald-500 bg-emerald-50 flex items-start gap-3';
         } else if (oid === selectedId && !isCorrect) {
-          btn.className = 'quiz-opt-btn text-left p-4 rounded-xl border-2 border-rose-500 bg-rose-50 flex items-start gap-3';
+          btn.className = 'quiz-opt-btn text-left min-h-[58px] p-4 rounded-2xl border-2 border-rose-500 bg-rose-50 flex items-start gap-3';
         } else {
-          btn.className = 'quiz-opt-btn text-left p-4 rounded-xl border-2 border-slate-100 opacity-50 flex items-start gap-3';
+          btn.className = 'quiz-opt-btn text-left min-h-[58px] p-4 rounded-2xl border-2 border-slate-100 opacity-50 flex items-start gap-3';
         }
       });
 
@@ -1141,12 +1337,12 @@
         wrongBox.classList.remove('hidden');
         retryBtn.classList.remove('hidden');
         document.getElementById('quizWrongList').innerHTML = state.quizWrongItems.map(it => `
-          <div class="p-3 flex items-center justify-between gap-3 bg-white">
-            <div>
-              <div class="font-bold text-slate-900 text-sm">${escHtml(it.w)}</div>
+          <div class="p-3.5 flex items-center justify-between gap-3 bg-white">
+            <div class="min-w-0">
+              <div class="font-bold text-slate-900 text-sm break-words">${escHtml(it.w)}</div>
               <div class="text-xs text-slate-600">${escHtml(it.m)}</div>
             </div>
-            <button type="button" data-speak="${escHtml(it.w)}" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-indigo-100 text-xs font-semibold">🔊</button>
+            <button type="button" data-speak="${escHtml(it.w)}" class="w-11 h-11 rounded-xl bg-slate-100 hover:bg-indigo-100 flex items-center justify-center shrink-0 text-base tap-feedback">🔊</button>
           </div>
         `).join('');
       } else {
@@ -1178,6 +1374,8 @@
       const pct = Math.round((done / total) * 100);
       document.getElementById('gOverallProgressText').textContent = `${done}/${total} (${pct}%)`;
       document.getElementById('gOverallProgressBar').style.width = `${pct}%`;
+      const mobileMini = document.getElementById('gMobileProgressMini');
+      if (mobileMini) mobileMini.textContent = `${done}/${total}`;
 
       if (!state.grammarIsMixed) {
         const isDone = state.completedGrammar.has(state.grammarTopicId);
@@ -1185,10 +1383,10 @@
         const btn = document.getElementById('gToggleCompleteBtn');
         if (isDone) {
           btn.textContent = '✓ Đã hoàn thành';
-          btn.className = 'px-3.5 py-2 rounded-xl text-xs font-bold border border-emerald-200 bg-emerald-50 text-emerald-700 transition';
+          btn.className = 'min-h-[44px] px-4 py-2 rounded-xl text-xs font-bold border border-emerald-200 bg-emerald-50 text-emerald-700 tap-feedback';
         } else {
           btn.textContent = '○ Đánh dấu đã học';
-          btn.className = 'px-3.5 py-2 rounded-xl text-xs font-semibold border border-slate-200 hover:bg-slate-50 text-slate-700 transition';
+          btn.className = 'min-h-[44px] px-4 py-2 rounded-xl text-xs font-semibold border border-slate-200 hover:bg-slate-50 text-slate-700 tap-feedback';
         }
       }
     }
@@ -1207,7 +1405,7 @@
         const isActive = !state.grammarIsMixed && t.id === state.grammarTopicId;
         const isDone = state.completedGrammar.has(t.id);
         return `
-          <button type="button" data-gtopic="${t.id}" class="grammar-nav-btn w-full text-left px-3 py-2.5 rounded-xl text-xs sm:text-sm text-slate-700 hover:bg-slate-50 transition flex items-center justify-between gap-2 ${isActive ? 'active' : ''}">
+          <button type="button" data-gtopic="${t.id}" class="grammar-nav-btn w-full min-h-[46px] text-left px-3.5 py-2.5 rounded-xl text-sm text-slate-700 hover:bg-slate-50 flex items-center justify-between gap-2 tap-feedback ${isActive ? 'active' : ''}">
             <span class="truncate">${t.number}. ${escHtml(t.shortTitle)}</span>
             <span class="shrink-0 text-[10px] font-bold ${isDone ? 'text-emerald-600' : 'text-slate-400'}">${isDone ? '✓' : t.questions.length}</span>
           </button>
@@ -1259,6 +1457,7 @@
       const theoryView = document.getElementById('grammarTheoryView');
       const practiceView = document.getElementById('grammarPracticeView');
       const markWrap = document.getElementById('gMarkCompleteWrapper');
+      const mobileTopicLabel = document.getElementById('gMobileTopicLabel');
 
       if (state.grammarIsMixed) {
         const qCount = state.gCurrentQuestions.length;
@@ -1268,6 +1467,7 @@
         document.getElementById('gTopicSubtitle').textContent = `${qCount} câu hỏi trắc nghiệm được rút và xáo trộn ngẫu nhiên từ kho ${TOTAL_GRAMMAR_Q} câu hỏi ngữ pháp.`;
         document.getElementById('gQuizCountPill').textContent = qCount;
         document.getElementById('gQuizHeaderTitle').textContent = `⚡ Đề thi tổng hợp ${qCount} câu ngẫu nhiên (từ kho ${TOTAL_GRAMMAR_Q} câu)`;
+        if (mobileTopicLabel) mobileTopicLabel.textContent = 'Kiểm Tra Tổng Hợp (16 CĐ)';
         markWrap.classList.add('hidden');
         theoryBtn.classList.add('hidden');
         state.grammarMode = 'practice';
@@ -1282,17 +1482,27 @@
         document.getElementById('gTopicSubtitle').textContent = topic.subtitle;
         document.getElementById('gQuizCountPill').textContent = `${state.gCurrentQuestions.length}/${topic.questions.length}`;
         document.getElementById('gQuizHeaderTitle').textContent = `⚡ Luyện tập: ${topic.shortTitle} (${state.gCurrentQuestions.length}/${topic.questions.length} câu)`;
+        if (mobileTopicLabel) mobileTopicLabel.textContent = `${topic.number}. ${topic.shortTitle}`;
         markWrap.classList.remove('hidden');
         theoryBtn.classList.remove('hidden');
 
         theoryView.innerHTML = `
           <div class="space-y-5">${topic.theoryHTML}</div>
-          <div class="flex flex-wrap items-center justify-between gap-3 pt-5 border-t border-slate-100">
-            ${prevT ? `<button type="button" data-gtopic="${prevT.id}" class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition">← ${prevT.number}. ${escHtml(prevT.shortTitle)}</button>` : '<div></div>'}
-            <button type="button" id="gJumpPracticeBtn" class="px-4 py-2 rounded-xl bg-amber-100 hover:bg-amber-200 text-amber-900 text-xs font-bold transition">✍️ Làm Quiz chuyên đề này (${topic.questions.length} câu)</button>
-            ${nextT ? `<button type="button" data-gtopic="${nextT.id}" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition">${nextT.number}. ${escHtml(nextT.shortTitle)} →</button>` : '<div></div>'}
+          <div class="grid grid-cols-2 sm:flex sm:flex-wrap items-center justify-between gap-2.5 pt-5 border-t border-slate-100">
+            ${prevT ? `<button type="button" data-gtopic="${prevT.id}" class="min-h-[46px] px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold flex items-center justify-center sm:justify-start truncate tap-feedback">← ${prevT.number}. ${escHtml(prevT.shortTitle)}</button>` : '<div></div>'}
+            <button type="button" id="gJumpPracticeBtn" class="col-span-2 sm:col-span-1 order-first sm:order-none min-h-[46px] px-4 py-2.5 rounded-xl bg-amber-100 hover:bg-amber-200 text-amber-900 text-xs font-bold flex items-center justify-center tap-feedback">✍️ Làm Quiz chuyên đề này (${topic.questions.length} câu)</button>
+            ${nextT ? `<button type="button" data-gtopic="${nextT.id}" class="min-h-[46px] px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold flex items-center justify-center sm:justify-end truncate tap-feedback">${nextT.number}. ${escHtml(nextT.shortTitle)} →</button>` : '<div></div>'}
           </div>
         `;
+
+        theoryView.querySelectorAll('.overflow-x-auto').forEach(wrap => {
+          if (wrap.querySelector('table')) {
+            const hintEl = document.createElement('div');
+            hintEl.className = 'md:hidden text-[11px] font-semibold text-indigo-600/80 mb-1.5 flex items-center gap-1';
+            hintEl.textContent = '👆 Vuốt ngang bảng để xem đầy đủ';
+            wrap.parentNode.insertBefore(hintEl, wrap);
+          }
+        });
       }
 
       theoryBtn.classList.toggle('active', state.grammarMode === 'theory');
@@ -1306,80 +1516,90 @@
       }
     }
 
+    function renderSingleGrammarQuestionHtml(item, qIdx) {
+      const letters = ['A', 'B', 'C', 'D'];
+      const userSelected = state.gUserAnswers[qIdx];
+      const hasAnswered = userSelected !== undefined;
+      const showResult = (state.gQuizMode === 'instant' && hasAnswered) || (state.gQuizMode === 'exam' && state.gExamSubmitted);
+      const speechText = showResult
+        ? item.q.replace(/_{2,}/g, item.options[item.ans])
+        : item.q.replace(/_{2,}/g, 'blank');
+
+      const borderCls = showResult
+        ? (userSelected === item.ans ? 'border-emerald-300' : 'border-rose-300')
+        : 'border-slate-200';
+
+      return `
+        <div data-qcard="${qIdx}" class="bg-white rounded-2xl p-4 sm:p-5 border ${borderCls} shadow-sm space-y-3.5">
+          <div class="flex items-start justify-between gap-3">
+            <div class="flex items-start gap-3 min-w-0">
+              <span class="w-7 h-7 rounded-lg bg-indigo-100 text-indigo-700 font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">${qIdx + 1}</span>
+              <div class="min-w-0">
+                ${state.grammarIsMixed ? `<span class="inline-block mb-1 px-2 py-0.5 rounded bg-slate-100 text-slate-600 text-[11px] font-semibold">${escHtml(item.topicTag)}</span>` : ''}
+                <p class="text-sm sm:text-base font-semibold text-slate-900 leading-relaxed break-words">${escHtml(item.q)}</p>
+              </div>
+            </div>
+            <button type="button" data-speak="${escHtml(speechText)}" title="Nghe phát âm câu này" class="shrink-0 w-11 h-11 rounded-xl bg-slate-100 hover:bg-indigo-100 text-slate-600 hover:text-indigo-700 flex items-center justify-center text-base tap-feedback">🔊</button>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            ${item.options.map((optText, optIdx) => {
+              let btnCls = 'border-slate-200 hover:border-indigo-400 hover:bg-indigo-50/40 text-slate-700';
+              let badgeCls = 'bg-slate-100 text-slate-600';
+              let icon = '';
+              if (showResult) {
+                if (optIdx === item.ans) {
+                  btnCls = 'border-emerald-500 bg-emerald-50 text-emerald-900 font-bold';
+                  badgeCls = 'bg-emerald-500 text-white';
+                  icon = '<span class="ml-auto text-emerald-600 font-bold">✓</span>';
+                } else if (optIdx === userSelected) {
+                  btnCls = 'border-rose-500 bg-rose-50 text-rose-900';
+                  badgeCls = 'bg-rose-500 text-white';
+                  icon = '<span class="ml-auto text-rose-600 font-bold">✕</span>';
+                } else {
+                  btnCls = 'border-slate-100 text-slate-400 opacity-60';
+                }
+              } else if (userSelected === optIdx) {
+                btnCls = 'border-indigo-600 bg-indigo-50 text-indigo-900 font-semibold ring-1 ring-indigo-500';
+                badgeCls = 'bg-indigo-600 text-white';
+              }
+              return `
+                <button type="button" data-gq="${qIdx}" data-go="${optIdx}" ${showResult && state.gQuizMode === 'instant' ? 'disabled' : ''} class="min-h-[52px] p-3.5 sm:p-4 rounded-xl border text-left text-sm flex items-center gap-3 tap-feedback ${btnCls}">
+                  <span class="w-7 h-7 rounded-lg font-bold text-xs flex items-center justify-center shrink-0 ${badgeCls}">${letters[optIdx]}</span>
+                  <span class="flex-1 break-words">${escHtml(optText)}</span>
+                  ${icon}
+                </button>
+              `;
+            }).join('')}
+          </div>
+
+          ${showResult ? `
+            <div class="p-3.5 rounded-xl bg-slate-50 border-l-4 ${userSelected === item.ans ? 'border-emerald-500' : 'border-amber-500'} text-xs sm:text-sm space-y-1">
+              <div class="font-bold ${userSelected === item.ans ? 'text-emerald-700' : 'text-amber-700'}">
+                💡 ${userSelected === item.ans ? 'Chính xác!' : (hasAnswered ? 'Chưa chính xác!' : 'Chưa chọn đáp án!')} Đáp án đúng: ${letters[item.ans]}. ${escHtml(item.options[item.ans])}
+              </div>
+              <p class="text-slate-600 leading-relaxed">${escHtml(item.exp)}</p>
+            </div>
+          ` : ''}
+        </div>
+      `;
+    }
+
+    function updateExamSubmitLabel() {
+      const btn = document.getElementById('gSubmitExamBtn');
+      if (!btn) return;
+      const answered = Object.keys(state.gUserAnswers).length;
+      const total = state.gCurrentQuestions.length;
+      btn.textContent = `📨 Nộp bài (${answered}/${total} câu) & Xem giải thích`;
+    }
+
     function renderGrammarQuizQuestions() {
       const container = document.getElementById('gQuestionsContainer');
       const examWrap = document.getElementById('gExamSubmitWrapper');
-      const letters = ['A', 'B', 'C', 'D'];
 
       examWrap.classList.toggle('hidden', !(state.gQuizMode === 'exam' && !state.gExamSubmitted));
-
-      container.innerHTML = state.gCurrentQuestions.map((item, qIdx) => {
-        const userSelected = state.gUserAnswers[qIdx];
-        const hasAnswered = userSelected !== undefined;
-        const showResult = (state.gQuizMode === 'instant' && hasAnswered) || (state.gQuizMode === 'exam' && state.gExamSubmitted);
-        const speechText = showResult
-          ? item.q.replace(/_{2,}/g, item.options[item.ans])
-          : item.q.replace(/_{2,}/g, 'blank');
-
-        const borderCls = showResult
-          ? (userSelected === item.ans ? 'border-emerald-300' : 'border-rose-300')
-          : 'border-slate-200';
-
-        return `
-          <div class="bg-white rounded-2xl p-4 sm:p-5 border ${borderCls} shadow-xs space-y-3.5">
-            <div class="flex items-start justify-between gap-3">
-              <div class="flex items-start gap-3">
-                <span class="w-7 h-7 rounded-lg bg-indigo-100 text-indigo-700 font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">${qIdx + 1}</span>
-                <div>
-                  ${state.grammarIsMixed ? `<span class="inline-block mb-1 px-2 py-0.5 rounded bg-slate-100 text-slate-600 text-[11px] font-semibold">${escHtml(item.topicTag)}</span>` : ''}
-                  <p class="text-sm sm:text-base font-semibold text-slate-900 leading-relaxed">${escHtml(item.q)}</p>
-                </div>
-              </div>
-              <button type="button" data-speak="${escHtml(speechText)}" title="Nghe phát âm câu này" class="shrink-0 w-8 h-8 rounded-lg bg-slate-100 hover:bg-indigo-100 text-slate-600 hover:text-indigo-700 flex items-center justify-center text-sm transition">🔊</button>
-            </div>
-
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-              ${item.options.map((optText, optIdx) => {
-                let btnCls = 'border-slate-200 hover:border-indigo-400 hover:bg-indigo-50/40 text-slate-700';
-                let badgeCls = 'bg-slate-100 text-slate-600';
-                let icon = '';
-                if (showResult) {
-                  if (optIdx === item.ans) {
-                    btnCls = 'border-emerald-500 bg-emerald-50 text-emerald-900 font-bold';
-                    badgeCls = 'bg-emerald-500 text-white';
-                    icon = '<span class="ml-auto text-emerald-600 font-bold">✓</span>';
-                  } else if (optIdx === userSelected) {
-                    btnCls = 'border-rose-500 bg-rose-50 text-rose-900';
-                    badgeCls = 'bg-rose-500 text-white';
-                    icon = '<span class="ml-auto text-rose-600 font-bold">✕</span>';
-                  } else {
-                    btnCls = 'border-slate-100 text-slate-400 opacity-60';
-                  }
-                } else if (userSelected === optIdx) {
-                  btnCls = 'border-indigo-600 bg-indigo-50 text-indigo-900 font-semibold ring-1 ring-indigo-500';
-                  badgeCls = 'bg-indigo-600 text-white';
-                }
-                return `
-                  <button type="button" data-gq="${qIdx}" data-go="${optIdx}" ${showResult && state.gQuizMode === 'instant' ? 'disabled' : ''} class="p-3 rounded-xl border text-left text-xs sm:text-sm flex items-center gap-2.5 transition ${btnCls}">
-                    <span class="w-6 h-6 rounded-lg font-bold text-xs flex items-center justify-center shrink-0 ${badgeCls}">${letters[optIdx]}</span>
-                    <span class="flex-1">${escHtml(optText)}</span>
-                    ${icon}
-                  </button>
-                `;
-              }).join('')}
-            </div>
-
-            ${showResult ? `
-              <div class="p-3.5 rounded-xl bg-slate-50 border-l-4 ${userSelected === item.ans ? 'border-emerald-500' : 'border-amber-500'} text-xs sm:text-sm space-y-1">
-                <div class="font-bold ${userSelected === item.ans ? 'text-emerald-700' : 'text-amber-700'}">
-                  💡 ${userSelected === item.ans ? 'Chính xác!' : (hasAnswered ? 'Chưa chính xác!' : 'Chưa chọn đáp án!')} Đáp án đúng: ${letters[item.ans]}. ${escHtml(item.options[item.ans])}
-                </div>
-                <p class="text-slate-600 leading-relaxed">${escHtml(item.exp)}</p>
-              </div>
-            ` : ''}
-          </div>
-        `;
-      }).join('');
+      container.innerHTML = state.gCurrentQuestions.map((item, qIdx) => renderSingleGrammarQuestionHtml(item, qIdx)).join('');
+      updateExamSubmitLabel();
     }
 
     function calculateGrammarScore() {
@@ -1428,9 +1648,6 @@
         btn.addEventListener('click', () => switchTab(btn.dataset.tab));
       });
       document.getElementById('brandLogo').addEventListener('click', () => switchTab('dashboard'));
-      document.getElementById('mobileMenuBtn').addEventListener('click', () => {
-        document.getElementById('mobileNav').classList.toggle('hidden');
-      });
       document.getElementById('accentToggleBtn').addEventListener('click', () => {
         state.accent = state.accent === 'en-US' ? 'en-GB' : 'en-US';
         document.getElementById('accentToggleBtn').textContent = state.accent === 'en-US' ? '🔊 US' : '🔊 UK';
@@ -1479,11 +1696,15 @@
       });
 
       // Reset modal
+      const resetModal = document.getElementById('resetModal');
       document.getElementById('resetProgressBtn').addEventListener('click', () => {
-        document.getElementById('resetModal').classList.remove('hidden');
+        resetModal.classList.remove('hidden');
       });
       document.getElementById('cancelResetBtn').addEventListener('click', () => {
-        document.getElementById('resetModal').classList.add('hidden');
+        resetModal.classList.add('hidden');
+      });
+      resetModal.addEventListener('click', (e) => {
+        if (e.target === resetModal) resetModal.classList.add('hidden');
       });
       document.getElementById('confirmResetBtn').addEventListener('click', () => {
         state.mastered.clear();
@@ -1492,7 +1713,7 @@
         state.quizCorrect = 0;
         state.quizTotal = 0;
         saveProgress();
-        document.getElementById('resetModal').classList.add('hidden');
+        resetModal.classList.add('hidden');
         renderDashboard();
         showToast('Đã đặt lại toàn bộ tiến độ học.');
       });
@@ -1507,9 +1728,20 @@
         state.vocabPage = 1;
         renderVocab();
       });
-      document.getElementById('vocabSearchInput').addEventListener('input', (e) => {
+      const vocabSearchInput = document.getElementById('vocabSearchInput');
+      const vocabSearchClearBtn = document.getElementById('vocabSearchClearBtn');
+      vocabSearchInput.addEventListener('input', (e) => {
         state.vocabSearch = e.target.value;
+        vocabSearchClearBtn.classList.toggle('hidden', !e.target.value);
         state.vocabPage = 1;
+        renderVocab();
+      });
+      vocabSearchClearBtn.addEventListener('click', () => {
+        vocabSearchInput.value = '';
+        state.vocabSearch = '';
+        state.vocabPage = 1;
+        vocabSearchClearBtn.classList.add('hidden');
+        vocabSearchInput.focus();
         renderVocab();
       });
       document.getElementById('vocabStatusFilter').addEventListener('change', (e) => {
@@ -1555,7 +1787,7 @@
         window.scrollTo({ top: 0, behavior: 'smooth' });
       });
 
-      // Flashcard events
+      // Flashcard events + touch swipe gestures
       document.getElementById('fcPackSelect').addEventListener('change', (e) => {
         state.fcPack = e.target.value;
         state.fcTopic = 'all';
@@ -1574,8 +1806,82 @@
         buildFlashcardDeck(true);
         showToast('Đã xáo trộn bộ thẻ!');
       });
-      document.getElementById('fcCardWrapper').addEventListener('click', (e) => {
-        if (e.target.closest('button')) return;
+
+      const fcWrapper = document.getElementById('fcCardWrapper');
+      const fcSwipeStage = document.getElementById('fcSwipeStage');
+      const fcSwipeBadge = document.getElementById('fcSwipeBadge');
+      let fcTouchStartX = 0;
+      let fcTouchStartY = 0;
+      let fcTouchActive = false;
+      let fcSwipeDir = null;
+      let fcTouchDx = 0;
+      let fcSuppressClickUntil = 0;
+
+      fcWrapper.addEventListener('touchstart', (e) => {
+        if (e.touches.length !== 1 || e.target.closest('button')) return;
+        fcTouchStartX = e.touches[0].clientX;
+        fcTouchStartY = e.touches[0].clientY;
+        fcTouchActive = true;
+        fcSwipeDir = null;
+        fcTouchDx = 0;
+        fcSwipeStage.style.transition = 'none';
+      }, { passive: true });
+
+      fcWrapper.addEventListener('touchmove', (e) => {
+        if (!fcTouchActive || e.touches.length !== 1) return;
+        const dx = e.touches[0].clientX - fcTouchStartX;
+        const dy = e.touches[0].clientY - fcTouchStartY;
+
+        if (!fcSwipeDir) {
+          if (Math.abs(dx) < 10 && Math.abs(dy) < 10) return;
+          if (Math.abs(dy) > Math.abs(dx)) {
+            fcSwipeDir = 'v';
+            fcTouchActive = false;
+            return;
+          }
+          fcSwipeDir = 'h';
+        }
+
+        if (fcSwipeDir === 'h') {
+          e.preventDefault();
+          fcTouchDx = dx;
+          fcSwipeStage.style.transform = `translate3d(${dx}px, 0, 0) rotate(${dx * 0.03}deg)`;
+          if (dx > 30) {
+            fcSwipeBadge.textContent = '← Thẻ trước';
+            fcSwipeBadge.classList.remove('hidden');
+          } else if (dx < -30) {
+            fcSwipeBadge.textContent = 'Thẻ tiếp →';
+            fcSwipeBadge.classList.remove('hidden');
+          } else {
+            fcSwipeBadge.classList.add('hidden');
+          }
+        }
+      }, { passive: false });
+
+      function resetFcSwipeStage(shouldNavigate) {
+        if (fcSwipeDir === 'h') {
+          fcSuppressClickUntil = Date.now() + 350;
+        }
+        const dx = fcTouchDx;
+        const wasHorizontal = fcSwipeDir === 'h';
+        fcTouchActive = false;
+        fcSwipeDir = null;
+        fcTouchDx = 0;
+        fcSwipeStage.style.transition = 'transform 0.22s ease-out';
+        fcSwipeStage.style.transform = 'translate3d(0, 0, 0)';
+        fcSwipeBadge.classList.add('hidden');
+
+        if (shouldNavigate && wasHorizontal) {
+          if (dx <= -65) nextFlashcard(1);
+          else if (dx >= 65) nextFlashcard(-1);
+        }
+      }
+
+      fcWrapper.addEventListener('touchend', () => resetFcSwipeStage(true), { passive: true });
+      fcWrapper.addEventListener('touchcancel', () => resetFcSwipeStage(false), { passive: true });
+
+      fcWrapper.addEventListener('click', (e) => {
+        if (Date.now() < fcSuppressClickUntil || e.target.closest('button')) return;
         state.fcFlipped = !state.fcFlipped;
         renderFlashcard();
       });
@@ -1616,7 +1922,13 @@
       });
 
       document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          resetModal.classList.add('hidden');
+          closeGrammarDrawer();
+          return;
+        }
         if (state.activeTab !== 'flashcard') return;
+        if (e.ctrlKey || e.metaKey || e.altKey) return;
         if (['INPUT', 'SELECT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
         if (e.code === 'Space') { e.preventDefault(); state.fcFlipped = !state.fcFlipped; renderFlashcard(); }
         else if (e.code === 'ArrowRight') nextFlashcard(1);
@@ -1668,7 +1980,18 @@
         if (sp) speakWord(sp.dataset.speak);
       });
 
-      // Grammar & Grammar Random Quiz events
+      // Grammar & Grammar Random Quiz events + Mobile Drawer
+      document.getElementById('openGrammarDrawerBtn').addEventListener('click', openGrammarDrawer);
+      document.getElementById('closeGrammarDrawerBtn').addEventListener('click', closeGrammarDrawer);
+      document.getElementById('grammarDrawerBackdrop').addEventListener('click', closeGrammarDrawer);
+      document.getElementById('mobileMixedGrammarBtn').addEventListener('click', () => {
+        startMixedGrammarTest();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+      window.addEventListener('resize', () => {
+        if (window.innerWidth >= 1024) closeGrammarDrawer();
+      });
+
       document.getElementById('grammarSearchInput').addEventListener('input', (e) => {
         renderGrammarSidebar(e.target.value);
       });
@@ -1676,10 +1999,12 @@
         const btn = e.target.closest('[data-gtopic]');
         if (!btn) return;
         selectGrammarTopic(btn.dataset.gtopic, 'theory');
+        closeGrammarDrawer();
         window.scrollTo({ top: 0, behavior: 'smooth' });
       });
       document.getElementById('gMixedTestBtn').addEventListener('click', () => {
         startMixedGrammarTest();
+        closeGrammarDrawer();
         window.scrollTo({ top: 0, behavior: 'smooth' });
       });
       document.getElementById('gToggleCompleteBtn').addEventListener('click', () => {
@@ -1749,7 +2074,15 @@
         if (state.gQuizMode === 'instant' && state.gUserAnswers[qIdx] !== undefined) return;
         if (state.gQuizMode === 'exam' && state.gExamSubmitted) return;
         state.gUserAnswers[qIdx] = oIdx;
-        renderGrammarQuizQuestions();
+
+        const card = document.querySelector(`#gQuestionsContainer [data-qcard="${qIdx}"]`);
+        if (card) {
+          card.outerHTML = renderSingleGrammarQuestionHtml(state.gCurrentQuestions[qIdx], qIdx);
+        } else {
+          renderGrammarQuizQuestions();
+        }
+        updateExamSubmitLabel();
+
         if (state.gQuizMode === 'instant' && Object.keys(state.gUserAnswers).length === state.gCurrentQuestions.length) {
           calculateGrammarScore();
         }
@@ -1758,6 +2091,15 @@
         state.gExamSubmitted = true;
         renderGrammarQuizQuestions();
         calculateGrammarScore();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+
+      // Scroll-to-top button
+      const scrollTopBtn = document.getElementById('scrollTopBtn');
+      window.addEventListener('scroll', () => {
+        scrollTopBtn.classList.toggle('hidden', window.scrollY <= 450);
+      }, { passive: true });
+      scrollTopBtn.addEventListener('click', () => {
         window.scrollTo({ top: 0, behavior: 'smooth' });
       });
     }
