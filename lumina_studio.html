@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Lumina Studio — Trình Chỉnh Sửa Ảnh Pro (PS × LR)</title>
+  <title>Lumina Studio</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
@@ -131,6 +131,111 @@
     .crop-sw { bottom: -3px; left: -3px; border-width: 0 0 3px 3px; cursor: nesw-resize; }
     .crop-se { bottom: -3px; right: -3px; border-width: 0 3px 3px 0; cursor: nwse-resize; }
 
+    /* Overlay Gizmo & Transform Handles */
+    #overlayGizmo {
+      position: absolute; border: 1.5px solid #38bdf8;
+      box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.6);
+      cursor: move; touch-action: none; z-index: 32;
+      transform-origin: center center;
+    }
+    #overlayGizmo.mask-outline {
+      pointer-events: none;
+      border-style: dashed;
+      border-color: rgba(56, 189, 248, 0.65);
+    }
+    #overlayGizmo.mask-outline .ov-handle,
+    #overlayGizmo.mask-outline .ov-edge,
+    #overlayGizmo.mask-outline .ov-rotate-stem,
+    #overlayGizmo.mask-outline .ov-rotate-handle,
+    #overlayGizmo.mask-outline #ovGizmoBadge {
+      display: none;
+    }
+    .ov-handle {
+      position: absolute; width: 14px; height: 14px; border-radius: 50%;
+      background: #ffffff; border: 2px solid #2563eb;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.7);
+      transform: translate(-50%, -50%); touch-action: none; z-index: 33;
+    }
+    .ov-handle::after {
+      content: ''; position: absolute; left: 50%; top: 50%;
+      width: 24px; height: 24px; transform: translate(-50%, -50%);
+    }
+    .ov-nw { top: 0; left: 0; cursor: nwse-resize; }
+    .ov-ne { top: 0; left: 100%; cursor: nesw-resize; }
+    .ov-sw { top: 100%; left: 0; cursor: nesw-resize; }
+    .ov-se { top: 100%; left: 100%; cursor: nwse-resize; }
+
+    .ov-edge {
+      position: absolute; background: #ffffff; border: 1.5px solid #2563eb;
+      border-radius: 999px; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.7);
+      transform: translate(-50%, -50%); touch-action: none; z-index: 33;
+    }
+    .ov-edge::after {
+      content: ''; position: absolute; left: 50%; top: 50%;
+      width: 24px; height: 24px; transform: translate(-50%, -50%);
+    }
+    .ov-n { top: 0; left: 50%; width: 22px; height: 7px; cursor: ns-resize; }
+    .ov-s { top: 100%; left: 50%; width: 22px; height: 7px; cursor: ns-resize; }
+    .ov-w { top: 50%; left: 0; width: 7px; height: 22px; cursor: ew-resize; }
+    .ov-e { top: 50%; left: 100%; width: 7px; height: 22px; cursor: ew-resize; }
+
+    .ov-rotate-stem {
+      position: absolute; top: -24px; left: 50%; width: 1.5px; height: 24px;
+      background: #38bdf8; transform: translateX(-50%); pointer-events: none;
+    }
+    .ov-rotate-handle {
+      position: absolute; top: -28px; left: 50%; width: 16px; height: 16px;
+      border-radius: 50%; background: #0ea5e9; border: 2px solid #ffffff;
+      box-shadow: 0 1px 6px rgba(0, 0, 0, 0.75);
+      transform: translate(-50%, -50%); cursor: grab; touch-action: none; z-index: 33;
+    }
+    .ov-rotate-handle::after {
+      content: ''; position: absolute; left: 50%; top: 50%;
+      width: 26px; height: 26px; transform: translate(-50%, -50%);
+    }
+
+    #snapGuideV, #snapGuideH {
+      position: absolute; pointer-events: none; z-index: 31;
+      background: rgba(56, 189, 248, 0.8);
+    }
+    #snapGuideV { top: 0; bottom: 0; left: 50%; width: 1px; transform: translateX(-0.5px); }
+    #snapGuideH { left: 0; right: 0; top: 50%; height: 1px; transform: translateY(-0.5px); }
+
+    /* Overlay Crop Modal Box */
+    #ovCropBox {
+      position: absolute; border: 1.5px solid #ffffff;
+      box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.68);
+      cursor: move; touch-action: none; z-index: 30;
+    }
+    .ov-crop-handle {
+      position: absolute; width: 14px; height: 14px; border-radius: 3px;
+      background: #ffffff; border: 2px solid #2563eb;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.7);
+      transform: translate(-50%, -50%); touch-action: none; z-index: 31;
+    }
+    .ov-crop-handle::after {
+      content: ''; position: absolute; left: 50%; top: 50%;
+      width: 24px; height: 24px; transform: translate(-50%, -50%);
+    }
+    .ov-crop-nw { top: 0; left: 0; cursor: nwse-resize; }
+    .ov-crop-ne { top: 0; left: 100%; cursor: nesw-resize; }
+    .ov-crop-sw { top: 100%; left: 0; cursor: nesw-resize; }
+    .ov-crop-se { top: 100%; left: 100%; cursor: nwse-resize; }
+    .ov-crop-n { top: 0; left: 50%; width: 22px; height: 7px; cursor: ns-resize; }
+    .ov-crop-s { top: 100%; left: 50%; width: 22px; height: 7px; cursor: ns-resize; }
+    .ov-crop-w { top: 50%; left: 0; width: 7px; height: 22px; cursor: ew-resize; }
+    .ov-crop-e { top: 50%; left: 100%; width: 7px; height: 22px; cursor: ew-resize; }
+
+    /* Brush Cursor Modes */
+    #brushCursor.cursor-erase {
+      border-style: dashed; border-color: rgba(244, 63, 94, 0.95);
+      box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.75);
+    }
+    #brushCursor.cursor-restore {
+      border-style: dashed; border-color: rgba(16, 185, 129, 0.95);
+      box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.75);
+    }
+
     /* Toast */
     #toast {
       transition: opacity 0.25s ease, transform 0.25s ease;
@@ -139,8 +244,9 @@
 </head>
 <body class="flex flex-col h-[100dvh] w-screen overflow-hidden bg-studio-bg text-slate-100 font-sans">
 
-  <!-- Hidden File Input -->
+  <!-- Hidden File Inputs -->
   <input type="file" id="fileInput" accept="image/*" class="hidden" />
+  <input type="file" id="overlayFileInput" accept="image/*" multiple class="hidden" />
 
   <!-- TOP HEADER BAR -->
   <header class="h-12 sm:h-13 shrink-0 bg-studio-panel border-b border-studio-border px-2.5 sm:px-4 flex items-center justify-between gap-2 z-40">
@@ -167,6 +273,17 @@
         </svg>
         <span class="hidden sm:inline">Mở ảnh</span>
         <span class="sm:hidden">Mở</span>
+      </button>
+
+      <button id="btnAddOverlay" class="h-8 px-2.5 sm:px-3 rounded-lg bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-500/40 text-xs font-medium text-cyan-300 flex items-center gap-1.5 transition shrink-0" title="Thêm ảnh 2 (mã QR, logo, ảnh cắt ghép) chồng lên ảnh hiện tại">
+        <svg class="w-3.5 h-3.5 text-cyan-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="14" height="14" rx="2"></rect>
+          <path d="M17 9h2a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H11a2 2 0 0 1-2-2v-2"></path>
+          <line x1="10" y1="7" x2="10" y2="13"></line>
+          <line x1="7" y1="10" x2="13" y2="10"></line>
+        </svg>
+        <span class="hidden sm:inline">+ Ghép ảnh</span>
+        <span class="sm:hidden">Ghép</span>
       </button>
 
       <button id="btnAutoEnhance" class="h-8 px-2.5 rounded-lg bg-studio-surface hover:bg-slate-700/80 border border-studio-border text-xs font-medium text-amber-300 flex items-center gap-1.5 transition shrink-0" title="Tự động cân bằng sáng & màu">
@@ -245,6 +362,9 @@
       <button data-tool="text" class="ps-tool-btn w-9 h-9 rounded-lg flex items-center justify-center text-slate-400 hover:text-white hover:bg-studio-surface transition" title="Chèn chữ / Watermark (T)">
         <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 7 4 4 20 4 20 7"></polyline><line x1="9" y1="20" x2="15" y2="20"></line><line x1="12" y1="4" x2="12" y2="20"></line></svg>
       </button>
+      <button data-tool="composite" class="ps-tool-btn w-9 h-9 rounded-lg flex items-center justify-center text-slate-400 hover:text-white hover:bg-studio-surface transition" title="Ghép ảnh / Lớp (L)">
+        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+      </button>
 
       <div class="flex-1"></div>
 
@@ -259,32 +379,53 @@
       <!-- Drag & Drop Overlay -->
       <div id="dropOverlay" class="hidden absolute inset-3 rounded-2xl border-2 border-dashed border-cyan-400 bg-blue-950/70 backdrop-blur-sm z-50 flex flex-col items-center justify-center gap-2 pointer-events-none">
         <svg class="w-10 h-10 text-cyan-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
-        <p class="text-sm font-semibold text-white">Thả ảnh vào đây để chỉnh sửa ngay</p>
+        <p id="dropOverlayText" class="text-sm font-semibold text-white">Thả ảnh vào đây để chỉnh sửa ngay</p>
       </div>
 
       <!-- Canvas Stage Wrapper -->
       <div id="stageWrapper" class="relative flex items-center justify-center transition-transform duration-75" style="transform-origin: center center;">
-        <div id="canvasContainer" class="relative shadow-2xl shadow-black/80 canvas-checker overflow-hidden rounded-sm">
+        <div id="canvasContainer" class="relative shadow-2xl shadow-black/80 canvas-checker rounded-sm">
           <!-- Main Edited Canvas -->
-          <canvas id="mainCanvas" class="block max-w-full max-h-full"></canvas>
-          <!-- Original Canvas for Split Compare -->
-          <canvas id="originalCanvas" class="hidden absolute inset-0 pointer-events-none"></canvas>
+          <canvas id="mainCanvas" class="block max-w-full max-h-full rounded-sm"></canvas>
+          <!-- Clipped Inner Overlays (keeps 9999px crop shadow & split line clipped cleanly) -->
+          <div id="canvasClipLayer" class="absolute inset-0 overflow-hidden rounded-sm pointer-events-none">
+            <!-- Original Canvas for Split Compare -->
+            <canvas id="originalCanvas" class="hidden absolute inset-0 pointer-events-none"></canvas>
+            <!-- Interactive Split Line -->
+            <div id="splitLine" class="hidden"></div>
+            <!-- Snap Center Guides -->
+            <div id="snapGuideV" class="hidden"></div>
+            <div id="snapGuideH" class="hidden"></div>
+            <!-- Crop Box Overlay -->
+            <div id="cropBox" class="hidden pointer-events-auto">
+              <div class="crop-grid-v1"></div>
+              <div class="crop-grid-v2"></div>
+              <div class="crop-grid-h1"></div>
+              <div class="crop-grid-h2"></div>
+              <div class="crop-corner crop-nw" data-handle="nw"></div>
+              <div class="crop-corner crop-ne" data-handle="ne"></div>
+              <div class="crop-corner crop-sw" data-handle="sw"></div>
+              <div class="crop-corner crop-se" data-handle="se"></div>
+            </div>
+          </div>
           <!-- Interactive Split Handle -->
-          <div id="splitLine" class="hidden"></div>
           <div id="splitHandle" class="hidden">
             <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="15 18 9 12 15 6"></polyline></svg>
             <svg class="w-4 h-4 -ml-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="9 18 15 12 9 6"></polyline></svg>
           </div>
-          <!-- Crop Box Overlay -->
-          <div id="cropBox" class="hidden">
-            <div class="crop-grid-v1"></div>
-            <div class="crop-grid-v2"></div>
-            <div class="crop-grid-h1"></div>
-            <div class="crop-grid-h2"></div>
-            <div class="crop-corner crop-nw" data-handle="nw"></div>
-            <div class="crop-corner crop-ne" data-handle="ne"></div>
-            <div class="crop-corner crop-sw" data-handle="sw"></div>
-            <div class="crop-corner crop-se" data-handle="se"></div>
+          <!-- Overlay Transform Gizmo -->
+          <div id="overlayGizmo" class="hidden">
+            <div class="ov-rotate-stem"></div>
+            <div class="ov-rotate-handle" data-ov-handle="rotate" title="Kéo để xoay ảnh ghép"></div>
+            <div class="ov-handle ov-nw" data-ov-handle="nw"></div>
+            <div class="ov-handle ov-ne" data-ov-handle="ne"></div>
+            <div class="ov-handle ov-sw" data-ov-handle="sw"></div>
+            <div class="ov-handle ov-se" data-ov-handle="se"></div>
+            <div class="ov-edge ov-n" data-ov-handle="n"></div>
+            <div class="ov-edge ov-s" data-ov-handle="s"></div>
+            <div class="ov-edge ov-w" data-ov-handle="w"></div>
+            <div class="ov-edge ov-e" data-ov-handle="e"></div>
+            <div id="ovGizmoBadge" class="hidden absolute -bottom-6 left-1/2 -translate-x-1/2 px-1.5 py-0.5 rounded bg-slate-950/90 border border-cyan-500/40 text-[10px] font-mono text-cyan-300 whitespace-nowrap pointer-events-none shadow"></div>
           </div>
           <!-- Brush Cursor Ring -->
           <div id="brushCursor" class="hidden absolute rounded-full border-2 border-white/90 shadow-[0_0_0_1px_rgba(0,0,0,0.7)] pointer-events-none z-35" style="transform: translate(-50%, -50%);"></div>
@@ -311,6 +452,21 @@
         <button id="btnCancelCrop" class="px-2.5 py-1 rounded-lg bg-studio-surface hover:bg-slate-700 text-xs text-slate-300 font-medium transition">Hủy</button>
         <button id="btnApplyCrop" class="px-3 py-1 rounded-lg bg-blue-600 hover:bg-blue-500 text-xs text-white font-semibold transition">Áp dụng cắt</button>
       </div>
+
+      <!-- Floating Overlay Action Bar (When Overlay Layer Selected) -->
+      <div id="overlayFloatingBar" class="hidden absolute top-3 left-1/2 -translate-x-1/2 flex items-center gap-1 sm:gap-1.5 px-2.5 py-1.5 rounded-xl bg-studio-panel/95 border border-cyan-500/35 shadow-xl backdrop-blur-md z-35 max-w-[94vw] overflow-x-auto no-scrollbar">
+        <button id="btnFloatOvCrop" class="px-2 sm:px-2.5 py-1 rounded-lg bg-blue-600/90 hover:bg-blue-500 text-[11px] font-semibold text-white whitespace-nowrap transition" title="Cắt & chỉnh khung ảnh 2">Cắt ảnh 2</button>
+        <button id="btnFloatOvErase" class="px-2 sm:px-2.5 py-1 rounded-lg bg-studio-surface hover:bg-slate-700 text-[11px] font-medium text-slate-200 whitespace-nowrap transition" title="Tẩy mềm đường biên giữa 2 ảnh">Tẩy mềm</button>
+        <button id="btnFloatOvRestore" class="px-2 sm:px-2.5 py-1 rounded-lg bg-studio-surface hover:bg-slate-700 text-[11px] font-medium text-slate-200 whitespace-nowrap transition" title="Khôi phục vùng vừa tẩy">Khôi phục</button>
+        <button id="btnFloatOvMatch" class="px-2 sm:px-2.5 py-1 rounded-lg bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-500/40 text-[11px] font-medium text-cyan-300 whitespace-nowrap transition" title="Tự động khớp ánh sáng & màu theo ảnh nền">Khớp màu</button>
+        <button id="btnFloatOvDup" class="p-1.5 rounded-lg bg-studio-surface hover:bg-slate-700 text-slate-300 hover:text-white transition shrink-0" title="Nhân bản lớp ảnh ghép">
+          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        </button>
+        <button id="btnFloatOvDel" class="p-1.5 rounded-lg bg-studio-surface hover:bg-rose-500/25 text-slate-300 hover:text-rose-400 transition shrink-0" title="Xóa lớp đang chọn">
+          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6M14 11v6"></path></svg>
+        </button>
+        <button id="btnFloatOvDone" class="px-2.5 py-1 rounded-lg bg-emerald-600/90 hover:bg-emerald-500 text-[11px] font-semibold text-white whitespace-nowrap transition" title="Ẩn khung chọn để xem kết quả">Xong</button>
+      </div>
     </main>
 
     <!-- RIGHT INSPECTOR PANEL (Desktop) / BOTTOM DRAWER (Mobile) -->
@@ -335,6 +491,7 @@
         <button data-tab="curves" class="panel-tab px-2.5 py-2 text-xs font-medium rounded-t-lg border-b-2 border-transparent text-slate-400 hover:text-slate-200 whitespace-nowrap transition">Curves</button>
         <button data-tab="detail" class="panel-tab px-2.5 py-2 text-xs font-medium rounded-t-lg border-b-2 border-transparent text-slate-400 hover:text-slate-200 whitespace-nowrap transition">Chi tiết</button>
         <button data-tab="ps" class="panel-tab px-2.5 py-2 text-xs font-medium rounded-t-lg border-b-2 border-transparent text-slate-400 hover:text-slate-200 whitespace-nowrap transition">PS Tools</button>
+        <button data-tab="composite" class="panel-tab px-2.5 py-2 text-xs font-medium rounded-t-lg border-b-2 border-transparent text-slate-400 hover:text-slate-200 whitespace-nowrap transition flex items-center">Ghép ảnh<span id="overlayCountBadge" class="hidden ml-1 px-1.5 rounded-full bg-cyan-500/25 text-cyan-300 text-[10px] font-mono">0</span></button>
       </div>
 
       <!-- Scrollable Tab Content -->
@@ -431,6 +588,9 @@
               <button data-tool="text" class="ps-panel-btn py-2 px-2 rounded-lg bg-studio-surface text-slate-300 hover:text-white text-[11px] font-medium flex flex-col items-center gap-1 transition">
                 <span>Chèn chữ</span>
               </button>
+              <button data-tool="composite" class="ps-panel-btn py-2 px-2 rounded-lg bg-studio-surface text-cyan-300 hover:text-white text-[11px] font-medium flex flex-col items-center gap-1 transition col-span-3">
+                <span>Ghép ảnh / Cắt ghép</span>
+              </button>
             </div>
           </div>
 
@@ -516,6 +676,284 @@
           </div>
         </section>
 
+        <!-- TAB 7: IMAGE COMPOSITING (GHÉP ẢNH & LÀM MỀM ĐƯỜNG BIÊN) -->
+        <section id="tab-composite" class="tab-panel hidden space-y-4">
+          <div class="space-y-1.5">
+            <button id="btnPanelAddOverlay" class="w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 active:scale-[0.99] text-white text-xs font-semibold flex items-center justify-center gap-2 shadow-md shadow-blue-600/20 transition">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="14" height="14" rx="2"></rect>
+                <path d="M17 9h2a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H11a2 2 0 0 1-2-2v-2"></path>
+                <line x1="10" y1="7" x2="10" y2="13"></line>
+                <line x1="7" y1="10" x2="13" y2="10"></line>
+              </svg>
+              <span>+ Thêm ảnh ghép (Ảnh 2, Mã QR...)</span>
+            </button>
+            <p class="text-[10px] text-slate-400 text-center">Hỗ trợ chọn nhiều ảnh, kéo thả vào khung hoặc dán trực tiếp (Ctrl+V)</p>
+          </div>
+
+          <!-- Layers Stack -->
+          <div class="space-y-2 pt-1">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-semibold text-slate-300">Danh sách lớp ảnh ghép</span>
+              <span class="text-[10px] text-slate-400">Trên → Dưới</span>
+            </div>
+            <div id="overlayLayerList" class="space-y-1.5"></div>
+          </div>
+
+          <!-- Selected Layer Controls -->
+          <div id="overlayEditorWrap" class="hidden space-y-4">
+
+            <!-- 1. Cắt & Bố cục -->
+            <div class="space-y-3 pt-3 border-t border-studio-border">
+              <div class="text-xs font-semibold text-slate-200">1. Cắt & Bố cục Ảnh 2</div>
+              <div class="grid grid-cols-2 gap-1.5">
+                <button id="btnOpenOvCrop" class="py-2 px-2.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold flex items-center justify-center gap-1.5 transition">
+                  <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2v14a2 2 0 0 0 2 2h14"></path><path d="M18 22V8a2 2 0 0 0-2-2H2"></path></svg>
+                  <span>Cắt / Crop ảnh 2</span>
+                </button>
+                <button id="btnOvAutoMatch" class="py-2 px-2.5 rounded-lg bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-500/40 text-cyan-300 text-xs font-semibold flex items-center justify-center gap-1.5 transition" title="Tự động khớp độ sáng và nhiệt độ màu với vùng nền xung quanh">
+                  <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"></path></svg>
+                  <span>Khớp màu nền</span>
+                </button>
+              </div>
+              <div class="grid grid-cols-4 gap-1.5">
+                <button id="btnOvRotL" class="py-1.5 rounded-lg bg-studio-surface hover:bg-slate-700 text-xs text-slate-200 transition" title="Xoay trái 90°">↺ 90°</button>
+                <button id="btnOvRotR" class="py-1.5 rounded-lg bg-studio-surface hover:bg-slate-700 text-xs text-slate-200 transition" title="Xoay phải 90°">↻ 90°</button>
+                <button id="btnOvFlipH" class="py-1.5 rounded-lg bg-studio-surface hover:bg-slate-700 text-xs text-slate-200 transition" title="Lật ngang">⇆ Lật</button>
+                <button id="btnOvFlipV" class="py-1.5 rounded-lg bg-studio-surface hover:bg-slate-700 text-xs text-slate-200 transition" title="Lật dọc">⇅ Lật</button>
+              </div>
+
+              <div>
+                <div class="flex justify-between text-xs mb-1">
+                  <span class="text-slate-300">Kích thước</span>
+                  <span id="val_ovScale" class="font-mono text-[11px] text-cyan-400">44%</span>
+                </div>
+                <input type="range" id="sl_ovScale" min="5" max="180" value="44" class="pro-slider" />
+              </div>
+
+              <div>
+                <div class="flex justify-between text-xs mb-1">
+                  <span class="text-slate-300">Xoay góc</span>
+                  <span id="val_ovRotate" class="font-mono text-[11px] text-slate-400">0°</span>
+                </div>
+                <input type="range" id="sl_ovRotate" min="-180" max="180" value="0" step="0.5" class="pro-slider" />
+              </div>
+
+              <div class="grid grid-cols-2 gap-2.5">
+                <div>
+                  <div class="flex justify-between text-[11px] mb-1">
+                    <span class="text-slate-400">Nghiêng ngang</span>
+                    <span id="val_ovSkewX" class="font-mono text-slate-400">0°</span>
+                  </div>
+                  <input type="range" id="sl_ovSkewX" min="-35" max="35" value="0" step="0.5" class="pro-slider" />
+                </div>
+                <div>
+                  <div class="flex justify-between text-[11px] mb-1">
+                    <span class="text-slate-400">Nghiêng dọc</span>
+                    <span id="val_ovSkewY" class="font-mono text-slate-400">0°</span>
+                  </div>
+                  <input type="range" id="sl_ovSkewY" min="-35" max="35" value="0" step="0.5" class="pro-slider" />
+                </div>
+              </div>
+
+              <label class="flex items-center gap-2 text-xs text-slate-300 cursor-pointer select-none">
+                <input type="checkbox" id="chkOvLockAspect" checked class="rounded border-studio-border bg-studio-surface text-blue-500 focus:ring-0" />
+                <span>Khóa tỉ lệ khi kéo góc</span>
+              </label>
+            </div>
+
+            <!-- 2. Làm mềm đường biên & Hòa trộn (Hero Section) -->
+            <div class="space-y-3 pt-3 border-t border-studio-border">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-semibold text-cyan-300">2. Làm mềm đường biên & Hòa trộn</span>
+              </div>
+
+              <div>
+                <div class="text-[11px] text-slate-400 mb-1.5">Khung viền cắt ghép</div>
+                <div class="grid grid-cols-3 gap-1.5">
+                  <button data-ov-shape="rect" class="ov-shape-btn py-1.5 rounded-lg bg-blue-600 text-white text-[11px] font-medium transition">Chữ nhật</button>
+                  <button data-ov-shape="rounded" class="ov-shape-btn py-1.5 rounded-lg bg-studio-surface text-slate-300 text-[11px] font-medium transition">Bo góc</button>
+                  <button data-ov-shape="ellipse" class="ov-shape-btn py-1.5 rounded-lg bg-studio-surface text-slate-300 text-[11px] font-medium transition">Oval / Tròn</button>
+                </div>
+              </div>
+
+              <div id="ovCornerWrap" class="hidden">
+                <div class="flex justify-between text-xs mb-1">
+                  <span class="text-slate-300">Độ bo góc</span>
+                  <span id="val_ovCorner" class="font-mono text-[11px] text-cyan-400">15%</span>
+                </div>
+                <input type="range" id="sl_ovCorner" min="0" max="50" value="15" class="pro-slider" />
+              </div>
+
+              <div>
+                <div class="flex justify-between text-xs mb-1">
+                  <span class="text-slate-200 font-medium">Làm mềm viền (Feather)</span>
+                  <span id="val_ovFeather" class="font-mono text-[11px] text-slate-400">0%</span>
+                </div>
+                <input type="range" id="sl_ovFeather" min="0" max="100" value="0" class="pro-slider" />
+              </div>
+
+              <div>
+                <div class="flex justify-between text-xs mb-1">
+                  <span class="text-slate-200 font-medium">Làm mịn đường nối</span>
+                  <span id="val_ovEdgeBlur" class="font-mono text-[11px] text-slate-400">0%</span>
+                </div>
+                <input type="range" id="sl_ovEdgeBlur" min="0" max="100" value="0" class="pro-slider" />
+              </div>
+
+              <div>
+                <div class="flex justify-between text-xs mb-1">
+                  <span class="text-slate-200 font-medium">Hòa màu viền nền</span>
+                  <span id="val_ovEdgeBlend" class="font-mono text-[11px] text-slate-400">0%</span>
+                </div>
+                <input type="range" id="sl_ovEdgeBlend" min="0" max="100" value="0" class="pro-slider" />
+              </div>
+
+              <!-- Mask Brush -->
+              <div class="p-2.5 rounded-xl bg-studio-surface/70 border border-studio-border space-y-2.5">
+                <div class="flex items-center justify-between">
+                  <span class="text-[11px] font-semibold text-slate-200">Cọ tẩy mềm đường biên</span>
+                  <button id="btnOvResetMask" class="text-[11px] text-rose-400 hover:text-rose-300 transition">Đặt lại</button>
+                </div>
+                <div class="grid grid-cols-2 gap-1.5">
+                  <button id="btnOvEraseMode" class="py-1.5 px-2 rounded-lg bg-studio-panel hover:bg-slate-700 border border-studio-border text-[11px] font-medium text-slate-200 transition">Tẩy mềm viền</button>
+                  <button id="btnOvRestoreMode" class="py-1.5 px-2 rounded-lg bg-studio-panel hover:bg-slate-700 border border-studio-border text-[11px] font-medium text-slate-200 transition">Khôi phục</button>
+                </div>
+                <div>
+                  <div class="flex justify-between text-[11px] mb-0.5">
+                    <span class="text-slate-400">Cỡ cọ</span>
+                    <span id="val_ovBrushSize" class="font-mono text-cyan-400">32px</span>
+                  </div>
+                  <input type="range" id="sl_ovBrushSize" min="6" max="120" value="32" class="pro-slider" />
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                  <div>
+                    <div class="flex justify-between text-[11px] mb-0.5">
+                      <span class="text-slate-400">Độ mềm cọ</span>
+                      <span id="val_ovBrushSoft" class="font-mono text-cyan-400">80%</span>
+                    </div>
+                    <input type="range" id="sl_ovBrushSoft" min="10" max="100" value="80" class="pro-slider" />
+                  </div>
+                  <div>
+                    <div class="flex justify-between text-[11px] mb-0.5">
+                      <span class="text-slate-400">Cường độ</span>
+                      <span id="val_ovBrushStrength" class="font-mono text-cyan-400">75%</span>
+                    </div>
+                    <input type="range" id="sl_ovBrushStrength" min="10" max="100" value="75" class="pro-slider" />
+                  </div>
+                </div>
+              </div>
+
+              <!-- Blend & Background Removal -->
+              <div class="space-y-2.5 pt-1">
+                <div>
+                  <div class="flex justify-between text-xs mb-1">
+                    <span class="text-slate-300">Độ mờ (Opacity)</span>
+                    <span id="val_ovOpacity" class="font-mono text-[11px] text-cyan-400">100%</span>
+                  </div>
+                  <input type="range" id="sl_ovOpacity" min="0" max="100" value="100" class="pro-slider" />
+                </div>
+
+                <div>
+                  <label class="block text-[11px] text-slate-400 mb-1">Chế độ hòa trộn (Blend Mode)</label>
+                  <select id="selOvBlendMode" class="w-full bg-studio-surface border border-studio-border rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-blue-500">
+                    <option value="source-over">Bình thường (Normal)</option>
+                    <option value="multiply">Nhân màu (Multiply — Tốt cho QR)</option>
+                    <option value="screen">Lọc sáng (Screen)</option>
+                    <option value="overlay">Phủ màu (Overlay)</option>
+                    <option value="soft-light">Ánh sáng mềm (Soft Light)</option>
+                    <option value="darken">Tối hơn (Darken)</option>
+                    <option value="lighten">Sáng hơn (Lighten)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <div class="text-[11px] text-slate-400 mb-1.5">Tách nền nhanh (QR / Logo)</div>
+                  <div class="grid grid-cols-3 gap-1.5">
+                    <button data-ov-bg="none" class="ov-bg-btn py-1.5 rounded-lg bg-blue-600 text-white text-[11px] font-medium transition">Không</button>
+                    <button data-ov-bg="white" class="ov-bg-btn py-1.5 rounded-lg bg-studio-surface text-slate-300 text-[11px] font-medium transition">Xóa nền trắng</button>
+                    <button data-ov-bg="black" class="ov-bg-btn py-1.5 rounded-lg bg-studio-surface text-slate-300 text-[11px] font-medium transition">Xóa nền đen</button>
+                  </div>
+                </div>
+
+                <div id="ovBgParamsWrap" class="hidden space-y-2 pt-1">
+                  <div>
+                    <div class="flex justify-between text-[11px] mb-0.5">
+                      <span class="text-slate-400">Độ tách nền</span>
+                      <span id="val_ovBgTol" class="font-mono text-cyan-400">22%</span>
+                    </div>
+                    <input type="range" id="sl_ovBgTol" min="0" max="100" value="22" class="pro-slider" />
+                  </div>
+                  <div>
+                    <div class="flex justify-between text-[11px] mb-0.5">
+                      <span class="text-slate-400">Mềm mép tách</span>
+                      <span id="val_ovBgSoft" class="font-mono text-cyan-400">18%</span>
+                    </div>
+                    <input type="range" id="sl_ovBgSoft" min="0" max="100" value="18" class="pro-slider" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 3. Chỉnh sáng & màu riêng Ảnh 2 -->
+            <div class="space-y-3 pt-3 border-t border-studio-border">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-semibold text-slate-200">3. Chỉnh sáng & màu riêng Ảnh 2</span>
+                <button id="btnOvResetColor" class="text-[11px] text-slate-400 hover:text-cyan-400 transition">Đặt lại</button>
+              </div>
+              <div>
+                <div class="flex justify-between text-xs mb-1">
+                  <span class="text-slate-300">Độ sáng</span>
+                  <span id="val_ovBright" class="font-mono text-[11px] text-slate-400">0</span>
+                </div>
+                <input type="range" id="sl_ovBright" min="-100" max="100" value="0" class="pro-slider" />
+              </div>
+              <div>
+                <div class="flex justify-between text-xs mb-1">
+                  <span class="text-slate-300">Tương phản</span>
+                  <span id="val_ovContrast" class="font-mono text-[11px] text-slate-400">0</span>
+                </div>
+                <input type="range" id="sl_ovContrast" min="-100" max="100" value="0" class="pro-slider" />
+              </div>
+              <div>
+                <div class="flex justify-between text-xs mb-1">
+                  <span class="text-slate-300">Bão hòa</span>
+                  <span id="val_ovSat" class="font-mono text-[11px] text-slate-400">0</span>
+                </div>
+                <input type="range" id="sl_ovSat" min="-100" max="100" value="0" class="pro-slider track-sat" />
+              </div>
+              <div>
+                <div class="flex justify-between text-xs mb-1">
+                  <span class="text-slate-300">Nhiệt độ màu</span>
+                  <span id="val_ovTemp" class="font-mono text-[11px] text-slate-400">0</span>
+                </div>
+                <input type="range" id="sl_ovTemp" min="-100" max="100" value="0" class="pro-slider track-temp" />
+              </div>
+              <div>
+                <div class="flex justify-between text-xs mb-1">
+                  <span class="text-slate-300">Làm mờ nhẹ ảnh 2</span>
+                  <span id="val_ovBlur" class="font-mono text-[11px] text-slate-400">0</span>
+                </div>
+                <input type="range" id="sl_ovBlur" min="0" max="10" value="0" step="0.5" class="pro-slider" />
+              </div>
+              <label class="flex items-center gap-2 text-xs text-slate-300 cursor-pointer select-none pt-1">
+                <input type="checkbox" id="chkOvBelowFilter" class="rounded border-studio-border bg-studio-surface text-blue-500 focus:ring-0" />
+                <span>Áp chung bộ lọc Lightroom & hạt phim của Ảnh 1</span>
+              </label>
+            </div>
+
+            <!-- 4. Quản lý lớp -->
+            <div class="space-y-2 pt-3 border-t border-studio-border">
+              <div class="text-xs font-semibold text-slate-200">4. Quản lý lớp</div>
+              <div class="grid grid-cols-3 gap-1.5">
+                <button id="btnOvDuplicate" class="py-2 rounded-lg bg-studio-surface hover:bg-slate-700 text-[11px] font-medium text-slate-200 transition">Nhân bản</button>
+                <button id="btnOvFlatten" class="py-2 rounded-lg bg-studio-surface hover:bg-slate-700 text-[11px] font-medium text-cyan-300 transition">Gộp vào ảnh nền</button>
+                <button id="btnOvDelete" class="py-2 rounded-lg bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-[11px] font-medium text-rose-300 transition">Xóa lớp</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
       </div>
     </aside>
   </div>
@@ -595,6 +1033,69 @@
         <p class="text-[11px] text-slate-400 text-center leading-relaxed">
           Mẹo trên iPhone/Android: Bấm <b>Lưu trực tiếp vào Thư viện ảnh</b> rồi chọn <i>"Lưu hình ảnh"</i>, hoặc <b>nhấn giữ ảnh xem trước</b> ở trên để lưu nhanh vào Album.
         </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- OVERLAY CROP MODAL (Cắt & Chỉnh khung Ảnh 2) -->
+  <div id="overlayCropModal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4">
+    <div class="w-full max-w-2xl bg-studio-panel border border-studio-border rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[94dvh]">
+      <div class="px-4 py-3 border-b border-studio-border flex items-center justify-between gap-2 shrink-0">
+        <div>
+          <h2 class="text-sm font-bold text-white">Cắt & Chỉnh khung Ảnh ghép</h2>
+          <p id="ovCropDimLabel" class="text-[11px] font-mono text-cyan-400">—</p>
+        </div>
+        <button id="btnCloseOvCrop" class="w-8 h-8 rounded-lg hover:bg-studio-surface flex items-center justify-center text-slate-400 hover:text-white transition">✕</button>
+      </div>
+
+      <div id="ovCropStageWrap" class="flex-1 min-h-[240px] bg-[#090b0e] p-4 flex items-center justify-center overflow-hidden">
+        <div id="ovCropImgWrap" class="relative overflow-hidden select-none canvas-checker shadow-xl rounded-sm">
+          <canvas id="ovCropCanvas" class="block"></canvas>
+          <div id="ovCropBox">
+            <div class="crop-grid-v1"></div>
+            <div class="crop-grid-v2"></div>
+            <div class="crop-grid-h1"></div>
+            <div class="crop-grid-h2"></div>
+            <div class="ov-crop-handle ov-crop-nw" data-ovcrop-handle="nw"></div>
+            <div class="ov-crop-handle ov-crop-ne" data-ovcrop-handle="ne"></div>
+            <div class="ov-crop-handle ov-crop-sw" data-ovcrop-handle="sw"></div>
+            <div class="ov-crop-handle ov-crop-se" data-ovcrop-handle="se"></div>
+            <div class="ov-crop-handle ov-crop-n" data-ovcrop-handle="n"></div>
+            <div class="ov-crop-handle ov-crop-s" data-ovcrop-handle="s"></div>
+            <div class="ov-crop-handle ov-crop-w" data-ovcrop-handle="w"></div>
+            <div class="ov-crop-handle ov-crop-e" data-ovcrop-handle="e"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="px-4 py-3 border-t border-studio-border space-y-3 bg-studio-panel shrink-0">
+        <div class="flex flex-wrap items-center gap-1.5">
+          <button data-ov-ratio="free" class="ov-crop-ratio-btn px-2.5 py-1 rounded-lg bg-blue-600 text-white text-[11px] font-medium transition">Tự do</button>
+          <button data-ov-ratio="1:1" class="ov-crop-ratio-btn px-2.5 py-1 rounded-lg bg-studio-surface text-slate-300 text-[11px] font-medium transition">1:1 (QR)</button>
+          <button data-ov-ratio="4:5" class="ov-crop-ratio-btn px-2.5 py-1 rounded-lg bg-studio-surface text-slate-300 text-[11px] font-medium transition">4:5</button>
+          <button data-ov-ratio="3:4" class="ov-crop-ratio-btn px-2.5 py-1 rounded-lg bg-studio-surface text-slate-300 text-[11px] font-medium transition">3:4</button>
+          <button data-ov-ratio="4:3" class="ov-crop-ratio-btn px-2.5 py-1 rounded-lg bg-studio-surface text-slate-300 text-[11px] font-medium transition">4:3</button>
+          <button data-ov-ratio="16:9" class="ov-crop-ratio-btn px-2.5 py-1 rounded-lg bg-studio-surface text-slate-300 text-[11px] font-medium transition">16:9</button>
+          <button data-ov-ratio="full" class="ov-crop-ratio-btn px-2.5 py-1 rounded-lg bg-studio-surface text-cyan-300 text-[11px] font-medium transition">Toàn ảnh</button>
+        </div>
+
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <div class="flex items-center gap-1.5">
+            <button id="btnOvCropRotL" class="px-2.5 py-1.5 rounded-lg bg-studio-surface hover:bg-slate-700 text-xs text-slate-200 transition">↺ 90°</button>
+            <button id="btnOvCropRotR" class="px-2.5 py-1.5 rounded-lg bg-studio-surface hover:bg-slate-700 text-xs text-slate-200 transition">↻ 90°</button>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <span class="text-[11px] text-slate-400 mr-1">Khung:</span>
+            <button data-ov-crop-shape="rect" class="ov-crop-shape-btn px-2 py-1 rounded-lg bg-blue-600 text-white text-[11px] font-medium transition">Vuông</button>
+            <button data-ov-crop-shape="rounded" class="ov-crop-shape-btn px-2 py-1 rounded-lg bg-studio-surface text-slate-300 text-[11px] font-medium transition">Bo góc</button>
+            <button data-ov-crop-shape="ellipse" class="ov-crop-shape-btn px-2 py-1 rounded-lg bg-studio-surface text-slate-300 text-[11px] font-medium transition">Tròn / Oval</button>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-end gap-2 pt-1">
+          <button id="btnCancelOvCrop" class="px-3.5 py-2 rounded-xl bg-studio-surface hover:bg-slate-700 text-xs font-medium text-slate-300 transition">Hủy</button>
+          <button id="btnApplyOvCrop" class="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-xs font-semibold text-white shadow-md shadow-blue-600/25 transition">Áp dụng cắt ảnh 2</button>
+        </div>
       </div>
     </div>
   </div>
@@ -694,6 +1195,13 @@
       };
     }
 
+    // Overlay asset pool & render caches (kept outside `state` so `state` stays JSON-cloneable)
+    const overlayImagePool = new Map();   // assetId -> { img, rotCache: Map<turns, HTMLCanvasElement> }
+    const overlayRenderCache = new Map(); // layerId -> { key, canvas }
+    let cachedBaseCanvas = null;
+    let cachedBaseSig = '';
+    let previewBaseRev = 0;
+
     const state = {
       sourceImg: null,          // Original HTMLImageElement
       workingCanvas: null,      // Cropped/rotated full-res source canvas
@@ -712,13 +1220,20 @@
       cropRect: { x: 0.1, y: 0.1, w: 0.8, h: 0.8 }, // normalized 0..1
 
       // Photoshop Layers
-      activeTool: 'move', // move | crop | heal | blur | brush | text
+      activeTool: 'move', // move | crop | heal | blur | brush | text | composite | overlay-erase | overlay-restore
       brushSize: 28,
       brushOpacity: 85,
       brushColor: '#ffffff',
       strokes: [], // { type: 'heal'|'blur'|'brush', sizeNorm, opacity, color, points: [{x,y}] }
       texts: [],   // { id, text, x, y, sizeNorm, color, font }
       selectedTextId: null,
+
+      // Composite / Overlay Image Layers (Ảnh 2, QR, Logo...)
+      overlays: [],
+      selectedOverlayId: null,
+      overlayBrushSize: 32,
+      overlayBrushSoftness: 80,
+      overlayBrushStrength: 75,
 
       // View
       zoom: 1,
@@ -738,8 +1253,10 @@
     // =========================================================================
     const el = {
       fileInput: document.getElementById('fileInput'),
+      overlayFileInput: document.getElementById('overlayFileInput'),
       viewport: document.getElementById('viewport'),
       dropOverlay: document.getElementById('dropOverlay'),
+      dropOverlayText: document.getElementById('dropOverlayText'),
       stageWrapper: document.getElementById('stageWrapper'),
       canvasContainer: document.getElementById('canvasContainer'),
       mainCanvas: document.getElementById('mainCanvas'),
@@ -748,14 +1265,30 @@
       curveCanvas: document.getElementById('curveCanvas'),
       splitLine: document.getElementById('splitLine'),
       splitHandle: document.getElementById('splitHandle'),
+      snapGuideV: document.getElementById('snapGuideV'),
+      snapGuideH: document.getElementById('snapGuideH'),
       cropBox: document.getElementById('cropBox'),
       cropFloatingBar: document.getElementById('cropFloatingBar'),
+      overlayGizmo: document.getElementById('overlayGizmo'),
+      ovGizmoBadge: document.getElementById('ovGizmoBadge'),
+      overlayFloatingBar: document.getElementById('overlayFloatingBar'),
+      overlayCountBadge: document.getElementById('overlayCountBadge'),
+      overlayLayerList: document.getElementById('overlayLayerList'),
+      overlayEditorWrap: document.getElementById('overlayEditorWrap'),
       brushCursor: document.getElementById('brushCursor'),
       originalBadge: document.getElementById('originalBadge'),
       imgDimLabel: document.getElementById('imgDimLabel'),
       zoomLabel: document.getElementById('zoomLabel'),
       activeToolBadge: document.getElementById('activeToolBadge'),
       toast: document.getElementById('toast'),
+
+      // Overlay Crop Modal
+      overlayCropModal: document.getElementById('overlayCropModal'),
+      ovCropDimLabel: document.getElementById('ovCropDimLabel'),
+      ovCropStageWrap: document.getElementById('ovCropStageWrap'),
+      ovCropImgWrap: document.getElementById('ovCropImgWrap'),
+      ovCropCanvas: document.getElementById('ovCropCanvas'),
+      ovCropBox: document.getElementById('ovCropBox'),
 
       // Export modal
       exportModal: document.getElementById('exportModal'),
@@ -883,6 +1416,11 @@
         state.strokes = [];
         state.texts = [];
         state.selectedTextId = null;
+        state.overlays = [];
+        state.selectedOverlayId = null;
+        overlayImagePool.clear();
+        overlayRenderCache.clear();
+        cachedBaseSig = '';
         state.zoom = 1;
         state.panX = 0;
         state.panY = 0;
@@ -891,6 +1429,8 @@
 
         rebuildPreviewProxy();
         syncAllUI();
+        syncOverlayUI();
+        updateOverlayGizmoUI();
         pushHistory('Mở ảnh');
         fitCanvasToViewport();
         scheduleRender();
@@ -916,6 +1456,8 @@
       pc.height = ph;
       pc.getContext('2d').drawImage(state.workingCanvas, 0, 0, pw, ph);
       state.previewBaseCanvas = pc;
+      previewBaseRev++;
+      cachedBaseSig = '';
 
       el.mainCanvas.width = pw;
       el.mainCanvas.height = ph;
@@ -946,6 +1488,7 @@
       updateStageTransform();
       updateSplitUI();
       if (state.activeTool === 'crop') updateCropBoxUI();
+      updateOverlayGizmoUI();
     }
 
     function updateStageTransform() {
@@ -963,210 +1506,252 @@
       targetCanvas.height = h;
       const ctx = targetCanvas.getContext('2d', { willReadFrequently: true });
 
-      // 1. Draw base image with Straighten rotation (auto-scaled to avoid black corners)
-      ctx.save();
-      ctx.clearRect(0, 0, w, h);
-      if (Math.abs(state.straighten) > 0.05) {
-        const rad = (state.straighten * Math.PI) / 180;
-        const absSin = Math.abs(Math.sin(rad));
-        const absCos = Math.abs(Math.cos(rad));
-        const scale = Math.max(
-          (w * absCos + h * absSin) / w,
-          (w * absSin + h * absCos) / h
-        );
-        ctx.translate(w / 2, h / 2);
-        ctx.rotate(rad);
-        ctx.scale(scale, scale);
-        ctx.drawImage(sourceCanvas, -w / 2, -h / 2);
-      } else {
-        ctx.drawImage(sourceCanvas, 0, 0);
-      }
-      ctx.restore();
+      const belowLayers = state.overlays.filter(o => o.visible && o.belowFilter);
+      const aboveLayers = state.overlays.filter(o => o.visible && !o.belowFilter);
 
-      // If holding Original button (only on preview), skip color/retouch
-      if (!isFullRes && state.holdingOriginal) {
-        updateHistogram(ctx.getImageData(0, 0, w, h).data);
-        return;
+      let usedBaseCache = false;
+      let baseSig = '';
+      if (!isFullRes && !state.holdingOriginal) {
+        baseSig = JSON.stringify({
+          rev: previewBaseRev,
+          w,
+          h,
+          st: state.straighten,
+          strokes: state.strokes,
+          adj: state.adj,
+          below: belowLayers,
+        });
+        if (cachedBaseCanvas && cachedBaseCanvas.width === w && cachedBaseCanvas.height === h && cachedBaseSig === baseSig) {
+          ctx.clearRect(0, 0, w, h);
+          ctx.drawImage(cachedBaseCanvas, 0, 0);
+          usedBaseCache = true;
+        }
       }
 
-      // 2. Apply Photoshop Retouch Strokes (Heal & Blur operate on pixels, Brush draws overlay)
-      if (state.strokes.length > 0) {
-        applyRetouchStrokes(ctx, w, h);
-      }
+      if (!usedBaseCache) {
+        // 1. Draw base image with Straighten rotation (auto-scaled to avoid black corners)
+        ctx.save();
+        ctx.clearRect(0, 0, w, h);
+        if (Math.abs(state.straighten) > 0.05) {
+          const rad = (state.straighten * Math.PI) / 180;
+          const absSin = Math.abs(Math.sin(rad));
+          const absCos = Math.abs(Math.cos(rad));
+          const scale = Math.max(
+            (w * absCos + h * absSin) / w,
+            (w * absSin + h * absCos) / h
+          );
+          ctx.translate(w / 2, h / 2);
+          ctx.rotate(rad);
+          ctx.scale(scale, scale);
+          ctx.drawImage(sourceCanvas, -w / 2, -h / 2);
+        } else {
+          ctx.drawImage(sourceCanvas, 0, 0);
+        }
+        ctx.restore();
 
-      // 3. Pixel-level Lightroom Processing
-      const imgData = ctx.getImageData(0, 0, w, h);
-      const data = imgData.data;
-      const adj = state.adj;
-
-      // Precompute Tone Curve LUTs
-      const lutRGB = buildCurveLUT(adj.curves.rgb);
-      const lutR   = buildCurveLUT(adj.curves.r);
-      const lutG   = buildCurveLUT(adj.curves.g);
-      const lutB   = buildCurveLUT(adj.curves.b);
-
-      // Precompute exposure, contrast, temp, tint factors
-      const expMult = Math.pow(2, adj.exposure / 55);
-      const contrastFactor = (adj.contrast + adj.clarity * 0.35) / 100;
-      const cSlope = contrastFactor >= 0 ? 1 + contrastFactor * 1.15 : 1 + contrastFactor * 0.7;
-      const hlAmt = adj.highlights / 100;
-      const shAmt = adj.shadows / 100;
-      const whAmt = adj.whites / 100;
-      const blAmt = adj.blacks / 100;
-
-      const tempR = adj.temperature * 0.42;
-      const tempB = -adj.temperature * 0.42;
-      const tintG = -adj.tint * 0.32;
-      const tintRB = adj.tint * 0.14;
-
-      const vibAmt = adj.vibrance / 100;
-      const satAmt = adj.saturation / 100;
-      const fadeAmt = adj.fade / 100;
-      const grainAmt = adj.grain * 0.42;
-
-      // Check if any HSL channel is active
-      const activeHsls = HSL_CHANNELS.filter(c => {
-        const v = adj.hsl[c.id];
-        return v.h !== 0 || v.s !== 0 || v.l !== 0;
-      });
-      const hasHsl = activeHsls.length > 0;
-
-      const len = data.length;
-      for (let i = 0; i < len; i += 4) {
-        let r = data[i];
-        let g = data[i + 1];
-        let b = data[i + 2];
-
-        // Exposure
-        if (adj.exposure !== 0) {
-          r *= expMult; g *= expMult; b *= expMult;
+        // If holding Original button (only on preview), skip color/retouch/overlays
+        if (!isFullRes && state.holdingOriginal) {
+          updateHistogram(ctx.getImageData(0, 0, w, h).data);
+          return;
         }
 
-        // White Balance (Temp & Tint)
-        if (adj.temperature !== 0 || adj.tint !== 0) {
-          r += tempR + tintRB;
-          g += tintG;
-          b += tempB + tintRB;
+        // 1.5 Overlays pinned below Lightroom adjustments
+        if (belowLayers.length > 0) {
+          drawOverlayLayers(ctx, w, h, belowLayers, isFullRes);
         }
 
-        // Highlights / Shadows / Whites / Blacks based on luminance
-        if (hlAmt !== 0 || shAmt !== 0 || whAmt !== 0 || blAmt !== 0) {
-          const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-          let delta = 0;
-          if (shAmt !== 0) {
-            const wSh = Math.pow(clamp(1 - lum, 0, 1), 2);
-            delta += shAmt * wSh * 68;
+        // 2. Apply Photoshop Retouch Strokes (Heal & Blur operate on pixels, Brush draws overlay)
+        if (state.strokes.length > 0) {
+          applyRetouchStrokes(ctx, w, h);
+        }
+
+        // 3. Pixel-level Lightroom Processing
+        const imgData = ctx.getImageData(0, 0, w, h);
+        const data = imgData.data;
+        const adj = state.adj;
+
+        // Precompute Tone Curve LUTs
+        const lutRGB = buildCurveLUT(adj.curves.rgb);
+        const lutR   = buildCurveLUT(adj.curves.r);
+        const lutG   = buildCurveLUT(adj.curves.g);
+        const lutB   = buildCurveLUT(adj.curves.b);
+
+        // Precompute exposure, contrast, temp, tint factors
+        const expMult = Math.pow(2, adj.exposure / 55);
+        const contrastFactor = (adj.contrast + adj.clarity * 0.35) / 100;
+        const cSlope = contrastFactor >= 0 ? 1 + contrastFactor * 1.15 : 1 + contrastFactor * 0.7;
+        const hlAmt = adj.highlights / 100;
+        const shAmt = adj.shadows / 100;
+        const whAmt = adj.whites / 100;
+        const blAmt = adj.blacks / 100;
+
+        const tempR = adj.temperature * 0.42;
+        const tempB = -adj.temperature * 0.42;
+        const tintG = -adj.tint * 0.32;
+        const tintRB = adj.tint * 0.14;
+
+        const vibAmt = adj.vibrance / 100;
+        const satAmt = adj.saturation / 100;
+        const fadeAmt = adj.fade / 100;
+        const grainAmt = adj.grain * 0.42;
+
+        // Check if any HSL channel is active
+        const activeHsls = HSL_CHANNELS.filter(c => {
+          const v = adj.hsl[c.id];
+          return v.h !== 0 || v.s !== 0 || v.l !== 0;
+        });
+        const hasHsl = activeHsls.length > 0;
+
+        const len = data.length;
+        for (let i = 0; i < len; i += 4) {
+          let r = data[i];
+          let g = data[i + 1];
+          let b = data[i + 2];
+
+          // Exposure
+          if (adj.exposure !== 0) {
+            r *= expMult; g *= expMult; b *= expMult;
           }
-          if (hlAmt !== 0) {
-            const wHl = Math.pow(clamp(lum, 0, 1), 2);
-            delta += hlAmt * wHl * 68;
+
+          // White Balance (Temp & Tint)
+          if (adj.temperature !== 0 || adj.tint !== 0) {
+            r += tempR + tintRB;
+            g += tintG;
+            b += tempB + tintRB;
           }
-          if (whAmt !== 0) {
-            const wWh = Math.pow(clamp((lum - 0.55) / 0.45, 0, 1), 1.6);
-            delta += whAmt * wWh * 60;
+
+          // Highlights / Shadows / Whites / Blacks based on luminance
+          if (hlAmt !== 0 || shAmt !== 0 || whAmt !== 0 || blAmt !== 0) {
+            const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+            let delta = 0;
+            if (shAmt !== 0) {
+              const wSh = Math.pow(clamp(1 - lum, 0, 1), 2);
+              delta += shAmt * wSh * 68;
+            }
+            if (hlAmt !== 0) {
+              const wHl = Math.pow(clamp(lum, 0, 1), 2);
+              delta += hlAmt * wHl * 68;
+            }
+            if (whAmt !== 0) {
+              const wWh = Math.pow(clamp((lum - 0.55) / 0.45, 0, 1), 1.6);
+              delta += whAmt * wWh * 60;
+            }
+            if (blAmt !== 0) {
+              const wBl = Math.pow(clamp((0.45 - lum) / 0.45, 0, 1), 1.6);
+              delta += blAmt * wBl * 60;
+            }
+            r += delta; g += delta; b += delta;
           }
-          if (blAmt !== 0) {
-            const wBl = Math.pow(clamp((0.45 - lum) / 0.45, 0, 1), 1.6);
-            delta += blAmt * wBl * 60;
+
+          // Contrast + Clarity midtone punch
+          if (contrastFactor !== 0) {
+            r = (r - 128) * cSlope + 128;
+            g = (g - 128) * cSlope + 128;
+            b = (b - 128) * cSlope + 128;
           }
-          r += delta; g += delta; b += delta;
-        }
 
-        // Contrast + Clarity midtone punch
-        if (contrastFactor !== 0) {
-          r = (r - 128) * cSlope + 128;
-          g = (g - 128) * cSlope + 128;
-          b = (b - 128) * cSlope + 128;
-        }
+          r = clamp(r, 0, 255);
+          g = clamp(g, 0, 255);
+          b = clamp(b, 0, 255);
 
-        r = clamp(r, 0, 255);
-        g = clamp(g, 0, 255);
-        b = clamp(b, 0, 255);
+          // Tone Curves LUT
+          r = lutR[lutRGB[r | 0]];
+          g = lutG[lutRGB[g | 0]];
+          b = lutB[lutRGB[b | 0]];
 
-        // Tone Curves LUT
-        r = lutR[lutRGB[r | 0]];
-        g = lutG[lutRGB[g | 0]];
-        b = lutB[lutRGB[b | 0]];
+          // Vibrance & Saturation
+          if (vibAmt !== 0 || satAmt !== 0) {
+            const maxC = Math.max(r, g, b);
+            const minC = Math.min(r, g, b);
+            const avg = (r + g + b) / 3;
+            const curSat = maxC === 0 ? 0 : (maxC - minC) / maxC;
+            const vibBoost = vibAmt * (1 - curSat) * 0.85;
+            const totalSat = Math.max(-1, satAmt + vibBoost);
+            r = avg + (r - avg) * (1 + totalSat);
+            g = avg + (g - avg) * (1 + totalSat);
+            b = avg + (b - avg) * (1 + totalSat);
+          }
 
-        // Vibrance & Saturation
-        if (vibAmt !== 0 || satAmt !== 0) {
-          const maxC = Math.max(r, g, b);
-          const minC = Math.min(r, g, b);
-          const avg = (r + g + b) / 3;
-          const curSat = maxC === 0 ? 0 : (maxC - minC) / maxC;
-          const vibBoost = vibAmt * (1 - curSat) * 0.85;
-          const totalSat = Math.max(-1, satAmt + vibBoost);
-          r = avg + (r - avg) * (1 + totalSat);
-          g = avg + (g - avg) * (1 + totalSat);
-          b = avg + (b - avg) * (1 + totalSat);
-        }
-
-        // HSL Color Mixer
-        if (hasHsl) {
-          const [hVal, sVal, lVal] = rgbToHsl(clamp(r, 0, 255), clamp(g, 0, 255), clamp(b, 0, 255));
-          if (sVal > 0.04) {
-            let dh = 0, ds = 0, dl = 0;
-            for (let k = 0; k < activeHsls.length; k++) {
-              const ch = activeHsls[k];
-              let dist = Math.abs(hVal - ch.center);
-              if (dist > 180) dist = 360 - dist;
-              const range = 48;
-              if (dist < range) {
-                const weight = (1 - dist / range) * Math.min(1, sVal * 3);
-                const cv = adj.hsl[ch.id];
-                dh += (cv.h * 0.45) * weight;
-                ds += (cv.s / 100) * weight;
-                dl += (cv.l / 220) * weight;
+          // HSL Color Mixer
+          if (hasHsl) {
+            const [hVal, sVal, lVal] = rgbToHsl(clamp(r, 0, 255), clamp(g, 0, 255), clamp(b, 0, 255));
+            if (sVal > 0.04) {
+              let dh = 0, ds = 0, dl = 0;
+              for (let k = 0; k < activeHsls.length; k++) {
+                const ch = activeHsls[k];
+                let dist = Math.abs(hVal - ch.center);
+                if (dist > 180) dist = 360 - dist;
+                const range = 48;
+                if (dist < range) {
+                  const weight = (1 - dist / range) * Math.min(1, sVal * 3);
+                  const cv = adj.hsl[ch.id];
+                  dh += (cv.h * 0.45) * weight;
+                  ds += (cv.s / 100) * weight;
+                  dl += (cv.l / 220) * weight;
+                }
+              }
+              if (dh !== 0 || ds !== 0 || dl !== 0) {
+                const nr = hslToRgb(hVal + dh, clamp(sVal * (1 + ds), 0, 1), clamp(lVal + dl, 0, 1));
+                r = nr[0]; g = nr[1]; b = nr[2];
               }
             }
-            if (dh !== 0 || ds !== 0 || dl !== 0) {
-              const nr = hslToRgb(hVal + dh, clamp(sVal * (1 + ds), 0, 1), clamp(lVal + dl, 0, 1));
-              r = nr[0]; g = nr[1]; b = nr[2];
-            }
           }
+
+          // Matte Fade (lifts blacks)
+          if (fadeAmt > 0) {
+            const lift = fadeAmt * 42;
+            const compress = 1 - fadeAmt * 0.16;
+            r = r * compress + lift;
+            g = g * compress + lift;
+            b = b * compress + lift;
+          }
+
+          // Film Grain
+          if (grainAmt > 0) {
+            const n = (Math.random() - 0.5) * grainAmt;
+            r += n; g += n; b += n;
+          }
+
+          data[i]     = clamp(r, 0, 255);
+          data[i + 1] = clamp(g, 0, 255);
+          data[i + 2] = clamp(b, 0, 255);
         }
 
-        // Matte Fade (lifts blacks)
-        if (fadeAmt > 0) {
-          const lift = fadeAmt * 42;
-          const compress = 1 - fadeAmt * 0.16;
-          r = r * compress + lift;
-          g = g * compress + lift;
-          b = b * compress + lift;
+        // 4. Unsharp Mask / Sharpen (3x3 convolution)
+        if (adj.sharpen > 0) {
+          applySharpen(imgData, adj.sharpen / 100);
         }
 
-        // Film Grain
-        if (grainAmt > 0) {
-          const n = (Math.random() - 0.5) * grainAmt;
-          r += n; g += n; b += n;
+        ctx.putImageData(imgData, 0, 0);
+
+        // 5. Vignette Overlay
+        if (adj.vignette !== 0) {
+          const cx = w / 2, cy = h / 2;
+          const maxR = Math.hypot(cx, cy);
+          const grad = ctx.createRadialGradient(cx, cy, maxR * 0.35, cx, cy, maxR * 1.05);
+          if (adj.vignette > 0) {
+            grad.addColorStop(0, 'rgba(0,0,0,0)');
+            grad.addColorStop(1, `rgba(0,0,0,${(adj.vignette / 100) * 0.85})`);
+          } else {
+            grad.addColorStop(0, 'rgba(255,255,255,0)');
+            grad.addColorStop(1, `rgba(255,255,255,${(-adj.vignette / 100) * 0.72})`);
+          }
+          ctx.fillStyle = grad;
+          ctx.fillRect(0, 0, w, h);
         }
 
-        data[i]     = clamp(r, 0, 255);
-        data[i + 1] = clamp(g, 0, 255);
-        data[i + 2] = clamp(b, 0, 255);
+        if (!isFullRes) {
+          if (!cachedBaseCanvas) cachedBaseCanvas = document.createElement('canvas');
+          cachedBaseCanvas.width = w;
+          cachedBaseCanvas.height = h;
+          cachedBaseCanvas.getContext('2d').drawImage(targetCanvas, 0, 0);
+          cachedBaseSig = baseSig;
+        }
       }
 
-      // 4. Unsharp Mask / Sharpen (3x3 convolution)
-      if (adj.sharpen > 0) {
-        applySharpen(imgData, adj.sharpen / 100);
-      }
-
-      ctx.putImageData(imgData, 0, 0);
-
-      // 5. Vignette Overlay
-      if (adj.vignette !== 0) {
-        const cx = w / 2, cy = h / 2;
-        const maxR = Math.hypot(cx, cy);
-        const grad = ctx.createRadialGradient(cx, cy, maxR * 0.35, cx, cy, maxR * 1.05);
-        if (adj.vignette > 0) {
-          grad.addColorStop(0, 'rgba(0,0,0,0)');
-          grad.addColorStop(1, `rgba(0,0,0,${(adj.vignette / 100) * 0.85})`);
-        } else {
-          grad.addColorStop(0, 'rgba(255,255,255,0)');
-          grad.addColorStop(1, `rgba(255,255,255,${(-adj.vignette / 100) * 0.72})`);
-        }
-        ctx.fillStyle = grad;
-        ctx.fillRect(0, 0, w, h);
+      // 5.5 Overlays above Lightroom adjustments (default)
+      if (aboveLayers.length > 0) {
+        drawOverlayLayers(ctx, w, h, aboveLayers, isFullRes);
       }
 
       // 6. Text / Watermark Layers
@@ -1282,6 +1867,561 @@
       }
     }
 
+    // =========================================================================
+    // OVERLAY COMPOSITING & EDGE SOFTENING ENGINE
+    // =========================================================================
+    function getSelectedOverlay() {
+      if (!state.selectedOverlayId) return null;
+      return state.overlays.find(o => o.id === state.selectedOverlayId) || null;
+    }
+
+    function invalidateOverlayCache(layer) {
+      if (layer) overlayRenderCache.delete(layer.id);
+      else overlayRenderCache.clear();
+      if (!layer || layer.belowFilter) cachedBaseSig = '';
+    }
+
+    function smootherstep(t) {
+      return t <= 0 ? 0 : (t >= 1 ? 1 : t * t * t * (t * (6 * t - 15) + 10));
+    }
+
+    /** Fast separable 2-pass running-sum box blur on RGBA data (tent approximation). */
+    function fastBoxBlurRGBA(srcData, w, h, radius) {
+      const r = Math.max(0, Math.round(radius));
+      if (r < 1 || w < 2 || h < 2) return new Uint8ClampedArray(srcData);
+      const passes = r >= 2 ? 2 : 1;
+      const pr = r >= 2 ? Math.max(1, Math.round(r * 0.65)) : r;
+      let cur = new Uint8ClampedArray(srcData);
+      const tmp = new Uint8ClampedArray(cur.length);
+      const out = new Uint8ClampedArray(cur.length);
+      const div = pr * 2 + 1;
+
+      for (let p = 0; p < passes; p++) {
+        // Horizontal pass: cur -> tmp
+        for (let y = 0; y < h; y++) {
+          const row = y * w * 4;
+          let sr = cur[row] * (pr + 1), sg = cur[row + 1] * (pr + 1), sb = cur[row + 2] * (pr + 1), sa = cur[row + 3] * (pr + 1);
+          for (let i = 1; i <= pr; i++) {
+            const idx = row + Math.min(i, w - 1) * 4;
+            sr += cur[idx]; sg += cur[idx + 1]; sb += cur[idx + 2]; sa += cur[idx + 3];
+          }
+          for (let x = 0; x < w; x++) {
+            const dst = row + x * 4;
+            tmp[dst] = sr / div;
+            tmp[dst + 1] = sg / div;
+            tmp[dst + 2] = sb / div;
+            tmp[dst + 3] = sa / div;
+            const addX = Math.min(x + pr + 1, w - 1);
+            const subX = Math.max(x - pr, 0);
+            const aIdx = row + addX * 4;
+            const sIdx = row + subX * 4;
+            sr += cur[aIdx] - cur[sIdx];
+            sg += cur[aIdx + 1] - cur[sIdx + 1];
+            sb += cur[aIdx + 2] - cur[sIdx + 2];
+            sa += cur[aIdx + 3] - cur[sIdx + 3];
+          }
+        }
+        // Vertical pass: tmp -> out
+        const stride = w * 4;
+        for (let x = 0; x < w; x++) {
+          const col = x * 4;
+          let sr = tmp[col] * (pr + 1), sg = tmp[col + 1] * (pr + 1), sb = tmp[col + 2] * (pr + 1), sa = tmp[col + 3] * (pr + 1);
+          for (let i = 1; i <= pr; i++) {
+            const idx = Math.min(i, h - 1) * stride + col;
+            sr += tmp[idx]; sg += tmp[idx + 1]; sb += tmp[idx + 2]; sa += tmp[idx + 3];
+          }
+          for (let y = 0; y < h; y++) {
+            const dst = y * stride + col;
+            out[dst] = sr / div;
+            out[dst + 1] = sg / div;
+            out[dst + 2] = sb / div;
+            out[dst + 3] = sa / div;
+            const addY = Math.min(y + pr + 1, h - 1);
+            const subY = Math.max(y - pr, 0);
+            const aIdx = addY * stride + col;
+            const sIdx = subY * stride + col;
+            sr += tmp[aIdx] - tmp[sIdx];
+            sg += tmp[aIdx + 1] - tmp[sIdx + 1];
+            sb += tmp[aIdx + 2] - tmp[sIdx + 2];
+            sa += tmp[aIdx + 3] - tmp[sIdx + 3];
+          }
+        }
+        cur = out;
+      }
+      return out;
+    }
+
+    /** Fast separable 2-pass running-sum box blur on single-channel alpha array (0..255). */
+    function fastBoxBlurAlpha(alphaArr, w, h, radius) {
+      const r = Math.max(0, Math.round(radius));
+      if (r < 1 || w < 2 || h < 2) return new Uint8Array(alphaArr);
+      const passes = r >= 2 ? 2 : 1;
+      const pr = r >= 2 ? Math.max(1, Math.round(r * 0.65)) : r;
+      let cur = new Uint8Array(alphaArr);
+      const tmp = new Uint8Array(cur.length);
+      const out = new Uint8Array(cur.length);
+      const div = pr * 2 + 1;
+
+      for (let p = 0; p < passes; p++) {
+        for (let y = 0; y < h; y++) {
+          const row = y * w;
+          let sum = cur[row] * (pr + 1);
+          for (let i = 1; i <= pr; i++) sum += cur[row + Math.min(i, w - 1)];
+          for (let x = 0; x < w; x++) {
+            tmp[row + x] = sum / div;
+            sum += cur[row + Math.min(x + pr + 1, w - 1)] - cur[row + Math.max(x - pr, 0)];
+          }
+        }
+        for (let x = 0; x < w; x++) {
+          let sum = tmp[x] * (pr + 1);
+          for (let i = 1; i <= pr; i++) sum += tmp[Math.min(i, h - 1) * w + x];
+          for (let y = 0; y < h; y++) {
+            out[y * w + x] = sum / div;
+            sum += tmp[Math.min(y + pr + 1, h - 1) * w + x] - tmp[Math.max(y - pr, 0) * w + x];
+          }
+        }
+        cur = out;
+      }
+      return out;
+    }
+
+    function getRotatedOverlaySource(assetId, cropTurns) {
+      const entry = overlayImagePool.get(assetId);
+      if (!entry || !entry.img) return null;
+      const turns = ((cropTurns || 0) % 4 + 4) % 4;
+      if (turns === 0) return entry.img;
+      if (entry.rotCache.has(turns)) return entry.rotCache.get(turns);
+
+      const img = entry.img;
+      const iw = img.naturalWidth, ih = img.naturalHeight;
+      const rc = document.createElement('canvas');
+      rc.width = turns % 2 === 1 ? ih : iw;
+      rc.height = turns % 2 === 1 ? iw : ih;
+      const rctx = rc.getContext('2d');
+      rctx.translate(rc.width / 2, rc.height / 2);
+      rctx.rotate((turns * Math.PI) / 2);
+      rctx.drawImage(img, -iw / 2, -ih / 2);
+      entry.rotCache.set(turns, rc);
+      return rc;
+    }
+
+    function getOverlayCroppedPixelSize(layer) {
+      const src = getRotatedOverlaySource(layer.assetId, layer.cropTurns);
+      if (!src) return { w: 100, h: 100 };
+      const sw = src.naturalWidth || src.width;
+      const sh = src.naturalHeight || src.height;
+      return {
+        w: Math.max(1, Math.round(layer.crop.w * sw)),
+        h: Math.max(1, Math.round(layer.crop.h * sh)),
+      };
+    }
+
+    function getProcessedOverlayCanvas(layer, pixelW, pixelH, isFullRes) {
+      const src = getRotatedOverlaySource(layer.assetId, layer.cropTurns);
+      if (!src) return null;
+      const srcW = src.naturalWidth || src.width;
+      const srcH = src.naturalHeight || src.height;
+
+      const maxCap = isFullRes ? 2400 : 680;
+      const scale = Math.min(1, maxCap / Math.max(1, pixelW, pixelH));
+      const rw = isFullRes
+        ? Math.max(4, Math.round(pixelW * scale))
+        : Math.max(4, Math.round((pixelW * scale) / 4) * 4 || 4);
+      const rh = isFullRes
+        ? Math.max(4, Math.round(pixelH * scale))
+        : Math.max(4, Math.round((pixelH * scale) / 4) * 4 || 4);
+
+      const key = JSON.stringify([
+        isFullRes ? 1 : 0, rw, rh, layer.assetId, layer.cropTurns, layer.crop,
+        layer.shape, layer.cornerRadius, layer.feather, layer.removeBg,
+        layer.bgTolerance, layer.bgSoftness, layer.brightness, layer.contrast,
+        layer.saturation, layer.temperature, layer.blur, layer.maskStrokes
+      ]);
+
+      const cached = overlayRenderCache.get(layer.id);
+      if (cached && cached.key === key) return cached.canvas;
+
+      const sx = clamp(layer.crop.x, 0, 0.99) * srcW;
+      const sy = clamp(layer.crop.y, 0, 0.99) * srcH;
+      const sw = Math.max(2, clamp(layer.crop.w, 0.01, 1 - layer.crop.x) * srcW);
+      const sh = Math.max(2, clamp(layer.crop.h, 0.01, 1 - layer.crop.y) * srcH);
+
+      const rgbCanvas = document.createElement('canvas');
+      rgbCanvas.width = rw;
+      rgbCanvas.height = rh;
+      const rgbCtx = rgbCanvas.getContext('2d', { willReadFrequently: true });
+      rgbCtx.drawImage(src, sx, sy, sw, sh, 0, 0, rw, rh);
+
+      const needColorPass = layer.brightness !== 0 || layer.contrast !== 0 ||
+        layer.saturation !== 0 || layer.temperature !== 0 ||
+        layer.removeBg !== 'none' || layer.blur > 0;
+
+      if (needColorPass) {
+        const imgData = rgbCtx.getImageData(0, 0, rw, rh);
+        if (layer.blur > 0) {
+          const br = Math.max(1, Math.round(layer.blur * (Math.min(rw, rh) / 400)));
+          imgData.data.set(fastBoxBlurRGBA(imgData.data, rw, rh, br));
+        }
+
+        const data = imgData.data;
+        const bright = layer.brightness * 1.35;
+        const cFactor = layer.contrast >= 0
+          ? 1 + (layer.contrast / 100) * 1.4
+          : 1 + (layer.contrast / 100) * 0.7;
+        const temp = layer.temperature * 0.45;
+        const satMult = 1 + layer.saturation / 100;
+        const removeMode = layer.removeBg;
+        const bgTarget = removeMode === 'white' ? 255 : 0;
+        const bgTol = (layer.bgTolerance / 100) * 190;
+        const bgSoft = Math.max(4, (layer.bgSoftness / 100) * 110);
+
+        for (let i = 0; i < data.length; i += 4) {
+          let r = data[i], g = data[i + 1], b = data[i + 2], a = data[i + 3];
+          if (a === 0) continue;
+
+          if (removeMode === 'white' || removeMode === 'black') {
+            const dist = Math.hypot(r - bgTarget, g - bgTarget, b - bgTarget);
+            if (dist <= bgTol) {
+              data[i + 3] = 0;
+              continue;
+            } else if (dist < bgTol + bgSoft) {
+              const t = (dist - bgTol) / bgSoft;
+              a = Math.round(a * t * t * (3 - 2 * t));
+            }
+          }
+
+          if (bright !== 0) { r += bright; g += bright; b += bright; }
+          if (temp !== 0) { r += temp; b -= temp; }
+          if (layer.contrast !== 0) {
+            r = (r - 128) * cFactor + 128;
+            g = (g - 128) * cFactor + 128;
+            b = (b - 128) * cFactor + 128;
+          }
+          if (layer.saturation !== 0) {
+            const avg = (r + g + b) / 3;
+            r = avg + (r - avg) * satMult;
+            g = avg + (g - avg) * satMult;
+            b = avg + (b - avg) * satMult;
+          }
+
+          data[i] = clamp(r, 0, 255);
+          data[i + 1] = clamp(g, 0, 255);
+          data[i + 2] = clamp(b, 0, 255);
+          data[i + 3] = clamp(a, 0, 255);
+        }
+        rgbCtx.putImageData(imgData, 0, 0);
+      }
+
+      // Build geometric SDF feather + manual soft-brush mask
+      const hasMask = layer.shape !== 'rect' || layer.feather > 0 || layer.maskStrokes.length > 0;
+      if (hasMask) {
+        const maskCanvas = document.createElement('canvas');
+        maskCanvas.width = rw;
+        maskCanvas.height = rh;
+        const maskCtx = maskCanvas.getContext('2d');
+        const maskData = maskCtx.createImageData(rw, rh);
+        const mdata = maskData.data;
+        const halfW = rw * 0.5;
+        const halfH = rh * 0.5;
+        const minSide = Math.min(rw, rh);
+        const fPx = (layer.feather / 100) * (minSide * 0.44);
+        const rCorner = layer.shape === 'rounded'
+          ? clamp((layer.cornerRadius / 100) * minSide, 0, minSide * 0.5)
+          : 0;
+        const bx = halfW - rCorner;
+        const by = halfH - rCorner;
+
+        for (let y = 0; y < rh; y++) {
+          const dy = y + 0.5 - halfH;
+          for (let x = 0; x < rw; x++) {
+            const dx = x + 0.5 - halfW;
+            let sdf;
+            if (layer.shape === 'ellipse') {
+              const nx = dx / halfW;
+              const ny = dy / halfH;
+              const dNorm = Math.hypot(nx, ny);
+              const gLen = Math.hypot(nx / halfW, ny / halfH);
+              sdf = gLen > 0 ? (dNorm - 1) / gLen : -minSide * 0.5;
+            } else {
+              const px = Math.abs(dx) - bx;
+              const py = Math.abs(dy) - by;
+              sdf = Math.hypot(Math.max(px, 0), Math.max(py, 0)) + Math.min(Math.max(px, py), 0) - rCorner;
+            }
+
+            let alpha;
+            if (fPx <= 0.5) {
+              alpha = sdf <= -0.75 ? 255 : (sdf >= 0.75 ? 0 : Math.round(((0.75 - sdf) / 1.5) * 255));
+            } else {
+              const distIn = -sdf;
+              if (distIn <= 0) alpha = 0;
+              else if (distIn >= fPx) alpha = 255;
+              else alpha = Math.round(smootherstep(distIn / fPx) * 255);
+            }
+
+            const idx = (y * rw + x) * 4;
+            mdata[idx] = 255;
+            mdata[idx + 1] = 255;
+            mdata[idx + 2] = 255;
+            mdata[idx + 3] = alpha;
+          }
+        }
+        maskCtx.putImageData(maskData, 0, 0);
+
+        // Replay manual mask brush strokes (erase / restore)
+        if (layer.maskStrokes.length > 0) {
+          for (const st of layer.maskStrokes) {
+            if (!st.points || st.points.length === 0) continue;
+            const rx = Math.max(2, st.rxNorm * rw);
+            const ry = Math.max(2, st.ryNorm * rh);
+            const stepPx = Math.max(2, Math.min(rx, ry) * 0.25);
+            const hardStop = clamp(1 - st.softness, 0, 0.95);
+            const strength = clamp(st.strength, 0.05, 1);
+
+            maskCtx.save();
+            maskCtx.globalCompositeOperation = st.mode === 'restore' ? 'source-over' : 'destination-out';
+            const colRgb = st.mode === 'restore' ? '255,255,255' : '0,0,0';
+
+            const stampAt = (ux, uy) => {
+              maskCtx.save();
+              maskCtx.translate(ux * rw, uy * rh);
+              maskCtx.scale(rx, ry);
+              const grad = maskCtx.createRadialGradient(0, 0, 0, 0, 0, 1);
+              grad.addColorStop(0, `rgba(${colRgb},${strength})`);
+              if (hardStop > 0.02) grad.addColorStop(hardStop, `rgba(${colRgb},${strength})`);
+              grad.addColorStop(1, `rgba(${colRgb},0)`);
+              maskCtx.fillStyle = grad;
+              maskCtx.beginPath();
+              maskCtx.arc(0, 0, 1, 0, Math.PI * 2);
+              maskCtx.fill();
+              maskCtx.restore();
+            };
+
+            stampAt(st.points[0].x, st.points[0].y);
+            for (let i = 1; i < st.points.length; i++) {
+              const p0 = st.points[i - 1], p1 = st.points[i];
+              const dist = Math.hypot((p1.x - p0.x) * rw, (p1.y - p0.y) * rh);
+              const steps = Math.max(1, Math.ceil(dist / stepPx));
+              for (let s = 1; s <= steps; s++) {
+                const t = s / steps;
+                stampAt(p0.x + (p1.x - p0.x) * t, p0.y + (p1.y - p0.y) * t);
+              }
+            }
+            maskCtx.restore();
+          }
+        }
+
+        rgbCtx.save();
+        rgbCtx.globalCompositeOperation = 'destination-in';
+        rgbCtx.drawImage(maskCanvas, 0, 0);
+        rgbCtx.restore();
+      }
+
+      overlayRenderCache.set(layer.id, { key, canvas: rgbCanvas });
+      return rgbCanvas;
+    }
+
+    function computeOverlayPatchBounds(layer, w, h, pad) {
+      const cx = layer.x * w, cy = layer.y * h;
+      const hw = Math.max(2, layer.w * w * 0.5);
+      const hh = Math.max(2, layer.h * h * 0.5);
+      const rad = (layer.rotation * Math.PI) / 180;
+      const cos = Math.cos(rad), sin = Math.sin(rad);
+      const tanX = Math.tan((layer.skewX * Math.PI) / 180);
+      const tanY = Math.tan((layer.skewY * Math.PI) / 180);
+
+      let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+      const corners = [[-hw, -hh], [hw, -hh], [hw, hh], [-hw, hh]];
+      for (const [sx, sy] of corners) {
+        const kx = sx + tanX * sy;
+        const ky = tanY * sx + sy;
+        const px = cx + kx * cos - ky * sin;
+        const py = cy + kx * sin + ky * cos;
+        if (px < minX) minX = px;
+        if (py < minY) minY = py;
+        if (px > maxX) maxX = px;
+        if (py > maxY) maxY = py;
+      }
+      const bx = clamp(Math.floor(minX - pad), 0, w);
+      const by = clamp(Math.floor(minY - pad), 0, h);
+      const ex = clamp(Math.ceil(maxX + pad), 0, w);
+      const ey = clamp(Math.ceil(maxY + pad), 0, h);
+      return { bx, by, bw: ex - bx, bh: ey - by };
+    }
+
+    function applyOverlayTransform(ctx, layer, cx, cy) {
+      const rad = (layer.rotation * Math.PI) / 180;
+      const tanX = Math.tan((layer.skewX * Math.PI) / 180);
+      const tanY = Math.tan((layer.skewY * Math.PI) / 180);
+      ctx.translate(cx, cy);
+      ctx.rotate(rad);
+      ctx.transform(1, tanY, tanX, 1, 0, 0);
+      ctx.scale(layer.flipH ? -1 : 1, layer.flipV ? -1 : 1);
+    }
+
+    function drawOverlayLayers(ctx, w, h, layers, isFullRes) {
+      for (const L of layers) {
+        const lw = Math.max(4, L.w * w);
+        const lh = Math.max(4, L.h * h);
+        const oc = getProcessedOverlayCanvas(L, lw, lh, isFullRes);
+        if (!oc) continue;
+
+        const cx = L.x * w, cy = L.y * h;
+        const opacity = clamp(L.opacity / 100, 0, 1);
+        if (opacity <= 0) continue;
+
+        if (L.edgeColorBlend === 0 && L.edgeBlur === 0) {
+          ctx.save();
+          applyOverlayTransform(ctx, L, cx, cy);
+          ctx.globalAlpha = opacity;
+          ctx.globalCompositeOperation = L.blendMode || 'source-over';
+          ctx.drawImage(oc, -lw / 2, -lh / 2, lw, lh);
+          ctx.restore();
+          continue;
+        }
+
+        // Seamless Edge Color Bleed + Seam Soften path
+        const pad = Math.ceil(Math.max(8, Math.min(lw, lh) * 0.06));
+        const { bx, by, bw, bh } = computeOverlayPatchBounds(L, w, h, pad);
+        if (bw < 2 || bh < 2) continue;
+
+        const bgPatch = ctx.getImageData(bx, by, bw, bh);
+        const fgCanvas = document.createElement('canvas');
+        fgCanvas.width = bw;
+        fgCanvas.height = bh;
+        const fgCtx = fgCanvas.getContext('2d', { willReadFrequently: true });
+        fgCtx.save();
+        fgCtx.translate(-bx, -by);
+        applyOverlayTransform(fgCtx, L, cx, cy);
+        fgCtx.globalAlpha = opacity;
+        fgCtx.drawImage(oc, -lw / 2, -lh / 2, lw, lh);
+        fgCtx.restore();
+
+        const fgImg = fgCtx.getImageData(0, 0, bw, bh);
+        const fgData = fgImg.data;
+        const pxCount = bw * bh;
+        const fgAlpha = new Uint8Array(pxCount);
+        for (let p = 0; p < pxCount; p++) fgAlpha[p] = fgData[p * 4 + 3];
+
+        const seamRadius = clamp(Math.round(Math.max(3, Math.min(lw, lh) * 0.035)), 2, 16);
+        const blurredAlpha = fastBoxBlurAlpha(fgAlpha, bw, bh, seamRadius);
+
+        if (L.edgeColorBlend > 0) {
+          const bgBlurR = clamp(Math.round(Math.min(lw, lh) * 0.045), 3, 14);
+          const bgBlurred = fastBoxBlurRGBA(bgPatch.data, bw, bh, bgBlurR);
+          const blendAmt = (L.edgeColorBlend / 100) * 0.78;
+          for (let p = 0; p < pxCount; p++) {
+            if (fgAlpha[p] === 0) continue;
+            const ba = blurredAlpha[p] / 255;
+            if (ba < 0.96) {
+              const rimW = Math.pow(clamp(1 - ba, 0, 1), 1.3) * blendAmt;
+              const idx = p * 4;
+              fgData[idx]     = Math.round(fgData[idx]     * (1 - rimW) + bgBlurred[idx]     * rimW);
+              fgData[idx + 1] = Math.round(fgData[idx + 1] * (1 - rimW) + bgBlurred[idx + 1] * rimW);
+              fgData[idx + 2] = Math.round(fgData[idx + 2] * (1 - rimW) + bgBlurred[idx + 2] * rimW);
+            }
+          }
+          fgCtx.putImageData(fgImg, 0, 0);
+        }
+
+        ctx.save();
+        ctx.globalCompositeOperation = L.blendMode || 'source-over';
+        ctx.drawImage(fgCanvas, bx, by);
+        ctx.restore();
+
+        if (L.edgeBlur > 0) {
+          const compPatch = ctx.getImageData(bx, by, bw, bh);
+          const cdata = compPatch.data;
+          const blurR = clamp(Math.round((L.edgeBlur / 100) * Math.max(3, Math.min(lw, lh) * 0.04)), 1, 14);
+          const compBlurred = fastBoxBlurRGBA(cdata, bw, bh, blurR);
+          const edgeStr = L.edgeBlur / 100;
+          for (let p = 0; p < pxCount; p++) {
+            const ba = blurredAlpha[p] / 255;
+            const seamW = clamp(4 * ba * (1 - ba) * 1.15, 0, 1) * edgeStr;
+            if (seamW > 0.002) {
+              const idx = p * 4;
+              cdata[idx]     = Math.round(cdata[idx]     * (1 - seamW) + compBlurred[idx]     * seamW);
+              cdata[idx + 1] = Math.round(cdata[idx + 1] * (1 - seamW) + compBlurred[idx + 1] * seamW);
+              cdata[idx + 2] = Math.round(cdata[idx + 2] * (1 - seamW) + compBlurred[idx + 2] * seamW);
+            }
+          }
+          ctx.putImageData(compPatch, bx, by);
+        }
+      }
+    }
+
+    function autoMatchOverlayToBase(layer) {
+      if (!layer) return;
+      const baseCanvas = (cachedBaseCanvas && cachedBaseCanvas.width > 0)
+        ? cachedBaseCanvas
+        : state.previewBaseCanvas;
+      if (!baseCanvas) return;
+
+      const w = baseCanvas.width, h = baseCanvas.height;
+      const pad = Math.ceil(Math.max(12, Math.min(layer.w * w, layer.h * h) * 0.14));
+      const outer = computeOverlayPatchBounds(layer, w, h, pad);
+      const inner = computeOverlayPatchBounds(layer, w, h, 0);
+      if (outer.bw < 2 || outer.bh < 2) return;
+
+      const bCtx = baseCanvas.getContext('2d', { willReadFrequently: true });
+      const bgData = bCtx.getImageData(outer.bx, outer.by, outer.bw, outer.bh).data;
+      let bgR = 0, bgG = 0, bgB = 0, bgCnt = 0;
+      for (let py = 0; py < outer.bh; py += 2) {
+        const gy = outer.by + py;
+        for (let px = 0; px < outer.bw; px += 2) {
+          const gx = outer.bx + px;
+          const insideInner = gx >= inner.bx && gx < inner.bx + inner.bw && gy >= inner.by && gy < inner.by + inner.bh;
+          if (insideInner && (outer.bw > inner.bw + 6 || outer.bh > inner.bh + 6)) continue;
+          const idx = (py * outer.bw + px) * 4;
+          if (bgData[idx + 3] < 20) continue;
+          bgR += bgData[idx]; bgG += bgData[idx + 1]; bgB += bgData[idx + 2];
+          bgCnt++;
+        }
+      }
+      if (bgCnt === 0) return;
+      bgR /= bgCnt; bgG /= bgCnt; bgB /= bgCnt;
+      const bgLum = 0.299 * bgR + 0.587 * bgG + 0.114 * bgB;
+      const bgMax = Math.max(bgR, bgG, bgB), bgMin = Math.min(bgR, bgG, bgB);
+      const bgSat = bgMax > 1 ? (bgMax - bgMin) / bgMax : 0;
+
+      // Sample unadjusted cropped source of Image 2 for idempotent matching
+      const src = getRotatedOverlaySource(layer.assetId, layer.cropTurns);
+      if (!src) return;
+      const sw = src.naturalWidth || src.width, sh = src.naturalHeight || src.height;
+      const sCan = document.createElement('canvas');
+      sCan.width = 96; sCan.height = 96;
+      sCan.getContext('2d').drawImage(
+        src,
+        clamp(layer.crop.x, 0, 0.99) * sw,
+        clamp(layer.crop.y, 0, 0.99) * sh,
+        Math.max(2, clamp(layer.crop.w, 0.01, 1 - layer.crop.x) * sw),
+        Math.max(2, clamp(layer.crop.h, 0.01, 1 - layer.crop.y) * sh),
+        0, 0, 96, 96
+      );
+      const fgData = sCan.getContext('2d').getImageData(0, 0, 96, 96).data;
+      let fgR = 0, fgG = 0, fgB = 0, fgCnt = 0;
+      for (let i = 0; i < fgData.length; i += 4) {
+        if (fgData[i + 3] < 30) continue;
+        fgR += fgData[i]; fgG += fgData[i + 1]; fgB += fgData[i + 2];
+        fgCnt++;
+      }
+      if (fgCnt === 0) return;
+      fgR /= fgCnt; fgG /= fgCnt; fgB /= fgCnt;
+      const fgLum = 0.299 * fgR + 0.587 * fgG + 0.114 * fgB;
+      const fgMax = Math.max(fgR, fgG, fgB), fgMin = Math.min(fgR, fgG, fgB);
+      const fgSat = fgMax > 1 ? (fgMax - fgMin) / fgMax : 0;
+
+      layer.brightness = clamp(Math.round((bgLum - fgLum) * 0.38), -45, 45);
+      layer.temperature = clamp(Math.round(((bgR - bgB) - (fgR - fgB)) * 0.45), -60, 60);
+      layer.saturation = clamp(Math.round((bgSat - fgSat) * 45), -45, 30);
+      if (layer.edgeColorBlend === 0) layer.edgeColorBlend = 25;
+
+      invalidateOverlayCache(layer);
+      syncOverlayUI();
+      scheduleRender();
+      pushHistory('Khớp màu ảnh ghép');
+      showToast('Đã tự động khớp ánh sáng & màu theo vùng nền');
+    }
+
     function scheduleRender() {
       if (renderRAF) cancelAnimationFrame(renderRAF);
       renderRAF = requestAnimationFrame(() => {
@@ -1389,6 +2529,8 @@
         straighten: state.straighten,
         strokes: deepClone(state.strokes),
         texts: deepClone(state.texts),
+        overlays: deepClone(state.overlays),
+        selectedOverlayId: state.selectedOverlayId,
       };
       state.history = state.history.slice(0, state.historyIndex + 1);
       state.history.push(snap);
@@ -1407,7 +2549,14 @@
       state.straighten = snap.straighten;
       state.strokes = deepClone(snap.strokes);
       state.texts = deepClone(snap.texts);
+      state.overlays = deepClone(snap.overlays || []);
+      state.selectedOverlayId = state.overlays.some(o => o.id === snap.selectedOverlayId)
+        ? snap.selectedOverlayId
+        : null;
+      cachedBaseSig = '';
       syncAllUI();
+      syncOverlayUI();
+      updateOverlayGizmoUI();
       scheduleRender();
       updateHistoryButtons();
     }
@@ -1732,15 +2881,20 @@
       blur: 'Cọ làm mờ',
       brush: 'Cọ vẽ',
       text: 'Chèn chữ',
+      composite: 'Ghép ảnh',
+      'overlay-erase': 'Tẩy mềm viền',
+      'overlay-restore': 'Khôi phục viền',
     };
 
     function setActiveTool(tool) {
       state.activeTool = tool;
       el.activeToolBadge.textContent = TOOL_NAMES[tool] || 'Lightroom';
 
+      const isCompositeTool = tool === 'composite' || tool === 'overlay-erase' || tool === 'overlay-restore';
+
       // Sync left rail & PS panel buttons
       document.querySelectorAll('.ps-tool-btn, .ps-panel-btn').forEach(btn => {
-        const active = btn.dataset.tool === tool;
+        const active = btn.dataset.tool === tool || (isCompositeTool && btn.dataset.tool === 'composite');
         btn.classList.toggle('bg-blue-600', active);
         btn.classList.toggle('text-white', active);
         if (!active) {
@@ -1763,11 +2917,788 @@
       }
 
       // Cursor styling
-      const isBrush = tool === 'heal' || tool === 'blur' || tool === 'brush';
-      el.canvasContainer.style.cursor = isBrush ? 'none' : (tool === 'text' ? 'text' : 'grab');
+      const isBrush = ['heal', 'blur', 'brush', 'overlay-erase', 'overlay-restore'].includes(tool);
+      el.canvasContainer.style.cursor = isBrush
+        ? 'none'
+        : (tool === 'text' ? 'text' : (tool === 'composite' ? 'default' : 'grab'));
+      el.brushCursor.classList.toggle('cursor-erase', tool === 'overlay-erase');
+      el.brushCursor.classList.toggle('cursor-restore', tool === 'overlay-restore');
       if (!isBrush) el.brushCursor.classList.add('hidden');
 
-      if (tool !== 'move') switchTab('ps');
+      if (isCompositeTool) switchTab('composite');
+      else if (tool !== 'move') switchTab('ps');
+
+      syncOverlayBrushModeButtons();
+      updateOverlayGizmoUI();
+    }
+
+    // =========================================================================
+    // OVERLAY MANAGEMENT, LAYER STACK UI, TRANSFORM GIZMO & CROP MODAL
+    // =========================================================================
+    function syncOverlayBrushModeButtons() {
+      const isErase = state.activeTool === 'overlay-erase';
+      const isRestore = state.activeTool === 'overlay-restore';
+
+      const btnE = document.getElementById('btnOvEraseMode');
+      const btnR = document.getElementById('btnOvRestoreMode');
+      const flE = document.getElementById('btnFloatOvErase');
+      const flR = document.getElementById('btnFloatOvRestore');
+
+      if (btnE) {
+        btnE.className = isErase
+          ? 'py-1.5 px-2 rounded-lg bg-rose-600 text-white border border-rose-400 text-[11px] font-semibold transition'
+          : 'py-1.5 px-2 rounded-lg bg-studio-panel hover:bg-slate-700 border border-studio-border text-[11px] font-medium text-slate-200 transition';
+      }
+      if (btnR) {
+        btnR.className = isRestore
+          ? 'py-1.5 px-2 rounded-lg bg-emerald-600 text-white border border-emerald-400 text-[11px] font-semibold transition'
+          : 'py-1.5 px-2 rounded-lg bg-studio-panel hover:bg-slate-700 border border-studio-border text-[11px] font-medium text-slate-200 transition';
+      }
+      if (flE) {
+        flE.className = isErase
+          ? 'px-2 sm:px-2.5 py-1 rounded-lg bg-rose-600 text-white text-[11px] font-semibold whitespace-nowrap transition'
+          : 'px-2 sm:px-2.5 py-1 rounded-lg bg-studio-surface hover:bg-slate-700 text-[11px] font-medium text-slate-200 whitespace-nowrap transition';
+      }
+      if (flR) {
+        flR.className = isRestore
+          ? 'px-2 sm:px-2.5 py-1 rounded-lg bg-emerald-600 text-white text-[11px] font-semibold whitespace-nowrap transition'
+          : 'px-2 sm:px-2.5 py-1 rounded-lg bg-studio-surface hover:bg-slate-700 text-[11px] font-medium text-slate-200 whitespace-nowrap transition';
+      }
+    }
+
+    function addOverlayFiles(fileList) {
+      const files = Array.from(fileList || []).filter(f => f && f.type && f.type.startsWith('image/'));
+      if (files.length === 0) return;
+
+      if (!state.workingCanvas) {
+        const reader = new FileReader();
+        reader.onload = (ev) => loadImageFromSrc(ev.target.result, `Đã mở: ${files[0].name}`);
+        reader.readAsDataURL(files[0]);
+        return;
+      }
+
+      files.forEach((file, idx) => {
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          const img = new Image();
+          img.onload = () => {
+            const assetId = 'ov_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7);
+            overlayImagePool.set(assetId, { img, rotCache: new Map() });
+
+            const bw = state.workingCanvas.width;
+            const bh = state.workingCanvas.height;
+            const minBase = Math.min(bw, bh);
+            const targetMax = minBase * 0.44;
+            const imgMax = Math.max(1, img.naturalWidth, img.naturalHeight);
+            const pxW = (img.naturalWidth / imgMax) * targetMax;
+            const pxH = (img.naturalHeight / imgMax) * targetMax;
+            const offset = ((state.overlays.length + idx) % 5) * 0.03;
+
+            const layer = {
+              id: 'layer_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+              assetId,
+              name: file.name ? file.name.replace(/\.[^.]+$/, '') : `Ảnh ghép ${state.overlays.length + 1}`,
+              visible: true,
+              belowFilter: false,
+              crop: { x: 0, y: 0, w: 1, h: 1 },
+              cropTurns: 0,
+              x: clamp(0.5 + offset, 0.15, 0.85),
+              y: clamp(0.5 + offset, 0.15, 0.85),
+              w: clamp(pxW / bw, 0.06, 0.9),
+              h: clamp(pxH / bh, 0.06, 0.9),
+              lockAspect: true,
+              rotation: 0,
+              skewX: 0,
+              skewY: 0,
+              flipH: false,
+              flipV: false,
+              opacity: 100,
+              blendMode: 'source-over',
+              shape: 'rect',
+              cornerRadius: 15,
+              feather: 0,
+              edgeBlur: 0,
+              edgeColorBlend: 0,
+              removeBg: 'none',
+              bgTolerance: 22,
+              bgSoftness: 18,
+              brightness: 0,
+              contrast: 0,
+              saturation: 0,
+              temperature: 0,
+              blur: 0,
+              maskStrokes: [],
+            };
+
+            state.overlays.push(layer);
+            state.selectedOverlayId = layer.id;
+            setActiveTool('composite');
+            syncOverlayUI();
+            updateOverlayGizmoUI();
+            scheduleRender();
+            pushHistory(`Thêm ảnh ghép: ${layer.name}`);
+            showToast('Đã thêm ảnh ghép — kéo, cắt chỉnh hoặc làm mềm đường biên ngay');
+          };
+          img.onerror = () => showToast('Không thể đọc tệp ảnh ghép này');
+          img.src = ev.target.result;
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    function selectOverlayLayer(layerId) {
+      state.selectedOverlayId = layerId;
+      syncOverlayUI();
+      updateOverlayGizmoUI();
+    }
+
+    function deleteOverlayLayer(layerId) {
+      const idx = state.overlays.findIndex(o => o.id === layerId);
+      if (idx < 0) return;
+      const [removed] = state.overlays.splice(idx, 1);
+      overlayRenderCache.delete(layerId);
+      if (removed && removed.belowFilter) cachedBaseSig = '';
+      if (state.selectedOverlayId === layerId) {
+        const next = state.overlays[Math.min(idx, state.overlays.length - 1)];
+        state.selectedOverlayId = next ? next.id : null;
+      }
+      if (!state.selectedOverlayId && (state.activeTool === 'overlay-erase' || state.activeTool === 'overlay-restore')) {
+        setActiveTool('composite');
+      }
+      syncOverlayUI();
+      updateOverlayGizmoUI();
+      scheduleRender();
+      pushHistory('Xóa lớp ảnh ghép');
+      showToast('Đã xóa lớp ảnh ghép');
+    }
+
+    function duplicateSelectedOverlay() {
+      const L = getSelectedOverlay();
+      if (!L) return;
+      const copy = deepClone(L);
+      copy.id = 'layer_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+      copy.name = `${L.name} (bản sao)`;
+      copy.x = clamp(L.x + 0.04, 0.08, 0.92);
+      copy.y = clamp(L.y + 0.04, 0.08, 0.92);
+      state.overlays.push(copy);
+      state.selectedOverlayId = copy.id;
+      if (copy.belowFilter) cachedBaseSig = '';
+      syncOverlayUI();
+      updateOverlayGizmoUI();
+      scheduleRender();
+      pushHistory('Nhân bản lớp ảnh ghép');
+      showToast('Đã nhân bản ảnh ghép');
+    }
+
+    function moveOverlayOrder(layerId, dir) {
+      const idx = state.overlays.findIndex(o => o.id === layerId);
+      if (idx < 0) return;
+      const targetIdx = idx + dir;
+      if (targetIdx < 0 || targetIdx >= state.overlays.length) return;
+      const tmp = state.overlays[idx];
+      state.overlays[idx] = state.overlays[targetIdx];
+      state.overlays[targetIdx] = tmp;
+      cachedBaseSig = '';
+      syncOverlayUI();
+      scheduleRender();
+      pushHistory('Đổi thứ tự lớp ảnh');
+    }
+
+    function flattenSelectedOverlay() {
+      const L = getSelectedOverlay();
+      if (!L || !state.workingCanvas) return;
+      const idx = state.overlays.findIndex(o => o.id === L.id);
+      if (idx < 0) return;
+
+      const w = state.workingCanvas.width;
+      const h = state.workingCanvas.height;
+      const wCtx = state.workingCanvas.getContext('2d', { willReadFrequently: true });
+      const prevVis = L.visible;
+      L.visible = true;
+      drawOverlayLayers(wCtx, w, h, [L], true);
+      L.visible = prevVis;
+
+      state.overlays.splice(idx, 1);
+      overlayRenderCache.delete(L.id);
+      state.selectedOverlayId = state.overlays.length > 0 ? state.overlays[state.overlays.length - 1].id : null;
+      if (state.activeTool === 'overlay-erase' || state.activeTool === 'overlay-restore') {
+        setActiveTool('composite');
+      }
+      rebuildPreviewProxy();
+      syncOverlayUI();
+      updateOverlayGizmoUI();
+      scheduleRender();
+      showToast('Đã gộp ảnh ghép vào ảnh nền');
+    }
+
+    function setSliderDisplay(sliderId, valId, value, suffix = '', showPlus = false) {
+      const inp = document.getElementById(sliderId);
+      const valEl = document.getElementById(valId);
+      if (!inp || !valEl) return;
+      inp.value = value;
+      const num = Number(value);
+      const txt = showPlus && num > 0 ? `+${num}${suffix}` : `${num}${suffix}`;
+      valEl.textContent = txt;
+      const isDefault = (sliderId === 'sl_ovOpacity' ? num === 100 : (sliderId === 'sl_ovScale' ? false : num === 0));
+      valEl.className = `font-mono text-[11px] ${!isDefault ? 'text-cyan-400' : 'text-slate-400'}`;
+    }
+
+    function syncOverlayUI() {
+      const count = state.overlays.length;
+      el.overlayCountBadge.textContent = String(count);
+      el.overlayCountBadge.classList.toggle('hidden', count === 0);
+
+      // Build layer stack list (top to bottom)
+      const list = el.overlayLayerList;
+      list.innerHTML = '';
+      if (count === 0) {
+        list.innerHTML = `
+          <div class="p-3 rounded-xl bg-studio-surface/50 border border-dashed border-studio-border text-center space-y-1">
+            <div class="text-xs font-medium text-slate-300">Chưa có ảnh ghép nào</div>
+            <p class="text-[11px] text-slate-400 leading-relaxed">
+              Nhấn nút <b>+ Thêm ảnh ghép</b> phía trên (ví dụ mã QR, logo, ảnh cắt ghép) để cắt, chỉnh màu, đặt vị trí và làm mềm đường biên tự nhiên.
+            </p>
+          </div>
+        `;
+      } else {
+        for (let i = count - 1; i >= 0; i--) {
+          const L = state.overlays[i];
+          const active = L.id === state.selectedOverlayId;
+          const card = document.createElement('div');
+          card.className = `flex items-center gap-2 p-2 rounded-xl border cursor-pointer transition ${
+            active
+              ? 'bg-blue-600/15 border-blue-500/80 shadow-sm'
+              : 'bg-studio-surface/70 border-studio-border hover:border-slate-600'
+          }`;
+
+          // Thumbnail preview canvas
+          const thumb = document.createElement('canvas');
+          thumb.width = 36;
+          thumb.height = 36;
+          thumb.className = 'w-9 h-9 rounded-lg canvas-checker border border-studio-border shrink-0';
+          const src = getRotatedOverlaySource(L.assetId, L.cropTurns);
+          if (src) {
+            const sw = src.naturalWidth || src.width, sh = src.naturalHeight || src.height;
+            const csw = Math.max(2, L.crop.w * sw), csh = Math.max(2, L.crop.h * sh);
+            const r = Math.min(36 / csw, 36 / csh);
+            const dw = csw * r, dh = csh * r;
+            thumb.getContext('2d').drawImage(
+              src,
+              L.crop.x * sw, L.crop.y * sh, csw, csh,
+              (36 - dw) / 2, (36 - dh) / 2, dw, dh
+            );
+          }
+
+          const info = document.createElement('div');
+          info.className = 'min-w-0 flex-1';
+          info.innerHTML = `
+            <div class="text-xs font-semibold text-slate-100 truncate">${L.name}</div>
+            <div class="text-[10px] font-mono text-slate-400">${Math.round(Math.max(L.w, L.h) * 100)}% • Mờ ${L.opacity}%${L.belowFilter ? ' • Chung bộ lọc' : ''}</div>
+          `;
+
+          const actions = document.createElement('div');
+          actions.className = 'flex items-center gap-0.5 shrink-0';
+
+          const btnVis = document.createElement('button');
+          btnVis.className = `p-1.5 rounded-lg hover:bg-slate-700/80 transition ${L.visible ? 'text-cyan-400' : 'text-slate-500'}`;
+          btnVis.title = L.visible ? 'Ẩn lớp' : 'Hiện lớp';
+          btnVis.innerHTML = L.visible
+            ? '<svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path><circle cx="12" cy="12" r="3"></circle></svg>'
+            : '<svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>';
+          btnVis.addEventListener('click', (e) => {
+            e.stopPropagation();
+            L.visible = !L.visible;
+            if (L.belowFilter) cachedBaseSig = '';
+            syncOverlayUI();
+            updateOverlayGizmoUI();
+            scheduleRender();
+            pushHistory(L.visible ? 'Hiện lớp ảnh' : 'Ẩn lớp ảnh');
+          });
+
+          const btnUp = document.createElement('button');
+          btnUp.disabled = i === count - 1;
+          btnUp.className = 'p-1 rounded-lg hover:bg-slate-700/80 disabled:opacity-25 text-slate-300 text-xs transition';
+          btnUp.title = 'Đưa lên trên';
+          btnUp.textContent = '↑';
+          btnUp.addEventListener('click', (e) => { e.stopPropagation(); moveOverlayOrder(L.id, 1); });
+
+          const btnDn = document.createElement('button');
+          btnDn.disabled = i === 0;
+          btnDn.className = 'p-1 rounded-lg hover:bg-slate-700/80 disabled:opacity-25 text-slate-300 text-xs transition';
+          btnDn.title = 'Đưa xuống dưới';
+          btnDn.textContent = '↓';
+          btnDn.addEventListener('click', (e) => { e.stopPropagation(); moveOverlayOrder(L.id, -1); });
+
+          const btnDel = document.createElement('button');
+          btnDel.className = 'p-1 rounded-lg hover:bg-rose-500/25 text-slate-400 hover:text-rose-400 text-xs transition';
+          btnDel.title = 'Xóa lớp';
+          btnDel.textContent = '✕';
+          btnDel.addEventListener('click', (e) => { e.stopPropagation(); deleteOverlayLayer(L.id); });
+
+          actions.append(btnVis, btnUp, btnDn, btnDel);
+          card.append(thumb, info, actions);
+          card.addEventListener('click', () => selectOverlayLayer(L.id));
+          list.appendChild(card);
+        }
+      }
+
+      const sel = getSelectedOverlay();
+      el.overlayEditorWrap.classList.toggle('hidden', !sel);
+      if (!sel) {
+        syncOverlayBrushModeButtons();
+        return;
+      }
+
+      // Sync editor sliders & toggles
+      setSliderDisplay('sl_ovScale', 'val_ovScale', clamp(Math.round(Math.max(sel.w, sel.h) * 100), 5, 180), '%');
+      setSliderDisplay('sl_ovRotate', 'val_ovRotate', Math.round(sel.rotation * 2) / 2, '°');
+      setSliderDisplay('sl_ovSkewX', 'val_ovSkewX', sel.skewX, '°');
+      setSliderDisplay('sl_ovSkewY', 'val_ovSkewY', sel.skewY, '°');
+      document.getElementById('chkOvLockAspect').checked = !!sel.lockAspect;
+
+      document.querySelectorAll('.ov-shape-btn').forEach(btn => {
+        const act = btn.dataset.ovShape === sel.shape;
+        btn.classList.toggle('bg-blue-600', act);
+        btn.classList.toggle('text-white', act);
+        btn.classList.toggle('bg-studio-surface', !act);
+        btn.classList.toggle('text-slate-300', !act);
+      });
+      document.getElementById('ovCornerWrap').classList.toggle('hidden', sel.shape !== 'rounded');
+      setSliderDisplay('sl_ovCorner', 'val_ovCorner', sel.cornerRadius, '%');
+      setSliderDisplay('sl_ovFeather', 'val_ovFeather', sel.feather, '%');
+      setSliderDisplay('sl_ovEdgeBlur', 'val_ovEdgeBlur', sel.edgeBlur, '%');
+      setSliderDisplay('sl_ovEdgeBlend', 'val_ovEdgeBlend', sel.edgeColorBlend, '%');
+
+      setSliderDisplay('sl_ovBrushSize', 'val_ovBrushSize', state.overlayBrushSize, 'px');
+      setSliderDisplay('sl_ovBrushSoft', 'val_ovBrushSoft', state.overlayBrushSoftness, '%');
+      setSliderDisplay('sl_ovBrushStrength', 'val_ovBrushStrength', state.overlayBrushStrength, '%');
+
+      setSliderDisplay('sl_ovOpacity', 'val_ovOpacity', sel.opacity, '%');
+      document.getElementById('selOvBlendMode').value = sel.blendMode || 'source-over';
+
+      document.querySelectorAll('.ov-bg-btn').forEach(btn => {
+        const act = btn.dataset.ovBg === sel.removeBg;
+        btn.classList.toggle('bg-blue-600', act);
+        btn.classList.toggle('text-white', act);
+        btn.classList.toggle('bg-studio-surface', !act);
+        btn.classList.toggle('text-slate-300', !act);
+      });
+      document.getElementById('ovBgParamsWrap').classList.toggle('hidden', sel.removeBg === 'none');
+      setSliderDisplay('sl_ovBgTol', 'val_ovBgTol', sel.bgTolerance, '%');
+      setSliderDisplay('sl_ovBgSoft', 'val_ovBgSoft', sel.bgSoftness, '%');
+
+      setSliderDisplay('sl_ovBright', 'val_ovBright', sel.brightness, '', true);
+      setSliderDisplay('sl_ovContrast', 'val_ovContrast', sel.contrast, '', true);
+      setSliderDisplay('sl_ovSat', 'val_ovSat', sel.saturation, '', true);
+      setSliderDisplay('sl_ovTemp', 'val_ovTemp', sel.temperature, '', true);
+      setSliderDisplay('sl_ovBlur', 'val_ovBlur', sel.blur, 'px');
+      document.getElementById('chkOvBelowFilter').checked = !!sel.belowFilter;
+
+      syncOverlayBrushModeButtons();
+    }
+
+    function updateOverlayGizmoUI() {
+      const sel = getSelectedOverlay();
+      const hideTool = ['crop', 'heal', 'blur', 'brush', 'text'].includes(state.activeTool);
+      const isMaskTool = state.activeTool === 'overlay-erase' || state.activeTool === 'overlay-restore';
+
+      el.overlayFloatingBar.classList.toggle('hidden', !sel || state.activeTool === 'crop');
+
+      if (!sel || !sel.visible || hideTool) {
+        el.overlayGizmo.classList.add('hidden');
+        return;
+      }
+
+      el.overlayGizmo.classList.remove('hidden');
+      el.overlayGizmo.classList.toggle('mask-outline', isMaskTool);
+      el.overlayGizmo.style.left = `${sel.x * 100}%`;
+      el.overlayGizmo.style.top = `${sel.y * 100}%`;
+      el.overlayGizmo.style.width = `${sel.w * 100}%`;
+      el.overlayGizmo.style.height = `${sel.h * 100}%`;
+      el.overlayGizmo.style.transform = `translate(-50%, -50%) rotate(${sel.rotation}deg)`;
+    }
+
+    function initOverlayGizmoEvents() {
+      let mode = null; // 'move' | 'rotate' | 'nw' | 'ne' | 'sw' | 'se' | 'n' | 's' | 'w' | 'e'
+      let startX = 0, startY = 0;
+      let startSnap = null;
+      let moved = false;
+
+      const onDown = (e) => {
+        const L = getSelectedOverlay();
+        if (!L || state.activeTool === 'overlay-erase' || state.activeTool === 'overlay-restore') return;
+        e.preventDefault();
+        e.stopPropagation();
+        mode = e.target.dataset.ovHandle || 'move';
+        const pt = e.touches ? e.touches[0] : e;
+        startX = pt.clientX;
+        startY = pt.clientY;
+        startSnap = { x: L.x, y: L.y, w: L.w, h: L.h, rotation: L.rotation };
+        moved = false;
+      };
+
+      const onMove = (e) => {
+        if (!mode || !startSnap) return;
+        const L = getSelectedOverlay();
+        if (!L) { mode = null; return; }
+        e.preventDefault();
+        const pt = e.touches ? e.touches[0] : e;
+        const box = el.canvasContainer.getBoundingClientRect();
+        if (box.width < 4 || box.height < 4) return;
+        moved = true;
+
+        if (mode === 'move') {
+          const dx = (pt.clientX - startX) / box.width;
+          const dy = (pt.clientY - startY) / box.height;
+          let nx = clamp(startSnap.x + dx, -0.4, 1.4);
+          let ny = clamp(startSnap.y + dy, -0.4, 1.4);
+          const snapV = Math.abs(nx - 0.5) < 0.012;
+          const snapH = Math.abs(ny - 0.5) < 0.012;
+          if (snapV) nx = 0.5;
+          if (snapH) ny = 0.5;
+          el.snapGuideV.classList.toggle('hidden', !snapV);
+          el.snapGuideH.classList.toggle('hidden', !snapH);
+          L.x = nx;
+          L.y = ny;
+          el.ovGizmoBadge.textContent = `${Math.round(nx * 100)}%, ${Math.round(ny * 100)}%`;
+          el.ovGizmoBadge.classList.remove('hidden');
+        } else if (mode === 'rotate') {
+          const centerX = box.left + startSnap.x * box.width;
+          const centerY = box.top + startSnap.y * box.height;
+          let deg = Math.atan2(pt.clientX - centerX, -(pt.clientY - centerY)) * (180 / Math.PI);
+          for (const target of [0, 90, -90, 180, -180]) {
+            if (Math.abs(deg - target) < 2.5) { deg = target; break; }
+          }
+          if (deg <= -180) deg = 180;
+          L.rotation = Math.round(deg * 2) / 2;
+          el.ovGizmoBadge.textContent = `${L.rotation}°`;
+          el.ovGizmoBadge.classList.remove('hidden');
+          setSliderDisplay('sl_ovRotate', 'val_ovRotate', L.rotation, '°');
+        } else {
+          const dxPx = pt.clientX - startX;
+          const dyPx = pt.clientY - startY;
+          const rad = (startSnap.rotation * Math.PI) / 180;
+          const cos = Math.cos(rad), sin = Math.sin(rad);
+          const localDx = dxPx * cos + dyPx * sin;
+          const localDy = -dxPx * sin + dyPx * cos;
+
+          const sx = mode.includes('e') ? 1 : (mode.includes('w') ? -1 : 0);
+          const sy = mode.includes('s') ? 1 : (mode.includes('n') ? -1 : 0);
+          const W0 = startSnap.w * box.width;
+          const H0 = startSnap.h * box.height;
+          let newW = W0, newH = H0;
+
+          if (sx !== 0 && sy !== 0 && L.lockAspect && !e.shiftKey) {
+            const dW = sx * localDx, dH = sy * localDy;
+            const diagSq = Math.max(1, W0 * W0 + H0 * H0);
+            const minScale = Math.max(16 / Math.max(1, W0), 16 / Math.max(1, H0));
+            const sc = clamp(1 + (dW * W0 + dH * H0) / diagSq, minScale, 4);
+            newW = W0 * sc;
+            newH = H0 * sc;
+          } else {
+            if (sx !== 0) newW = Math.max(16, W0 + sx * localDx);
+            if (sy !== 0) newH = Math.max(16, H0 + sy * localDy);
+          }
+
+          const shiftLocalX = sx * (newW - W0) * 0.5;
+          const shiftLocalY = sy * (newH - H0) * 0.5;
+          const shiftX = shiftLocalX * cos - shiftLocalY * sin;
+          const shiftY = shiftLocalX * sin + shiftLocalY * cos;
+
+          L.x = clamp((startSnap.x * box.width + shiftX) / box.width, -0.5, 1.5);
+          L.y = clamp((startSnap.y * box.height + shiftY) / box.height, -0.5, 1.5);
+          L.w = clamp(newW / box.width, 0.03, 2.2);
+          L.h = clamp(newH / box.height, 0.03, 2.2);
+          el.ovGizmoBadge.textContent = `${Math.round(Math.max(L.w, L.h) * 100)}%`;
+          el.ovGizmoBadge.classList.remove('hidden');
+          setSliderDisplay('sl_ovScale', 'val_ovScale', clamp(Math.round(Math.max(L.w, L.h) * 100), 5, 180), '%');
+        }
+
+        if (L.belowFilter) cachedBaseSig = '';
+        updateOverlayGizmoUI();
+        scheduleRender();
+      };
+
+      const onUp = () => {
+        if (!mode) return;
+        const prevMode = mode;
+        mode = null;
+        startSnap = null;
+        el.snapGuideV.classList.add('hidden');
+        el.snapGuideH.classList.add('hidden');
+        el.ovGizmoBadge.classList.add('hidden');
+        if (moved) {
+          syncOverlayUI();
+          pushHistory(prevMode === 'move' ? 'Di chuyển ảnh ghép' : (prevMode === 'rotate' ? 'Xoay ảnh ghép' : 'Đổi cỡ ảnh ghép'));
+        }
+      };
+
+      el.overlayGizmo.addEventListener('mousedown', onDown);
+      window.addEventListener('mousemove', onMove);
+      window.addEventListener('mouseup', onUp);
+      el.overlayGizmo.addEventListener('touchstart', onDown, { passive: false });
+      window.addEventListener('touchmove', onMove, { passive: false });
+      window.addEventListener('touchend', onUp);
+    }
+
+    function canvasPointToOverlayUV(layer, px, py, w, h) {
+      const dx = px - layer.x * w;
+      const dy = py - layer.y * h;
+      const rad = (layer.rotation * Math.PI) / 180;
+      const cos = Math.cos(rad), sin = Math.sin(rad);
+      const rx = dx * cos + dy * sin;
+      const ry = -dx * sin + dy * cos;
+      const tanX = Math.tan((layer.skewX * Math.PI) / 180);
+      const tanY = Math.tan((layer.skewY * Math.PI) / 180);
+      const det = 1 - tanX * tanY;
+      if (Math.abs(det) < 1e-4) return null;
+      const kx = (rx - tanX * ry) / det;
+      const ky = (-tanY * rx + ry) / det;
+      const sx = kx * (layer.flipH ? -1 : 1);
+      const sy = ky * (layer.flipV ? -1 : 1);
+      return {
+        u: sx / Math.max(4, layer.w * w) + 0.5,
+        v: sy / Math.max(4, layer.h * h) + 0.5,
+      };
+    }
+
+    // Dedicated Overlay Crop Modal State & Logic
+    const ovCropDraft = {
+      layerId: null,
+      crop: { x: 0, y: 0, w: 1, h: 1 },
+      cropTurns: 0,
+      shape: 'rect',
+      ratio: 'free',
+    };
+
+    function renderOvCropModalStage() {
+      const layer = state.overlays.find(o => o.id === ovCropDraft.layerId);
+      if (!layer) return;
+      const src = getRotatedOverlaySource(layer.assetId, ovCropDraft.cropTurns);
+      if (!src) return;
+      const sw = src.naturalWidth || src.width;
+      const sh = src.naturalHeight || src.height;
+
+      const wrap = el.ovCropStageWrap;
+      const maxW = Math.max(200, Math.min(560, wrap.clientWidth - 32));
+      const maxH = Math.max(180, Math.min(window.innerHeight * 0.48, wrap.clientHeight - 32));
+      const scale = Math.min(maxW / sw, maxH / sh);
+      const dw = Math.max(40, Math.round(sw * scale));
+      const dh = Math.max(40, Math.round(sh * scale));
+
+      el.ovCropCanvas.width = dw;
+      el.ovCropCanvas.height = dh;
+      el.ovCropCanvas.style.width = `${dw}px`;
+      el.ovCropCanvas.style.height = `${dh}px`;
+      el.ovCropImgWrap.style.width = `${dw}px`;
+      el.ovCropImgWrap.style.height = `${dh}px`;
+      el.ovCropCanvas.getContext('2d').drawImage(src, 0, 0, dw, dh);
+
+      updateOvCropBoxUI();
+    }
+
+    function updateOvCropBoxUI() {
+      const layer = state.overlays.find(o => o.id === ovCropDraft.layerId);
+      if (!layer) return;
+      const src = getRotatedOverlaySource(layer.assetId, ovCropDraft.cropTurns);
+      const sw = src ? (src.naturalWidth || src.width) : 100;
+      const sh = src ? (src.naturalHeight || src.height) : 100;
+      const c = ovCropDraft.crop;
+
+      el.ovCropBox.style.left = `${c.x * 100}%`;
+      el.ovCropBox.style.top = `${c.y * 100}%`;
+      el.ovCropBox.style.width = `${c.w * 100}%`;
+      el.ovCropBox.style.height = `${c.h * 100}%`;
+      el.ovCropBox.style.borderRadius = ovCropDraft.shape === 'ellipse'
+        ? '50%'
+        : (ovCropDraft.shape === 'rounded' ? `${layer.cornerRadius || 15}%` : '0px');
+
+      const outW = Math.max(1, Math.round(c.w * sw));
+      const outH = Math.max(1, Math.round(c.h * sh));
+      el.ovCropDimLabel.textContent = `${outW} × ${outH} px`;
+
+      document.querySelectorAll('.ov-crop-ratio-btn').forEach(b => {
+        const act = b.dataset.ovRatio === ovCropDraft.ratio;
+        b.classList.toggle('bg-blue-600', act);
+        b.classList.toggle('text-white', act);
+        b.classList.toggle('bg-studio-surface', !act);
+        b.classList.toggle('text-slate-300', !act);
+      });
+      document.querySelectorAll('.ov-crop-shape-btn').forEach(b => {
+        const act = b.dataset.ovCropShape === ovCropDraft.shape;
+        b.classList.toggle('bg-blue-600', act);
+        b.classList.toggle('text-white', act);
+        b.classList.toggle('bg-studio-surface', !act);
+        b.classList.toggle('text-slate-300', !act);
+      });
+    }
+
+    function applyRatioToOvCropDraft(ratioStr) {
+      ovCropDraft.ratio = ratioStr;
+      if (ratioStr === 'full') {
+        ovCropDraft.crop = { x: 0, y: 0, w: 1, h: 1 };
+        updateOvCropBoxUI();
+        return;
+      }
+      if (ratioStr === 'free') {
+        updateOvCropBoxUI();
+        return;
+      }
+      const layer = state.overlays.find(o => o.id === ovCropDraft.layerId);
+      const src = layer ? getRotatedOverlaySource(layer.assetId, ovCropDraft.cropTurns) : null;
+      if (!src) return;
+      const [rw, rh] = ratioStr.split(':').map(Number);
+      const targetAspect = rw / rh;
+      const imgAspect = (src.naturalWidth || src.width) / (src.naturalHeight || src.height);
+      const normRatio = targetAspect / imgAspect;
+      let w = 0.86, h = w / normRatio;
+      if (h > 0.86) { h = 0.86; w = h * normRatio; }
+      ovCropDraft.crop = { x: (1 - w) / 2, y: (1 - h) / 2, w, h };
+      updateOvCropBoxUI();
+    }
+
+    function openOverlayCropModal(layer) {
+      if (!layer) return;
+      ovCropDraft.layerId = layer.id;
+      ovCropDraft.crop = { ...layer.crop };
+      ovCropDraft.cropTurns = layer.cropTurns || 0;
+      ovCropDraft.shape = layer.shape || 'rect';
+      ovCropDraft.ratio = 'free';
+      el.overlayCropModal.classList.remove('hidden');
+      requestAnimationFrame(renderOvCropModalStage);
+    }
+
+    function initOverlayCropModal() {
+      let mode = null;
+      let startX = 0, startY = 0, startRect = null;
+
+      const onDown = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        mode = e.target.dataset.ovcropHandle || 'move';
+        const pt = e.touches ? e.touches[0] : e;
+        startX = pt.clientX;
+        startY = pt.clientY;
+        startRect = { ...ovCropDraft.crop };
+      };
+
+      const onMove = (e) => {
+        if (!mode || !startRect) return;
+        e.preventDefault();
+        const pt = e.touches ? e.touches[0] : e;
+        const box = el.ovCropImgWrap.getBoundingClientRect();
+        if (box.width < 10 || box.height < 10) return;
+        const dx = (pt.clientX - startX) / box.width;
+        const dy = (pt.clientY - startY) / box.height;
+        const r = { ...startRect };
+        const minS = 0.08;
+
+        if (mode === 'move') {
+          r.x = clamp(startRect.x + dx, 0, 1 - startRect.w);
+          r.y = clamp(startRect.y + dy, 0, 1 - startRect.h);
+        } else {
+          if (mode.includes('e')) r.w = clamp(startRect.w + dx, minS, 1 - startRect.x);
+          if (mode.includes('s')) r.h = clamp(startRect.h + dy, minS, 1 - startRect.y);
+          if (mode.includes('w')) {
+            const nx = clamp(startRect.x + dx, 0, startRect.x + startRect.w - minS);
+            r.w = startRect.w + (startRect.x - nx);
+            r.x = nx;
+          }
+          if (mode.includes('n')) {
+            const ny = clamp(startRect.y + dy, 0, startRect.y + startRect.h - minS);
+            r.h = startRect.h + (startRect.y - ny);
+            r.y = ny;
+          }
+          // Enforce aspect ratio when locked
+          if (ovCropDraft.ratio !== 'free' && ovCropDraft.ratio !== 'full') {
+            const [rw, rh] = ovCropDraft.ratio.split(':').map(Number);
+            const normAspect = (rw / rh) / (box.width / box.height);
+            if (mode === 'n' || mode === 's') {
+              r.w = clamp(r.h * normAspect, minS, 1 - r.x);
+              r.h = r.w / normAspect;
+            } else {
+              r.h = clamp(r.w / normAspect, minS, 1 - r.y);
+              r.w = r.h * normAspect;
+            }
+          }
+        }
+        ovCropDraft.crop = r;
+        updateOvCropBoxUI();
+      };
+
+      const onUp = () => { mode = null; startRect = null; };
+
+      el.ovCropBox.addEventListener('mousedown', onDown);
+      window.addEventListener('mousemove', onMove);
+      window.addEventListener('mouseup', onUp);
+      el.ovCropBox.addEventListener('touchstart', onDown, { passive: false });
+      window.addEventListener('touchmove', onMove, { passive: false });
+      window.addEventListener('touchend', onUp);
+
+      document.querySelectorAll('.ov-crop-ratio-btn').forEach(btn => {
+        btn.addEventListener('click', () => applyRatioToOvCropDraft(btn.dataset.ovRatio));
+      });
+      document.querySelectorAll('.ov-crop-shape-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          ovCropDraft.shape = btn.dataset.ovCropShape;
+          updateOvCropBoxUI();
+        });
+      });
+
+      document.getElementById('btnOvCropRotL').addEventListener('click', () => {
+        ovCropDraft.cropTurns = (ovCropDraft.cropTurns + 3) % 4;
+        ovCropDraft.crop = { x: 0, y: 0, w: 1, h: 1 };
+        renderOvCropModalStage();
+      });
+      document.getElementById('btnOvCropRotR').addEventListener('click', () => {
+        ovCropDraft.cropTurns = (ovCropDraft.cropTurns + 1) % 4;
+        ovCropDraft.crop = { x: 0, y: 0, w: 1, h: 1 };
+        renderOvCropModalStage();
+      });
+
+      const closeModal = () => el.overlayCropModal.classList.add('hidden');
+      document.getElementById('btnCloseOvCrop').addEventListener('click', closeModal);
+      document.getElementById('btnCancelOvCrop').addEventListener('click', closeModal);
+      el.overlayCropModal.addEventListener('click', (e) => {
+        if (e.target === el.overlayCropModal) closeModal();
+      });
+
+      document.getElementById('btnApplyOvCrop').addEventListener('click', () => {
+        const layer = state.overlays.find(o => o.id === ovCropDraft.layerId);
+        if (!layer || !state.workingCanvas) { closeModal(); return; }
+
+        const cropChanged = JSON.stringify(layer.crop) !== JSON.stringify(ovCropDraft.crop) ||
+          layer.cropTurns !== ovCropDraft.cropTurns;
+
+        const bw = state.workingCanvas.width, bh = state.workingCanvas.height;
+        const oldArea = Math.max(16, (layer.w * bw) * (layer.h * bh));
+
+        layer.crop = { ...ovCropDraft.crop };
+        layer.cropTurns = ovCropDraft.cropTurns;
+        layer.shape = ovCropDraft.shape;
+        if (cropChanged) layer.maskStrokes = [];
+
+        const rotSrc = getRotatedOverlaySource(layer.assetId, layer.cropTurns);
+        if (rotSrc) {
+          const sw = rotSrc.naturalWidth || rotSrc.width;
+          const sh = rotSrc.naturalHeight || rotSrc.height;
+          const csw = Math.max(1, layer.crop.w * sw);
+          const csh = Math.max(1, layer.crop.h * sh);
+          const newAspect = csw / csh;
+          const newPxW = Math.sqrt(oldArea * newAspect);
+          const newPxH = newPxW / newAspect;
+          layer.w = clamp(newPxW / bw, 0.04, 1.8);
+          layer.h = clamp(newPxH / bh, 0.04, 1.8);
+        }
+
+        invalidateOverlayCache(layer);
+        syncOverlayUI();
+        updateOverlayGizmoUI();
+        scheduleRender();
+        pushHistory('Cắt ảnh ghép');
+        closeModal();
+        showToast('Đã áp dụng cắt & chỉnh khung ảnh ghép');
+      });
     }
 
     // =========================================================================
@@ -1905,12 +3836,24 @@
       next.width = sw;
       next.height = sh;
       next.getContext('2d').drawImage(state.workingCanvas, sx, sy, sw, sh, 0, 0, sw, sh);
+
+      for (const L of state.overlays) {
+        const pxW = L.w * w;
+        const pxH = L.h * h;
+        L.x = clamp((L.x * w - sx) / sw, 0.05, 0.95);
+        L.y = clamp((L.y * h - sy) / sh, 0.05, 0.95);
+        L.w = clamp(pxW / sw, 0.04, 1.8);
+        L.h = clamp(pxH / sh, 0.04, 1.8);
+      }
+
       state.workingCanvas = next;
       state.strokes = []; // reset pixel-coordinate strokes after crop
 
       rebuildPreviewProxy();
       setActiveTool('move');
       fitCanvasToViewport();
+      syncOverlayUI();
+      updateOverlayGizmoUI();
       scheduleRender();
       showToast(`Đã cắt ảnh (${sw} × ${sh})`);
     }
@@ -1938,19 +3881,37 @@
         ctx.drawImage(src, 0, 0);
       }
 
+      const newW = next.width, newH = next.height;
+      for (const L of state.overlays) {
+        const pxW = L.w * w;
+        const pxH = L.h * h;
+        const ox = L.x, oy = L.y;
+        if (type === 'rotR') { L.x = 1 - oy; L.y = ox; }
+        else if (type === 'rotL') { L.x = oy; L.y = 1 - ox; }
+        else if (type === 'flipH') { L.x = 1 - ox; }
+        else if (type === 'flipV') { L.y = 1 - oy; }
+        L.w = clamp(pxW / newW, 0.04, 1.8);
+        L.h = clamp(pxH / newH, 0.04, 1.8);
+      }
+
       state.workingCanvas = next;
       state.strokes = [];
       rebuildPreviewProxy();
       fitCanvasToViewport();
+      syncOverlayUI();
+      updateOverlayGizmoUI();
       scheduleRender();
       showToast('Đã xoay / lật ảnh');
     }
 
     // =========================================================================
-    // CANVAS INTERACTION: BRUSH / HEAL / BLUR / TEXT DRAG / PAN
+    // CANVAS INTERACTION: BRUSH / HEAL / BLUR / MASK BRUSH / OVERLAY / TEXT / PAN
     // =========================================================================
     function initCanvasInteractions() {
       let activeStroke = null;
+      let activeMaskStroke = null;
+      let activeMaskLayer = null;
+      let draggingOverlay = null;
       let draggingText = null;
       let panning = false;
       let panStart = { x: 0, y: 0, ox: 0, oy: 0 };
@@ -1961,6 +3922,8 @@
         return {
           x: clamp((pt.clientX - rect.left) / rect.width, 0, 1),
           y: clamp((pt.clientY - rect.top) / rect.height, 0, 1),
+          rawX: (pt.clientX - rect.left) / rect.width,
+          rawY: (pt.clientY - rect.top) / rect.height,
           localX: pt.clientX - rect.left,
           localY: pt.clientY - rect.top,
           rect,
@@ -1968,7 +3931,7 @@
       };
 
       const updateBrushRing = (e) => {
-        const isBrush = ['heal', 'blur', 'brush'].includes(state.activeTool);
+        const isBrush = ['heal', 'blur', 'brush', 'overlay-erase', 'overlay-restore'].includes(state.activeTool);
         if (!isBrush || e.touches) {
           el.brushCursor.classList.add('hidden');
           return;
@@ -1981,7 +3944,8 @@
           return;
         }
         const minDisp = Math.min(rect.width, rect.height);
-        const sizeNorm = state.brushSize / 500;
+        const isOvMask = state.activeTool === 'overlay-erase' || state.activeTool === 'overlay-restore';
+        const sizeNorm = (isOvMask ? state.overlayBrushSize : state.brushSize) / 500;
         const diam = Math.max(8, sizeNorm * minDisp * 2);
         el.brushCursor.style.width = `${diam}px`;
         el.brushCursor.style.height = `${diam}px`;
@@ -1994,6 +3958,35 @@
         if (state.activeTool === 'crop') return;
         const pt = e.touches ? e.touches[0] : e;
         const pos = getNormCoords(e);
+        const cw = el.mainCanvas.width || 1;
+        const ch = el.mainCanvas.height || 1;
+
+        // Overlay soft-mask brush (erase / restore)
+        if (state.activeTool === 'overlay-erase' || state.activeTool === 'overlay-restore') {
+          e.preventDefault();
+          const sel = getSelectedOverlay();
+          if (!sel) {
+            showToast('Hãy chọn một lớp ảnh ghép trước');
+            return;
+          }
+          const uv = canvasPointToOverlayUV(sel, pos.rawX * cw, pos.rawY * ch, cw, ch);
+          if (!uv) return;
+          const minDim = Math.min(cw, ch);
+          const rCanvas = Math.max(3, (state.overlayBrushSize / 500) * minDim);
+          activeMaskLayer = sel;
+          activeMaskStroke = {
+            mode: state.activeTool === 'overlay-restore' ? 'restore' : 'erase',
+            rxNorm: rCanvas / Math.max(4, sel.w * cw),
+            ryNorm: rCanvas / Math.max(4, sel.h * ch),
+            softness: state.overlayBrushSoftness / 100,
+            strength: state.overlayBrushStrength / 100,
+            points: [{ x: uv.u, y: uv.v }],
+          };
+          sel.maskStrokes.push(activeMaskStroke);
+          invalidateOverlayCache(sel);
+          scheduleRender();
+          return;
+        }
 
         // Check if clicking an existing text layer (in move or text tool)
         if ((state.activeTool === 'move' || state.activeTool === 'text') && state.texts.length > 0) {
@@ -2005,6 +3998,35 @@
               e.preventDefault();
               return;
             }
+          }
+        }
+
+        // Hit-test overlay layers in move or composite mode
+        if ((state.activeTool === 'move' || state.activeTool === 'composite') && state.overlays.length > 0) {
+          for (let i = state.overlays.length - 1; i >= 0; i--) {
+            const L = state.overlays[i];
+            if (!L.visible) continue;
+            const uv = canvasPointToOverlayUV(L, pos.rawX * cw, pos.rawY * ch, cw, ch);
+            if (uv && uv.u >= 0 && uv.u <= 1 && uv.v >= 0 && uv.v <= 1) {
+              state.selectedOverlayId = L.id;
+              syncOverlayUI();
+              updateOverlayGizmoUI();
+              draggingOverlay = {
+                layer: L,
+                startX: pt.clientX,
+                startY: pt.clientY,
+                ox: L.x,
+                oy: L.y,
+                moved: false,
+              };
+              e.preventDefault();
+              return;
+            }
+          }
+          if (state.selectedOverlayId) {
+            state.selectedOverlayId = null;
+            syncOverlayUI();
+            updateOverlayGizmoUI();
           }
         }
 
@@ -2022,7 +4044,7 @@
           return;
         }
 
-        if (state.activeTool === 'move' && state.zoom > 1) {
+        if ((state.activeTool === 'move' || state.activeTool === 'composite') && state.zoom > 1) {
           panning = true;
           panStart = { x: pt.clientX, y: pt.clientY, ox: state.panX, oy: state.panY };
         }
@@ -2030,6 +4052,43 @@
 
       const onMove = (e) => {
         updateBrushRing(e);
+        if (activeMaskStroke && activeMaskLayer) {
+          e.preventDefault();
+          const pos = getNormCoords(e);
+          const cw = el.mainCanvas.width || 1;
+          const ch = el.mainCanvas.height || 1;
+          const uv = canvasPointToOverlayUV(activeMaskLayer, pos.rawX * cw, pos.rawY * ch, cw, ch);
+          if (uv) {
+            const last = activeMaskStroke.points[activeMaskStroke.points.length - 1];
+            if (Math.hypot(uv.u - last.x, uv.v - last.y) > 0.006) {
+              activeMaskStroke.points.push({ x: uv.u, y: uv.v });
+              invalidateOverlayCache(activeMaskLayer);
+              scheduleRender();
+            }
+          }
+          return;
+        }
+        if (draggingOverlay) {
+          e.preventDefault();
+          const pt = e.touches ? e.touches[0] : e;
+          const box = el.canvasContainer.getBoundingClientRect();
+          const L = draggingOverlay.layer;
+          let nx = clamp(draggingOverlay.ox + (pt.clientX - draggingOverlay.startX) / box.width, -0.4, 1.4);
+          let ny = clamp(draggingOverlay.oy + (pt.clientY - draggingOverlay.startY) / box.height, -0.4, 1.4);
+          const snapV = Math.abs(nx - 0.5) < 0.012;
+          const snapH = Math.abs(ny - 0.5) < 0.012;
+          if (snapV) nx = 0.5;
+          if (snapH) ny = 0.5;
+          el.snapGuideV.classList.toggle('hidden', !snapV);
+          el.snapGuideH.classList.toggle('hidden', !snapH);
+          L.x = nx;
+          L.y = ny;
+          draggingOverlay.moved = true;
+          if (L.belowFilter) cachedBaseSig = '';
+          updateOverlayGizmoUI();
+          scheduleRender();
+          return;
+        }
         if (activeStroke) {
           e.preventDefault();
           const pos = getNormCoords(e);
@@ -2057,6 +4116,19 @@
       };
 
       const onUp = () => {
+        if (activeMaskStroke) {
+          const lbl = activeMaskStroke.mode === 'restore' ? 'Khôi phục viền ảnh' : 'Tẩy mềm viền ảnh';
+          activeMaskStroke = null;
+          activeMaskLayer = null;
+          pushHistory(lbl);
+        }
+        if (draggingOverlay) {
+          const didMove = draggingOverlay.moved;
+          draggingOverlay = null;
+          el.snapGuideV.classList.add('hidden');
+          el.snapGuideH.classList.add('hidden');
+          if (didMove) pushHistory('Di chuyển ảnh ghép');
+        }
         if (activeStroke) {
           const label = activeStroke.type === 'heal' ? 'Xóa khuyết điểm' : (activeStroke.type === 'blur' ? 'Cọ làm mờ' : 'Cọ vẽ');
           activeStroke = null;
@@ -2188,7 +4260,7 @@
     // WIRE ALL EVENT LISTENERS
     // =========================================================================
     function initEvents() {
-      // Upload
+      // Upload Base Image & Overlay Image
       document.getElementById('btnUpload').addEventListener('click', () => el.fileInput.click());
       el.fileInput.addEventListener('change', (e) => {
         const file = e.target.files[0];
@@ -2199,10 +4271,47 @@
         e.target.value = '';
       });
 
+      const triggerOverlayPicker = () => el.overlayFileInput.click();
+      document.getElementById('btnAddOverlay').addEventListener('click', triggerOverlayPicker);
+      document.getElementById('btnPanelAddOverlay').addEventListener('click', triggerOverlayPicker);
+      el.overlayFileInput.addEventListener('change', (e) => {
+        if (e.target.files && e.target.files.length > 0) {
+          addOverlayFiles(e.target.files);
+        }
+        e.target.value = '';
+      });
+
+      // Clipboard Paste (Ctrl+V) to paste overlay image
+      window.addEventListener('paste', (e) => {
+        const tag = document.activeElement && document.activeElement.tagName;
+        if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+        const items = e.clipboardData && e.clipboardData.items;
+        if (!items) return;
+        const imgFiles = [];
+        for (const item of items) {
+          if (item.type && item.type.startsWith('image/')) {
+            const f = item.getAsFile();
+            if (f) imgFiles.push(f);
+          }
+        }
+        if (imgFiles.length > 0) {
+          e.preventDefault();
+          addOverlayFiles(imgFiles);
+        }
+      });
+
       // Drag & Drop anywhere on viewport
+      const isCompositeDropCtx = () => {
+        const compTab = document.getElementById('tab-composite');
+        const tabVisible = compTab && !compTab.classList.contains('hidden');
+        return tabVisible || ['composite', 'overlay-erase', 'overlay-restore'].includes(state.activeTool);
+      };
       ['dragenter', 'dragover'].forEach(evt => {
         el.viewport.addEventListener(evt, (e) => {
           e.preventDefault();
+          el.dropOverlayText.textContent = isCompositeDropCtx()
+            ? 'Thả ảnh vào đây để ghép lên ảnh nền'
+            : 'Thả ảnh vào đây để chỉnh sửa ngay';
           el.dropOverlay.classList.remove('hidden');
         });
       });
@@ -2213,11 +4322,17 @@
         });
       });
       el.viewport.addEventListener('drop', (e) => {
-        const file = e.dataTransfer.files[0];
-        if (file && file.type.startsWith('image/')) {
-          const reader = new FileReader();
-          reader.onload = (ev) => loadImageFromSrc(ev.target.result, `Đã mở: ${file.name}`);
-          reader.readAsDataURL(file);
+        const files = e.dataTransfer && e.dataTransfer.files;
+        if (!files || files.length === 0) return;
+        if (isCompositeDropCtx() && state.workingCanvas) {
+          addOverlayFiles(files);
+        } else {
+          const file = files[0];
+          if (file && file.type.startsWith('image/')) {
+            const reader = new FileReader();
+            reader.onload = (ev) => loadImageFromSrc(ev.target.result, `Đã mở: ${file.name}`);
+            reader.readAsDataURL(file);
+          }
         }
       });
 
@@ -2256,7 +4371,13 @@
         state.straighten = 0;
         state.strokes = [];
         state.texts = [];
+        state.overlays = [];
+        state.selectedOverlayId = null;
+        overlayRenderCache.clear();
+        cachedBaseSig = '';
         syncAllUI();
+        syncOverlayUI();
+        updateOverlayGizmoUI();
         scheduleRender();
         pushHistory('Đặt lại toàn bộ');
         showToast('Đã đặt lại toàn bộ thông số');
@@ -2398,6 +4519,210 @@
         showToast('Đã xóa toàn bộ chữ');
       });
 
+      // Overlay Floating Bar & Composite Panel Controls
+      const toggleMaskMode = (mode) => {
+        if (!getSelectedOverlay()) {
+          showToast('Hãy chọn lớp ảnh ghép trước');
+          return;
+        }
+        setActiveTool(state.activeTool === mode ? 'composite' : mode);
+      };
+
+      document.getElementById('btnFloatOvCrop').addEventListener('click', () => openOverlayCropModal(getSelectedOverlay()));
+      document.getElementById('btnOpenOvCrop').addEventListener('click', () => openOverlayCropModal(getSelectedOverlay()));
+      document.getElementById('btnFloatOvErase').addEventListener('click', () => toggleMaskMode('overlay-erase'));
+      document.getElementById('btnOvEraseMode').addEventListener('click', () => toggleMaskMode('overlay-erase'));
+      document.getElementById('btnFloatOvRestore').addEventListener('click', () => toggleMaskMode('overlay-restore'));
+      document.getElementById('btnOvRestoreMode').addEventListener('click', () => toggleMaskMode('overlay-restore'));
+      document.getElementById('btnFloatOvMatch').addEventListener('click', () => autoMatchOverlayToBase(getSelectedOverlay()));
+      document.getElementById('btnOvAutoMatch').addEventListener('click', () => autoMatchOverlayToBase(getSelectedOverlay()));
+      document.getElementById('btnFloatOvDup').addEventListener('click', duplicateSelectedOverlay);
+      document.getElementById('btnOvDuplicate').addEventListener('click', duplicateSelectedOverlay);
+      document.getElementById('btnFloatOvDel').addEventListener('click', () => {
+        const L = getSelectedOverlay();
+        if (L) deleteOverlayLayer(L.id);
+      });
+      document.getElementById('btnOvDelete').addEventListener('click', () => {
+        const L = getSelectedOverlay();
+        if (L) deleteOverlayLayer(L.id);
+      });
+      document.getElementById('btnOvFlatten').addEventListener('click', flattenSelectedOverlay);
+      document.getElementById('btnFloatOvDone').addEventListener('click', () => {
+        state.selectedOverlayId = null;
+        if (state.activeTool === 'overlay-erase' || state.activeTool === 'overlay-restore') {
+          setActiveTool('composite');
+        } else {
+          syncOverlayUI();
+          updateOverlayGizmoUI();
+        }
+      });
+
+      const rotateOverlayStep = (delta) => {
+        const L = getSelectedOverlay();
+        if (!L) return;
+        let deg = ((L.rotation + delta + 180) % 360 + 360) % 360 - 180;
+        if (deg <= -180) deg = 180;
+        L.rotation = Math.round(deg * 2) / 2;
+        if (L.belowFilter) cachedBaseSig = '';
+        syncOverlayUI();
+        updateOverlayGizmoUI();
+        scheduleRender();
+        pushHistory('Xoay ảnh ghép');
+      };
+      document.getElementById('btnOvRotL').addEventListener('click', () => rotateOverlayStep(-90));
+      document.getElementById('btnOvRotR').addEventListener('click', () => rotateOverlayStep(90));
+      document.getElementById('btnOvFlipH').addEventListener('click', () => {
+        const L = getSelectedOverlay();
+        if (!L) return;
+        L.flipH = !L.flipH;
+        if (L.belowFilter) cachedBaseSig = '';
+        scheduleRender();
+        pushHistory('Lật ngang ảnh ghép');
+      });
+      document.getElementById('btnOvFlipV').addEventListener('click', () => {
+        const L = getSelectedOverlay();
+        if (!L) return;
+        L.flipV = !L.flipV;
+        if (L.belowFilter) cachedBaseSig = '';
+        scheduleRender();
+        pushHistory('Lật dọc ảnh ghép');
+      });
+
+      const slScale = document.getElementById('sl_ovScale');
+      slScale.addEventListener('input', () => {
+        const L = getSelectedOverlay();
+        if (!L) return;
+        const targetMax = clamp(Number(slScale.value), 5, 180) / 100;
+        const curMax = Math.max(0.01, L.w, L.h);
+        const factor = targetMax / curMax;
+        L.w = clamp(L.w * factor, 0.03, 2.2);
+        L.h = clamp(L.h * factor, 0.03, 2.2);
+        if (L.belowFilter) cachedBaseSig = '';
+        setSliderDisplay('sl_ovScale', 'val_ovScale', Math.round(targetMax * 100), '%');
+        updateOverlayGizmoUI();
+        scheduleRender();
+      });
+      slScale.addEventListener('change', () => { syncOverlayUI(); pushHistory('Đổi kích thước ảnh ghép'); });
+
+      const wireOverlaySlider = (sliderId, valId, prop, suffix, showPlus, invalidateVisual, historyLabel, syncGizmo = false) => {
+        const inp = document.getElementById(sliderId);
+        if (!inp) return;
+        inp.addEventListener('input', () => {
+          const L = getSelectedOverlay();
+          if (!L) return;
+          const v = Number(inp.value);
+          L[prop] = v;
+          if (invalidateVisual) invalidateOverlayCache(L);
+          else if (L.belowFilter) cachedBaseSig = '';
+          setSliderDisplay(sliderId, valId, v, suffix, showPlus);
+          if (syncGizmo) updateOverlayGizmoUI();
+          scheduleRender();
+        });
+        inp.addEventListener('change', () => pushHistory(historyLabel));
+      };
+
+      wireOverlaySlider('sl_ovRotate', 'val_ovRotate', 'rotation', '°', false, false, 'Xoay ảnh ghép', true);
+      wireOverlaySlider('sl_ovSkewX', 'val_ovSkewX', 'skewX', '°', false, false, 'Nghiêng ngang ảnh ghép');
+      wireOverlaySlider('sl_ovSkewY', 'val_ovSkewY', 'skewY', '°', false, false, 'Nghiêng dọc ảnh ghép');
+      wireOverlaySlider('sl_ovCorner', 'val_ovCorner', 'cornerRadius', '%', false, true, 'Bo góc ảnh ghép');
+      wireOverlaySlider('sl_ovFeather', 'val_ovFeather', 'feather', '%', false, true, 'Làm mềm viền ảnh ghép');
+      wireOverlaySlider('sl_ovEdgeBlur', 'val_ovEdgeBlur', 'edgeBlur', '%', false, false, 'Làm mịn đường nối');
+      wireOverlaySlider('sl_ovEdgeBlend', 'val_ovEdgeBlend', 'edgeColorBlend', '%', false, false, 'Hòa màu viền nền');
+      wireOverlaySlider('sl_ovOpacity', 'val_ovOpacity', 'opacity', '%', false, false, 'Độ mờ ảnh ghép');
+      wireOverlaySlider('sl_ovBgTol', 'val_ovBgTol', 'bgTolerance', '%', false, true, 'Độ tách nền ảnh ghép');
+      wireOverlaySlider('sl_ovBgSoft', 'val_ovBgSoft', 'bgSoftness', '%', false, true, 'Mềm mép tách nền');
+      wireOverlaySlider('sl_ovBright', 'val_ovBright', 'brightness', '', true, true, 'Độ sáng ảnh ghép');
+      wireOverlaySlider('sl_ovContrast', 'val_ovContrast', 'contrast', '', true, true, 'Tương phản ảnh ghép');
+      wireOverlaySlider('sl_ovSat', 'val_ovSat', 'saturation', '', true, true, 'Bão hòa ảnh ghép');
+      wireOverlaySlider('sl_ovTemp', 'val_ovTemp', 'temperature', '', true, true, 'Nhiệt độ màu ảnh ghép');
+      wireOverlaySlider('sl_ovBlur', 'val_ovBlur', 'blur', 'px', false, true, 'Làm mờ ảnh ghép');
+
+      document.getElementById('chkOvLockAspect').addEventListener('change', (e) => {
+        const L = getSelectedOverlay();
+        if (!L) return;
+        L.lockAspect = !!e.target.checked;
+        pushHistory('Khóa tỉ lệ ảnh ghép');
+      });
+
+      document.querySelectorAll('.ov-shape-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const L = getSelectedOverlay();
+          if (!L) return;
+          L.shape = btn.dataset.ovShape;
+          invalidateOverlayCache(L);
+          syncOverlayUI();
+          scheduleRender();
+          pushHistory('Đổi khung viền ảnh ghép');
+        });
+      });
+
+      document.getElementById('btnOvResetMask').addEventListener('click', () => {
+        const L = getSelectedOverlay();
+        if (!L) return;
+        L.maskStrokes = [];
+        invalidateOverlayCache(L);
+        scheduleRender();
+        pushHistory('Đặt lại vùng tẩy viền');
+        showToast('Đã đặt lại vùng tẩy đường biên');
+      });
+
+      const wireMaskBrushSlider = (sliderId, valId, prop, suffix) => {
+        const inp = document.getElementById(sliderId);
+        inp.addEventListener('input', () => {
+          const v = Number(inp.value);
+          state[prop] = v;
+          setSliderDisplay(sliderId, valId, v, suffix);
+        });
+      };
+      wireMaskBrushSlider('sl_ovBrushSize', 'val_ovBrushSize', 'overlayBrushSize', 'px');
+      wireMaskBrushSlider('sl_ovBrushSoft', 'val_ovBrushSoft', 'overlayBrushSoftness', '%');
+      wireMaskBrushSlider('sl_ovBrushStrength', 'val_ovBrushStrength', 'overlayBrushStrength', '%');
+
+      document.getElementById('selOvBlendMode').addEventListener('change', (e) => {
+        const L = getSelectedOverlay();
+        if (!L) return;
+        L.blendMode = e.target.value;
+        if (L.belowFilter) cachedBaseSig = '';
+        scheduleRender();
+        pushHistory('Chế độ hòa trộn ảnh ghép');
+      });
+
+      document.querySelectorAll('.ov-bg-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const L = getSelectedOverlay();
+          if (!L) return;
+          L.removeBg = btn.dataset.ovBg;
+          invalidateOverlayCache(L);
+          syncOverlayUI();
+          scheduleRender();
+          pushHistory('Tách nền ảnh ghép');
+        });
+      });
+
+      document.getElementById('btnOvResetColor').addEventListener('click', () => {
+        const L = getSelectedOverlay();
+        if (!L) return;
+        L.brightness = 0;
+        L.contrast = 0;
+        L.saturation = 0;
+        L.temperature = 0;
+        L.blur = 0;
+        invalidateOverlayCache(L);
+        syncOverlayUI();
+        scheduleRender();
+        pushHistory('Đặt lại màu ảnh ghép');
+      });
+
+      document.getElementById('chkOvBelowFilter').addEventListener('change', (e) => {
+        const L = getSelectedOverlay();
+        if (!L) return;
+        L.belowFilter = !!e.target.checked;
+        cachedBaseSig = '';
+        syncOverlayUI();
+        scheduleRender();
+        pushHistory('Đổi thứ tự bộ lọc lớp ảnh');
+      });
+
       // Zoom Controls
       document.getElementById('btnZoomIn').addEventListener('click', () => {
         state.zoom = clamp(state.zoom * 1.25, 0.4, 4);
@@ -2434,7 +4759,13 @@
 
       // Keyboard Shortcuts (Desktop)
       window.addEventListener('keydown', (e) => {
-        if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA') return;
+        if (e.key === 'Escape' && !el.overlayCropModal.classList.contains('hidden')) {
+          el.overlayCropModal.classList.add('hidden');
+          return;
+        }
+        const tag = document.activeElement && document.activeElement.tagName;
+        if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+
         if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
           e.preventDefault();
           if (e.shiftKey) restoreSnapshot(state.historyIndex + 1);
@@ -2442,15 +4773,43 @@
         } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') {
           e.preventDefault();
           restoreSnapshot(state.historyIndex + 1);
+        } else if (e.key === 'Escape') {
+          if (state.activeTool === 'overlay-erase' || state.activeTool === 'overlay-restore') {
+            setActiveTool('composite');
+          } else if (state.selectedOverlayId) {
+            state.selectedOverlayId = null;
+            syncOverlayUI();
+            updateOverlayGizmoUI();
+          }
+        } else if ((e.key === 'Delete' || e.key === 'Backspace') && state.selectedOverlayId) {
+          e.preventDefault();
+          deleteOverlayLayer(state.selectedOverlayId);
+        } else if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key) && state.selectedOverlayId) {
+          const L = getSelectedOverlay();
+          if (L) {
+            e.preventDefault();
+            const step = e.shiftKey ? 0.015 : 0.002;
+            if (e.key === 'ArrowLeft') L.x = clamp(L.x - step, -0.4, 1.4);
+            if (e.key === 'ArrowRight') L.x = clamp(L.x + step, -0.4, 1.4);
+            if (e.key === 'ArrowUp') L.y = clamp(L.y - step, -0.4, 1.4);
+            if (e.key === 'ArrowDown') L.y = clamp(L.y + step, -0.4, 1.4);
+            if (L.belowFilter) cachedBaseSig = '';
+            updateOverlayGizmoUI();
+            scheduleRender();
+          }
         } else if (e.key.toLowerCase() === 'v') setActiveTool('move');
         else if (e.key.toLowerCase() === 'c') setActiveTool('crop');
         else if (e.key.toLowerCase() === 'j') setActiveTool('heal');
         else if (e.key.toLowerCase() === 'r') setActiveTool('blur');
         else if (e.key.toLowerCase() === 'b') setActiveTool('brush');
         else if (e.key.toLowerCase() === 't') setActiveTool('text');
+        else if (e.key.toLowerCase() === 'l') setActiveTool('composite');
       });
 
-      window.addEventListener('resize', fitCanvasToViewport);
+      window.addEventListener('resize', () => {
+        fitCanvasToViewport();
+        if (!el.overlayCropModal.classList.contains('hidden')) renderOvCropModalStage();
+      });
     }
 
     // =========================================================================
@@ -2464,6 +4823,8 @@
     initCurveEvents();
     initSplitHandle();
     initCropDrag();
+    initOverlayGizmoEvents();
+    initOverlayCropModal();
     initCanvasInteractions();
     initEvents();
     loadImageFromSrc(DEFAULT_SAMPLE_SRC);
