@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Cosmos Lab 3D Pro</title>
+  <title>Hệ Mặt Trời</title>
 
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -228,6 +228,37 @@
       transform: scale(0.98);
     }
 
+    :fullscreen,
+    :-webkit-full-screen {
+      width: 100% !important;
+      height: 100% !important;
+      background-color: #01040b;
+    }
+    ::backdrop {
+      background-color: #01040b;
+    }
+
+    #cosmosCinemaVignette {
+      position: fixed;
+      inset: 0;
+      z-index: 6;
+      pointer-events: none;
+      opacity: 0;
+      background: radial-gradient(ellipse at center, rgba(1, 4, 11, 0) 56%, rgba(1, 4, 11, 0.52) 100%);
+      transition: opacity 0.45s ease;
+    }
+    body.hud-hidden #cosmosCinemaVignette {
+      opacity: 1;
+    }
+    #cosmosCinemaBar {
+      transition: opacity 0.35s ease, transform 0.25s ease;
+    }
+    body.hud-hidden.cosmos-cinema-idle #cosmosCinemaBar:not(:hover) {
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(-6px);
+    }
+
     /* Floating Cursor HUD during 3D Drag / Slingshot */
     #cursorHud {
       position: fixed;
@@ -282,19 +313,18 @@
     <div class="flex items-center gap-1.5 overflow-x-auto custom-scroll py-1">
       <button id="wsTabCosmos" data-ws-tab="cosmos" role="tab" aria-selected="true" class="ws-tab-btn active px-2.5 py-1 rounded-lg border border-transparent text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-800/70 flex items-center gap-1.5 whitespace-nowrap cursor-pointer">
         <i class="fa-solid fa-earth-americas text-sky-400"></i>
-        <span>Hệ Mặt Trời &amp; Sandbox 3D</span>
+        <span>Hệ Mặt Trời</span>
       </button>
       <button id="wsTabRelativity" data-ws-tab="relativity" role="tab" aria-selected="false" class="ws-tab-btn px-2.5 py-1 rounded-lg border border-transparent text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-800/70 flex items-center gap-1.5 whitespace-nowrap cursor-pointer">
         <i class="fa-solid fa-atom text-violet-400"></i>
-        <span>Vũ Trụ Tương Đối GPU</span>
-        <span class="hidden sm:inline-flex items-center px-1.5 py-0.5 rounded-full text-[9.5px] font-mono bg-violet-500/20 text-violet-200 border border-violet-400/35">6 Mô phỏng • Lý thuyết</span>
+        <span>Thuyết Tương Đối</span>
       </button>
     </div>
     <div class="flex items-center gap-1.5 shrink-0">
       <span id="wsEngineBadge" class="hidden lg:inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-slate-900/80 border border-slate-700/70 text-[10px] font-mono text-sky-300">
         Three.js N-Body 3D
       </span>
-      <button id="wsPopoutRelativityBtn" type="button" title="Mở Phòng Thí Nghiệm Vũ Trụ Tương Đối ở tab trình duyệt mới" class="px-2 py-1 rounded-lg bg-slate-800/80 hover:bg-sky-500/20 border border-slate-700/70 hover:border-sky-400/45 text-[11px] font-medium text-slate-200 hover:text-white flex items-center gap-1.5 transition cursor-pointer">
+      <button id="wsPopoutRelativityBtn" type="button" title="Mở Thuyết Tương Đối ở tab trình duyệt mới" class="px-2 py-1 rounded-lg bg-slate-800/80 hover:bg-sky-500/20 border border-slate-700/70 hover:border-sky-400/45 text-[11px] font-medium text-slate-200 hover:text-white flex items-center gap-1.5 transition cursor-pointer">
         <i class="fa-solid fa-arrow-up-right-from-square text-[10px] text-sky-400"></i>
         <span class="hidden md:inline">Tab mới</span>
       </button>
@@ -319,10 +349,23 @@
     <div id="cursorHudSub" class="text-[10px] font-mono mt-0.5"></div>
   </div>
 
-  <!-- RESTORE HUD PILL (SHOWN ONLY IN CINEMATIC MODE) -->
-  <button id="restoreHudBtn" class="hidden fixed top-3 right-3 z-50 glass-panel hover:bg-slate-800/90 px-3 py-1.5 rounded-full text-xs font-semibold text-sky-300 border border-sky-400/40 flex items-center gap-1.5 shadow-xl transition">
-    <i class="fa-solid fa-eye"></i>Hiện giao diện (H)
-  </button>
+  <!-- CINEMATIC MODE VIGNETTE & FLOATING CONTROL BAR (TAB 1) -->
+  <div id="cosmosCinemaVignette"></div>
+  <div id="cosmosCinemaBar" class="hidden fixed top-3 right-3 z-50 glass-panel px-2 py-1.5 rounded-full border border-sky-400/35 flex items-center gap-1.5 shadow-2xl">
+    <button id="cinemaAutoRotateBtn" type="button" title="Tự xoay camera điện ảnh" class="px-2.5 py-1 rounded-full text-[11px] font-medium flex items-center gap-1.5 bg-sky-500/20 text-sky-300 border border-sky-400/40 hover:text-white transition cursor-pointer">
+      <i class="fa-solid fa-rotate text-[10px]"></i><span>Tự xoay</span>
+    </button>
+    <button id="cinemaLabelsBtn" type="button" title="Hiện / Ẩn nhãn thiên thể trong chế độ điện ảnh" class="px-2.5 py-1 rounded-full text-[11px] font-medium flex items-center gap-1.5 bg-slate-800/70 text-slate-400 border border-slate-700/60 hover:text-slate-200 transition cursor-pointer">
+      <i class="fa-solid fa-tag text-[10px]"></i><span>Nhãn</span>
+    </button>
+    <button id="cinemaPlayBtn" type="button" title="Tạm dừng / Tiếp tục (Space)" class="w-7 h-7 rounded-full bg-slate-800/80 hover:bg-sky-500/25 text-sky-300 border border-slate-700/70 hover:border-sky-400/40 flex items-center justify-center transition cursor-pointer">
+      <i id="cinemaPlayIcon" class="fa-solid fa-pause text-[11px]"></i>
+    </button>
+    <div class="w-px h-4 bg-slate-700/70"></div>
+    <button id="restoreHudBtn" type="button" title="Thoát chế độ Điện ảnh & Toàn màn hình (ESC / H)" class="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-sky-500/15 hover:bg-sky-500/30 text-sky-200 hover:text-white border border-sky-400/40 flex items-center gap-1.5 transition cursor-pointer">
+      <i class="fa-solid fa-compress text-sky-300"></i><span>Thoát điện ảnh</span>
+    </button>
+  </div>
 
   <!-- TOP CONTROL BAR -->
   <header class="hud-chrome fixed top-[50px] left-2.5 right-2.5 z-30 flex items-center justify-between gap-2 pointer-events-none">
@@ -336,7 +379,7 @@
           <i class="fa-solid fa-atom text-white text-xs"></i>
         </div>
         <div class="hidden xl:block leading-tight">
-          <h1 class="font-display text-xs font-bold tracking-wide text-white">COSMOS <span class="text-sky-400 font-mono">3D PRO</span></h1>
+          <h1 class="font-display text-xs font-bold tracking-wide text-white">Space <span class="text-sky-400 font-mono">Simulation</span></h1>
           <div class="flex items-center gap-1.5 text-[9.5px] font-mono text-slate-400 tabular-nums">
             <span id="simClockLabel" class="text-sky-300/90">Năm 0.00</span>
             <span>•</span>
@@ -402,8 +445,8 @@
         <button id="toggleHZBtn" title="Vùng Sống Được (Habitable Zone)" class="vis-btn px-2 py-1.5 rounded-lg text-[11px] font-medium flex items-center gap-1 bg-sky-500/20 text-sky-300 border border-sky-400/40 transition">
           <i class="fa-solid fa-seedling"></i><span class="hidden 2xl:inline">Vùng sống</span>
         </button>
-        <button id="toggleHudBtn" title="Chế độ Điện ảnh: Ẩn toàn bộ HUD (Phím H)" class="px-2 py-1.5 rounded-lg text-[11px] font-medium bg-slate-800/70 text-slate-300 border border-slate-700/60 hover:text-white transition">
-          <i class="fa-solid fa-eye-slash"></i>
+        <button id="toggleHudBtn" title="Chế độ Điện ảnh toàn màn hình: Ẩn giao diện & tự xoay camera (Phím H)" class="px-2.5 py-1.5 rounded-lg text-[11px] font-semibold flex items-center gap-1.5 bg-gradient-to-r from-sky-500/20 to-indigo-500/25 hover:from-sky-500/35 hover:to-indigo-500/40 text-sky-200 hover:text-white border border-sky-400/45 shadow-sm transition shrink-0">
+          <i class="fa-solid fa-film text-sky-300"></i><span>Điện ảnh</span>
         </button>
         <button id="toggleSoundBtn" title="Bật/Tắt âm thanh vật lý" class="px-2 py-1.5 rounded-lg text-[11px] font-medium bg-emerald-500/15 text-emerald-300 border border-emerald-400/35 transition">
           <i id="soundIcon" class="fa-solid fa-volume-high"></i>
@@ -722,7 +765,7 @@
 
   <!-- TAB 2: PHÒNG THÍ NGHIỆM VŨ TRỤ TƯƠNG ĐỐI GPU (WEBGL2 RAYMARCHING + LÝ THUYẾT) -->
   <div id="tabRelativityView" class="hidden fixed top-[42px] left-0 right-0 bottom-0 z-20 bg-[#04060d]">
-    <iframe id="relativityFrame" title="Phòng Thí Nghiệm Vũ Trụ Tương Đối GPU" class="w-full h-full border-0 block bg-[#04060d]"></iframe>
+    <iframe id="relativityFrame" title="Phòng Thí Nghiệm Vũ Trụ Tương Đối GPU" allow="fullscreen" allowfullscreen class="w-full h-full border-0 block bg-[#04060d]"></iframe>
   </div>
 
   <script>
@@ -3269,6 +3312,55 @@
         hudHidden: false
       };
 
+      let cinemaAutoRotate = true;
+      let cinemaShowLabels = false;
+      let cinemaIdleTimer = null;
+      let cinemaEnteredFullscreen = false;
+      let lastCinemaExitAt = 0;
+
+      function getFullscreenElement() {
+        return document.fullscreenElement
+          || document.webkitFullscreenElement
+          || document.mozFullScreenElement
+          || document.msFullscreenElement
+          || null;
+      }
+
+      function requestElementFullscreen(el) {
+        if (!el) return Promise.resolve(false);
+        if (getFullscreenElement()) return Promise.resolve(true);
+        const fn = el.requestFullscreen
+          || el.webkitRequestFullscreen
+          || el.mozRequestFullScreen
+          || el.msRequestFullscreen;
+        if (typeof fn !== 'function') return Promise.resolve(false);
+        try {
+          const res = fn.call(el);
+          if (res && typeof res.then === 'function') {
+            return res.then(() => true).catch(() => false);
+          }
+          return Promise.resolve(true);
+        } catch (err) {
+          return Promise.resolve(false);
+        }
+      }
+
+      function exitDocumentFullscreen() {
+        if (!getFullscreenElement()) return Promise.resolve();
+        const fn = document.exitFullscreen
+          || document.webkitExitFullscreen
+          || document.mozCancelFullScreen
+          || document.msExitFullscreen;
+        if (typeof fn !== 'function') return Promise.resolve();
+        try {
+          const res = fn.call(document);
+          if (res && typeof res.then === 'function') {
+            return res.catch(() => {});
+          }
+        } catch (err) {}
+        return Promise.resolve();
+      }
+
       let controlMode = 'orbit';
       let dropMode = 'orbit';
       let activeVaultCat = 'all';
@@ -5161,13 +5253,14 @@
 
       window.addEventListener('keydown', (e) => {
         if (!isCosmosTabActive) return;
-        if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') return;
         if (e.code === 'Space') { e.preventDefault(); togglePause(); }
         else if (e.key === '+' || e.key === '=') zoomCameraByFactor(0.72);
         else if (e.key === '-' || e.key === '_') zoomCameraByFactor(1.38);
         else if (e.key === 'h' || e.key === 'H') toggleHudVisibility();
         else if (e.key === 'Escape') {
-          if (visuals.hudHidden) { toggleHudVisibility(); return; }
+          if (visuals.hudHidden) { setCosmosCinemaMode(false, { syncFullscreen: true }); return; }
+          if (performance.now() - lastCinemaExitAt < 300) return;
           camState.followId = null;
           camState.hasLastFollowPos = false;
           updateFollowBanner();
@@ -5290,7 +5383,8 @@
       const toBodyVec = new THREE.Vector3();
 
       function update3DLabels() {
-        if (!visuals.labels || visuals.hudHidden) {
+        const showLabelsNow = visuals.hudHidden ? cinemaShowLabels : visuals.labels;
+        if (!showLabelsNow) {
           labelsLayer.style.display = 'none';
           return;
         }
@@ -5673,12 +5767,96 @@
       function togglePause() {
         isPaused = !isPaused;
         document.getElementById('playPauseIcon').className = isPaused ? 'fa-solid fa-play text-xs' : 'fa-solid fa-pause text-xs';
+        const cinemaIcon = document.getElementById('cinemaPlayIcon');
+        if (cinemaIcon) {
+          cinemaIcon.className = isPaused ? 'fa-solid fa-play text-[11px]' : 'fa-solid fa-pause text-[11px]';
+        }
+      }
+
+      function clearCosmosCinemaIdle() {
+        if (cinemaIdleTimer) {
+          clearTimeout(cinemaIdleTimer);
+          cinemaIdleTimer = null;
+        }
+        document.body.classList.remove('cosmos-cinema-idle');
+      }
+
+      function scheduleCosmosCinemaIdle() {
+        clearCosmosCinemaIdle();
+        if (!isCosmosTabActive || !visuals.hudHidden) return;
+        cinemaIdleTimer = setTimeout(() => {
+          if (isCosmosTabActive && visuals.hudHidden) {
+            document.body.classList.add('cosmos-cinema-idle');
+          }
+        }, 3200);
+      }
+
+      function updateCosmosCinemaUI() {
+        const autoBtn = document.getElementById('cinemaAutoRotateBtn');
+        if (autoBtn) {
+          autoBtn.className = cinemaAutoRotate
+            ? 'px-2.5 py-1 rounded-full text-[11px] font-medium flex items-center gap-1.5 bg-sky-500/20 text-sky-300 border border-sky-400/40 hover:text-white transition cursor-pointer'
+            : 'px-2.5 py-1 rounded-full text-[11px] font-medium flex items-center gap-1.5 bg-slate-800/70 text-slate-400 border border-slate-700/60 hover:text-slate-200 transition cursor-pointer';
+        }
+        const lblBtn = document.getElementById('cinemaLabelsBtn');
+        if (lblBtn) {
+          lblBtn.className = cinemaShowLabels
+            ? 'px-2.5 py-1 rounded-full text-[11px] font-medium flex items-center gap-1.5 bg-sky-500/20 text-sky-300 border border-sky-400/40 hover:text-white transition cursor-pointer'
+            : 'px-2.5 py-1 rounded-full text-[11px] font-medium flex items-center gap-1.5 bg-slate-800/70 text-slate-400 border border-slate-700/60 hover:text-slate-200 transition cursor-pointer';
+        }
+        const cinemaIcon = document.getElementById('cinemaPlayIcon');
+        if (cinemaIcon) {
+          cinemaIcon.className = isPaused ? 'fa-solid fa-play text-[11px]' : 'fa-solid fa-pause text-[11px]';
+        }
+        if (controls && 'autoRotate' in controls) {
+          controls.autoRotate = Boolean(visuals.hudHidden && cinemaAutoRotate);
+          controls.autoRotateSpeed = 0.6;
+        }
+      }
+
+      function setCosmosCinemaMode(active, opts = {}) {
+        const next = Boolean(active);
+        const syncFullscreen = opts.syncFullscreen !== false;
+        visuals.hudHidden = next;
+        document.body.classList.toggle('hud-hidden', next);
+        const cinemaBar = document.getElementById('cosmosCinemaBar');
+        if (cinemaBar) cinemaBar.classList.toggle('hidden', !next);
+
+        if (next) {
+          resetAllInteractionState();
+          cinemaAutoRotate = true;
+          cinemaShowLabels = false;
+          cinemaEnteredFullscreen = Boolean(getFullscreenElement());
+          updateCosmosCinemaUI();
+          scheduleCosmosCinemaIdle();
+          if (syncFullscreen) {
+            requestElementFullscreen(document.documentElement).then((entered) => {
+              if (entered && isCosmosTabActive && visuals.hudHidden) {
+                cinemaEnteredFullscreen = true;
+              }
+            });
+          }
+        } else {
+          clearCosmosCinemaIdle();
+          cinemaShowLabels = false;
+          cinemaEnteredFullscreen = false;
+          lastCinemaExitAt = performance.now();
+          updateCosmosCinemaUI();
+          if (syncFullscreen && getFullscreenElement()) {
+            exitDocumentFullscreen();
+          }
+        }
+
+        requestAnimationFrame(() => {
+          if (isCosmosTabActive) syncRendererSize();
+        });
+        setTimeout(() => {
+          if (isCosmosTabActive) syncRendererSize();
+        }, 120);
       }
 
       function toggleHudVisibility() {
-        visuals.hudHidden = !visuals.hudHidden;
-        document.body.classList.toggle('hud-hidden', visuals.hudHidden);
-        document.getElementById('restoreHudBtn').classList.toggle('hidden', !visuals.hudHidden);
+        setCosmosCinemaMode(!visuals.hudHidden, { syncFullscreen: true });
       }
 
       function setVisual(key, state) {
@@ -5788,8 +5966,62 @@
         document.getElementById('toggleBeltsBtn').addEventListener('click', () => setVisual('belts', !visuals.belts));
         document.getElementById('toggleLabelsBtn').addEventListener('click', () => setVisual('labels', !visuals.labels));
         document.getElementById('toggleHZBtn').addEventListener('click', () => setVisual('habitableZone', !visuals.habitableZone));
-        document.getElementById('toggleHudBtn').addEventListener('click', toggleHudVisibility);
-        document.getElementById('restoreHudBtn').addEventListener('click', toggleHudVisibility);
+        document.getElementById('toggleHudBtn').addEventListener('click', () => setCosmosCinemaMode(!visuals.hudHidden, { syncFullscreen: true }));
+        document.getElementById('restoreHudBtn').addEventListener('click', () => setCosmosCinemaMode(false, { syncFullscreen: true }));
+
+        const cinemaAutoBtn = document.getElementById('cinemaAutoRotateBtn');
+        if (cinemaAutoBtn) {
+          cinemaAutoBtn.addEventListener('click', () => {
+            cinemaAutoRotate = !cinemaAutoRotate;
+            updateCosmosCinemaUI();
+            scheduleCosmosCinemaIdle();
+          });
+        }
+
+        const cinemaLabelsBtn = document.getElementById('cinemaLabelsBtn');
+        if (cinemaLabelsBtn) {
+          cinemaLabelsBtn.addEventListener('click', () => {
+            cinemaShowLabels = !cinemaShowLabels;
+            updateCosmosCinemaUI();
+            scheduleCosmosCinemaIdle();
+          });
+        }
+
+        const cinemaPlayBtn = document.getElementById('cinemaPlayBtn');
+        if (cinemaPlayBtn) {
+          cinemaPlayBtn.addEventListener('click', () => {
+            togglePause();
+            scheduleCosmosCinemaIdle();
+          });
+        }
+
+        const wakeCosmosCinemaBar = () => {
+          if (isCosmosTabActive && visuals.hudHidden) {
+            scheduleCosmosCinemaIdle();
+          }
+        };
+        window.addEventListener('pointermove', wakeCosmosCinemaBar, { passive: true });
+        window.addEventListener('pointerdown', wakeCosmosCinemaBar, { passive: true });
+        window.addEventListener('touchstart', wakeCosmosCinemaBar, { passive: true });
+
+        const onCosmosFullscreenChange = () => {
+          if (!isCosmosTabActive) return;
+          const fsEl = getFullscreenElement();
+          if (fsEl) {
+            if (visuals.hudHidden) cinemaEnteredFullscreen = true;
+          } else if (visuals.hudHidden && cinemaEnteredFullscreen) {
+            setCosmosCinemaMode(false, { syncFullscreen: false });
+          }
+          syncRendererSize();
+          requestAnimationFrame(() => {
+            if (isCosmosTabActive) syncRendererSize();
+          });
+          setTimeout(() => {
+            if (isCosmosTabActive) syncRendererSize();
+          }, 120);
+        };
+        document.addEventListener('fullscreenchange', onCosmosFullscreenChange);
+        document.addEventListener('webkitfullscreenchange', onCosmosFullscreenChange);
 
         document.getElementById('toggleSoundBtn').addEventListener('click', () => {
           SoundFX.enabled = !SoundFX.enabled;
@@ -6124,6 +6356,9 @@
             lastFrameTime = performance.now();
             if (!cosmosRafId) cosmosRafId = requestAnimationFrame(animate);
           }
+        },
+        setCinemaMode(active, opts) {
+          setCosmosCinemaMode(active, opts);
         }
       };
 
@@ -6153,7 +6388,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Phòng Thí Nghiệm Vũ Trụ Tương Đối</title>
+<title>Thuyết Tương Đối</title>
 <style>
   :root {
     --bg-deep: #04060d;
@@ -6733,6 +6968,17 @@
     transition: opacity 0.3s ease;
   }
 
+  :fullscreen,
+  :-webkit-full-screen {
+    width: 100% !important;
+    height: 100% !important;
+    background-color: #04060d;
+  }
+
+  ::backdrop {
+    background-color: #04060d;
+  }
+
   /* Cinema Mode (Hide HUD) */
   body.cinema-mode .top-bar,
   body.cinema-mode .side-panel,
@@ -6749,10 +6995,17 @@
     right: 14px;
     z-index: 30;
     display: none;
+    transition: opacity 0.35s ease, transform 0.25s ease;
   }
 
   body.cinema-mode .cinema-exit-btn {
     display: inline-flex;
+  }
+
+  body.cinema-mode.cinema-idle .cinema-exit-btn:not(:hover) {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-6px);
   }
 
   /* Toast Notification */
@@ -7078,7 +7331,7 @@
   <div class="brand-pill glass">
     <div class="brand-orb"></div>
     <div>
-      <div class="brand-title">Vũ Trụ Tương Đối GPU</div>
+      <div class="brand-title">Thuyết Tương Đối</div>
       <div class="brand-sub">Einstein • Hawking • WebGL2</div>
     </div>
   </div>
@@ -7096,11 +7349,11 @@
     <button class="icon-btn" id="btnPause" title="Tạm dừng / Tiếp tục (Phím Space)">⏸ Tạm dừng</button>
     <button class="icon-btn" id="btnAudio" title="Âm thanh nền vũ trụ">🔇 Âm thanh</button>
     <button class="icon-btn" id="btnSnapshot" title="Chụp ảnh GPU chất lượng cao">📷 Chụp</button>
-    <button class="icon-btn" id="btnCinema" title="Ẩn giao diện xem toàn màn hình">🎬 Điện ảnh</button>
+    <button class="icon-btn" id="btnCinema" title="Chế độ Điện ảnh toàn màn hình (Phím H)">🎬 Điện ảnh</button>
   </div>
 </header>
 
-<button class="icon-btn glass cinema-exit-btn" id="btnExitCinema">✕ Hiện giao diện</button>
+<button class="icon-btn glass cinema-exit-btn" id="btnExitCinema" title="Thoát chế độ Điện ảnh & Toàn màn hình (ESC / H)">✕ Thoát điện ảnh</button>
 
 <!-- Bottom Left GPU Badge -->
 <aside class="gpu-badge glass">
@@ -9407,22 +9660,146 @@
     }
   });
 
-  function setCinemaMode(active) {
-    document.body.classList.toggle('cinema-mode', active);
-    if (window.parent && window.parent !== window) {
-      window.parent.postMessage({ type: 'RELATIVITY_CINEMA', active }, '*');
+  let cinemaActive = false;
+  let cinemaEnteredFullscreen = false;
+  let cinemaIdleTimer = null;
+
+  function getFullscreenElement() {
+    return document.fullscreenElement
+      || document.webkitFullscreenElement
+      || document.mozFullScreenElement
+      || document.msFullscreenElement
+      || null;
+  }
+
+  function requestElementFullscreen(el) {
+    if (!el) return Promise.resolve(false);
+    if (getFullscreenElement()) return Promise.resolve(true);
+    const fn = el.requestFullscreen
+      || el.webkitRequestFullscreen
+      || el.mozRequestFullScreen
+      || el.msRequestFullscreen;
+    if (typeof fn !== 'function') return Promise.resolve(false);
+    try {
+      const res = fn.call(el);
+      if (res && typeof res.then === 'function') {
+        return res.then(() => true).catch(() => false);
+      }
+      return Promise.resolve(true);
+    } catch (err) {
+      return Promise.resolve(false);
     }
   }
 
-  document.getElementById('btnCinema').addEventListener('click', () => setCinemaMode(true));
-  document.getElementById('btnExitCinema').addEventListener('click', () => setCinemaMode(false));
+  function exitDocumentFullscreen() {
+    if (!getFullscreenElement()) return Promise.resolve();
+    const fn = document.exitFullscreen
+      || document.webkitExitFullscreen
+      || document.mozCancelFullScreen
+      || document.msExitFullscreen;
+    if (typeof fn !== 'function') return Promise.resolve();
+    try {
+      const res = fn.call(document);
+      if (res && typeof res.then === 'function') {
+        return res.catch(() => {});
+      }
+    } catch (err) {}
+    return Promise.resolve();
+  }
+
+  function clearCinemaIdle() {
+    if (cinemaIdleTimer) {
+      clearTimeout(cinemaIdleTimer);
+      cinemaIdleTimer = null;
+    }
+    document.body.classList.remove('cinema-idle');
+  }
+
+  function scheduleCinemaIdle() {
+    clearCinemaIdle();
+    if (!cinemaActive) return;
+    cinemaIdleTimer = setTimeout(() => {
+      if (cinemaActive) {
+        document.body.classList.add('cinema-idle');
+      }
+    }, 3200);
+  }
+
+  function setCinemaMode(active, opts = {}) {
+    const next = Boolean(active);
+    const syncFullscreen = opts.syncFullscreen !== false;
+    if (next === cinemaActive && !opts.force) return;
+
+    cinemaActive = next;
+    document.body.classList.toggle('cinema-mode', next);
+
+    if (next) {
+      cinemaEnteredFullscreen = Boolean(getFullscreenElement());
+      scheduleCinemaIdle();
+      if (syncFullscreen) {
+        requestElementFullscreen(document.documentElement).then(entered => {
+          if (entered && cinemaActive) {
+            cinemaEnteredFullscreen = true;
+            return;
+          }
+          if (!entered && cinemaActive) {
+            try {
+              if (window.parent && window.parent !== window && typeof window.parent.__requestWorkspaceFullscreen === 'function') {
+                window.parent.__requestWorkspaceFullscreen();
+              }
+            } catch (err) {}
+          }
+        });
+      }
+    } else {
+      cinemaEnteredFullscreen = false;
+      clearCinemaIdle();
+      if (syncFullscreen && getFullscreenElement()) {
+        exitDocumentFullscreen();
+      }
+    }
+
+    if (window.parent && window.parent !== window) {
+      window.parent.postMessage({ type: 'RELATIVITY_CINEMA', active: next }, '*');
+    }
+
+    requestAnimationFrame(updateCanvasSize);
+    setTimeout(updateCanvasSize, 120);
+  }
+
+  document.getElementById('btnCinema').addEventListener('click', () => setCinemaMode(true, { syncFullscreen: true }));
+  document.getElementById('btnExitCinema').addEventListener('click', () => setCinemaMode(false, { syncFullscreen: true }));
+
+  function wakeCinemaControls() {
+    if (cinemaActive) scheduleCinemaIdle();
+  }
+  window.addEventListener('pointermove', wakeCinemaControls, { passive: true });
+  window.addEventListener('pointerdown', wakeCinemaControls, { passive: true });
+  window.addEventListener('touchstart', wakeCinemaControls, { passive: true });
+
+  function onRelativityFullscreenChange() {
+    const fsEl = getFullscreenElement();
+    if (fsEl) {
+      if (cinemaActive) cinemaEnteredFullscreen = true;
+    } else if (cinemaActive && cinemaEnteredFullscreen) {
+      setCinemaMode(false, { syncFullscreen: false });
+    }
+    updateCanvasSize();
+    requestAnimationFrame(updateCanvasSize);
+    setTimeout(updateCanvasSize, 120);
+  }
+  document.addEventListener('fullscreenchange', onRelativityFullscreenChange);
+  document.addEventListener('webkitfullscreenchange', onRelativityFullscreenChange);
 
   window.addEventListener('keydown', e => {
-    if (e.code === 'Space' && e.target.tagName !== 'INPUT') {
+    if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA')) return;
+    if (e.code === 'Space') {
       e.preventDefault();
       document.getElementById('btnPause').click();
+    } else if (e.key === 'h' || e.key === 'H') {
+      setCinemaMode(!cinemaActive, { syncFullscreen: true });
     } else if (e.code === 'Escape') {
-      setCinemaMode(false);
+      if (cinemaActive) setCinemaMode(false, { syncFullscreen: true });
     }
   });
 
@@ -9669,6 +10046,8 @@
     } else if (data.type === 'OPEN_THEORY_TAB') {
       const theoryTabBtn = document.querySelector('.panel-tab[data-tab="theory"]');
       if (theoryTabBtn) theoryTabBtn.click();
+    } else if (data.type === 'SET_CINEMA') {
+      setCinemaMode(Boolean(data.active), { syncFullscreen: Boolean(data.syncFullscreen) });
     }
   });
 
@@ -9697,6 +10076,52 @@
       let frameMounted = false;
       let frameLoaded = false;
       let popoutUrl = null;
+      let parentObservedRelativityFullscreen = false;
+
+      function getFullscreenElement() {
+        return document.fullscreenElement
+          || document.webkitFullscreenElement
+          || document.mozFullScreenElement
+          || document.msFullscreenElement
+          || null;
+      }
+
+      function requestElementFullscreen(el) {
+        if (!el) return Promise.resolve(false);
+        if (getFullscreenElement()) return Promise.resolve(true);
+        const fn = el.requestFullscreen
+          || el.webkitRequestFullscreen
+          || el.mozRequestFullScreen
+          || el.msRequestFullscreen;
+        if (typeof fn !== 'function') return Promise.resolve(false);
+        try {
+          const res = fn.call(el);
+          if (res && typeof res.then === 'function') {
+            return res.then(() => true).catch(() => false);
+          }
+          return Promise.resolve(true);
+        } catch (err) {
+          return Promise.resolve(false);
+        }
+      }
+
+      function exitDocumentFullscreen() {
+        if (!getFullscreenElement()) return Promise.resolve();
+        const fn = document.exitFullscreen
+          || document.webkitExitFullscreen
+          || document.mozCancelFullScreen
+          || document.msExitFullscreen;
+        if (typeof fn !== 'function') return Promise.resolve();
+        try {
+          const res = fn.call(document);
+          if (res && typeof res.then === 'function') {
+            return res.catch(() => {});
+          }
+        } catch (err) {}
+        return Promise.resolve();
+      }
+
+      window.__requestWorkspaceFullscreen = () => requestElementFullscreen(document.documentElement);
 
       function getRelativityHtml() {
         return sourceEl.textContent.replace(/<\\\/script/gi, '</script').trim();
@@ -9729,15 +10154,19 @@
           engineBadge.textContent = isCosmos ? 'Three.js N-Body 3D' : 'WebGL2 Raymarching HDR';
         }
         document.title = isCosmos
-          ? 'Cosmos Lab 3D Pro — Vũ Trụ & Tương Đối GPU'
-          : 'Vũ Trụ Tương Đối GPU — Lý Thuyết & Mô Phỏng';
+          ? 'Hệ Mặt Trời'
+          : 'Thuyết Tương Đối';
 
         if (window.__cosmosTabController) {
           window.__cosmosTabController.setActive(isCosmos);
         }
 
         if (!isCosmos) {
-          document.body.classList.remove('hud-hidden');
+          if (window.__cosmosTabController && typeof window.__cosmosTabController.setCinemaMode === 'function') {
+            window.__cosmosTabController.setCinemaMode(false, { syncFullscreen: false });
+          }
+          document.body.classList.remove('hud-hidden', 'cosmos-cinema-idle');
+          if (getFullscreenElement()) exitDocumentFullscreen();
           if (!frameMounted) {
             frameMounted = true;
             frame.srcdoc = getRelativityHtml();
@@ -9747,7 +10176,10 @@
           }
         } else {
           document.body.classList.remove('relativity-cinema');
+          parentObservedRelativityFullscreen = false;
           postToRelativity({ type: 'SET_ACTIVE', active: false });
+          postToRelativity({ type: 'SET_CINEMA', active: false, syncFullscreen: false });
+          if (getFullscreenElement()) exitDocumentFullscreen();
         }
       }
 
@@ -9757,9 +10189,30 @@
       window.addEventListener('message', (e) => {
         if (e.source !== frame.contentWindow) return;
         if (e.data && e.data.type === 'RELATIVITY_CINEMA') {
-          document.body.classList.toggle('relativity-cinema', Boolean(e.data.active));
+          const active = Boolean(e.data.active);
+          document.body.classList.toggle('relativity-cinema', active);
+          if (!active) {
+            parentObservedRelativityFullscreen = false;
+            if (getFullscreenElement()) exitDocumentFullscreen();
+          }
         }
       });
+
+      const onParentFullscreenChange = () => {
+        if (activeTab !== 'relativity') return;
+        const fsEl = getFullscreenElement();
+        if (fsEl) {
+          if (document.body.classList.contains('relativity-cinema')) {
+            parentObservedRelativityFullscreen = true;
+          }
+        } else if (document.body.classList.contains('relativity-cinema') && parentObservedRelativityFullscreen) {
+          parentObservedRelativityFullscreen = false;
+          document.body.classList.remove('relativity-cinema');
+          postToRelativity({ type: 'SET_CINEMA', active: false, syncFullscreen: false });
+        }
+      };
+      document.addEventListener('fullscreenchange', onParentFullscreenChange);
+      document.addEventListener('webkitfullscreenchange', onParentFullscreenChange);
 
       if (popoutBtn) {
         popoutBtn.addEventListener('click', () => {

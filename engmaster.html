@@ -6,6 +6,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="theme-color" content="#ffffff" />
+  <meta name="referrer" content="no-referrer" />
   <title>English Master</title>
   <script>
     (function () {
@@ -827,34 +828,257 @@
       }
     }
 
+    function normLang(l) {
+      return String(l || '').toLowerCase().replace(/_/g, '-');
+    }
+
+    // Filter out macOS novelty, Eloquence, and legacy robotic voices that often fail or sound distorted.
+    const EXCLUDED_VOICE_RE = /\b(albert|bad news|bahh|bells|boing|bubbles|cellos|eddy|flo|fred|good news|grandma|grandpa|jester|junior|kathy|organ|princess|ralph|reed|rocko|sandy|shelley|superstar|trinoids|whisper|wobble|zarvox)\b/i;
+    const PREFERRED_VOICES = {
+      'en-us': ['samantha', 'ava', 'allison', 'alex', 'nicky', 'zoe', 'siri', 'microsoft aria', 'microsoft jenny', 'microsoft guy', 'microsoft zira', 'microsoft david', 'google us english'],
+      'en-gb': ['daniel', 'serena', 'oliver', 'kate', 'martha', 'arthur', 'stephanie', 'microsoft sonia', 'microsoft libby', 'microsoft ryan', 'microsoft hazel', 'microsoft george', 'google uk english female', 'google uk english male']
+    };
+
     function pickVoice(accent) {
       if (!cachedVoices.length) refreshVoices();
-      const target = (accent || 'en-US').toLowerCase();
-      const exact = cachedVoices.find(v => (v.lang || '').toLowerCase() === target);
-      if (exact) return exact;
-      const normTarget = target.replace('_', '-');
-      const prefix = cachedVoices.find(v => (v.lang || '').toLowerCase().replace('_', '-').startsWith(normTarget));
-      if (prefix) return prefix;
-      return cachedVoices.find(v => (v.lang || '').toLowerCase().startsWith('en')) || null;
+      const usable = cachedVoices.filter(v => v && !EXCLUDED_VOICE_RE.test(v.name || ''));
+      if (!usable.length) return null;
+
+      const target = normLang(accent || 'en-US');
+      let candidates = usable.filter(v => {
+        const vl = normLang(v.lang);
+        return vl === target || vl.startsWith(target + '-');
+      });
+      if (!candidates.length) {
+        candidates = usable.filter(v => normLang(v.lang).startsWith('en'));
+      }
+      if (!candidates.length) return null;
+
+      const prefs = PREFERRED_VOICES[target] || PREFERRED_VOICES['en-us'];
+      let best = candidates[0];
+      let bestScore = -1;
+      for (const v of candidates) {
+        let score = 0;
+        const vl = normLang(v.lang);
+        if (vl === target) score += 1000;
+        else if (vl.startsWith(target + '-')) score += 500;
+        // Prefer local OS voices because cloud Google voices often fail silently on non-Chrome Chromium forks.
+        if (v.localService === true) score += 350;
+        const nameLower = String(v.name || '').toLowerCase();
+        const prefIdx = prefs.findIndex(p => nameLower.includes(p));
+        if (prefIdx !== -1) score += 220 - prefIdx * 10;
+        if (/\b(enhanced|premium|natural)\b/i.test(v.name || '')) score += 25;
+        if (v.default === true) score += 30;
+        if (score > bestScore) {
+          bestScore = score;
+          best = v;
+        }
+      }
+      return best;
+    }
+
+    let fallbackAudio = null;
+    let activeUtterance = null;
+    let speechReqId = 0;
+    let speakDelayTimer = null;
+    let speakWatchdogTimer = null;
+    let speechEngineBroken = false;
+
+    function stopFallbackAudio() {
+      if (!fallbackAudio) return;
+      try {
+        fallbackAudio.onerror = null;
+        fallbackAudio.onended = null;
+        fallbackAudio.pause();
+        fallbackAudio.currentTime = 0;
+      } catch (e) {}
+    }
+
+    function buildFallbackAudioUrls(text, accent) {
+      const q = text.replace(/\s+/g, ' ').trim().slice(0, 190);
+      const tl = accent === 'en-GB' ? 'en-GB' : 'en-US';
+      const enc = encodeURIComponent(q);
+      const urls = [
+        `https://translate.googleapis.com/translate_tts?client=gtx&ie=UTF-8&tl=${tl}&q=${enc}`,
+        `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=${tl}&q=${enc}`
+      ];
+      if (q.length <= 40 && !/[.!?]$/.test(q)) {
+        urls.push(`https://dict.youdao.com/dictvoice?audio=${enc}&type=${accent === 'en-GB' ? 1 : 2}`);
+      }
+      return urls;
+    }
+
+    function playFallbackAudio(text, accent, reqId) {
+      if (typeof Audio === 'undefined') {
+        showToast('Không phát được âm thanh. Hãy kiểm tra loa hoặc kết nối mạng.');
+        return;
+      }
+      if (!fallbackAudio) {
+        fallbackAudio = new Audio();
+        fallbackAudio.preload = 'auto';
+      }
+      const urls = buildFallbackAudioUrls(text, accent);
+      let idx = 0;
+
+      function tryNext() {
+        if (reqId !== speechReqId) return;
+        if (idx >= urls.length) {
+          showToast('Không phát được âm thanh. Hãy kiểm tra loa hoặc kết nối mạng.');
+          return;
+        }
+        const url = urls[idx++];
+        let advanced = false;
+        const advance = () => {
+          if (advanced || reqId !== speechReqId) return;
+          advanced = true;
+          tryNext();
+        };
+
+        fallbackAudio.onerror = advance;
+        fallbackAudio.onended = () => {
+          if (reqId !== speechReqId) return;
+          fallbackAudio.onerror = null;
+        };
+        fallbackAudio.src = url;
+        try {
+          fallbackAudio.defaultPlaybackRate = 0.95;
+          fallbackAudio.playbackRate = 0.95;
+        } catch (e) {}
+
+        try {
+          const p = fallbackAudio.play();
+          if (p && typeof p.catch === 'function') {
+            p.catch(err => {
+              if (reqId !== speechReqId) return;
+              if (err && err.name === 'NotAllowedError') {
+                showToast('Trình duyệt đang chặn tự phát âm thanh. Hãy bấm nút 🔊 để nghe.');
+                return;
+              }
+              advance();
+            });
+          }
+        } catch (e) {
+          advance();
+        }
+      }
+
+      tryNext();
     }
 
     function speakWord(text) {
-      if (!('speechSynthesis' in window)) {
-        showToast('Trình duyệt không hỗ trợ phát âm tự động.');
+      const cleanText = String(text || '').replace(/\s+/g, ' ').trim();
+      if (!cleanText) return;
+      const reqId = ++speechReqId;
+      if (speakDelayTimer) { clearTimeout(speakDelayTimer); speakDelayTimer = null; }
+      if (speakWatchdogTimer) { clearTimeout(speakWatchdogTimer); speakWatchdogTimer = null; }
+      stopFallbackAudio();
+
+      if (!('speechSynthesis' in window) || typeof SpeechSynthesisUtterance === 'undefined' || speechEngineBroken) {
+        playFallbackAudio(cleanText, state.accent, reqId);
         return;
       }
-      try {
-        window.speechSynthesis.cancel();
-        if (typeof window.speechSynthesis.resume === 'function') {
-          window.speechSynthesis.resume();
+
+      function attemptWebSpeech(useDefaultVoice) {
+        if (reqId !== speechReqId) return;
+        const synth = window.speechSynthesis;
+        let needsCancel = false;
+        try {
+          // Only cancel when active/queued; calling cancel() + speak() synchronously wedges Chromium on macOS.
+          needsCancel = Boolean(synth.speaking || synth.pending);
+          if (needsCancel) synth.cancel();
+        } catch (e) {}
+
+        function runSpeak() {
+          if (reqId !== speechReqId) return;
+          try {
+            if (synth.paused && typeof synth.resume === 'function') {
+              synth.resume();
+            }
+          } catch (e) {}
+
+          const voice = useDefaultVoice ? null : pickVoice(state.accent);
+          let started = false;
+          let settled = false;
+          let utt = null;
+
+          function handleFailure() {
+            if (settled || reqId !== speechReqId) return;
+            settled = true;
+            if (speakWatchdogTimer) { clearTimeout(speakWatchdogTimer); speakWatchdogTimer = null; }
+            if (activeUtterance === utt) activeUtterance = null;
+            if (!useDefaultVoice && voice) {
+              attemptWebSpeech(true);
+            } else {
+              try { synth.cancel(); } catch (e) {}
+              speechEngineBroken = true;
+              playFallbackAudio(cleanText, state.accent, reqId);
+            }
+          }
+
+          try {
+            utt = new SpeechSynthesisUtterance(cleanText);
+          } catch (e) {
+            speechEngineBroken = true;
+            playFallbackAudio(cleanText, state.accent, reqId);
+            return;
+          }
+
+          activeUtterance = utt;
+          if (voice) {
+            utt.voice = voice;
+            utt.lang = voice.lang || state.accent;
+          } else {
+            utt.lang = state.accent;
+          }
+          utt.rate = 0.93;
+          utt.pitch = 1;
+          utt.volume = 1;
+
+          utt.onstart = () => {
+            if (reqId !== speechReqId) return;
+            started = true;
+            if (speakWatchdogTimer) { clearTimeout(speakWatchdogTimer); speakWatchdogTimer = null; }
+          };
+          utt.onend = () => {
+            if (reqId !== speechReqId) return;
+            started = true;
+            settled = true;
+            if (speakWatchdogTimer) { clearTimeout(speakWatchdogTimer); speakWatchdogTimer = null; }
+            if (activeUtterance === utt) activeUtterance = null;
+          };
+          utt.onerror = (ev) => {
+            if (reqId !== speechReqId) return;
+            const code = ev && ev.error;
+            if (code === 'canceled' || code === 'interrupted') {
+              settled = true;
+              if (speakWatchdogTimer) { clearTimeout(speakWatchdogTimer); speakWatchdogTimer = null; }
+              if (activeUtterance === utt) activeUtterance = null;
+              return;
+            }
+            handleFailure();
+          };
+
+          speakWatchdogTimer = setTimeout(() => {
+            if (!started && !settled && reqId === speechReqId) {
+              handleFailure();
+            }
+          }, 1000);
+
+          try {
+            synth.speak(utt);
+          } catch (e) {
+            handleFailure();
+          }
         }
-        const utt = new SpeechSynthesisUtterance(text);
-        const voice = pickVoice(state.accent);
-        if (voice) utt.voice = voice;
-        utt.lang = state.accent;
-        utt.rate = 0.93;
-        window.speechSynthesis.speak(utt);
-      } catch (e) {}
+
+        if (needsCancel) {
+          speakDelayTimer = setTimeout(runSpeak, 80);
+        } else {
+          runSpeak();
+        }
+      }
+
+      attemptWebSpeech(false);
     }
 
     function showToast(msg) {

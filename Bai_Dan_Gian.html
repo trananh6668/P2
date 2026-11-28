@@ -2,7 +2,7 @@
 <html lang="vi" data-theme="emerald">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="color-scheme" content="dark">
     <meta name="darkreader-lock">
     <title>Hội Bài Dân Gian Việt</title>
@@ -168,6 +168,7 @@
             padding: 0;
             user-select: none;
             -webkit-user-select: none;
+            -webkit-touch-callout: none;
             -webkit-tap-highlight-color: transparent;
             touch-action: manipulation;
         }
@@ -181,6 +182,9 @@
             color: var(--text-primary);
             overflow-x: hidden;
             overflow-y: auto;
+            touch-action: manipulation;
+            -ms-touch-action: manipulation;
+            -webkit-text-size-adjust: 100%;
             -webkit-font-smoothing: antialiased;
             text-rendering: optimizeLegibility;
         }
@@ -8568,6 +8572,113 @@ function initBowlDragSqueeze() {
     });
 }
 
+/* Chặn zoom do chạm đúp liên tục hoặc chụm ngón tay trên thiết bị cảm ứng */
+function initTouchZoomGuard() {
+    let lastTapEndTime = 0;
+    let lastTapWasBowl = false;
+    let touchStartX = 0;
+    let touchStartY = 0;
+    let touchStartTime = 0;
+    let touchMoved = false;
+    let isMultiTouch = false;
+
+    document.addEventListener('touchstart', (e) => {
+        if (e.touches.length > 1) {
+            isMultiTouch = true;
+            if (e.cancelable) e.preventDefault();
+            return;
+        }
+        const t = e.touches[0];
+        if (!t) return;
+        isMultiTouch = false;
+        touchMoved = false;
+        touchStartX = t.clientX;
+        touchStartY = t.clientY;
+        touchStartTime = Date.now();
+    }, { passive: false });
+
+    document.addEventListener('touchmove', (e) => {
+        if (e.touches.length > 1) {
+            isMultiTouch = true;
+            if (e.cancelable) e.preventDefault();
+            return;
+        }
+        const t = e.touches[0];
+        if (!t) return;
+        if (!touchMoved && Math.hypot(t.clientX - touchStartX, t.clientY - touchStartY) > 10) {
+            touchMoved = true;
+        }
+    }, { passive: false });
+
+    document.addEventListener('touchcancel', () => {
+        touchMoved = false;
+        isMultiTouch = false;
+    }, { passive: true });
+
+    document.addEventListener('touchend', (e) => {
+        if (isMultiTouch) {
+            if (e.touches.length === 0) isMultiTouch = false;
+            if (e.cancelable) e.preventDefault();
+            return;
+        }
+        if (touchMoved || e.touches.length > 0 || e.changedTouches.length !== 1) {
+            touchMoved = false;
+            return;
+        }
+
+        const now = Date.now();
+        const touch = e.changedTouches[0];
+        const targetEl = (e.target instanceof Element && e.target.isConnected)
+            ? e.target
+            : (touch ? document.elementFromPoint(touch.clientX, touch.clientY) : null);
+        const bowlEl = targetEl ? targetEl.closest('#bauCuaBowl') : null;
+        const isBowl = !!bowlEl;
+        const isRapidTap = lastTapEndTime > 0 && ((now - lastTapEndTime) <= 450 || (touchStartTime - lastTapEndTime) <= 380);
+
+        if (isRapidTap && e.cancelable) {
+            e.preventDefault();
+            const clientX = touch ? touch.clientX : 0;
+            const clientY = touch ? touch.clientY : 0;
+            if (isBowl && lastTapWasBowl) {
+                bowlEl.dispatchEvent(new MouseEvent('dblclick', {
+                    bubbles: true,
+                    cancelable: true,
+                    view: window,
+                    clientX,
+                    clientY
+                }));
+                lastTapEndTime = now;
+                lastTapWasBowl = false;
+                return;
+            } else if (targetEl && !isBowl) {
+                const closestBtn = targetEl.closest('button');
+                if (!(closestBtn && closestBtn.disabled) && targetEl.closest('button, a, [onclick], [role="button"]')) {
+                    targetEl.dispatchEvent(new MouseEvent('click', {
+                        bubbles: true,
+                        cancelable: true,
+                        view: window,
+                        clientX,
+                        clientY
+                    }));
+                }
+            }
+        }
+
+        lastTapEndTime = now;
+        lastTapWasBowl = isBowl;
+    }, { passive: false });
+
+    ['gesturestart', 'gesturechange', 'gestureend'].forEach((evtName) => {
+        document.addEventListener(evtName, (e) => {
+            if (e.cancelable) e.preventDefault();
+        }, { passive: false });
+    });
+
+    document.addEventListener('dblclick', (e) => {
+        if (e.cancelable) e.preventDefault();
+    }, { passive: false });
+}
+
 /* ==========================================================================
    GLOBAL KEYBOARD SHORTCUTS, RESIZE & BOOTSTRAP
    ========================================================================== */
@@ -8664,6 +8775,7 @@ window.addEventListener('DOMContentLoaded', () => {
     loadPersistentState();
     updateWalletUI();
     initBowlDragSqueeze();
+    initTouchZoomGuard();
     selectRulesTab('tienlen');
     switchGameMode('tienlen');
 });
