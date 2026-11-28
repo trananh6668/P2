@@ -812,6 +812,9 @@
     };
 
     // ===================== 2. HELPERS (SPEECH, SHUFFLE, TOAST) =====================
+    const IS_MACOS = /macintosh|mac os x/i.test((typeof navigator !== 'undefined' && navigator.userAgent) || '') &&
+      !/iphone|ipad|ipod/i.test((typeof navigator !== 'undefined' && navigator.userAgent) || '');
+
     let cachedVoices = [];
     function refreshVoices() {
       if (!('speechSynthesis' in window)) return;
@@ -832,49 +835,70 @@
       return String(l || '').toLowerCase().replace(/_/g, '-');
     }
 
-    // Filter out macOS novelty, Eloquence, and legacy robotic voices that often fail or sound distorted.
-    const EXCLUDED_VOICE_RE = /\b(albert|bad news|bahh|bells|boing|bubbles|cellos|eddy|flo|fred|good news|grandma|grandpa|jester|junior|kathy|organ|princess|ralph|reed|rocko|sandy|shelley|superstar|trinoids|whisper|wobble|zarvox)\b/i;
-    const PREFERRED_VOICES = {
-      'en-us': ['samantha', 'ava', 'allison', 'alex', 'nicky', 'zoe', 'siri', 'microsoft aria', 'microsoft jenny', 'microsoft guy', 'microsoft zira', 'microsoft david', 'google us english'],
-      'en-gb': ['daniel', 'serena', 'oliver', 'kate', 'martha', 'arthur', 'stephanie', 'microsoft sonia', 'microsoft libby', 'microsoft ryan', 'microsoft hazel', 'microsoft george', 'google uk english female', 'google uk english male']
+    // Filter out English & localized Vietnamese macOS novelty, Eloquence, legacy robotic, and Siri voices.
+    const EXCLUDED_VOICE_RE = /(^|[^a-z0-9\u00c0-\u1ef9])(albert|agnes|bad\s*news|bahh|bells|boing|bruce|bubbles|cellos|deranged|eddy|eloquence|flo|fred|good\s*news|grandma|grandpa|hysterical|jester|junior|kathy|novelty|pipe\s*organ|organ|princess|ralph|reed|rocko|sandy|shelley|siri|superstar|trinoids|vicki|victoria|whisper|wobble|zarvox|tin\s*xấu|tin\s*tốt|bong\s*bóng|chuông|tiếng\s*bật\s*nảy|bật\s*nảy|đàn\s*xen[\s-]*lô|xen[\s-]*lô|chú\s*hề|đàn\s*ống|đàn\s*óoc[\s-]*gan|óoc[\s-]*gan|siêu\s*sao|thì\s*thầm|lảo\s*đảo)($|[^a-z0-9\u00c0-\u1ef9])/i;
+    const TRUSTED_VOICES = {
+      'en-us': ['samantha', 'ava', 'allison', 'alex', 'nicky', 'aaron', 'evan', 'nathan', 'noelle', 'susan', 'tom', 'zoe', 'microsoft aria', 'microsoft jenny', 'microsoft guy', 'microsoft ana', 'microsoft christopher', 'microsoft eric', 'microsoft michelle', 'microsoft roger', 'microsoft steffan', 'microsoft zira', 'microsoft david', 'microsoft mark', 'google us english'],
+      'en-gb': ['daniel', 'serena', 'oliver', 'kate', 'martha', 'arthur', 'stephanie', 'jamie', 'malcolm', 'fiona', 'microsoft sonia', 'microsoft libby', 'microsoft ryan', 'microsoft maisie', 'microsoft thomas', 'microsoft hazel', 'microsoft george', 'microsoft susan', 'google uk english female', 'google uk english male']
     };
 
-    function pickVoice(accent) {
+    function isExcludedVoice(v) {
+      if (!v) return true;
+      let name = String(v.name || '');
+      let uri = String(v.voiceURI || '');
+      if (typeof name.normalize === 'function') {
+        name = name.normalize('NFC');
+        uri = uri.normalize('NFC');
+      }
+      return EXCLUDED_VOICE_RE.test(name) || EXCLUDED_VOICE_RE.test(uri);
+    }
+
+    function matchesVoiceToken(v, token) {
+      if (!v || !token) return false;
+      const escaped = token.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\s+/g, '\\s+');
+      const re = new RegExp('(^|[^a-z0-9])' + escaped + '($|[^a-z0-9])', 'i');
+      return re.test(String(v.name || '')) || re.test(String(v.voiceURI || ''));
+    }
+
+    function pickVoiceCandidates(accent) {
       if (!cachedVoices.length) refreshVoices();
-      const usable = cachedVoices.filter(v => v && !EXCLUDED_VOICE_RE.test(v.name || ''));
-      if (!usable.length) return null;
+      const usable = cachedVoices.filter(v => !isExcludedVoice(v));
+      if (!usable.length) return [];
 
       const target = normLang(accent || 'en-US');
+      const prefs = TRUSTED_VOICES[target] || TRUSTED_VOICES['en-us'];
+
       let candidates = usable.filter(v => {
         const vl = normLang(v.lang);
         return vl === target || vl.startsWith(target + '-');
       });
-      if (!candidates.length) {
+
+      if (IS_MACOS) {
+        // Strict whitelist on macOS prevents localized novelty voices in any OS language from slipping through.
+        candidates = candidates.filter(v => prefs.some(tok => matchesVoiceToken(v, tok)));
+      } else if (!candidates.length) {
         candidates = usable.filter(v => normLang(v.lang).startsWith('en'));
       }
-      if (!candidates.length) return null;
+      if (!candidates.length) return [];
 
-      const prefs = PREFERRED_VOICES[target] || PREFERRED_VOICES['en-us'];
-      let best = candidates[0];
-      let bestScore = -1;
-      for (const v of candidates) {
+      const scored = candidates.map((v, idx) => {
         let score = 0;
         const vl = normLang(v.lang);
         if (vl === target) score += 1000;
         else if (vl.startsWith(target + '-')) score += 500;
-        // Prefer local OS voices because cloud Google voices often fail silently on non-Chrome Chromium forks.
+        const trustedIdx = prefs.findIndex(tok => matchesVoiceToken(v, tok));
+        if (trustedIdx !== -1) score += 2000 + Math.max(0, 300 - trustedIdx * 10);
         if (v.localService === true) score += 350;
-        const nameLower = String(v.name || '').toLowerCase();
-        const prefIdx = prefs.findIndex(p => nameLower.includes(p));
-        if (prefIdx !== -1) score += 220 - prefIdx * 10;
         if (/\b(enhanced|premium|natural)\b/i.test(v.name || '')) score += 25;
         if (v.default === true) score += 30;
-        if (score > bestScore) {
-          bestScore = score;
-          best = v;
-        }
-      }
-      return best;
+        return { v, score, idx };
+      });
+      scored.sort((a, b) => (b.score - a.score) || (a.idx - b.idx));
+      return scored.map(item => item.v);
+    }
+
+    function pickVoice(accent) {
+      return pickVoiceCandidates(accent)[0] || null;
     }
 
     let fallbackAudio = null;
@@ -882,13 +906,24 @@
     let speechReqId = 0;
     let speakDelayTimer = null;
     let speakWatchdogTimer = null;
-    let speechEngineBroken = false;
+    let audioLoadTimer = null;
+    const brokenWebSpeechAccents = {};
+
+    function clearAudioLoadTimer() {
+      if (audioLoadTimer) {
+        clearTimeout(audioLoadTimer);
+        audioLoadTimer = null;
+      }
+    }
 
     function stopFallbackAudio() {
+      clearAudioLoadTimer();
       if (!fallbackAudio) return;
       try {
         fallbackAudio.onerror = null;
         fallbackAudio.onended = null;
+        fallbackAudio.onplaying = null;
+        fallbackAudio.oncanplay = null;
         fallbackAudio.pause();
         fallbackAudio.currentTime = 0;
       } catch (e) {}
@@ -908,9 +943,23 @@
       return urls;
     }
 
-    function playFallbackAudio(text, accent, reqId) {
+    function playFallbackAudio(text, accent, reqId, onAllFailed) {
+      function handleExhausted(reason) {
+        clearAudioLoadTimer();
+        if (reqId !== speechReqId) return;
+        if (typeof onAllFailed === 'function') {
+          onAllFailed(reason);
+          return;
+        }
+        if (reason === 'NotAllowedError') {
+          showToast('Trình duyệt đang chặn tự phát âm thanh. Hãy bấm nút 🔊 để nghe.');
+        } else {
+          showToast('Không phát được âm thanh. Hãy kiểm tra loa hoặc kết nối mạng.');
+        }
+      }
+
       if (typeof Audio === 'undefined') {
-        showToast('Không phát được âm thanh. Hãy kiểm tra loa hoặc kết nối mạng.');
+        handleExhausted('no-audio');
         return;
       }
       if (!fallbackAudio) {
@@ -921,9 +970,10 @@
       let idx = 0;
 
       function tryNext() {
+        clearAudioLoadTimer();
         if (reqId !== speechReqId) return;
         if (idx >= urls.length) {
-          showToast('Không phát được âm thanh. Hãy kiểm tra loa hoặc kết nối mạng.');
+          handleExhausted('all-failed');
           return;
         }
         const url = urls[idx++];
@@ -931,14 +981,24 @@
         const advance = () => {
           if (advanced || reqId !== speechReqId) return;
           advanced = true;
+          clearAudioLoadTimer();
           tryNext();
         };
 
+        fallbackAudio.onplaying = () => {
+          if (reqId === speechReqId) clearAudioLoadTimer();
+        };
+        fallbackAudio.oncanplay = () => {
+          if (reqId === speechReqId) clearAudioLoadTimer();
+        };
         fallbackAudio.onerror = advance;
         fallbackAudio.onended = () => {
           if (reqId !== speechReqId) return;
+          clearAudioLoadTimer();
           fallbackAudio.onerror = null;
         };
+        audioLoadTimer = setTimeout(advance, 4000);
+
         fallbackAudio.src = url;
         try {
           fallbackAudio.defaultPlaybackRate = 0.95;
@@ -951,7 +1011,9 @@
             p.catch(err => {
               if (reqId !== speechReqId) return;
               if (err && err.name === 'NotAllowedError') {
-                showToast('Trình duyệt đang chặn tự phát âm thanh. Hãy bấm nút 🔊 để nghe.');
+                advanced = true;
+                stopFallbackAudio();
+                handleExhausted('NotAllowedError');
                 return;
               }
               advance();
@@ -968,117 +1030,171 @@
     function speakWord(text) {
       const cleanText = String(text || '').replace(/\s+/g, ' ').trim();
       if (!cleanText) return;
+      const accent = state.accent === 'en-GB' ? 'en-GB' : 'en-US';
       const reqId = ++speechReqId;
       if (speakDelayTimer) { clearTimeout(speakDelayTimer); speakDelayTimer = null; }
       if (speakWatchdogTimer) { clearTimeout(speakWatchdogTimer); speakWatchdogTimer = null; }
       stopFallbackAudio();
 
-      if (!('speechSynthesis' in window) || typeof SpeechSynthesisUtterance === 'undefined' || speechEngineBroken) {
-        playFallbackAudio(cleanText, state.accent, reqId);
-        return;
-      }
+      const hasWebSpeech = ('speechSynthesis' in window) && typeof SpeechSynthesisUtterance !== 'undefined';
+      const isOnline = typeof navigator === 'undefined' || navigator.onLine !== false;
 
-      function attemptWebSpeech(useDefaultVoice) {
+      function attemptWebSpeechCandidates(targetAccent, allowUkOfflineFallback, onWebSpeechExhausted) {
         if (reqId !== speechReqId) return;
-        const synth = window.speechSynthesis;
-        let needsCancel = false;
-        try {
-          // Only cancel when active/queued; calling cancel() + speak() synchronously wedges Chromium on macOS.
-          needsCancel = Boolean(synth.speaking || synth.pending);
-          if (needsCancel) synth.cancel();
-        } catch (e) {}
 
-        function runSpeak() {
-          if (reqId !== speechReqId) return;
-          try {
-            if (synth.paused && typeof synth.resume === 'function') {
-              synth.resume();
-            }
-          } catch (e) {}
-
-          const voice = useDefaultVoice ? null : pickVoice(state.accent);
-          let started = false;
-          let settled = false;
-          let utt = null;
-
-          function handleFailure() {
-            if (settled || reqId !== speechReqId) return;
-            settled = true;
-            if (speakWatchdogTimer) { clearTimeout(speakWatchdogTimer); speakWatchdogTimer = null; }
-            if (activeUtterance === utt) activeUtterance = null;
-            if (!useDefaultVoice && voice) {
-              attemptWebSpeech(true);
-            } else {
-              try { synth.cancel(); } catch (e) {}
-              speechEngineBroken = true;
-              playFallbackAudio(cleanText, state.accent, reqId);
-            }
+        const tryUkOfflineOrExhaust = () => {
+          if (allowUkOfflineFallback && targetAccent === 'en-US' && !brokenWebSpeechAccents['en-GB'] && pickVoiceCandidates('en-GB').length > 0) {
+            attemptWebSpeechCandidates('en-GB', false, onWebSpeechExhausted);
+            return;
           }
+          onWebSpeechExhausted();
+        };
 
-          try {
-            utt = new SpeechSynthesisUtterance(cleanText);
-          } catch (e) {
-            speechEngineBroken = true;
-            playFallbackAudio(cleanText, state.accent, reqId);
+        if (!hasWebSpeech || brokenWebSpeechAccents[targetAccent]) {
+          tryUkOfflineOrExhaust();
+          return;
+        }
+
+        const candidates = pickVoiceCandidates(targetAccent).slice(0, 2);
+        if (!candidates.length) {
+          // Only allow voice=null on non-macOS when voices haven't loaded yet; on macOS, voice=null falls back to the OS locale voice (e.g. Vietnamese Linh).
+          if (!IS_MACOS && cachedVoices.length === 0) {
+            candidates.push(null);
+          } else {
+            tryUkOfflineOrExhaust();
+            return;
+          }
+        }
+
+        let candIdx = 0;
+
+        function tryCandidate() {
+          if (reqId !== speechReqId) return;
+          if (candIdx >= candidates.length) {
+            try { window.speechSynthesis.cancel(); } catch (e) {}
+            brokenWebSpeechAccents[targetAccent] = true;
+            tryUkOfflineOrExhaust();
             return;
           }
 
-          activeUtterance = utt;
-          if (voice) {
-            utt.voice = voice;
-            utt.lang = voice.lang || state.accent;
-          } else {
-            utt.lang = state.accent;
-          }
-          utt.rate = 0.93;
-          utt.pitch = 1;
-          utt.volume = 1;
+          const voice = candidates[candIdx++];
+          const synth = window.speechSynthesis;
+          let needsCancel = false;
+          try {
+            // Only cancel when active/queued; calling cancel() + speak() synchronously wedges Chromium on macOS.
+            needsCancel = Boolean(synth.speaking || synth.pending);
+            if (needsCancel) synth.cancel();
+          } catch (e) {}
 
-          utt.onstart = () => {
+          function runSpeak() {
             if (reqId !== speechReqId) return;
-            started = true;
-            if (speakWatchdogTimer) { clearTimeout(speakWatchdogTimer); speakWatchdogTimer = null; }
-          };
-          utt.onend = () => {
-            if (reqId !== speechReqId) return;
-            started = true;
-            settled = true;
-            if (speakWatchdogTimer) { clearTimeout(speakWatchdogTimer); speakWatchdogTimer = null; }
-            if (activeUtterance === utt) activeUtterance = null;
-          };
-          utt.onerror = (ev) => {
-            if (reqId !== speechReqId) return;
-            const code = ev && ev.error;
-            if (code === 'canceled' || code === 'interrupted') {
+            try {
+              if (synth.paused && typeof synth.resume === 'function') {
+                synth.resume();
+              }
+            } catch (e) {}
+
+            let started = false;
+            let settled = false;
+            let utt = null;
+
+            function handleFailure() {
+              if (settled || reqId !== speechReqId) return;
               settled = true;
               if (speakWatchdogTimer) { clearTimeout(speakWatchdogTimer); speakWatchdogTimer = null; }
               if (activeUtterance === utt) activeUtterance = null;
+              tryCandidate();
+            }
+
+            try {
+              utt = new SpeechSynthesisUtterance(cleanText);
+            } catch (e) {
+              handleFailure();
               return;
             }
-            handleFailure();
-          };
 
-          speakWatchdogTimer = setTimeout(() => {
-            if (!started && !settled && reqId === speechReqId) {
+            activeUtterance = utt;
+            if (voice) {
+              utt.voice = voice;
+              utt.lang = voice.lang || targetAccent;
+            } else {
+              utt.lang = targetAccent;
+            }
+            utt.rate = 0.93;
+            utt.pitch = 1;
+            utt.volume = 1;
+
+            utt.onstart = () => {
+              if (reqId !== speechReqId) return;
+              started = true;
+              if (speakWatchdogTimer) { clearTimeout(speakWatchdogTimer); speakWatchdogTimer = null; }
+            };
+            utt.onend = () => {
+              if (reqId !== speechReqId) return;
+              started = true;
+              settled = true;
+              if (speakWatchdogTimer) { clearTimeout(speakWatchdogTimer); speakWatchdogTimer = null; }
+              if (activeUtterance === utt) activeUtterance = null;
+            };
+            utt.onerror = (ev) => {
+              if (reqId !== speechReqId) return;
+              const code = ev && ev.error;
+              if (code === 'canceled' || code === 'interrupted') {
+                settled = true;
+                if (speakWatchdogTimer) { clearTimeout(speakWatchdogTimer); speakWatchdogTimer = null; }
+                if (activeUtterance === utt) activeUtterance = null;
+                return;
+              }
+              handleFailure();
+            };
+
+            speakWatchdogTimer = setTimeout(() => {
+              if (!started && !settled && reqId === speechReqId) {
+                handleFailure();
+              }
+            }, 1000);
+
+            try {
+              synth.speak(utt);
+            } catch (e) {
               handleFailure();
             }
-          }, 1000);
+          }
 
-          try {
-            synth.speak(utt);
-          } catch (e) {
-            handleFailure();
+          if (needsCancel) {
+            speakDelayTimer = setTimeout(runSpeak, 80);
+          } else {
+            runSpeak();
           }
         }
 
-        if (needsCancel) {
-          speakDelayTimer = setTimeout(runSpeak, 80);
-        } else {
-          runSpeak();
-        }
+        tryCandidate();
       }
 
-      attemptWebSpeech(false);
+      // On macOS, en-US system voices are frequently localized novelty voices or distorted assets; use clean Google TTS <audio> first when online, with safe offline fallback.
+      if (IS_MACOS && accent === 'en-US' && isOnline) {
+        playFallbackAudio(cleanText, 'en-US', reqId, (reason) => {
+          if (reqId !== speechReqId) return;
+          attemptWebSpeechCandidates('en-US', true, () => {
+            if (reqId !== speechReqId) return;
+            if (reason === 'NotAllowedError') {
+              showToast('Trình duyệt đang chặn tự phát âm thanh. Hãy bấm nút 🔊 để nghe.');
+            } else {
+              showToast('Không phát được âm thanh. Hãy kiểm tra loa hoặc kết nối mạng.');
+            }
+          });
+        });
+        return;
+      }
+
+      attemptWebSpeechCandidates(accent, IS_MACOS && accent === 'en-US', () => {
+        if (reqId !== speechReqId) return;
+        if (!isOnline) {
+          showToast('Không có giọng phát âm offline phù hợp hoặc thiết bị đang ngoại tuyến.');
+          return;
+        }
+        playFallbackAudio(cleanText, accent, reqId);
+      });
     }
 
     function showToast(msg) {
